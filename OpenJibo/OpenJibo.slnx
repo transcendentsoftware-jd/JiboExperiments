@@ -2,5 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
-  <Project Path="Playground/Playground.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/Jibo.Runtime.Abstractions/Jibo.Runtime.Abstractions.csproj" Id="41abf805-373e-4e71-b1bf-2cab6dbf892e" />
+    <Project Path="src/Playground/Playground.csproj" />
+  </Folder>
 </Solution>
