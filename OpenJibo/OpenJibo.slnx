@@ -1,12 +1,13 @@
 <Solution>
   <Folder Name="/docs/">
+    <File Path="docs/development-plan.md" />
     <File Path="docs/device-bootstrap.md" />
     <File Path="docs/protocol-inventory.md" />
     <File Path="docs/public-site-plan.md" />
     <File Path="docs/support-tiers.md" />
   </Folder>
   <Folder Name="/scripts/" />
-  <Folder Name="/scripts/boostrap/">
+  <Folder Name="/scripts/bootstrap/">
     <File Path="scripts/bootstrap/Discover-JiboHosts.ps1" />
     <File Path="scripts/bootstrap/Generate-JiboDnsOverrides.ps1" />
     <File Path="scripts/bootstrap/README.md" />
@@ -27,6 +28,9 @@
     <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/Jibo.Cloud.Infrastructure.csproj" />
     <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Api/Jibo.Cloud.Api.csproj" />
     <Project Path="src/Playground/Playground.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Jibo.Cloud.Tests/Jibo.Cloud.Tests.csproj" />
   </Folder>
   <Folder Name="/src/OpenJibo.Site/">
     <File Path="src/OpenJibo.Site/index.html" />

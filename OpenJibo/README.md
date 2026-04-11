@@ -36,7 +36,7 @@ Jibo device -> OpenJibo cloud -> normalized runtime contracts -> capabilities an
 The first supported recovery path is enthusiast-friendly, not zero-touch:
 
 ```text
-QR Wi-Fi -> controlled router/DNS -> redirect legacy Jibo hosts ->
+QR Wi-Fi -> inject OpenJibo region config -> set robot region ->
 RCM/device patch for TLS and host acceptance -> OpenJibo cloud on Azure
 ```
 
@@ -47,6 +47,7 @@ That path is documented in [docs/device-bootstrap.md](C:/Projects/JiboExperiment
 ```text
 OpenJibo/
   docs/
+    development-plan.md
     device-bootstrap.md
     protocol-inventory.md
     public-site-plan.md
@@ -78,11 +79,13 @@ OpenJibo/
 - port required endpoint and WebSocket behavior from Node to .NET
 - keep protocol captures and replay fixtures current
 - harden device bootstrap documentation and scripts
+- map more endpoints and behaviors beyond the current Node coverage
 - stand up the initial `openjibo.com` information site
 
 ## Important Docs
 
 - [Cloud overview](/src/Jibo.Cloud/README.md)
+- [Development plan](/docs/development-plan.md)
 - [Protocol inventory](/docs/protocol-inventory.md)
 - [Support tiers](/docs/support-tiers.md)
 - [Device bootstrap path](/docs/device-bootstrap.md)

@@ -4,6 +4,8 @@
 
 This document tracks the currently observed cloud surface area for Jibo and helps keep the .NET port aligned with real behavior captured by the Node prototype.
 
+It is not a claim that the current Node server covers all Jibo endpoints or behaviors. It reflects only the portions mapped so far.
+
 Confidence levels:
 
 - `high`: observed in code and currently represented in the .NET scaffold
@@ -17,7 +19,20 @@ Confidence levels:
 | `api.jibo.com` | HTTPS API target for `X-Amz-Target` operations | high | Main request dispatch path in the Node prototype |
 | `api-socket.jibo.com` | token-authenticated WebSocket path | medium | Node accepts tokenized connections and intentionally sends no greeting |
 | `neo-hub.jibo.com` | listen and proactive WebSocket traffic | medium | Path-driven split between listen and `/v1/proactive` |
-| `neohub.jibo.com` | likely alias/spelling variant to watch | low | Mentioned in docs; validate against real traffic |
+
+## Region Configuration
+
+Current robot findings suggest the preferred OpenJibo bootstrap path is to inject a new region configuration rather than treat host overrides as the only integration seam.
+
+Confirmed or strongly observed files:
+
+- `/etc/jibo-jetstream-service.json`
+- `/var/jibo/credentials.json`
+- `/etc/jibo-ssm/*.json`
+- `/skills/jibo/Jibo/Skills/@be/be/node_modules/language-subtag-registry/data/json/registry.json`
+- `/skills/jibo/Jibo/Skills/oobe-config/config.json`
+
+The first two are the clearest current OpenJibo injection points. The others should remain on the audit list while endpoint and behavior mapping continues.
 
 ## HTTP Dispatch Families
 
@@ -64,6 +79,22 @@ The first .NET hosted milestone should fully support:
 - root probe and health checks
 - basic listen/proactive WebSocket acceptance
 - normalized turn and reply mapping for simple chat
+
+## Known Beyond Current Node Coverage
+
+The platform scope is broader than the endpoints currently modeled in `open-jibo-link.js`. Known areas that still need mapping include:
+
+- broader skill launch and lifecycle behavior
+- interactivity command families beyond the joke starter path
+- richer animation and expression control
+- ESML and embodied speech features
+- additional service families and region-specific endpoint behavior
+- startup and configuration differences across Jibo software variants
+
+Useful external references for future mapping:
+
+- [Speak-Tweak Docs](https://hri2024.jibo.media.mit.edu/Speak-Tweak-Docs)
+- [ESML PDF](https://hri2024.jibo.media.mit.edu/attachments/SDK-SDK---ESML-121023-203758.pdf)
 
 ## Fixture Source
 

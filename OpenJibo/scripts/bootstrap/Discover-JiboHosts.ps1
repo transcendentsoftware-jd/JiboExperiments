@@ -3,8 +3,7 @@ param(
     [string[]]$KnownHosts = @(
         "api.jibo.com",
         "api-socket.jibo.com",
-        "neo-hub.jibo.com",
-        "neohub.jibo.com"
+        "neo-hub.jibo.com"
     )
 )
 

@@ -20,8 +20,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             {
                 ["api.jibo.com"] = "openjibo.com",
                 ["api-socket.jibo.com"] = "openjibo.com",
-                ["neo-hub.jibo.com"] = "openjibo.com",
-                ["neohub.jibo.com"] = "openjibo.com"
+                ["neo-hub.jibo.com"] = "openjibo.com"
             }
         };
 
