@@ -412,3 +412,7 @@ FodyWeavers.xsd
 # Built Visual Studio Code Extensions
 *.vsix
 
+# Local .NET CLI home and first-run artifacts
+.dotnet/
+**/.dotnet/
+

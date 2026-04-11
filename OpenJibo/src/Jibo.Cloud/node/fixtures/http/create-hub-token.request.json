@@ -1,0 +1,9 @@
+{
+  "host": "api.jibo.com",
+  "method": "POST",
+  "path": "/",
+  "headers": {
+    "x-amz-target": "Account_20160715.CreateHubToken"
+  },
+  "body": {}
+}

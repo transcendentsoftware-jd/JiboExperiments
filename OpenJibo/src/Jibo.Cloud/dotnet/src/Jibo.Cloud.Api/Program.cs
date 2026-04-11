@@ -1,0 +1,170 @@
+using System.Net.WebSockets;
+using System.Text;
+using Jibo.Cloud.Application.Services;
+using Jibo.Cloud.Domain.Models;
+using Jibo.Cloud.Infrastructure.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenJiboCloud();
+
+var app = builder.Build();
+
+app.UseWebSockets();
+
+app.Use(async (context, next) =>
+{
+    if (!context.WebSockets.IsWebSocketRequest)
+    {
+        await next();
+        return;
+    }
+
+    var webSocketService = context.RequestServices.GetRequiredService<JiboWebSocketService>();
+    using var socket = await context.WebSockets.AcceptWebSocketAsync();
+
+    var kind = ResolveSocketKind(context.Request.Host.Host, context.Request.Path);
+    var token = ResolveToken(context.Request);
+
+    while (socket.State == WebSocketState.Open)
+    {
+        var received = await ReceiveAsync(socket, context.RequestAborted);
+        if (received.MessageType == WebSocketMessageType.Close)
+        {
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", context.RequestAborted);
+            break;
+        }
+
+        var envelope = new WebSocketMessageEnvelope
+        {
+            ConnectionId = Guid.NewGuid().ToString("N"),
+            HostName = context.Request.Host.Host,
+            Path = context.Request.Path.Value ?? "/",
+            Kind = kind,
+            Token = token,
+            Text = received.MessageType == WebSocketMessageType.Text ? Encoding.UTF8.GetString(received.Buffer) : null,
+            Binary = received.MessageType == WebSocketMessageType.Binary ? received.Buffer : null
+        };
+
+        var replies = await webSocketService.HandleMessageAsync(envelope, context.RequestAborted);
+        foreach (var reply in replies)
+        {
+            if (string.IsNullOrWhiteSpace(reply.Text))
+            {
+                continue;
+            }
+
+            var payload = Encoding.UTF8.GetBytes(reply.Text);
+            await socket.SendAsync(payload, WebSocketMessageType.Text, true, context.RequestAborted);
+        }
+    }
+});
+
+app.MapGet("/health", () => Results.Json(new { ok = true, service = "OpenJibo Cloud Api" }));
+
+app.MapMethods("/{**path}", ["GET", "POST", "PUT"], async (HttpContext context, JiboCloudProtocolService service, CancellationToken cancellationToken) =>
+{
+    var envelope = await BuildEnvelopeAsync(context, cancellationToken);
+    var result = await service.DispatchAsync(envelope, cancellationToken);
+
+    context.Response.StatusCode = result.StatusCode;
+    context.Response.ContentType = result.ContentType;
+
+    foreach (var header in result.Headers)
+    {
+        context.Response.Headers[header.Key] = header.Value;
+    }
+
+    if (!string.IsNullOrEmpty(result.BodyText))
+    {
+        await context.Response.WriteAsync(result.BodyText, cancellationToken);
+    }
+});
+
+app.Run();
+return;
+
+static async Task<ReceivedSocketMessage> ReceiveAsync(WebSocket socket, CancellationToken cancellationToken)
+{
+    var buffer = new byte[8192];
+    using var ms = new MemoryStream();
+
+    WebSocketReceiveResult result;
+    do
+    {
+        result = await socket.ReceiveAsync(buffer, cancellationToken);
+        ms.Write(buffer, 0, result.Count);
+    }
+    while (!result.EndOfMessage);
+
+    return new ReceivedSocketMessage(result.MessageType, ms.ToArray());
+}
+
+static async Task<ProtocolEnvelope> BuildEnvelopeAsync(HttpContext context, CancellationToken cancellationToken)
+{
+    context.Request.EnableBuffering();
+
+    using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+    var bodyText = await reader.ReadToEndAsync(cancellationToken);
+    context.Request.Body.Position = 0;
+
+    var target = context.Request.Headers["X-Amz-Target"].ToString();
+    var targetParts = target.Split('.', 2, StringSplitOptions.RemoveEmptyEntries);
+
+    return new ProtocolEnvelope
+    {
+        RequestId = Guid.NewGuid().ToString("N"),
+        Transport = "http",
+        Method = context.Request.Method,
+        HostName = context.Request.Host.Host,
+        Path = context.Request.Path.Value ?? "/",
+        ServicePrefix = targetParts.Length > 0 ? targetParts[0] : null,
+        Operation = targetParts.Length > 1 ? targetParts[1] : null,
+        DeviceId = context.Request.Headers["X-Jibo-RobotId"].ToString(),
+        CorrelationId = context.TraceIdentifier,
+        FirmwareVersion = context.Request.Headers["X-OpenJibo-Firmware"].ToString(),
+        ApplicationVersion = context.Request.Headers["X-OpenJibo-AppVersion"].ToString(),
+        BodyText = bodyText,
+        Headers = context.Request.Headers.ToDictionary(pair => pair.Key, pair => pair.Value.ToString(), StringComparer.OrdinalIgnoreCase)
+    };
+}
+
+static string ResolveSocketKind(string host, PathString path)
+{
+    if (host.Equals("api-socket.jibo.com", StringComparison.OrdinalIgnoreCase))
+    {
+        return "api-socket";
+    }
+
+    if (host.Equals("neo-hub.jibo.com", StringComparison.OrdinalIgnoreCase) &&
+        path.StartsWithSegments("/v1/proactive"))
+    {
+        return "neo-hub-proactive";
+    }
+
+    if (host.Equals("neo-hub.jibo.com", StringComparison.OrdinalIgnoreCase))
+    {
+        return "neo-hub-listen";
+    }
+
+    return "openjibo";
+}
+
+static string? ResolveToken(HttpRequest request)
+{
+    var auth = request.Headers.Authorization.ToString();
+    if (auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+    {
+        return auth["Bearer ".Length..].Trim();
+    }
+
+    var path = request.Path.Value;
+    if (!string.IsNullOrWhiteSpace(path) && path.Length > 1)
+    {
+        return path.Trim('/');
+    }
+
+    return null;
+}
+
+internal sealed record ReceivedSocketMessage(WebSocketMessageType MessageType, byte[] Buffer);

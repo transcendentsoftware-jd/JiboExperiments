@@ -1,0 +1,7 @@
+{
+  "statusCode": 200,
+  "body": {
+    "token": "hub-usr_test_001-1712700000000",
+    "expires": 1712703600000
+  }
+}

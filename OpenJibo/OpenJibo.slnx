@@ -1,9 +1,35 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="docs/device-bootstrap.md" />
+    <File Path="docs/protocol-inventory.md" />
+    <File Path="docs/public-site-plan.md" />
+    <File Path="docs/support-tiers.md" />
+  </Folder>
+  <Folder Name="/scripts/" />
+  <Folder Name="/scripts/boostrap/">
+    <File Path="scripts/bootstrap/Discover-JiboHosts.ps1" />
+    <File Path="scripts/bootstrap/Generate-JiboDnsOverrides.ps1" />
+    <File Path="scripts/bootstrap/README.md" />
+    <File Path="scripts/bootstrap/Test-OpenJiboRouting.ps1" />
+  </Folder>
+  <Folder Name="/scripts/cloud/">
+    <File Path="scripts/cloud/Invoke-CloudSmoke.ps1" />
+    <File Path="scripts/cloud/Invoke-ProtocolFixture.ps1" />
+    <File Path="scripts/cloud/README.md" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Jibo.Runtime.Abstractions/Jibo.Runtime.Abstractions.csproj" Id="41abf805-373e-4e71-b1bf-2cab6dbf892e" />
+    <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Domain/Jibo.Cloud.Domain.csproj" />
+    <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Jibo.Cloud.Application.csproj" />
+    <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/Jibo.Cloud.Infrastructure.csproj" />
+    <Project Path="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Api/Jibo.Cloud.Api.csproj" />
     <Project Path="src/Playground/Playground.csproj" />
+  </Folder>
+  <Folder Name="/src/OpenJibo.Site/">
+    <File Path="src/OpenJibo.Site/index.html" />
+    <File Path="src/OpenJibo.Site/site.css" />
   </Folder>
 </Solution>

@@ -12,6 +12,13 @@ public sealed class TurnContext
     public string? WakePhrase { get; init; }
     public string? RawTranscript { get; init; }
     public string? NormalizedTranscript { get; init; }
+    public string? DeviceId { get; init; }
+    public string? HostName { get; init; }
+    public string? RequestId { get; init; }
+    public string? ProtocolService { get; init; }
+    public string? ProtocolOperation { get; init; }
+    public string? FirmwareVersion { get; init; }
+    public string? ApplicationVersion { get; init; }
 
     public string? Locale { get; init; } = "en-US";
     public string? TimeZone { get; init; }

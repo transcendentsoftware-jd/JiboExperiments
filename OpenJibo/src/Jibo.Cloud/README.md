@@ -1,97 +1,62 @@
 # Jibo.Cloud
 
-## Overview
+## Summary
 
-**Jibo.Cloud** is the replacement cloud layer for the OpenJibo project.
+`Jibo.Cloud` is the replacement cloud layer for OpenJibo.
 
-The original Jibo relied heavily on cloud services for core functionality including speech, skills, configuration, and identity. With the original cloud infrastructure no longer available, this project aims to recreate and eventually improve that layer so Jibo can function again for everyday users.
+Its job is to restore the hosted services that physical Jibo devices still expect, while also becoming the bridge into a modern .NET runtime and future capabilities.
 
-This is not just a mock or emulator. The goal is to build a functional, extensible cloud platform that can support both the original Jibo behaviors and new capabilities over time.
+## Current Strategy
 
----
+The project is deliberately split into two roles:
 
-## Current Approach
+- `node/`
+  Reverse-engineering oracle, discovery server, fixture source, and rapid protocol lab.
+- `dotnet/`
+  Stable hosted implementation intended for Azure deployment and long-term maintenance.
 
-The cloud layer is being developed in stages.
+The Node server remains valuable, but it is no longer the target production architecture.
 
-To move quickly and understand Jibo’s behavior, development started with a lightweight Node.js implementation that acts as a “fake cloud.” This allows rapid experimentation, endpoint discovery, and validation of how Jibo communicates.
+## First Production Goal
 
-As the system stabilizes, the implementation is being ported to **C# / .NET** for long-term maintainability, performance, and integration with hosted infrastructure.
+The first milestone is a stable hosted cloud that can support:
 
----
+- token and session issuance
+- account and robot identity flows needed for startup
+- required HTTPS `X-Amz-Target` operations
+- required WebSocket listen and proactive flows
+- basic media and update metadata handling
+- normalized handoff into OpenJibo runtime contracts
 
-## Architecture Direction
+## Hosting Direction
 
-The long-term vision for Jibo.Cloud is:
+The hosted deployment target is Azure:
 
-* Provide a stable replacement for Jibo’s original cloud endpoints
-* Support secure communication (TLS) using a real hosted domain
-* Act as a bridge between the physical robot and the OpenJibo runtime
-* Enable new capabilities beyond the original Jibo feature set
+- Azure App Service with WebSockets enabled
+- Azure SQL as the system of record
+- Azure Blob Storage for upload and update artifacts
+- Azure Key Vault for secrets and certificates
+- Application Insights for telemetry and diagnostics
 
-### OTA Update Strategy
+Human-facing entry points will live on domains such as:
 
-One of the key strategies for restoring and extending Jibo functionality is leveraging its existing **OTA (over-the-air) update mechanism**.
+- `openjibo.com`
+- `openjibo.ai`
 
-Rather than requiring users to manually modify their devices, Jibo.Cloud aims to:
+Robot traffic may still arrive using legacy hostnames routed to the OpenJibo service.
 
-* Deliver updates through Jibo’s native update flow
-* Push new or modified skills directly to the robot
-* Eventually enable delivery of larger system updates (including OpenJibo components)
+## Recovery Strategy
 
-This approach significantly lowers the barrier for non-technical users and creates a path toward a true “plug-and-play” recovery experience.
+The first supported device path is:
 
----
-
-## Hosting Strategy
-
-The cloud service is intended to be hosted publicly using domains such as:
-
-* `openjibo.com`
-* `openjibo.ai`
-
-Final domain structure is still being evaluated and may include subdomains similar to the original Jibo architecture.
-
----
-
-## Project Structure
-
-```plaintext id="6h2v1k"
-Jibo.Cloud/
-  node/      # Initial prototype implementation (Node.js)
-  dotnet/    # Long-term implementation (C# / .NET)
+```text
+RCM + controlled DNS/TLS patching + hosted OpenJibo cloud
 ```
 
----
+OTA remains important, but it is a later simplification layer after the hosted cloud is stable on real hardware.
 
-## Goals
+## Supporting Docs
 
-* Restore functionality to existing Jibo devices
-* Provide an “easy button” for non-technical users
-* Leverage OTA updates to simplify delivery and adoption
-* Keep the system open and extensible for the community
-* Build a foundation for future OpenJibo capabilities
-
----
-
-## Status
-
-This project is actively in development.
-
-* Node.js prototype: in progress and functional for basic interactions
-* C# implementation: planned and in progress
-
----
-
-## Contributing
-
-If you're interested in helping, exploring, or building on this work, contributions are welcome.
-
-The goal is to make Jibo accessible again, not just for developers, but for anyone who owns one.
-
----
-
-## Notes
-
-This project is not affiliated with the original Jibo company. It is a community-driven effort to restore and extend the platform.
-
+- [Protocol inventory](C:/Projects/JiboExperiments/OpenJibo/docs/protocol-inventory.md)
+- [Support tiers](C:/Projects/JiboExperiments/OpenJibo/docs/support-tiers.md)
+- [Device bootstrap path](C:/Projects/JiboExperiments/OpenJibo/docs/device-bootstrap.md)

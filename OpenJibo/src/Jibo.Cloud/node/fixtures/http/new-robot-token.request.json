@@ -1,0 +1,11 @@
+{
+  "host": "api.jibo.com",
+  "method": "POST",
+  "path": "/",
+  "headers": {
+    "x-amz-target": "Notification_20160715.NewRobotToken"
+  },
+  "body": {
+    "deviceId": "my-robot-serial-number"
+  }
+}

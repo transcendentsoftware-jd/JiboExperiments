@@ -8,6 +8,8 @@ public sealed class ResponsePlan
 
     public string? IntentName { get; init; }
     public string? Topic { get; init; }
+    public string? DeviceId { get; init; }
+    public string? TargetHost { get; init; }
     public IList<PlanAction> Actions { get; init; } = new List<PlanAction>();
 
     public FollowUpPolicy FollowUp { get; init; } = FollowUpPolicy.None;
@@ -15,4 +17,5 @@ public sealed class ResponsePlan
 
     public string? DebugRoute { get; init; }
     public IDictionary<string, object?> Diagnostics { get; init; } = new Dictionary<string, object?>();
+    public IDictionary<string, object?> ProtocolMetadata { get; init; } = new Dictionary<string, object?>();
 }
