@@ -1,0 +1,54 @@
+{
+  "name": "neo-hub context client nlu flow",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/listen",
+    "kind": "neo-hub-listen",
+    "token": "fixture-nlu-token"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "transID": "fixture-trans-nlu",
+        "data": {
+          "text": "hello jibo",
+          "rules": [
+            "wake-word"
+          ]
+        }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    },
+    {
+      "text": {
+        "type": "CONTEXT",
+        "transID": "fixture-trans-nlu",
+        "data": {
+          "topic": "conversation",
+          "screen": "home"
+        }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_CONTEXT_ACK"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_NLU",
+        "transID": "fixture-trans-nlu",
+        "data": {
+          "intent": "joke"
+        }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS"
+      ]
+    }
+  ]
+}

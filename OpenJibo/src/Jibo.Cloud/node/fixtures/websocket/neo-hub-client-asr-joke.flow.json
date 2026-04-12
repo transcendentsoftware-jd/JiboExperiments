@@ -1,0 +1,42 @@
+{
+  "name": "neo-hub client asr joke flow",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/listen",
+    "kind": "neo-hub-listen",
+    "token": "fixture-joke-token"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "transID": "fixture-trans-joke",
+        "data": {
+          "text": "tell me a joke",
+          "rules": [
+            "wake-word"
+          ]
+        }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_ASR",
+        "transID": "fixture-trans-joke",
+        "data": {
+          "text": "tell me a joke"
+        }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    }
+  ]
+}

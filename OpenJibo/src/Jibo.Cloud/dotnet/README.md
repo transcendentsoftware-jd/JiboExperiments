@@ -57,9 +57,25 @@ The .NET implementation should:
 - copy observed behavior where needed
 - use fixtures captured from Node and real robots
 - avoid speculative protocol design
+- separate HTTP parity, websocket parity, and future discovery work so coverage stays honest
 
 ## Current State
 
 This folder now contains the first hosted scaffold, not just a README.
 
 The intent is to grow from a runnable dev monolith into the real Azure deployment target without abandoning the existing abstractions work.
+
+Current websocket scope is still intentionally narrow:
+
+- token-backed socket sessions
+- synthetic `LISTEN` result shaping for `LISTEN`, `CLIENT_NLU`, and `CLIENT_ASR`
+- `CONTEXT` capture and follow-up turn state
+- `EOS` completion
+- first skill vertical for joke/chat `SKILL_ACTION` playback
+
+Not yet covered:
+
+- real binary audio / ASR finalization parity
+- upstream Nimbus or broader skill lifecycle behavior
+- animation / expression command families
+- ESML feature parity beyond the narrow synthetic playback payloads used in the current scaffold

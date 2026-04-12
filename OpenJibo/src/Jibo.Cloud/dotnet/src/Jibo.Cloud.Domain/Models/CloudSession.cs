@@ -11,7 +11,12 @@ public sealed class CloudSession
     public string? Path { get; init; }
     public DateTimeOffset CreatedUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset LastSeenUtc { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? FollowUpExpiresUtc { get; set; }
+    public string? LastMessageType { get; set; }
     public string? LastListenType { get; set; }
+    public string? LastIntent { get; set; }
     public string? LastTranscript { get; set; }
+    public string? LastTransId { get; set; }
+    public bool FollowUpOpen => FollowUpExpiresUtc.HasValue && FollowUpExpiresUtc > DateTimeOffset.UtcNow;
     public IDictionary<string, object?> Metadata { get; init; } = new Dictionary<string, object?>();
 }

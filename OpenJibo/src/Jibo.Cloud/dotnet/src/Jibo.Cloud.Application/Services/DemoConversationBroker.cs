@@ -57,6 +57,19 @@ public sealed class DemoConversationBroker : IConversationBroker
             }
         };
 
+        if (string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase))
+        {
+            plan.Actions.Add(new InvokeNativeSkillAction
+            {
+                Sequence = 2,
+                SkillName = "@be/joke",
+                Payload = new Dictionary<string, object?>
+                {
+                    ["replyType"] = "joke"
+                }
+            });
+        }
+
         return Task.FromResult(plan);
     }
 }

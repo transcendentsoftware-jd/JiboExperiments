@@ -56,8 +56,28 @@ Observed from `open-jibo-link.js`:
 | Host/path | Flow | Confidence | Current .NET status |
 | --- | --- | --- | --- |
 | `api-socket.jibo.com/{token}` | token-authenticated socket for API-side signaling | medium | stub endpoint implemented |
-| `neo-hub.jibo.com/{listen-path}` | listen turn flow with JSON and binary audio traffic | medium | initial JSON flow implemented |
+| `neo-hub.jibo.com/{listen-path}` | listen turn flow with JSON and binary audio traffic | medium | fixture-backed synthetic turn flow implemented for `LISTEN`, `CONTEXT`, `CLIENT_NLU`, `CLIENT_ASR`, `EOS`, and first chat/joke skill responses |
 | `neo-hub.jibo.com/v1/proactive` | proactive connection flow | medium | stub endpoint implemented |
+
+### Current WebSocket Parity Slice
+
+The current .NET pass covers only a narrow, explicitly synthetic subset of observed Neo-Hub behavior:
+
+- token/session tracking across websocket turns
+- `LISTEN` message handling with synthetic `LISTEN` result payload shaping
+- `CONTEXT` capture for turn/session state
+- `CLIENT_NLU` turn completion using remembered listen/session metadata
+- `CLIENT_ASR` text-driven turn completion
+- `EOS` emission after completed turns
+- first richer vertical slice for joke/chat `SKILL_ACTION` playback
+
+This does not yet mean parity for:
+
+- real binary audio buffering and finalization
+- external ASR lifecycle timing
+- early-EOS behavior
+- multi-step skill lifecycles beyond the current synthetic playback response
+- broader interaction, animation, or ESML command families
 
 ## Upload Paths
 

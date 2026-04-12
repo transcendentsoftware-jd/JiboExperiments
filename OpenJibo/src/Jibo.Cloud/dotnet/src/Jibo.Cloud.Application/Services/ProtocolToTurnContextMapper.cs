@@ -6,14 +6,34 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class ProtocolToTurnContextMapper
 {
-    public TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session)
+    public TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session, string messageType)
     {
         var text = ExtractTranscript(envelope.Text);
+        var protocolOperation = messageType.ToLowerInvariant();
+        var attributes = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["messageType"] = messageType
+        };
+
+        if (!string.IsNullOrWhiteSpace(session.LastTransId))
+        {
+            attributes["transID"] = session.LastTransId;
+        }
+
+        if (session.Metadata.TryGetValue("context", out var context))
+        {
+            attributes["context"] = context;
+        }
+
+        if (session.Metadata.TryGetValue("listenRules", out var listenRules))
+        {
+            attributes["listenRules"] = listenRules;
+        }
 
         return new TurnContext
         {
             SessionId = session.SessionId,
-            InputMode = session.LastListenType == "follow-up" ? TurnInputMode.FollowUp : TurnInputMode.DirectText,
+            InputMode = session.FollowUpOpen ? TurnInputMode.FollowUp : TurnInputMode.DirectText,
             SourceKind = TurnSourceKind.Api,
             RawTranscript = text,
             NormalizedTranscript = text?.Trim(),
@@ -21,10 +41,11 @@ public sealed class ProtocolToTurnContextMapper
             HostName = envelope.HostName,
             RequestId = envelope.ConnectionId,
             ProtocolService = "neo-hub",
-            ProtocolOperation = "listen",
+            ProtocolOperation = protocolOperation,
             FirmwareVersion = session.Metadata.TryGetValue("firmwareVersion", out var firmwareVersion) ? firmwareVersion as string : null,
             ApplicationVersion = session.Metadata.TryGetValue("applicationVersion", out var applicationVersion) ? applicationVersion as string : null,
-            IsFollowUpEligible = true
+            IsFollowUpEligible = true,
+            Attributes = attributes
         };
     }
 
