@@ -7,17 +7,28 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class JiboWebSocketService(
     ICloudStateStore stateStore,
+    IWebSocketTelemetrySink telemetrySink,
     WebSocketTurnFinalizationService turnFinalizationService)
 {
+    public CloudSession GetOrCreateSession(WebSocketMessageEnvelope envelope)
+    {
+        return stateStore.FindSessionByToken(envelope.Token ?? string.Empty) ??
+               stateStore.OpenSession(envelope.Kind, null, envelope.Token, envelope.HostName, envelope.Path);
+    }
+
     public async Task<IReadOnlyList<WebSocketReply>> HandleMessageAsync(WebSocketMessageEnvelope envelope, CancellationToken cancellationToken = default)
     {
-        var session = stateStore.FindSessionByToken(envelope.Token ?? string.Empty) ??
-                      stateStore.OpenSession(envelope.Kind, null, envelope.Token, envelope.HostName, envelope.Path);
+        var session = GetOrCreateSession(envelope);
         session.LastSeenUtc = DateTimeOffset.UtcNow;
 
         if (envelope.IsBinary)
         {
-            return turnFinalizationService.HandleBinaryAudio(session, envelope);
+            var replies = turnFinalizationService.HandleBinaryAudio(session, envelope);
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "binary_audio_received", new Dictionary<string, object?>
+            {
+                ["bytes"] = envelope.Binary?.Length ?? 0
+            }, cancellationToken);
+            return replies;
         }
 
         var parsedType = ReadMessageType(envelope.Text);
@@ -31,12 +42,25 @@ public sealed class JiboWebSocketService(
 
         if (parsedType == "CONTEXT")
         {
-            return turnFinalizationService.HandleContext(session, envelope.Text);
+            var replies = turnFinalizationService.HandleContext(session, envelope.Text);
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "context_received", new Dictionary<string, object?>
+            {
+                ["transID"] = session.TurnState.TransId
+            }, cancellationToken);
+            return replies;
         }
 
         if (parsedType is "LISTEN" or "CLIENT_NLU" or "CLIENT_ASR")
         {
-            return await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
+            var replies = await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+            {
+                ["messageType"] = parsedType,
+                ["replyCount"] = replies.Count,
+                ["transcript"] = session.LastTranscript,
+                ["intent"] = session.LastIntent
+            }, cancellationToken);
+            return replies;
         }
 
         return

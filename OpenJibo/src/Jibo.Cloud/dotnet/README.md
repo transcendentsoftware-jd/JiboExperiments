@@ -72,6 +72,7 @@ Current websocket scope is still intentionally narrow:
 - synthetic `LISTEN` result shaping for `LISTEN`, `CLIENT_NLU`, and `CLIENT_ASR`
 - buffered audio state tracking behind a dedicated turn-finalization layer
 - synthetic STT strategy selection for fixture-driven audio turn completion
+- structured websocket telemetry and live-run fixture export
 - `CONTEXT` capture and follow-up turn state
 - `EOS` completion
 - first skill vertical for joke/chat `SKILL_ACTION` playback

@@ -1,12 +1,13 @@
 using System.Net.WebSockets;
 using System.Text;
+using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenJiboCloud();
+builder.Services.AddOpenJiboCloud(builder.Configuration);
 
 var app = builder.Build();
 
@@ -21,10 +22,21 @@ app.Use(async (context, next) =>
     }
 
     var webSocketService = context.RequestServices.GetRequiredService<JiboWebSocketService>();
+    var telemetrySink = context.RequestServices.GetRequiredService<IWebSocketTelemetrySink>();
     using var socket = await context.WebSockets.AcceptWebSocketAsync();
 
     var kind = ResolveSocketKind(context.Request.Host.Host, context.Request.Path);
     var token = ResolveToken(context.Request);
+    var openEnvelope = new WebSocketMessageEnvelope
+    {
+        ConnectionId = Guid.NewGuid().ToString("N"),
+        HostName = context.Request.Host.Host,
+        Path = context.Request.Path.Value ?? "/",
+        Kind = kind,
+        Token = token
+    };
+    var openSession = ResolveSession(webSocketService, openEnvelope);
+    await telemetrySink.RecordConnectionOpenedAsync(openEnvelope, openSession, context.RequestAborted);
 
     while (socket.State == WebSocketState.Open)
     {
@@ -47,6 +59,8 @@ app.Use(async (context, next) =>
         };
 
         var replies = await webSocketService.HandleMessageAsync(envelope, context.RequestAborted);
+        var session = ResolveSession(webSocketService, envelope);
+        await telemetrySink.RecordInboundAsync(envelope, session, ReadMessageType(envelope.Text), context.RequestAborted);
         foreach (var reply in replies)
         {
             if (string.IsNullOrWhiteSpace(reply.Text))
@@ -57,7 +71,20 @@ app.Use(async (context, next) =>
             var payload = Encoding.UTF8.GetBytes(reply.Text);
             await socket.SendAsync(payload, WebSocketMessageType.Text, true, context.RequestAborted);
         }
+
+        await telemetrySink.RecordOutboundAsync(envelope, session, replies, context.RequestAborted);
     }
+
+    var closeEnvelope = new WebSocketMessageEnvelope
+    {
+        ConnectionId = Guid.NewGuid().ToString("N"),
+        HostName = context.Request.Host.Host,
+        Path = context.Request.Path.Value ?? "/",
+        Kind = kind,
+        Token = token
+    };
+    var closeSession = ResolveSession(webSocketService, closeEnvelope);
+    await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, closeSession, "socket-loop-ended", context.RequestAborted);
 });
 
 app.MapGet("/health", () => Results.Json(new { ok = true, service = "OpenJibo Cloud Api" }));
@@ -165,6 +192,31 @@ static string? ResolveToken(HttpRequest request)
     }
 
     return null;
+}
+
+static string ReadMessageType(string? text)
+{
+    if (string.IsNullOrWhiteSpace(text))
+    {
+        return "BINARY_OR_EMPTY";
+    }
+
+    try
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(text);
+        return document.RootElement.TryGetProperty("type", out var type) && type.ValueKind == System.Text.Json.JsonValueKind.String
+            ? type.GetString() ?? "UNKNOWN"
+            : "UNKNOWN";
+    }
+    catch
+    {
+        return "TEXT";
+    }
+}
+
+static CloudSession ResolveSession(JiboWebSocketService webSocketService, WebSocketMessageEnvelope envelope)
+{
+    return webSocketService.GetOrCreateSession(envelope);
 }
 
 internal sealed record ReceivedSocketMessage(WebSocketMessageType MessageType, byte[] Buffer);
