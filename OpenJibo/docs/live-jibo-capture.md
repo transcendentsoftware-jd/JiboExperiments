@@ -59,3 +59,9 @@ Artifacts:
 4. Inspect the captured websocket events and exported fixtures.
 5. Convert the best captures into sanitized checked-in fixtures and tests.
 6. Keep Node available to compare any surprising turn behavior before changing infrastructure.
+
+Useful helper scripts:
+
+- [scripts/cloud/Invoke-LiveJiboPrep.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Invoke-LiveJiboPrep.ps1)
+- [scripts/cloud/Get-WebSocketCaptureSummary.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Get-WebSocketCaptureSummary.ps1)
+- [scripts/cloud/Import-WebSocketCaptureFixture.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Import-WebSocketCaptureFixture.ps1)
