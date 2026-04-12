@@ -64,6 +64,7 @@ Observed from `open-jibo-link.js`:
 The current .NET pass covers only a narrow, explicitly synthetic subset of observed Neo-Hub behavior:
 
 - token/session tracking across websocket turns
+- explicit per-turn state tracking for transID, rules, context, buffered audio, and finalize attempts
 - buffered audio accounting and turn-pending state
 - `LISTEN` message handling with synthetic `LISTEN` result payload shaping
 - `CONTEXT` capture for turn/session state
@@ -85,7 +86,8 @@ This does not yet mean parity for:
 The current .NET websocket layer now separates:
 
 - robot-facing websocket compatibility
-- session and buffered-audio state
+- long-lived cloud session state
+- per-turn websocket state
 - transcript resolution / STT selection
 - turn-to-response mapping
 

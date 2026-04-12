@@ -68,6 +68,7 @@ The intent is to grow from a runnable dev monolith into the real Azure deploymen
 Current websocket scope is still intentionally narrow:
 
 - token-backed socket sessions
+- explicit websocket turn-state tracking separate from long-lived cloud session state
 - synthetic `LISTEN` result shaping for `LISTEN`, `CLIENT_NLU`, and `CLIENT_ASR`
 - buffered audio state tracking behind a dedicated turn-finalization layer
 - synthetic STT strategy selection for fixture-driven audio turn completion
@@ -79,6 +80,7 @@ Not yet covered:
 
 - real binary audio / ASR finalization parity
 - provider-backed ASR integration
+- timed finalize/fallback behavior matching richer Node turn-state semantics
 - upstream Nimbus or broader skill lifecycle behavior
 - animation / expression command families
 - ESML feature parity beyond the narrow synthetic playback payloads used in the current scaffold

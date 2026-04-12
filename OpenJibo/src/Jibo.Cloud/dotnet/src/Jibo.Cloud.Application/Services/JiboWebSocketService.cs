@@ -26,6 +26,7 @@ public sealed class JiboWebSocketService(
         if (!string.IsNullOrWhiteSpace(parsedTransId))
         {
             session.LastTransId = parsedTransId;
+            session.TurnState.TransId = parsedTransId;
         }
 
         if (parsedType == "CONTEXT")

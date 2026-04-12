@@ -19,6 +19,7 @@
     <File Path="scripts/cloud/README.md" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="NuGet.Config" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">

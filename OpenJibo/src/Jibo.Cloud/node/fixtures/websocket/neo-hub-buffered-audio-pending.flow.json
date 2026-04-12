@@ -1,0 +1,41 @@
+{
+  "name": "neo-hub buffered audio pending flow",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/listen",
+    "kind": "neo-hub-listen",
+    "token": "fixture-pending-audio-token"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "transID": "fixture-trans-pending",
+        "data": {
+          "rules": [
+            "wake-word"
+          ]
+        }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    },
+    {
+      "binary": [1, 2, 3, 4],
+      "expectedReplyTypes": [
+        "OPENJIBO_AUDIO_RECEIVED"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_ASR",
+        "transID": "fixture-trans-pending",
+        "data": { }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    }
+  ]
+}

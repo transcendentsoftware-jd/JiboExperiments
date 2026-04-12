@@ -8,6 +8,7 @@ public sealed class ProtocolToTurnContextMapper
 {
     public TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session, string messageType)
     {
+        var turnState = session.TurnState;
         var text = ExtractTranscript(envelope.Text);
         var protocolOperation = messageType.ToLowerInvariant();
         var attributes = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
@@ -15,30 +16,35 @@ public sealed class ProtocolToTurnContextMapper
             ["messageType"] = messageType
         };
 
-        if (!string.IsNullOrWhiteSpace(session.LastTransId))
+        if (!string.IsNullOrWhiteSpace(turnState.TransId))
         {
-            attributes["transID"] = session.LastTransId;
+            attributes["transID"] = turnState.TransId;
         }
 
-        if (session.Metadata.TryGetValue("context", out var context))
+        if (!string.IsNullOrWhiteSpace(turnState.ContextPayload))
         {
-            attributes["context"] = context;
+            attributes["context"] = turnState.ContextPayload;
         }
 
-        if (session.Metadata.TryGetValue("listenRules", out var listenRules))
+        if (turnState.ListenRules.Count > 0)
         {
-            attributes["listenRules"] = listenRules;
+            attributes["listenRules"] = turnState.ListenRules;
         }
 
-        if (session.BufferedAudioBytes > 0)
+        if (turnState.BufferedAudioBytes > 0)
         {
-            attributes["bufferedAudioBytes"] = session.BufferedAudioBytes;
-            attributes["bufferedAudioChunks"] = session.BufferedAudioChunkCount;
+            attributes["bufferedAudioBytes"] = turnState.BufferedAudioBytes;
+            attributes["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount;
         }
 
-        if (session.Metadata.TryGetValue("audioTranscriptHint", out var audioTranscriptHint))
+        if (!string.IsNullOrWhiteSpace(turnState.AudioTranscriptHint))
         {
-            attributes["audioTranscriptHint"] = audioTranscriptHint;
+            attributes["audioTranscriptHint"] = turnState.AudioTranscriptHint;
+        }
+
+        if (turnState.FinalizeAttemptCount > 0)
+        {
+            attributes["finalizeAttemptCount"] = turnState.FinalizeAttemptCount;
         }
 
         return new TurnContext
