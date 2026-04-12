@@ -1,0 +1,56 @@
+{
+  "name": "neo-hub buffered audio synthetic asr flow",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/listen",
+    "kind": "neo-hub-listen",
+    "token": "fixture-audio-token"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "transID": "fixture-trans-audio",
+        "data": {
+          "rules": [
+            "wake-word"
+          ]
+        }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    },
+    {
+      "text": {
+        "type": "CONTEXT",
+        "transID": "fixture-trans-audio",
+        "data": {
+          "topic": "conversation",
+          "audioTranscriptHint": "tell me a joke"
+        }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_CONTEXT_ACK"
+      ]
+    },
+    {
+      "binary": [1, 2, 3, 4, 5, 6],
+      "expectedReplyTypes": [
+        "OPENJIBO_AUDIO_RECEIVED"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_ASR",
+        "transID": "fixture-trans-audio",
+        "data": { }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    }
+  ]
+}

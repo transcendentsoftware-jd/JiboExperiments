@@ -64,20 +64,32 @@ Observed from `open-jibo-link.js`:
 The current .NET pass covers only a narrow, explicitly synthetic subset of observed Neo-Hub behavior:
 
 - token/session tracking across websocket turns
+- buffered audio accounting and turn-pending state
 - `LISTEN` message handling with synthetic `LISTEN` result payload shaping
 - `CONTEXT` capture for turn/session state
 - `CLIENT_NLU` turn completion using remembered listen/session metadata
-- `CLIENT_ASR` text-driven turn completion
+- `CLIENT_ASR` turn completion, including a synthetic STT seam for buffered-audio replay
 - `EOS` emission after completed turns
 - first richer vertical slice for joke/chat `SKILL_ACTION` playback
 
 This does not yet mean parity for:
 
 - real binary audio buffering and finalization
-- external ASR lifecycle timing
+- real STT provider integration and external ASR lifecycle timing
 - early-EOS behavior
 - multi-step skill lifecycles beyond the current synthetic playback response
 - broader interaction, animation, or ESML command families
+
+### Internal ASR Direction
+
+The current .NET websocket layer now separates:
+
+- robot-facing websocket compatibility
+- session and buffered-audio state
+- transcript resolution / STT selection
+- turn-to-response mapping
+
+That separation is intentional. The synthetic STT path currently exists only to support fixture-driven replay while parity work continues. It should be treated as an internal compatibility seam, not as the final production ASR design.
 
 ## Upload Paths
 

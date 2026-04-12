@@ -69,6 +69,8 @@ Current websocket scope is still intentionally narrow:
 
 - token-backed socket sessions
 - synthetic `LISTEN` result shaping for `LISTEN`, `CLIENT_NLU`, and `CLIENT_ASR`
+- buffered audio state tracking behind a dedicated turn-finalization layer
+- synthetic STT strategy selection for fixture-driven audio turn completion
 - `CONTEXT` capture and follow-up turn state
 - `EOS` completion
 - first skill vertical for joke/chat `SKILL_ACTION` playback
@@ -76,6 +78,7 @@ Current websocket scope is still intentionally narrow:
 Not yet covered:
 
 - real binary audio / ASR finalization parity
+- provider-backed ASR integration
 - upstream Nimbus or broader skill lifecycle behavior
 - animation / expression command families
 - ESML feature parity beyond the narrow synthetic playback payloads used in the current scaffold

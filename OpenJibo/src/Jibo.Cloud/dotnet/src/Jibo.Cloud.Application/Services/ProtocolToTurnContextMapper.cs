@@ -30,6 +30,17 @@ public sealed class ProtocolToTurnContextMapper
             attributes["listenRules"] = listenRules;
         }
 
+        if (session.BufferedAudioBytes > 0)
+        {
+            attributes["bufferedAudioBytes"] = session.BufferedAudioBytes;
+            attributes["bufferedAudioChunks"] = session.BufferedAudioChunkCount;
+        }
+
+        if (session.Metadata.TryGetValue("audioTranscriptHint", out var audioTranscriptHint))
+        {
+            attributes["audioTranscriptHint"] = audioTranscriptHint;
+        }
+
         return new TurnContext
         {
             SessionId = session.SessionId,
@@ -68,17 +79,30 @@ public sealed class ProtocolToTurnContextMapper
                     return transcript.GetString();
                 }
 
+                if (data.TryGetProperty("asr", out var asr) &&
+                    asr.ValueKind == JsonValueKind.Object &&
+                    asr.TryGetProperty("text", out var asrText) &&
+                    asrText.ValueKind == JsonValueKind.String)
+                {
+                    return asrText.GetString();
+                }
+
+                if (data.TryGetProperty("transcriptHint", out var transcriptHint) && transcriptHint.ValueKind == JsonValueKind.String)
+                {
+                    return transcriptHint.GetString();
+                }
+
                 if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
                 {
                     return intent.GetString();
                 }
             }
+
+            return null;
         }
         catch
         {
             return text;
         }
-
-        return text;
     }
 }

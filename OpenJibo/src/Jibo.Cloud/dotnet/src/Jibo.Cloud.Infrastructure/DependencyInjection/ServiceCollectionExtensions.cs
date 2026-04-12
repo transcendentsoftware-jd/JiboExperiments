@@ -12,8 +12,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<ICloudStateStore, InMemoryCloudStateStore>();
         services.AddSingleton<IConversationBroker, DemoConversationBroker>();
+        services.AddSingleton<ISttStrategy, SyntheticBufferedAudioSttStrategy>();
+        services.AddSingleton<ISttStrategySelector, DefaultSttStrategySelector>();
         services.AddSingleton<ProtocolToTurnContextMapper>();
         services.AddSingleton<ResponsePlanToSocketMessagesMapper>();
+        services.AddSingleton<WebSocketTurnFinalizationService>();
         services.AddSingleton<JiboCloudProtocolService>();
         services.AddSingleton<JiboWebSocketService>();
 
