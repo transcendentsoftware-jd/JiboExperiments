@@ -19,4 +19,11 @@
     <ProjectReference Include="..\..\src\Jibo.Runtime.Abstractions\Jibo.Runtime.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\src\Jibo.Cloud\node\fixtures\http\*.json">
+      <Link>fixtures\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
