@@ -2,6 +2,7 @@
   <Folder Name="/docs/">
     <File Path="docs/development-plan.md" />
     <File Path="docs/device-bootstrap.md" />
+    <File Path="docs/live-jibo-capture.md" />
     <File Path="docs/protocol-inventory.md" />
     <File Path="docs/public-site-plan.md" />
     <File Path="docs/support-tiers.md" />
@@ -14,7 +15,10 @@
     <File Path="scripts/bootstrap/Test-OpenJiboRouting.ps1" />
   </Folder>
   <Folder Name="/scripts/cloud/">
+    <File Path="scripts/cloud/Get-WebSocketCaptureSummary.ps1" />
+    <File Path="scripts/cloud/Import-WebSocketCaptureFixture.ps1" />
     <File Path="scripts/cloud/Invoke-CloudSmoke.ps1" />
+    <File Path="scripts/cloud/Invoke-LiveJiboPrep.ps1" />
     <File Path="scripts/cloud/Invoke-ProtocolFixture.ps1" />
     <File Path="scripts/cloud/README.md" />
   </Folder>
@@ -32,6 +36,9 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Jibo.Cloud.Tests/Jibo.Cloud.Tests.csproj" />
+  </Folder>
+  <Folder Name="/src/Jibo WiFi QR Generator/">
+    <File Path="src/Jibo WiFi QR Generator/jibo_qr_generator.html" />
   </Folder>
   <Folder Name="/src/OpenJibo.Site/">
     <File Path="src/OpenJibo.Site/index.html" />
