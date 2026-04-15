@@ -1,5 +1,5 @@
 param(
-    [string]$CaptureDirectory = "..\..\src\Jibo.Cloud\dotnet\src\Jibo.Cloud.Api\bin\Debug\net10.0\captures\websocket"
+    [string]$CaptureDirectory = "..\..\captures\websocket"
 )
 
 $resolvedDirectory = Resolve-Path -LiteralPath $CaptureDirectory -ErrorAction Stop

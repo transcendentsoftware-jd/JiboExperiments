@@ -21,12 +21,30 @@ app.Use(async (context, next) =>
         return;
     }
 
+    var kind = ResolveSocketKind(context.Request.Host.Host, context.Request.Path);
+    var token = ResolveToken(context.Request);
+    if (kind == "unknown")
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    if (kind == "api-socket" && string.IsNullOrWhiteSpace(token))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return;
+    }
+
+    if ((kind is "neo-hub-listen" or "neo-hub-proactive") && string.IsNullOrWhiteSpace(token))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return;
+    }
+
     var webSocketService = context.RequestServices.GetRequiredService<JiboWebSocketService>();
     var telemetrySink = context.RequestServices.GetRequiredService<IWebSocketTelemetrySink>();
     using var socket = await context.WebSockets.AcceptWebSocketAsync();
 
-    var kind = ResolveSocketKind(context.Request.Host.Host, context.Request.Path);
-    var token = ResolveToken(context.Request);
     var openEnvelope = new WebSocketMessageEnvelope
     {
         ConnectionId = Guid.NewGuid().ToString("N"),
@@ -89,10 +107,11 @@ app.Use(async (context, next) =>
 
 app.MapGet("/health", () => Results.Json(new { ok = true, service = "OpenJibo Cloud Api" }));
 
-app.MapMethods("/{**path}", ["GET", "POST", "PUT"], async (HttpContext context, JiboCloudProtocolService service, CancellationToken cancellationToken) =>
+app.MapMethods("/{**path}", ["GET", "POST", "PUT"], async (HttpContext context, JiboCloudProtocolService service, IProtocolTelemetrySink telemetrySink, CancellationToken cancellationToken) =>
 {
     var envelope = await BuildEnvelopeAsync(context, cancellationToken);
     var result = await service.DispatchAsync(envelope, cancellationToken);
+    await telemetrySink.RecordAsync(envelope, result, cancellationToken);
 
     context.Response.StatusCode = result.StatusCode;
     context.Response.ContentType = result.ContentType;
@@ -174,7 +193,14 @@ static string ResolveSocketKind(string host, PathString path)
         return "neo-hub-listen";
     }
 
-    return "openjibo";
+    if (host.Equals("openjibo.com", StringComparison.OrdinalIgnoreCase) ||
+        host.Equals("openjibo.ai", StringComparison.OrdinalIgnoreCase) ||
+        host.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+    {
+        return "openjibo";
+    }
+
+    return "unknown";
 }
 
 static string? ResolveToken(HttpRequest request)

@@ -15,6 +15,7 @@ public static class ServiceCollectionExtensions
         if (configuration is not null)
         {
             services.Configure<WebSocketTelemetryOptions>(configuration.GetSection("OpenJibo:Telemetry"));
+            services.Configure<ProtocolTelemetryOptions>(configuration.GetSection("OpenJibo:ProtocolTelemetry"));
         }
 
         services.AddSingleton<ICloudStateStore, InMemoryCloudStateStore>();
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISttStrategy, SyntheticBufferedAudioSttStrategy>();
         services.AddSingleton<ISttStrategySelector, DefaultSttStrategySelector>();
         services.AddSingleton<IWebSocketTelemetrySink, FileWebSocketTelemetrySink>();
+        services.AddSingleton<IProtocolTelemetrySink, FileProtocolTelemetrySink>();
         services.AddSingleton<ProtocolToTurnContextMapper>();
         services.AddSingleton<ResponsePlanToSocketMessagesMapper>();
         services.AddSingleton<WebSocketTurnFinalizationService>();
