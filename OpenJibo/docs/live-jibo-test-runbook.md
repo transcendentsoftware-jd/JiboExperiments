@@ -72,6 +72,19 @@ ASPNETCORE_URLS="https://0.0.0.0:443;http://0.0.0.0:24605" \
 ./scripts/cloud/invoke-live-jibo-prep.sh
 ```
 
+By default this uses the local HTTP port exposed by the launcher:
+
+- `http://localhost:24605`
+
+That avoids certificate-name validation issues during preflight.
+
+If you want to override it, either of these works:
+
+```bash
+BASE_URL=http://localhost:24605 ./scripts/cloud/invoke-live-jibo-prep.sh
+BASEURL=http://localhost:24605 ./scripts/cloud/invoke-live-jibo-prep.sh
+```
+
 4. Verify controlled routing from the Ubuntu environment:
 
 ```bash

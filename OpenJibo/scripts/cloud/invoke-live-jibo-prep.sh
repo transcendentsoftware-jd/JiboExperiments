@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-BASE_URL="${BASE_URL:-https://localhost:5001}"
+BASE_URL="${BASE_URL:-${BASEURL:-${BASE_URL_OLD:-http://localhost:24605}}}"
 CAPTURE_DIRECTORY="${CAPTURE_DIRECTORY:-${REPO_ROOT}/captures/websocket}"
 EXPECTED_HOSTS=(
   "api.jibo.com"
@@ -34,5 +34,6 @@ echo " - keep the Ubuntu/Jibo routing setup in place"
 echo " - keep the Node server available as a fallback"
 echo " - point Jibo at the .NET server using the same controlled network settings"
 echo " - perform one startup check, one chat turn, and one joke turn"
+echo " - if you want to probe HTTPS directly, use BASE_URL=https://api.jibo.com with routing in place"
 echo " - after the run, inspect capture output with scripts/cloud/get-websocket-capture-summary.sh"
 echo " - import the best exported fixture with scripts/cloud/import-websocket-capture-fixture.py"
