@@ -66,6 +66,7 @@ The current .NET pass covers only a narrow, explicitly synthetic subset of obser
 - token/session tracking across websocket turns
 - explicit per-turn state tracking for transID, rules, context, buffered audio, and finalize attempts
 - buffered audio accounting and turn-pending state
+- auto-finalize triggering for raw audio once `LISTEN`, `CONTEXT`, and minimum buffered-audio thresholds are present
 - `LISTEN` message handling with synthetic `LISTEN` result payload shaping
 - `CONTEXT` capture for turn/session state
 - `CLIENT_NLU` turn completion using remembered listen/session metadata
@@ -80,6 +81,12 @@ This does not yet mean parity for:
 - early-EOS behavior
 - multi-step skill lifecycles beyond the current synthetic playback response
 - broader interaction, animation, or ESML command families
+
+Current raw-audio fallback behavior remains explicitly synthetic:
+
+- when a buffered-audio turn can be resolved through the synthetic transcript-hint seam, `.NET` now auto-finalizes and emits `LISTEN` + `EOS` + `SKILL_ACTION`
+- when the turn crosses the finalize threshold without a usable transcript, `.NET` now emits a fallback `LISTEN` + `EOS` + generic `SKILL_ACTION` rather than leaving the robot hanging on an unfinished turn
+- that fallback is a compatibility measure inspired by the Node oracle, not a claim of real ASR understanding
 
 ### Internal ASR Direction
 

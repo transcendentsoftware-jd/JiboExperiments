@@ -23,7 +23,7 @@ public sealed class JiboWebSocketService(
 
         if (envelope.IsBinary)
         {
-            var replies = turnFinalizationService.HandleBinaryAudio(session, envelope);
+            var replies = await turnFinalizationService.HandleBinaryAudioAsync(session, envelope, cancellationToken);
             await telemetrySink.RecordTurnEventAsync(envelope, session, "binary_audio_received", new Dictionary<string, object?>
             {
                 ["bytes"] = envelope.Binary?.Length ?? 0
@@ -42,7 +42,7 @@ public sealed class JiboWebSocketService(
 
         if (parsedType == "CONTEXT")
         {
-            var replies = turnFinalizationService.HandleContext(session, envelope.Text);
+            var replies = await turnFinalizationService.HandleContextAsync(session, envelope, cancellationToken);
             await telemetrySink.RecordTurnEventAsync(envelope, session, "context_received", new Dictionary<string, object?>
             {
                 ["transID"] = session.TurnState.TransId

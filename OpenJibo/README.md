@@ -99,6 +99,12 @@ What remains unresolved:
 - the next post-`api-socket` startup requests and timing seen in successful Node runs
 - broader live websocket behavior on a real robot beyond the current synthetic parity slice
 
+The current websocket bridge now also includes server-driven raw-audio turn completion:
+
+- enough buffered audio plus `CONTEXT` can now trigger auto-finalize on the server side
+- `EOS` is emitted on that auto-finalize path so turns do not remain open indefinitely
+- transcript-less raw-audio turns still fall back to a synthetic compatibility response, not real ASR
+
 ## Important Docs
 
 - [Cloud overview](/src/Jibo.Cloud/README.md)

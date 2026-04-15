@@ -71,6 +71,7 @@ Current websocket scope is still intentionally narrow:
 - explicit websocket turn-state tracking separate from long-lived cloud session state
 - synthetic `LISTEN` result shaping for `LISTEN`, `CLIENT_NLU`, and `CLIENT_ASR`
 - buffered audio state tracking behind a dedicated turn-finalization layer
+- raw audio auto-finalization once `LISTEN` + `CONTEXT` + minimum buffered audio thresholds are present
 - synthetic STT strategy selection for fixture-driven audio turn completion
 - structured websocket telemetry and live-run fixture export
 - `CONTEXT` capture and follow-up turn state
@@ -100,3 +101,9 @@ It has not yet confirmed:
 - full startup parity with the successful Node run cadence
 - consistent eye-open / wake completion on the robot
 - the later health/log upload sequence currently seen in the working Node run
+
+Current raw-audio behavior is still a compatibility bridge:
+
+- if buffered audio has a synthetic transcript hint, the server now auto-finalizes the turn and emits `LISTEN` + `EOS` + `SKILL_ACTION`
+- if buffered audio crosses the finalize threshold without a usable transcript, the server now emits a Node-style fallback completion with `EOS` instead of hanging the turn forever
+- this is intentionally not a claim of real ASR parity
