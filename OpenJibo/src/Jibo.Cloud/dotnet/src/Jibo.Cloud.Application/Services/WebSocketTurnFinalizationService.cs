@@ -269,7 +269,7 @@ public sealed class WebSocketTurnFinalizationService(
                 session.LastIntent = "heyJibo";
                 session.LastListenType = "fallback";
                 var fallbackReplies = replyMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
-                    .Select(text => new WebSocketReply { Text = text })
+                    .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
                     .ToArray();
                 ResetBufferedAudio(session);
                 return fallbackReplies;
@@ -308,9 +308,10 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.AwaitingTurnCompletion = false;
 
         var emitSkillActions = messageType != "CLIENT_NLU";
-        var replies = replyMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(text => new WebSocketReply
+        var replies = replyMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
-            Text = text
+            Text = map.Text,
+            DelayMs = map.DelayMs
         }).ToArray();
 
         ResetBufferedAudio(session);

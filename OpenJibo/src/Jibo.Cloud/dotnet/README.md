@@ -76,6 +76,7 @@ Current websocket scope is still intentionally narrow:
 - structured websocket telemetry and live-run fixture export
 - `CONTEXT` capture and follow-up turn state
 - `EOS` completion
+- delayed `SKILL_ACTION` emission after `EOS` to preserve the current Node-observed turn sequence
 - first skill vertical for joke/chat `SKILL_ACTION` playback
 - repo-root live-run capture support for both `captures/http/` and `captures/websocket/`
 

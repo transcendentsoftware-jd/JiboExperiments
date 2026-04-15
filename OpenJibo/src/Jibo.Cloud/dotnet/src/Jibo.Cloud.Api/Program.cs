@@ -86,6 +86,11 @@ app.Use(async (context, next) =>
                 continue;
             }
 
+            if (reply.DelayMs > 0)
+            {
+                await Task.Delay(reply.DelayMs, context.RequestAborted);
+            }
+
             var payload = Encoding.UTF8.GetBytes(reply.Text);
             await socket.SendAsync(payload, WebSocketMessageType.Text, true, context.RequestAborted);
         }

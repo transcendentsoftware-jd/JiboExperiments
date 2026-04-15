@@ -72,6 +72,7 @@ The current .NET pass covers only a narrow, explicitly synthetic subset of obser
 - `CLIENT_NLU` turn completion using remembered listen/session metadata
 - `CLIENT_ASR` turn completion, including a synthetic STT seam for buffered-audio replay
 - `EOS` emission after completed turns
+- delayed `SKILL_ACTION` emission after `EOS` on completed turn flows to better match the Node oracle timing
 - first richer vertical slice for joke/chat `SKILL_ACTION` playback
 
 This does not yet mean parity for:

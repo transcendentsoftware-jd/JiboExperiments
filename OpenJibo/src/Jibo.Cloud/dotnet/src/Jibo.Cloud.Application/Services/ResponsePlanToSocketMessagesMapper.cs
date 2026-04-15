@@ -6,7 +6,7 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class ResponsePlanToSocketMessagesMapper
 {
-    public IReadOnlyList<string> Map(ResponsePlan plan, TurnContext turn, CloudSession session, bool emitSkillActions)
+    public IReadOnlyList<SocketReplyPlan> Map(ResponsePlan plan, TurnContext turn, CloudSession session, bool emitSkillActions)
     {
         var speak = plan.Actions.OfType<SpeakAction>().FirstOrDefault();
         var skill = plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault();
@@ -15,9 +15,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
             : session.LastTransId ?? string.Empty;
         var transcript = turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty;
         var rules = ReadRules(turn);
-        var messages = new List<string>();
+        var messages = new List<SocketReplyPlan>();
 
-        messages.Add(JsonSerializer.Serialize(new
+        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
         {
             type = "LISTEN",
             transID = transId,
@@ -43,9 +43,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     score = 0.95
                 }
             }
-        }));
+        })));
 
-        messages.Add(JsonSerializer.Serialize(new
+        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
         {
             type = "EOS",
             data = new
@@ -53,21 +53,23 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 sessionId = plan.SessionId,
                 transID = transId
             }
-        }));
+        })));
 
         if (emitSkillActions && speak is not null)
         {
-            messages.Add(JsonSerializer.Serialize(BuildSkillPayload(plan, turn, transId, speak, skill)));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillPayload(plan, turn, transId, speak, skill)),
+                DelayMs: 75));
         }
 
         return messages;
     }
 
-    public IReadOnlyList<string> MapFallback(CloudSession session, string transId, IReadOnlyList<string> rules)
+    public IReadOnlyList<SocketReplyPlan> MapFallback(CloudSession session, string transId, IReadOnlyList<string> rules)
     {
         return
         [
-            JsonSerializer.Serialize(new
+            new SocketReplyPlan(JsonSerializer.Serialize(new
             {
                 type = "LISTEN",
                 transID = transId,
@@ -93,8 +95,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         score = 0.95
                     }
                 }
-            }),
-            JsonSerializer.Serialize(new
+            })),
+            new SocketReplyPlan(JsonSerializer.Serialize(new
             {
                 type = "EOS",
                 data = new
@@ -102,8 +104,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     sessionId = session.SessionId,
                     transID = transId
                 }
-            }),
-            JsonSerializer.Serialize(BuildGenericFallbackSkillPayload(transId))
+            })),
+            new SocketReplyPlan(JsonSerializer.Serialize(BuildGenericFallbackSkillPayload(transId)), DelayMs: 75)
         ];
     }
 
@@ -231,4 +233,6 @@ public sealed class ResponsePlanToSocketMessagesMapper
             .Replace("\"", "&quot;", StringComparison.Ordinal)
             .Replace("'", "&apos;", StringComparison.Ordinal);
     }
+
+    public sealed record SocketReplyPlan(string Text, int DelayMs = 0);
 }

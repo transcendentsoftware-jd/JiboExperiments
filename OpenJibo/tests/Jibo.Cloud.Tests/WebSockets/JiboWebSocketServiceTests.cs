@@ -49,6 +49,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
         Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+        Assert.Equal(75, replies[2].DelayMs);
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("hello jibo", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
@@ -124,6 +125,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
         Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+        Assert.Equal(75, replies[2].DelayMs);
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("tell me a joke", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
@@ -180,6 +182,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
         Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+        Assert.Equal(75, replies[2].DelayMs);
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("heyJibo", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -324,6 +327,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("LISTEN", ReadReplyType(finalizeReplies[0]));
         Assert.Equal("EOS", ReadReplyType(finalizeReplies[1]));
         Assert.Equal("SKILL_ACTION", ReadReplyType(finalizeReplies[2]));
+        Assert.Equal(75, finalizeReplies[2].DelayMs);
 
         using var listenPayload = JsonDocument.Parse(finalizeReplies[0].Text!);
         Assert.Equal("tell me a joke", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
