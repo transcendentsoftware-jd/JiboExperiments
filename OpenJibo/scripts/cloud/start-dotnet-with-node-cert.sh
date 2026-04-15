@@ -12,8 +12,10 @@ PFX_OUT="${PFX_OUT:-${REPO_ROOT}/.tmp/openjibo-dev-cert.pfx}"
 PFX_PASSWORD="${PFX_PASSWORD:-openjibo-dev-password}"
 ASPNETCORE_URLS="${ASPNETCORE_URLS:-https://0.0.0.0:443;http://0.0.0.0:24605}"
 DOTNET_ENVIRONMENT="${DOTNET_ENVIRONMENT:-Development}"
+CAPTURE_DIRECTORY="${CAPTURE_DIRECTORY:-${REPO_ROOT}/captures/websocket}"
 
 mkdir -p "$(dirname "${PFX_OUT}")"
+mkdir -p "${CAPTURE_DIRECTORY}"
 
 if [[ ! -f "${CERT_PEM}" ]]; then
   echo "Missing CERT_PEM: ${CERT_PEM}" >&2
@@ -56,12 +58,14 @@ export ASPNETCORE_URLS
 export DOTNET_ENVIRONMENT
 export ASPNETCORE_Kestrel__Certificates__Default__Path="${PFX_OUT}"
 export ASPNETCORE_Kestrel__Certificates__Default__Password="${PFX_PASSWORD}"
+export OpenJibo__Telemetry__DirectoryPath="${CAPTURE_DIRECTORY}"
 
 echo ""
 echo "Starting OpenJibo .NET cloud"
 echo " - project: ${API_PROJECT}"
 echo " - urls: ${ASPNETCORE_URLS}"
 echo " - environment: ${DOTNET_ENVIRONMENT}"
+echo " - captures: ${CAPTURE_DIRECTORY}"
 
 cd "${REPO_ROOT}"
 exec dotnet run --project "${API_PROJECT}" --no-launch-profile

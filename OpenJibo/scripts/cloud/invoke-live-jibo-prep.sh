@@ -2,8 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BASE_URL="${BASE_URL:-https://localhost:5001}"
-CAPTURE_DIRECTORY="${CAPTURE_DIRECTORY:-${SCRIPT_DIR}/../../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Api/bin/Debug/net10.0/captures/websocket}"
+CAPTURE_DIRECTORY="${CAPTURE_DIRECTORY:-${REPO_ROOT}/captures/websocket}"
 EXPECTED_HOSTS=(
   "api.jibo.com"
   "api-socket.jibo.com"

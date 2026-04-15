@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CAPTURE_DIRECTORY="${1:-${SCRIPT_DIR}/../../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Api/bin/Debug/net10.0/captures/websocket}"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+CAPTURE_DIRECTORY="${1:-${REPO_ROOT}/captures/websocket}"
 
 if [[ ! -d "${CAPTURE_DIRECTORY}" ]]; then
   echo "No websocket capture directory found at ${CAPTURE_DIRECTORY}"
