@@ -109,6 +109,11 @@ BASEURL=http://localhost:24605 ./scripts/cloud/invoke-live-jibo-prep.sh
 
 - `captures/websocket/fixtures/`
 
+Telemetry from the same run should also now be present under:
+
+- `captures/http/`
+- `captures/websocket/`
+
 9. Import the best fixture into the checked-in websocket fixture set:
 
 ```bash
@@ -133,7 +138,8 @@ If the robot does not connect or the first turn fails:
 2. confirm the cert presented by the `.NET` API matches the currently working Node cert path
 3. confirm the Ubuntu routing still points Jibo traffic at the same machine
 4. compare the `.NET` websocket capture output with prior Node logs
-5. temporarily switch back to Node to confirm the environment still works
+5. compare the `.NET` HTTP capture output with prior Node logs
+6. temporarily switch back to Node to confirm the environment still works
 
 ## Not In Scope For This First Test
 

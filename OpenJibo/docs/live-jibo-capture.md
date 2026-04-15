@@ -36,27 +36,31 @@ Move to a second local/staging server or Azure after:
 
 ## Telemetry Before Live Runs
 
-The `.NET` cloud now supports structured websocket capture intended for first live runs:
+The `.NET` cloud now supports structured live capture intended for first robot runs:
 
-- event stream written as NDJSON
-- per-session fixture export for replay
+- HTTP request/response event streams written as NDJSON
+- websocket event streams written as NDJSON
+- per-session websocket fixture export for replay
 - turn metadata including `transID`, buffered audio counts, finalize attempts, and reply types
 
 Default capture location:
 
+- repo-root `captures/http/`
 - repo-root `captures/websocket/`
 
 Artifacts:
 
+- `http/*.events.ndjson`
+- `websocket/*.events.ndjson`
 - `*.events.ndjson`
-- `fixtures/*.flow.json`
+- `websocket/fixtures/*.flow.json`
 
 ## Suggested First Hookup Plan
 
 1. Start the `.NET` API on the Ubuntu-backed controlled network using the same robot routing settings currently used for Node.
 2. Confirm HTTP bootstrap and websocket acceptance with the existing smoke/routing helpers.
 3. Run one or two controlled listen turns with Jibo.
-4. Inspect the captured websocket events and exported fixtures.
+4. Inspect the captured HTTP and websocket events plus exported websocket fixtures.
 5. Convert the best captures into sanitized checked-in fixtures and tests.
 6. Keep Node available to compare any surprising turn behavior before changing infrastructure.
 

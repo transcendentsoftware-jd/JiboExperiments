@@ -28,7 +28,7 @@ public sealed class JiboCloudProtocolServiceTests
     }
 
     [Fact]
-    public async Task NewRobotToken_UsesBodyDeviceId()
+    public async Task NewRobotToken_UsesBodyDeviceId_WhenHeaderDeviceIdIsEmpty()
     {
         var result = await _service.DispatchAsync(new ProtocolEnvelope
         {
@@ -36,6 +36,7 @@ public sealed class JiboCloudProtocolServiceTests
             Method = "POST",
             ServicePrefix = "Notification_20160715",
             Operation = "NewRobotToken",
+            DeviceId = string.Empty,
             BodyText = """{"deviceId":"robot-123"}"""
         });
 

@@ -78,9 +78,26 @@ OpenJibo/
 
 - port required endpoint and WebSocket behavior from Node to .NET
 - keep protocol captures and replay fixtures current
+- keep HTTP and websocket live-run telemetry writing to the same repo-root capture tree
 - harden device bootstrap documentation and scripts
 - map more endpoints and behaviors beyond the current Node coverage
 - stand up the initial `openjibo.com` information site
+
+## Live Test Status
+
+The first physical `.NET -> Jibo` experiments have now produced useful captures, but not a full wake-and-interact success yet.
+
+What we have confirmed so far:
+
+- the robot reaches `.NET` HTTP startup calls on `api.jibo.com`
+- `.NET` can issue a robot token and accept the `api-socket.jibo.com` websocket
+- live HTTP and websocket telemetry are now intended to land together under repo-root `captures/`
+
+What remains unresolved:
+
+- matching the Node startup cadence closely enough for consistent wake/eye-open behavior
+- the next post-`api-socket` startup requests and timing seen in successful Node runs
+- broader live websocket behavior on a real robot beyond the current synthetic parity slice
 
 ## Important Docs
 

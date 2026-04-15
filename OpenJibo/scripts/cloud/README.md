@@ -10,6 +10,8 @@ These scripts help exercise the new .NET hosted cloud locally.
   Summarizes captured websocket telemetry events and exported live-run fixtures from the .NET cloud.
 - repo-root `captures/http/`
   Structured HTTP request/response telemetry for live robot startup comparison.
+- repo-root `captures/websocket/`
+  Structured websocket telemetry plus exported replay fixtures for live robot sessions.
 - `Invoke-LiveJiboPrep.ps1`
   Runs a small readiness checklist before the first physical Jibo test against the .NET cloud.
 - `Import-WebSocketCaptureFixture.ps1`

@@ -19,7 +19,10 @@ public sealed class FileProtocolTelemetrySink(
             return;
         }
 
-        var directory = Path.GetFullPath(options.Value.DirectoryPath, AppContext.BaseDirectory);
+        var directory = CapturePathResolver.Resolve(
+            options.Value.DirectoryPath,
+            Directory.GetCurrentDirectory(),
+            AppContext.BaseDirectory);
         Directory.CreateDirectory(directory);
         var filePath = Path.Combine(directory, $"{DateTimeOffset.UtcNow:yyyyMMdd}.events.ndjson");
 

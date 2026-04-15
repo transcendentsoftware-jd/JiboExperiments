@@ -9,10 +9,14 @@ namespace Jibo.Cloud.Tests.WebSockets;
 public sealed class FileWebSocketTelemetrySinkTests : IDisposable
 {
     private readonly string _directoryPath;
+    private readonly string _repoRoot;
+    private readonly string _appBaseDirectory;
 
     public FileWebSocketTelemetrySinkTests()
     {
         _directoryPath = Path.Combine(Path.GetTempPath(), "OpenJibo.Tests", Guid.NewGuid().ToString("N"));
+        _repoRoot = Path.Combine(_directoryPath, "OpenJibo");
+        _appBaseDirectory = Path.Combine(_repoRoot, "src", "Jibo.Cloud", "dotnet", "src", "Jibo.Cloud.Api", "bin", "Debug", "net10.0");
     }
 
     [Fact]
@@ -59,6 +63,48 @@ public sealed class FileWebSocketTelemetrySinkTests : IDisposable
         {
             Directory.Delete(_directoryPath, true);
         }
+    }
+
+    [Fact]
+    public async Task RecordsFixtureUsingRepoRootForRelativePaths()
+    {
+        Directory.CreateDirectory(_repoRoot);
+        Directory.CreateDirectory(_appBaseDirectory);
+        File.WriteAllText(Path.Combine(_repoRoot, "OpenJibo.slnx"), string.Empty);
+        var captureDirectory = CapturePathResolver.Resolve("captures/websocket", _repoRoot, _appBaseDirectory);
+
+        var sink = new FileWebSocketTelemetrySink(
+            NullLogger<FileWebSocketTelemetrySink>.Instance,
+            Options.Create(new WebSocketTelemetryOptions
+            {
+                Enabled = true,
+                ExportFixtures = true,
+                DirectoryPath = captureDirectory
+            }));
+
+        var envelope = new WebSocketMessageEnvelope
+        {
+            ConnectionId = "conn-relative",
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "token-relative",
+            Text = """{"type":"LISTEN","transID":"trans-relative","data":{"text":"hello"}}"""
+        };
+        var session = new CloudSession
+        {
+            Token = "token-relative",
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen"
+        };
+        session.TurnState.TransId = "trans-relative";
+
+        await sink.RecordConnectionOpenedAsync(envelope, session);
+        await sink.RecordOutboundAsync(envelope, session, [new WebSocketReply { Text = """{"type":"LISTEN"}""" }]);
+        await sink.RecordConnectionClosedAsync(envelope, session, "test");
+
+        var fixtureDirectory = Path.Combine(captureDirectory, "fixtures");
+        Assert.Single(Directory.GetFiles(fixtureDirectory, "*.flow.json"));
     }
 
     private FileWebSocketTelemetrySink CreateSink()

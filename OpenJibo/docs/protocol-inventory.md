@@ -45,11 +45,11 @@ Observed from `open-jibo-link.js`:
 | `Loop_*` | `List`, `ListLoops` | medium | initial dispatch implemented |
 | `Robot_*` | `GetRobot`, `UpdateRobot` | medium | initial dispatch implemented |
 | `Update_*` | `ListUpdates`, `ListUpdatesFrom`, `GetUpdateFrom`, `CreateUpdate`, `RemoveUpdate` | medium | list/get scaffolding implemented |
-| `Media_20160725` | `List`, `Get`, `Create`, `Remove` | medium | not yet ported |
-| `Log_*` | `PutEvents`, `PutEventsAsync`, `PutBinaryAsync`, `PutAsrBinary` | medium | upload endpoints reserved; detailed handling pending |
-| `Key_*` | `ShouldCreate`, `CreateSymmetricKey`, `GetRequest` | medium | pending |
-| `Person_*` | `ListHolidays` | low | pending |
-| `Backup_*` | `List` | low | pending |
+| `Media_20160725` | `List`, `Get`, `Create`, `Remove` | medium | implemented in current parity scaffold |
+| `Log_*` | `PutEvents`, `PutEventsAsync`, `PutBinaryAsync`, `PutAsrBinary` | medium | async upload metadata and placeholder upload endpoints implemented |
+| `Key_*` | `ShouldCreate`, `CreateSymmetricKey`, `GetRequest` | medium | implemented in current parity scaffold |
+| `Person_*` | `ListHolidays` | low | implemented in current parity scaffold |
+| `Backup_*` | `List` | low | implemented in current parity scaffold |
 
 ## WebSocket Flows
 
@@ -100,6 +100,16 @@ That separation is intentional. The synthetic STT path currently exists only to 
 | `/upload/asr-binary` | async audio/log upload target | medium | placeholder endpoint accepted |
 | `/upload/log-events` | async log upload target | medium | placeholder endpoint accepted |
 | `/upload/log-binary` | async binary upload target | medium | placeholder endpoint accepted |
+
+## First Live .NET Capture Findings
+
+The first real `.NET` robot run has confirmed only an early startup slice so far:
+
+- `api.jibo.com` startup HTTP requests are reaching the `.NET` cloud
+- `Notification.NewRobotToken` is active in the robot startup sequence
+- `api-socket.jibo.com/{token}` is being accepted live
+
+The first live run has not yet shown full startup parity with the working Node server. In particular, the successful Node run continues into additional health/log cadence after token issuance and socket acceptance, while the current `.NET` run has not yet reproduced that full progression consistently.
 
 ## First Core Revive Slice
 

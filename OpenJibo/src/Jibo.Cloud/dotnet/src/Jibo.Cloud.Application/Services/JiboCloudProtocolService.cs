@@ -278,14 +278,15 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
         }
 
         var body = envelope.TryParseBody();
-        var deviceId = envelope.DeviceId
-            ?? ReadString(body, "deviceId")
-            ?? ReadString(body, "serial_number")
-            ?? ReadString(body, "serialNumber")
-            ?? ReadString(body, "cpuid")
-            ?? ReadString(body, "cpuId")
-            ?? ReadString(body, "robotId")
-            ?? "unknown-device";
+        var deviceId = !string.IsNullOrWhiteSpace(envelope.DeviceId)
+            ? envelope.DeviceId!
+            : ReadString(body, "deviceId")
+              ?? ReadString(body, "serial_number")
+              ?? ReadString(body, "serialNumber")
+              ?? ReadString(body, "cpuid")
+              ?? ReadString(body, "cpuId")
+              ?? ReadString(body, "robotId")
+              ?? "unknown-device";
 
         stateStore.GetOrCreateDevice(deviceId, envelope.FirmwareVersion, envelope.ApplicationVersion);
 

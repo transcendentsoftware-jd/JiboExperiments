@@ -227,7 +227,10 @@ public sealed class FileWebSocketTelemetrySink(
 
     private string GetBaseDirectory()
     {
-        return Path.GetFullPath(options.Value.DirectoryPath, AppContext.BaseDirectory);
+        return CapturePathResolver.Resolve(
+            options.Value.DirectoryPath,
+            Directory.GetCurrentDirectory(),
+            AppContext.BaseDirectory);
     }
 
     private static string BuildFixtureName(CloudSession session, CapturedWebSocketFixtureBuilder fixture)

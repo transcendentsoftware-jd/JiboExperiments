@@ -76,6 +76,7 @@ Current websocket scope is still intentionally narrow:
 - `CONTEXT` capture and follow-up turn state
 - `EOS` completion
 - first skill vertical for joke/chat `SKILL_ACTION` playback
+- repo-root live-run capture support for both `captures/http/` and `captures/websocket/`
 
 Not yet covered:
 
@@ -85,3 +86,17 @@ Not yet covered:
 - upstream Nimbus or broader skill lifecycle behavior
 - animation / expression command families
 - ESML feature parity beyond the narrow synthetic playback payloads used in the current scaffold
+
+## Live Capture Status
+
+The first real `.NET` robot test has confirmed:
+
+- startup HTTP traffic reaches the `.NET` cloud
+- `Notification.NewRobotToken` is in the active startup path
+- `api-socket.jibo.com` connections are being accepted live
+
+It has not yet confirmed:
+
+- full startup parity with the successful Node run cadence
+- consistent eye-open / wake completion on the robot
+- the later health/log upload sequence currently seen in the working Node run
