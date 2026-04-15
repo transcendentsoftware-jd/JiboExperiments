@@ -62,6 +62,6 @@ Artifacts:
 
 Useful helper scripts:
 
-- [scripts/cloud/Invoke-LiveJiboPrep.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Invoke-LiveJiboPrep.ps1)
-- [scripts/cloud/Get-WebSocketCaptureSummary.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Get-WebSocketCaptureSummary.ps1)
-- [scripts/cloud/Import-WebSocketCaptureFixture.ps1](C:/Projects/JiboExperiments/OpenJibo/scripts/cloud/Import-WebSocketCaptureFixture.ps1)
+- [scripts/cloud/Invoke-LiveJiboPrep.ps1](/OpenJibo/scripts/cloud/Invoke-LiveJiboPrep.ps1)
+- [scripts/cloud/Get-WebSocketCaptureSummary.ps1](/OpenJibo/scripts/cloud/Get-WebSocketCaptureSummary.ps1)
+- [scripts/cloud/Import-WebSocketCaptureFixture.ps1](/OpenJibo/scripts/cloud/Import-WebSocketCaptureFixture.ps1)

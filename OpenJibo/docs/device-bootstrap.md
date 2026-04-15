@@ -54,7 +54,7 @@ The currently relevant public hostnames for the OpenJibo cloud path are:
 
 ## Scripted Helpers
 
-Bootstrap helper scripts live in [scripts/bootstrap](C:/Projects/JiboExperiments/OpenJibo/scripts/bootstrap):
+Bootstrap helper scripts live in [scripts/bootstrap](/OpenJibo/scripts/bootstrap):
 
 - `Discover-JiboHosts.ps1`
 - `Generate-JiboDnsOverrides.ps1`

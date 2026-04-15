@@ -40,7 +40,7 @@ QR Wi-Fi -> inject OpenJibo region config -> set robot region ->
 RCM/device patch for TLS and host acceptance -> OpenJibo cloud on Azure
 ```
 
-That path is documented in [docs/device-bootstrap.md](C:/Projects/JiboExperiments/OpenJibo/docs/device-bootstrap.md).
+That path is documented in [docs/device-bootstrap.md](/OpenJibo/docs/device-bootstrap.md).
 
 ## Repo Map
 

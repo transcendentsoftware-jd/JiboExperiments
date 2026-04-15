@@ -132,4 +132,4 @@ Useful external references for future mapping:
 
 ## Fixture Source
 
-Sanitized fixtures live under [src/Jibo.Cloud/node/fixtures](C:/Projects/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/fixtures) and should be expanded as real traffic is captured.
+Sanitized fixtures live under [src/Jibo.Cloud/node/fixtures](/OpenJibo/src/Jibo.Cloud/node/fixtures) and should be expanded as real traffic is captured.

@@ -21,4 +21,4 @@ Stand up a small public site on `openjibo.com` that makes the project understand
 
 ## Initial Repo Asset
 
-A simple static site scaffold lives in [src/OpenJibo.Site](C:/Projects/JiboExperiments/OpenJibo/src/OpenJibo.Site).
+A simple static site scaffold lives in [src/OpenJibo.Site](/OpenJibo/src/OpenJibo.Site).
