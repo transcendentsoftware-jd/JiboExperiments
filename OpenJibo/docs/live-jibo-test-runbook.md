@@ -94,7 +94,7 @@ ASPNETCORE_URLS="https://0.0.0.0:443;http://0.0.0.0:24605" \
 
 8. Inspect exported fixtures under:
 
-- `src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Api/bin/Debug/net10.0/captures/websocket/fixtures/`
+- `captures/websocket/fixtures/`
 
 9. Import the best fixture into the checked-in websocket fixture set:
 

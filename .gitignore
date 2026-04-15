@@ -416,3 +416,7 @@ FodyWeavers.xsd
 .dotnet/
 **/.dotnet/
 
+# OpenJibo live-run capture output
+OpenJibo/captures/
+OpenJibo/.tmp/
+

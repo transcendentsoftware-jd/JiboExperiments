@@ -44,7 +44,7 @@ The `.NET` cloud now supports structured websocket capture intended for first li
 
 Default capture location:
 
-- `captures/websocket/`
+- repo-root `captures/websocket/`
 
 Artifacts:
 
