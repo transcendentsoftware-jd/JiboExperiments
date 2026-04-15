@@ -1,0 +1,1502 @@
+SERVER_VERSION 2026-04-04-jibo-fake-cloud-v8-STT
+Open Jibo Link test server listening on https://0.0.0.0:443
+Structured logs will be written to /var/www/jibo/logs
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:03:51.546Z
+Remote: 192.168.8.170 46783
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225831691-bd6e053c
+Time: 2026-04-15T04:03:51.691Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Notification_20150505.NewRobotToken
+BodyLength: 40
+Headers: {
+  "content-type": "application/json",
+  "x-amz-target": "Notification_20150505.NewRobotToken",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=da8c9d36368b821864cc7eced246e76c93375f78bfea0ad61269b4ab9972e325",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040351Z",
+  "content-length": "40",
+  "host": "api.jibo.com"
+}
+Body (utf8): {"deviceId":"Royal-Current-Sage-Canvas"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225831691-bd6e053c
+Time: 2026-04-15T04:03:51.696Z
+Status: 200
+Note: Issued robot token
+Body: {
+  "token": "token-Royal-Current-Sage-Canvas-1776225831696"
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:03:51.778Z
+Remote: 192.168.8.170 46784
+======================
+TLS SNI host: api-socket.jibo.com
+==== WS UPGRADE ====
+Time: 2026-04-15T04:03:51.855Z
+Host: api-socket.jibo.com
+URL: /token-Royal-Current-Sage-Canvas-1776225831696
+WS KIND: api-socket
+Headers: {
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=da8c9d36368b821864cc7eced246e76c93375f78bfea0ad61269b4ab9972e325",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040351Z",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "kSmYe6Qt9E1u8ph96cG2Jw==",
+  "host": "api-socket.jibo.com"
+}
+====================
+==== WS CONNECTED ====
+WsId: ws-1776225831863-d5a406
+Time: 2026-04-15T04:03:51.863Z
+Host: api-socket.jibo.com
+Path: /token-Royal-Current-Sage-Canvas-1776225831696
+WS KIND: api-socket
+Token known: true
+Headers: {
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=da8c9d36368b821864cc7eced246e76c93375f78bfea0ad61269b4ab9972e325",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040351Z",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "kSmYe6Qt9E1u8ph96cG2Jw==",
+  "host": "api-socket.jibo.com"
+}
+======================
+WS ping: ws-1776225831863-d5a406 api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:03:59.030Z
+Remote: 192.168.8.170 46822
+======================
+WS ping: ws-1776225831863-d5a406 api-socket len= 0 
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225839067-8e536e99
+Time: 2026-04-15T04:03:59.067Z
+Host: api.jibo.com
+Method: GET
+URL: /
+X-Amz-Target: <none>
+BodyLength: 0
+Headers: {
+  "host": "api.jibo.com",
+  "connection": "close"
+}
+Body: <empty>
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225839067-8e536e99
+Time: 2026-04-15T04:03:59.067Z
+Status: 204
+Note: Root probe
+Body: {}
+========================
+WS ping: ws-1776225831863-d5a406 api-socket len= 0 
+WS ping: ws-1776225831863-d5a406 api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:04:46.480Z
+Remote: 192.168.8.170 46947
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225886537-8ef4fc7b
+Time: 2026-04-15T04:04:46.537Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Log_20150309.PutEventsAsync
+BodyLength: 50
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Log_20150309.PutEventsAsync",
+  "x-amz-content-sha256": "5ba08cf52677ba35e9635d05f5a4c568eb52234637edb8b638fce0c2b4397d58",
+  "content-length": "50",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040445Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/log/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=9be633b3a794cf1da8be2b84a3374a946fe5d60df34c5032fc5d49a5a9c5b6c9",
+  "connection": "keep-alive"
+}
+Body (utf8): {"kind":"LOG","serial":"BOJW-1000-0017-1114-0008"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225886537-8ef4fc7b
+Time: 2026-04-15T04:04:46.538Z
+Status: 200
+Note: Accepted log events async
+Body: {
+  "contentEncoding": "gzip",
+  "uploadUrl": "https://api.jibo.com/upload/log-events"
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:04:46.676Z
+Remote: 192.168.8.170 46948
+======================
+TLS SNI host: api.jibo.com
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:05:49.153Z
+Remote: 192.168.8.170 35775
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225949922-daf964a9
+Time: 2026-04-15T04:05:49.922Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Notification_20150505.NewRobotToken
+BodyLength: 40
+Headers: {
+  "content-type": "application/json",
+  "x-amz-target": "Notification_20150505.NewRobotToken",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e45cf66c143ead620ace590eb74ade5604d2bb68eb035841618ca51fda9ae6f6",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040548Z",
+  "content-length": "40",
+  "host": "api.jibo.com"
+}
+Body (utf8): {"deviceId":"Royal-Current-Sage-Canvas"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225949922-daf964a9
+Time: 2026-04-15T04:05:49.923Z
+Status: 200
+Note: Issued robot token
+Body: {
+  "token": "token-Royal-Current-Sage-Canvas-1776225949923"
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:05:50.587Z
+Remote: 192.168.8.170 35777
+======================
+TLS SNI host: api-socket.jibo.com
+==== WS UPGRADE ====
+Time: 2026-04-15T04:05:51.124Z
+Host: api-socket.jibo.com
+URL: /token-Royal-Current-Sage-Canvas-1776225949923
+WS KIND: api-socket
+Headers: {
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e45cf66c143ead620ace590eb74ade5604d2bb68eb035841618ca51fda9ae6f6",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040548Z",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "M5o7cG6kgBa6kAhzMLUDUA==",
+  "host": "api-socket.jibo.com"
+}
+====================
+==== WS CONNECTED ====
+WsId: ws-1776225951126-e0e6bf
+Time: 2026-04-15T04:05:51.126Z
+Host: api-socket.jibo.com
+Path: /token-Royal-Current-Sage-Canvas-1776225949923
+WS KIND: api-socket
+Token known: true
+Headers: {
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e45cf66c143ead620ace590eb74ade5604d2bb68eb035841618ca51fda9ae6f6",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040548Z",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "M5o7cG6kgBa6kAhzMLUDUA==",
+  "host": "api-socket.jibo.com"
+}
+======================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:05:58.998Z
+Remote: 192.168.8.170 35820
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225959044-1db4f5cd
+Time: 2026-04-15T04:05:59.044Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Log_20150309.PutEventsAsync
+BodyLength: 53
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Log_20150309.PutEventsAsync",
+  "x-amz-content-sha256": "738ec9072f51811b7378977698ef463d739662d21f7e5595e8a0d1ff1de0b358",
+  "content-length": "53",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040558Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/log/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=687452e7aaff6a2a6b3c2692024234938db67c81974229ae60685706ceb77f76",
+  "connection": "keep-alive"
+}
+Body (utf8): {"kind":"HEALTH","serial":"BOJW-1000-0017-1114-0008"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225959044-1db4f5cd
+Time: 2026-04-15T04:05:59.044Z
+Status: 200
+Note: Accepted log events async
+Body: {
+  "contentEncoding": "gzip",
+  "uploadUrl": "https://api.jibo.com/upload/log-events"
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:05:59.178Z
+Remote: 192.168.8.170 35821
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225959211-c4a07935
+Time: 2026-04-15T04:05:59.211Z
+Host: api.jibo.com
+Method: PUT
+URL: /upload/log-events
+X-Amz-Target: <none>
+BodyLength: 1456
+Headers: {
+  "accept": "*/*",
+  "content-type": "application/octet-stream",
+  "content-length": "1456",
+  "host": "api.jibo.com",
+  "connection": "close"
+}
+Body: <binary>
+Body HEX preview: 1f8b0800000000000003ad57cd8edb36107e9540406f9697a4444ada53935cda04418adda03da40b81966859b124aa24e55d27d8472bfa487d850e25ca96d6eec6c0c607439cdf6f86c3e1f09ba7f7da883acd2a996dbd6b1c458c109a5046c208b19046e1c203019eef47114682884501432c5a78b5cc8577ed3552d5bcf216
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225959211-c4a07935
+Time: 2026-04-15T04:05:59.213Z
+Status: 200
+Note: Accepted uploaded blob
+Body: 
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:05.122Z
+Remote: 192.168.8.170 35846
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225965150-094c5848
+Time: 2026-04-15T04:06:05.150Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Loop_20160324.ListLoops
+BodyLength: 2
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Loop_20160324.ListLoops",
+  "x-amz-content-sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "content-length": "2",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040604Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/Loop/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=d25ec27c14c4ec1c6fa8c5a0d02a02d380f8862139284ab66bab45721464d6d4",
+  "connection": "keep-alive"
+}
+Body (utf8): {}
+=======================
+LOOP OPERATION: ListLoops
+==== HTTPS RESPONSE ====
+ReqId: 1776225965150-094c5848
+Time: 2026-04-15T04:06:05.151Z
+Status: 200
+Note: Returned one loop
+Body: [
+  {
+    "id": "5c0b221fdf9d450019c5e253",
+    "name": "OpenJibo Test Loop",
+    "owner": "usr_test_001",
+    "robot": "Royal-Current-Sage-Canvas",
+    "robotFriendlyId": "BOJW-1000-0017-1114-0008",
+    "members": [],
+    "isSuspended": false,
+    "created": 1775099000000,
+    "updated": 1775099000000
+  }
+]
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:07.164Z
+Remote: 192.168.8.170 35851
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776225967176-667fe9db
+Time: 2026-04-15T04:06:07.176Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Key_20160201.ListIncomingRequests
+BodyLength: 37
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Key_20160201.ListIncomingRequests",
+  "x-amz-content-sha256": "5ee4e122445b4712b5081eaf0582314673f01a49080fab8fcbc8262af6f17eff",
+  "content-length": "37",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040605Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/key/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=0911eaecf42ef19c8791783611f6c7754258bd5058f0dc5e1402b0eb8a3dc431",
+  "connection": "keep-alive"
+}
+Body (utf8): {"loopId":"5c0b221fdf9d450019c5e253"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225967176-667fe9db
+Time: 2026-04-15T04:06:07.178Z
+Status: 200
+Note: No incoming key requests
+Body: []
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:07.276Z
+Remote: 192.168.8.170 35855
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776225967288-9ed95a24
+Time: 2026-04-15T04:06:07.288Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Key_20160201.ListBinaryRequests
+BodyLength: 37
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Key_20160201.ListBinaryRequests",
+  "x-amz-content-sha256": "5ee4e122445b4712b5081eaf0582314673f01a49080fab8fcbc8262af6f17eff",
+  "content-length": "37",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040607Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/key/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=9b4126ea0a1ee43469835b745481d8ffd19236f57d8658b574dcc8101274d562",
+  "connection": "keep-alive"
+}
+Body (utf8): {"loopId":"5c0b221fdf9d450019c5e253"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225967288-9ed95a24
+Time: 2026-04-15T04:06:07.289Z
+Status: 200
+Note: No incoming binary requests
+Body: []
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:13.401Z
+Remote: 192.168.8.170 35935
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225973433-57e1933e
+Time: 2026-04-15T04:06:13.433Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Account_20151111.Get
+BodyLength: 2
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Account_20151111.Get",
+  "x-amz-content-sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "content-length": "2",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040612Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/account/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=18521b333f71370005e8feae393abdc9d5d5ef2efb78f183b446f576a92a1379",
+  "connection": "keep-alive"
+}
+Body (utf8): {}
+=======================
+ACCOUNT OPERATION: Get BODY: {}
+==== HTTPS RESPONSE ====
+ReqId: 1776225973433-57e1933e
+Time: 2026-04-15T04:06:13.435Z
+Status: 200
+Note: Returned account list
+Body: [
+  {
+    "id": "usr_test_001",
+    "email": "jibo@example.com",
+    "firstName": "Jibo",
+    "lastName": "Owner",
+    "gender": "unknown",
+    "birthday": 631152000000,
+    "phoneNumber": "+10000000000",
+    "photoUrl": "",
+    "isActive": true,
+    "messagingAllowed": true,
+    "accessKeyId": "a3ksSqxDYDpzZrV8j4md",
+    "secretAccessKey": "fake-secret-access-key",
+    "roles": [],
+    "facebookConnected": false,
+    "termsAccepted": true
+  }
+]
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:14.441Z
+Remote: 192.168.8.170 35984
+======================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:14.443Z
+Remote: 192.168.8.170 35992
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776225974480-b5eaf641
+Time: 2026-04-15T04:06:14.480Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Loop_20160324.ListLoops
+BodyLength: 2
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Loop_20160324.ListLoops",
+  "x-amz-content-sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+  "content-length": "2",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040613Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/Loop/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=2ae3586e6abdbd6197b113c4c4028599a065d877b176fec1fe8743ace65443e7",
+  "connection": "keep-alive"
+}
+Body (utf8): {}
+=======================
+LOOP OPERATION: ListLoops
+==== HTTPS RESPONSE ====
+ReqId: 1776225974480-b5eaf641
+Time: 2026-04-15T04:06:14.481Z
+Status: 200
+Note: Returned one loop
+Body: [
+  {
+    "id": "5c0b221fdf9d450019c5e253",
+    "name": "OpenJibo Test Loop",
+    "owner": "usr_test_001",
+    "robot": "Royal-Current-Sage-Canvas",
+    "robotFriendlyId": "BOJW-1000-0017-1114-0008",
+    "members": [],
+    "isSuspended": false,
+    "created": 1775099000000,
+    "updated": 1775099000000
+  }
+]
+========================
+==== HTTPS REQUEST ====
+ReqId: 1776225974490-8adea26a
+Time: 2026-04-15T04:06:14.490Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Robot_20160225.GetRobot
+BodyLength: 34
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Robot_20160225.GetRobot",
+  "x-amz-content-sha256": "881bb92888fe0bbfb9aa6f3fdf34613edc5bb9782527ba9ad506407f97ea2f32",
+  "content-length": "34",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040614Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/robot/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=c41941a31330a1551c267ffcbeda10f209fb00fee4cc12411d77505c3e2fef04",
+  "connection": "keep-alive"
+}
+Body (utf8): {"id":"Royal-Current-Sage-Canvas"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225974490-8adea26a
+Time: 2026-04-15T04:06:14.491Z
+Status: 200
+Note: Returned robot
+Body: {
+  "id": "Royal-Current-Sage-Canvas",
+  "payload": {
+    "SSID": "GL-MT300N-V2-c8c",
+    "connectedAt": 1776225974491,
+    "platform": "12.10.0",
+    "serialNumber": "BOJW-1000-0017-1114-0008"
+  },
+  "calibrationPayload": {},
+  "updated": 1776225974491,
+  "created": 1776225974491
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:14.500Z
+Remote: 192.168.8.170 35994
+======================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:14.502Z
+Remote: 192.168.8.170 35995
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776225974565-6ed56573
+Time: 2026-04-15T04:06:14.566Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Person_20160801.ListHolidays
+BodyLength: 37
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Person_20160801.ListHolidays",
+  "x-amz-content-sha256": "5ee4e122445b4712b5081eaf0582314673f01a49080fab8fcbc8262af6f17eff",
+  "content-length": "37",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040614Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/person/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=e014923b3030c475df651c72c4d1920517acbfaf37275f5fa6c7f14f2d780739",
+  "connection": "keep-alive"
+}
+Body (utf8): {"loopId":"5c0b221fdf9d450019c5e253"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225974565-6ed56573
+Time: 2026-04-15T04:06:14.566Z
+Status: 200
+Note: Returned 1 holidays
+Body: [
+  {
+    "id": "easter-1",
+    "eventId": null,
+    "name": "Easter",
+    "category": "holiday",
+    "subcategory": null,
+    "loopId": "5c0b221fdf9d450019c5e253",
+    "memberId": null,
+    "isEnabled": true,
+    "date": "2026-04-05",
+    "endDate": null,
+    "created": "2026-04-15T04:06:14.566Z"
+  }
+]
+========================
+==== HTTPS REQUEST ====
+ReqId: 1776225974569-8d95c085
+Time: 2026-04-15T04:06:14.569Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Media_20160725.List
+BodyLength: 40
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Media_20160725.List",
+  "x-amz-content-sha256": "b7985c0a0c6ab5e3f585633cfe8bcc32785e57688ec120ca68f0f9d06fcd79b7",
+  "content-length": "40",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040614Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/media/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=b2178ea5b01f07f37c8a5ef0c22031d3880d1459b2ac3a083371d79c2a02fc83",
+  "connection": "keep-alive"
+}
+Body (utf8): {"loopIds":["5c0b221fdf9d450019c5e253"]}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225974569-8d95c085
+Time: 2026-04-15T04:06:14.570Z
+Status: 200
+Note: Returned 0 media items
+Body: []
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:18.733Z
+Remote: 192.168.8.170 36012
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776225978760-5da29a89
+Time: 2026-04-15T04:06:18.760Z
+Host: api.jibo.com
+Method: GET
+URL: /
+X-Amz-Target: <none>
+BodyLength: 0
+Headers: {
+  "host": "api.jibo.com",
+  "connection": "close"
+}
+Body: <empty>
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225978760-5da29a89
+Time: 2026-04-15T04:06:18.761Z
+Status: 204
+Note: Root probe
+Body: {}
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:29.954Z
+Remote: 192.168.8.170 36062
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776225989964-1a3abbd3
+Time: 2026-04-15T04:06:29.964Z
+Host: api.jibo.com
+Method: GET
+URL: /
+X-Amz-Target: <none>
+BodyLength: 0
+Headers: {
+  "host": "api.jibo.com",
+  "connection": "close"
+}
+Body: <empty>
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776225989964-1a3abbd3
+Time: 2026-04-15T04:06:29.965Z
+Status: 204
+Note: Root probe
+Body: {}
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:49.471Z
+Remote: 192.168.8.170 36200
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776226009623-48fdcd9d
+Time: 2026-04-15T04:06:49.623Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Robot_20160225.UpdateRobot
+BodyLength: 163
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.117 linux/v6.5.0",
+  "content-type": "application/json",
+  "x-amz-target": "Robot_20160225.UpdateRobot",
+  "x-amz-content-sha256": "5a0cbf36349df2a3d5be6dbe3bb6144f96c419ebd7eeab35d83d9322e68f7d04",
+  "content-length": "163",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040649Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/robot/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=5ac44160b94572a8a6ff9708b981ba37b7ae2713281923f374a1347101749091",
+  "connection": "keep-alive"
+}
+Body (utf8): {"id":"Royal-Current-Sage-Canvas","payload":{"SSID":"GL-MT300N-V2-c8c","connectedAt":1776226008899,"platform":"12.10.0","serialNumber":"BOJW-1000-0017-1114-0008"}}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776226009623-48fdcd9d
+Time: 2026-04-15T04:06:49.624Z
+Status: 200
+Note: Robot updated
+Body: {
+  "result": "ok"
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:50.509Z
+Remote: 192.168.8.170 36205
+======================
+==== HTTPS REQUEST ====
+ReqId: 1776226010520-1fb182b7
+Time: 2026-04-15T04:06:50.520Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Backup_20170222.List
+BodyLength: 37
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.105 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Backup_20170222.List",
+  "x-amz-content-sha256": "5ee4e122445b4712b5081eaf0582314673f01a49080fab8fcbc8262af6f17eff",
+  "content-length": "37",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040650Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/backup/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=63897a30eed08c4ae12c322805ee0fe1e10e2df6f56f67b4bdb89f34cd4d6b27",
+  "connection": "keep-alive"
+}
+Body (utf8): {"loopId":"5c0b221fdf9d450019c5e253"}
+=======================
+==== HTTPS RESPONSE ====
+ReqId: 1776226010520-1fb182b7
+Time: 2026-04-15T04:06:50.521Z
+Status: 200
+Note: No backups available
+Body: []
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:58.839Z
+Remote: 192.168.8.170 36253
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776226019278-2d98c784
+Time: 2026-04-15T04:06:59.278Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Account_20151111.CreateHubToken
+BodyLength: 2
+Headers: {
+  "content-type": "application/json",
+  "content-length": "2",
+  "x-amz-target": "Account_20151111.CreateHubToken",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/api/jibo/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=7a62944874c4a59f9d19448ca063421e9546505016722727cb9653e03482066e",
+  "x-amz-content-sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "x-amz-date": "20260415T040658Z",
+  "host": "api.jibo.com"
+}
+Body (utf8): {}
+=======================
+ACCOUNT OPERATION: CreateHubToken BODY: {}
+==== HTTPS RESPONSE ====
+ReqId: 1776226019278-2d98c784
+Time: 2026-04-15T04:06:59.282Z
+Status: 200
+Note: Issued CreateHubToken
+Body: {
+  "token": "hub-usr_test_001-1776226019282",
+  "expires": 1776229619281
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:06:59.823Z
+Remote: 192.168.8.170 36255
+======================
+TLS SNI host: neo-hub.jibo.com
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+==== WS UPGRADE ====
+Time: 2026-04-15T04:07:00.141Z
+Host: neo-hub.jibo.com
+URL: /v1/listen
+WS KIND: neo-hub-listen
+Headers: {
+  "authorization": "Bearer hub-usr_test_001-1776226019282",
+  "x-jibo-transid": "tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae",
+  "x-jibo-robotid": "Royal-Current-Sage-Canvas",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "QrWWJNF73RwJuz9j+w5vHA==",
+  "host": "neo-hub.jibo.com"
+}
+====================
+==== WS CONNECTED ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:00.144Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+Bearer Token: hub-usr_test_001-1776226019282
+Bearer Token Known: true
+TransId: tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae
+RobotId: Royal-Current-Sage-Canvas
+Headers: {
+  "authorization": "Bearer hub-usr_test_001-1776226019282",
+  "x-jibo-transid": "tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae",
+  "x-jibo-robotid": "Royal-Current-Sage-Canvas",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "QrWWJNF73RwJuz9j+w5vHA==",
+  "host": "neo-hub.jibo.com"
+}
+======================
+Neo-hub connected; waiting for client message
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:00.174Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: false
+Length: 360
+Text: {"type":"LISTEN","ts":1776226020065,"msgID":"mid-8d2c3d76-3880-11f1-a49c-5cf821ea55ae","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","data":{"lang":"en-US","hotphrase":true,"rules":["launch","globals/global_commands_launch"],"mode":"","asr":{"hints":[],"earlyEOS":[],"encoding":"OGG_OPUS","sampleRate":16000,"sosTimeout":7000,"maxSpeechTimeout":20000}}}
+====================
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:00.178Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 47
+Binary HEX preview: 4f67675300020000000000000000c6237b32000000001f31d56a01134f7075734865616401010000803e0000000000
+====================
+TIMING {"at":"2026-04-15T04:07:00.181Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":0,"length":47,"ok":true,"capture":"OggS","version":0,"headerType":2,"continued":false,"bos":true,"eos":false,"granulePos":"0","bitstreamSerial":846930886,"pageSequenceNo":0,"checksum":1792356639,"pageSegments":1,"headerLen":28,"payloadLen":19,"expectedTotalLen":47,"actualLen":47,"lacingPreview":[19]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:00.828Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: false
+Length: 979
+Text: {"type":"CONTEXT","ts":1776226020227,"msgID":"mid-8d44f2da-3880-11f1-9b8c-5cf821ea55ae","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","data":{"runtime":{"character":{"emotion":{"name":"NEUTRAL","valence":0.45,"confidence":0.2},"motivation":{"social":0.0012613888888888892,"playful":0.000420462962962963}},"perception":{"speaker":null,"peoplePresent":[]},"location":{"city":"Pleasant Hill","state":"Missouri","stateAbbr":"MO","country":"United States","countryCode":"US","lat":38.835839,"lng":-94.1427134,"iso":"2026-04-14T23:07:00.159-05:00"},"loop":{"loopId":"5c0b221fdf9d450019c5e253","users":[{"firstName":"Erin","lastName":"Picone","phoneticName":"Erin","gender":"female","birthdate":649209600000,"id":"5c0b221fdf9d450019c5e255","accountId":"5c0b20547c46170019235759"}],"jibo":{"color":"WHITE","birthdate":1544234645598,"id":"5c0b221fdf9d450019c5e254"},"owner":"5c0b221fdf9d450019c5e255"},"dialog":{"referent":null}},"skill":{"id":null},"general":{"release":"1.9.2"}}}
+====================
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:00.834Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4286
+Binary HEX preview: 4f67675300008061000000000000c6237b3201000000c4c000fe1b2ee9939593a094929ea1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a14f707573546167730d0000006c69626f70757320312e312e32010000000d0000006a69626f3d6465762d74657374b875719a6e26ca1a0ad2b1a6fa7f10f31c5f07da1132a15fcd60cc87
+====================
+TIMING {"at":"2026-04-15T04:07:00.835Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":1,"length":4286,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"24960","bitstreamSerial":846930886,"pageSequenceNo":1,"checksum":4261462212,"pageSegments":27,"headerLen":54,"payloadLen":4232,"expectedTotalLen":4286,"actualLen":4286,"lacingPreview":[46,233,147,149,147,160,148,146,158,161,161,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:02.882Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4237
+Binary HEX preview: 4f676753000040bf000000000000c6237b32020000006197455d19a1c5ae9aaf9bc49ea2a19dcf9c9db1bda1a1a19aa8a1a1a1a1b801854bfc2e4c2bc80ccb6fb12dce319e66b454d07d449514a52a3947ab1160237e7c1fa8adfabe753837c773bba8dbfcc23c7636073bdeb56b61ac4a4e5156a9595cc0eec1c731de9a04d5
+====================
+TIMING {"at":"2026-04-15T04:07:02.890Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":2,"length":4237,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"48960","bitstreamSerial":846930886,"pageSequenceNo":2,"checksum":1564841825,"pageSegments":25,"headerLen":52,"payloadLen":4185,"expectedTotalLen":4237,"actualLen":4237,"lacingPreview":[161,197,174,154,175,155,196,158,162,161,157,207]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:02.891Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4239
+Binary HEX preview: 4f6767530000c020010000000000c6237b32030000002cf9d3ca1aa1a1a1a197a5a7a19798b4a1a1a1a19ca6a1a1a1a1a1a1a1a1a1b877a07657344df176db0e21f20284a333d2a33ad64d6c4010b21edbcffac2931fbcfc0f834d9313a2c7729b01c7b6b1ef0e3b2b2d8a74d65088231b10ce5903985d3648fe87e6c3c57297
+====================
+TIMING {"at":"2026-04-15T04:07:02.893Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":3,"length":4239,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"73920","bitstreamSerial":846930886,"pageSequenceNo":3,"checksum":3402889516,"pageSegments":26,"headerLen":53,"payloadLen":4186,"expectedTotalLen":4239,"actualLen":4239,"lacingPreview":[161,161,161,161,151,165,167,161,151,152,180,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:02.895Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4241
+Binary HEX preview: 4f67675300000086010000000000c6237b32040000005af3d7431ba1a1a1a194ae9a999b99b7a8a1a189888a8889ac9488a9a78a9ea1b8d8cb57facb5f269db38c571f2481c93df1dc7d729844cfa6ba91b17921b8234ab8c29527b59c0ff6f4a1a8471f864edc1a3a7133f58c62db51b470c873671b836e67e28e3a0280795d
+====================
+TIMING {"at":"2026-04-15T04:07:02.896Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":4,"length":4241,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"99840","bitstreamSerial":846930886,"pageSequenceNo":4,"checksum":1138226010,"pageSegments":27,"headerLen":54,"payloadLen":4187,"expectedTotalLen":4241,"actualLen":4241,"lacingPreview":[161,161,161,161,148,174,154,153,155,153,183,168]}
+TIMING {"at":"2026-04-15T04:07:02.897Z","event":"ws_begin_finalize","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","reason":"early-start","audioFrames":5,"audioBytes":17050,"finalizeGraceMs":1200}
+TIMING {"at":"2026-04-15T04:07:02.906Z","event":"ws_normalized_ogg_written","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","normalizedSize":17050}
+TIMING {"at":"2026-04-15T04:07:02.908Z","event":"ws_finalize_attempt","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","reason":"begin","audioFrames":5,"audioBytes":17050,"oggSize":17050}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:02.918Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4239
+Binary HEX preview: 4f676753000080e7010000000000c6237b320500000083e075e11aa1a1a1a1a1a1a1a1a1ad95a1af93a1a1a1a1b1ad8e98a1a1a1a1b81f7aa187e9b9938016eb2735fef506d9fca59023fdf49bb2ff15adac37dd92530dfc83dcdb53eb9467916863cf80e5410016ee5051fd9012b49611a28113c31846445f3607708dd54553
+====================
+TIMING {"at":"2026-04-15T04:07:02.919Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":5,"length":4239,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"124800","bitstreamSerial":846930886,"pageSequenceNo":5,"checksum":3782598787,"pageSegments":26,"headerLen":53,"payloadLen":4186,"expectedTotalLen":4239,"actualLen":4239,"lacingPreview":[161,161,161,161,161,161,161,161,161,173,149,161]}
+TIMING {"at":"2026-04-15T04:07:03.256Z","event":"ws_finalize_wav","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","wavSize":66638}
+TIMING {"at":"2026-04-15T04:07:03.381Z","event":"ws_finalize_wav_trimmed","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","wavSize":82966}
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:04.922Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4255
+Binary HEX preview: 4f67675300000049020000000000c6237b320600000081bebae61aa1a1a1a1a1af989cb092a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1b1b817d916a48cb713568f1025162b8569e0e1353de8c66fb2bba757a2bcc220169ce256521805b6b34c9be933a8f6c0742dcef56cc50f1232d55ef8c0238d9a021bf0073c5f06b0acc63c14
+====================
+TIMING {"at":"2026-04-15T04:07:04.928Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":6,"length":4255,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"149760","bitstreamSerial":846930886,"pageSequenceNo":6,"checksum":3870998145,"pageSegments":26,"headerLen":53,"payloadLen":4202,"expectedTotalLen":4255,"actualLen":4255,"lacingPreview":[161,161,161,161,161,175,152,156,176,146,161,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:04.930Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4234
+Binary HEX preview: 4f676753000080aa020000000000c6237b3207000000b006ed0d1a93b6a19597a0a1a1a1a1b79598a0a1a1a1a1a1a1a1a1a1a1a1acb8099d562510430965e8e7e8907559e8b8053b776d42d9f2dd2adbd62616c4dffc88e9fe13b9d521c51a16c4d5e7a978b26dcc47b1137d050ffc518aa27e7ed790d624ba349505c5745e30
+====================
+TIMING {"at":"2026-04-15T04:07:04.931Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":7,"length":4234,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"174720","bitstreamSerial":846930886,"pageSequenceNo":7,"checksum":233637552,"pageSegments":26,"headerLen":53,"payloadLen":4181,"expectedTotalLen":4234,"actualLen":4234,"lacingPreview":[147,182,161,149,151,160,161,161,161,161,183,149]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:04.933Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4228
+Binary HEX preview: 4f6767530000000c030000000000c6237b3208000000ebe2d0131a96a1a1b19a98a1a1a7ae9996a1a1a1a1a1a79ba1a1a1a1a1a1a1b81e3fd8d45cdd3b5d45ce1c8e047d3390dac9fb15c80896b31a67f06ae748ad95450ed1af008e1f58fc1ccc82946600b65546fde13f404e5e3d46c085453204070470d987b361746ab4f8
+====================
+TIMING {"at":"2026-04-15T04:07:04.939Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":8,"length":4228,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"199680","bitstreamSerial":846930886,"pageSequenceNo":8,"checksum":332456683,"pageSegments":26,"headerLen":53,"payloadLen":4175,"expectedTotalLen":4228,"actualLen":4228,"lacingPreview":[150,161,161,177,154,152,161,161,167,174,153,150]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:04.941Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4291
+Binary HEX preview: 4f6767530000806d030000000000c6237b32090000006cd204f31ac09b96a998989da1a1a2a0a1a1a1a1a1a1a1a1a1b6bf9597abaeb8773fc9b779a767f87f0cd166ecbfb95338b36c07af2da15cf7ba25a41e3e99b749a4edb69f4cdab26f132c8760544d54d8ab7b80c22cdf32e4a054ebae514d9546dba52067f3b9455c94
+====================
+TIMING {"at":"2026-04-15T04:07:04.943Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":9,"length":4291,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"224640","bitstreamSerial":846930886,"pageSequenceNo":9,"checksum":4077179500,"pageSegments":26,"headerLen":53,"payloadLen":4238,"expectedTotalLen":4291,"actualLen":4291,"lacingPreview":[192,155,150,169,152,152,157,161,161,162,160,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:05.027Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4271
+Binary HEX preview: 4f676753000000cf030000000000c6237b320a000000892e7beb1a97b5b69897989998a4b2ca989e9bb29898b49e96ad989a98b797b80b880c4b38b6c92ba52cc92cbd6b81460fa0679f5083642dbae6ce26d0d813af18cea70ec23c31c4926890d5e06196f9ef72572066842ba6bd537f601f54ccc97740a6ab44187a435938
+====================
+TIMING {"at":"2026-04-15T04:07:05.028Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":10,"length":4271,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"249600","bitstreamSerial":846930886,"pageSequenceNo":10,"checksum":3950718601,"pageSegments":26,"headerLen":53,"payloadLen":4218,"expectedTotalLen":4271,"actualLen":4271,"lacingPreview":[151,181,182,152,151,152,153,152,164,178,202,152]}
+TIMING {"at":"2026-04-15T04:07:06.380Z","event":"whisper_cli_result","wavPath":"/tmp/openjibo-asr/1776226022899_tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae.trimmed.wav","stdout":"\n[00:00:00.000 --> 00:00:01.840]   What time is it?\n","stderr":"whisper_init_from_file_with_params_no_state: loading model from '/home/jake-dubin/whisper.cpp/models/ggml-base.en.bin'\nwhisper_init_with_params_no_state: use gpu    = 1\nwhisper_init_with_params_no_state: flash attn = 1\nwhisper_init_with_params_no_state: gpu_device = 0\nwhisper_init_with_params_no_state: dtw        = 0\nwhisper_init_with_params_no_state: devices    = 1\nwhisper_init_with_params_no_state: backends   = 1\nwhisper_model_load: loading model\nwhisper_model_load: n_vocab       = 51864\nwhisper_model_load: n_audio_ctx   = 1500\nwhisper_model_load: n_audio_state = 512\nwhisper_model_load: n_audio_head  = 8\nwhisper_model_load: n_audio_layer = 6\nwhisper_model_load: n_text_ctx    = 448\nwhisper_model_load: n_text_state  = 512\nwhisper_model_load: n_text_head   = 8\nwhisper_model_load: n_text_layer  = 6\nwhisper_model_load: n_mels        = 80\nwhisper_model_load: ftype         = 1\nwhisper_model_load: qntvr         = 0\nwhisper_model_load: type          = 2 (base)\nwhisper_model_load: adding 1607 extra tokens\nwhisper_model_load: n_langs       = 99\nwhisper_model_load:          CPU total size =   147.37 MB\nwhisper_model_load: model size    =  147.37 MB\nwhisper_backend_init_gpu: device 0: CPU (type: 0)\nwhisper_backend_init_gpu: no GPU found\nwhisper_init_state: kv self size  =    6.29 MB\nwhisper_init_state: kv cross size =   18.87 MB\nwhisper_init_state: kv pad  size  =    3.15 MB\nwhisper_init_state: compute buffer (conv)   =   16.28 MB\nwhisper_init_state: compute buffer (encode) =   23.09 MB\nwhisper_init_state: compute buffer (cross)  =    4.66 MB\nwhisper_init_state: compute buffer (decode) =   96.37 MB\n\nsystem_info: n_threads = 4 / 8 | WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | OPENMP = 1 | REPACK = 1 | \n\nmain: processing '/tmp/openjibo-asr/1776226022899_tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae.trimmed.wav' (41444 samples, 2.6 sec), 4 threads, 1 processors, 5 beams + best of 5, lang = en, task = transcribe, timestamps = 1 ...\n\n\nwhisper_print_timings:     load time =   584.94 ms\nwhisper_print_timings:     fallbacks =   0 p /   0 h\nwhisper_print_timings:      mel time =    14.53 ms\nwhisper_print_timings:   sample time =    46.93 ms /    41 runs (     1.14 ms per run)\nwhisper_print_timings:   encode time =  1984.85 ms /     1 runs (  1984.85 ms per run)\nwhisper_print_timings:   decode time =    18.28 ms /     2 runs (     9.14 ms per run)\nwhisper_print_timings:   batchd time =   176.00 ms /    35 runs (     5.03 ms per run)\nwhisper_print_timings:   prompt time =     0.00 ms /     1 runs (     0.00 ms per run)\nwhisper_print_timings:    total time =  2918.18 ms\n"}
+TIMING {"at":"2026-04-15T04:07:06.387Z","event":"ws_finalize_transcript","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","transcript":"What time is it?","source":"trimmed"}
+LOOKING FOR NORMALIZED TEXT {
+  "lower": "what time is it"
+}
+TIMING {"at":"2026-04-15T04:07:06.390Z","event":"ws_send_listen_result","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","intent":"time","asrText":"What time is it?"}
+LOOKING FOR INTENT CHANGE {
+  "intent": "time",
+  "heardText": "What time is it?",
+  "normalizedText": "What time is it?",
+  "isYesNo": false,
+  "rule": null,
+  "entities": {
+    "domain": "create"
+  }
+}
+GENERIC SYNTHETIC LISTEN PAYLOAD {
+  "intent": "time",
+  "normalizedText": "What time is it?",
+  "rules": [
+    "launch",
+    "globals/global_commands_launch"
+  ]
+}
+TIMING {"at":"2026-04-15T04:07:06.395Z","event":"ws_send_eos","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae"}
+CompleteTurnWithRoute {
+  "listenData": {
+    "lang": "en-US",
+    "hotphrase": true,
+    "rules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "mode": "",
+    "asr": {
+      "hints": [],
+      "earlyEOS": [],
+      "encoding": "OGG_OPUS",
+      "sampleRate": 16000,
+      "sosTimeout": 7000,
+      "maxSpeechTimeout": 20000
+    }
+  },
+  "rules": [
+    "launch",
+    "globals/global_commands_launch"
+  ],
+  "isYesNoIntent": false,
+  "yesNoSession": false
+}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:06.401Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4155
+Binary HEX preview: 4f67675300008030040000000000c6237b320b000000cb81a6f21a97969b999a97999a9b9a9da1a1a1a1a1a59da1a49ea1a1a1a1a1b81e7bfdd0091655abe3bf6540f5c6ee72fa9ff36b6ff2f74b648a19dda7081ed2e84fe131fe7e50feffb0774750848328fe01876a9eb51d63e808b3ec6a7e42632e508e355b0b566d7a61
+====================
+TIMING {"at":"2026-04-15T04:07:06.402Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":11,"length":4155,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"274560","bitstreamSerial":846930886,"pageSequenceNo":11,"checksum":4070998475,"pageSegments":26,"headerLen":53,"payloadLen":4102,"expectedTotalLen":4155,"actualLen":4155,"lacingPreview":[151,150,155,153,154,151,153,154,155,154,157,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:06.404Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4246
+Binary HEX preview: 4f67675300000092040000000000c6237b320c000000acb0a2271aa1a1a1a1a1a1a1af969ea1a1a1a1c39897aab897a897999a9c9ab815fbbcb579f2151144d0ec0eb29a8e0bf7a4ce914a4f268d6c80f7b8dc0653f5ebeb8ddb1539b3a21033240e943ff8634d228d25a3c22ec751fb55eb2454f2259e6eb2fe7a5e18b17f61
+====================
+TIMING {"at":"2026-04-15T04:07:06.404Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":12,"length":4246,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"299520","bitstreamSerial":846930886,"pageSequenceNo":12,"checksum":664973484,"pageSegments":26,"headerLen":53,"payloadLen":4193,"expectedTotalLen":4246,"actualLen":4246,"lacingPreview":[161,161,161,161,161,161,161,175,150,158,161,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226020144-5a116b
+Time: 2026-04-15T04:07:06.406Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4254
+Binary HEX preview: 4f676753000080f3040000000000c6237b320d00000052e3e25a1a9aa1ada2af979b999ea1a1a1a1a1bd9d9a9b9c9ba1cfa59a9697b8165ec702c2b6c4f8d90f9a5db7c3e764fbce59286f7f5019dbeff944e127f31fb9f0115547a87fbaff3882e6ac5c3128c595176a7b62e01ac9cf46763c532044da304f07aa8f7e33878e
+====================
+TIMING {"at":"2026-04-15T04:07:06.407Z","event":"ogg_page_in","transID":"tid-8bfb9f8c-3880-11f1-a159-5cf821ea55ae","chunkIndex":13,"length":4254,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"324480","bitstreamSerial":846930886,"pageSequenceNo":13,"checksum":1524818770,"pageSegments":26,"headerLen":53,"payloadLen":4201,"expectedTotalLen":4254,"actualLen":4254,"lacingPreview":[154,161,173,162,175,151,155,153,158,161,161,161]}
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:12.464Z
+Remote: 192.168.8.170 36353
+======================
+TLS SNI host: neo-hub.jibo.com
+==== WS UPGRADE ====
+Time: 2026-04-15T04:07:12.560Z
+Host: neo-hub.jibo.com
+URL: /v1/listen
+WS KIND: neo-hub-listen
+Headers: {
+  "authorization": "Bearer hub-usr_test_001-1776226019282",
+  "x-jibo-transid": "tid-9479acf8-3880-11f1-846c-5cf821ea55ae",
+  "x-jibo-robotid": "Royal-Current-Sage-Canvas",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "gyMIEMw2LzaR0/hz5G2wDg==",
+  "host": "neo-hub.jibo.com"
+}
+====================
+==== WS CONNECTED ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:12.561Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+Bearer Token: hub-usr_test_001-1776226019282
+Bearer Token Known: true
+TransId: tid-9479acf8-3880-11f1-846c-5cf821ea55ae
+RobotId: Royal-Current-Sage-Canvas
+Headers: {
+  "authorization": "Bearer hub-usr_test_001-1776226019282",
+  "x-jibo-transid": "tid-9479acf8-3880-11f1-846c-5cf821ea55ae",
+  "x-jibo-robotid": "Royal-Current-Sage-Canvas",
+  "connection": "Upgrade",
+  "upgrade": "websocket",
+  "sec-websocket-version": "13",
+  "sec-websocket-key": "gyMIEMw2LzaR0/hz5G2wDg==",
+  "host": "neo-hub.jibo.com"
+}
+======================
+Neo-hub connected; waiting for client message
+WS close: ws-1776226020144-5a116b neo-hub-listen 1006 
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:12.568Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: false
+Length: 360
+Text: {"type":"LISTEN","ts":1776226032478,"msgID":"mid-94924ad8-3880-11f1-adc6-5cf821ea55ae","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","data":{"lang":"en-US","hotphrase":true,"rules":["launch","globals/global_commands_launch"],"mode":"","asr":{"hints":[],"earlyEOS":[],"encoding":"OGG_OPUS","sampleRate":16000,"sosTimeout":7000,"maxSpeechTimeout":20000}}}
+====================
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:12.572Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 47
+Binary HEX preview: 4f6767530002000000000000000073483366000000000fbccdbb01134f7075734865616401010000803e0000000000
+====================
+TIMING {"at":"2026-04-15T04:07:12.573Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":0,"length":47,"ok":true,"capture":"OggS","version":0,"headerType":2,"continued":false,"bos":true,"eos":false,"granulePos":"0","bitstreamSerial":1714636915,"pageSequenceNo":0,"checksum":3150822415,"pageSegments":1,"headerLen":28,"payloadLen":19,"expectedTotalLen":47,"actualLen":47,"lacingPreview":[19]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:12.995Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4286
+Binary HEX preview: 4f6767530000806100000000000073483366010000000a45816a1b2ee58c9095919fb5939ba1a1a1a1a1a1a89aa1a1a1a1a1a1a1a1a14f707573546167730d0000006c69626f70757320312e312e32010000000d0000006a69626f3d6465762d74657374b8776f97ddee4cca4a9ae19edd213f7f21f4f3c808ce73316f2b2016
+====================
+TIMING {"at":"2026-04-15T04:07:12.997Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":1,"length":4286,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"24960","bitstreamSerial":1714636915,"pageSequenceNo":1,"checksum":1786856714,"pageSegments":27,"headerLen":54,"payloadLen":4232,"expectedTotalLen":4286,"actualLen":4286,"lacingPreview":[46,229,140,144,149,145,159,181,147,155,161,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:13.047Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: false
+Length: 980
+Text: {"type":"CONTEXT","ts":1776226032958,"msgID":"mid-94db85c2-3880-11f1-9d36-5cf821ea55ae","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","data":{"runtime":{"character":{"emotion":{"name":"NEUTRAL","valence":0.45,"confidence":0.2},"motivation":{"social":0.0029497222222222227,"playful":0.0009832407407407407}},"perception":{"speaker":null,"peoplePresent":[]},"location":{"city":"Pleasant Hill","state":"Missouri","stateAbbr":"MO","country":"United States","countryCode":"US","lat":38.835839,"lng":-94.1427134,"iso":"2026-04-14T23:07:12.863-05:00"},"loop":{"loopId":"5c0b221fdf9d450019c5e253","users":[{"firstName":"Erin","lastName":"Picone","phoneticName":"Erin","gender":"female","birthdate":649209600000,"id":"5c0b221fdf9d450019c5e255","accountId":"5c0b20547c46170019235759"}],"jibo":{"color":"WHITE","birthdate":1544234645598,"id":"5c0b221fdf9d450019c5e254"},"owner":"5c0b221fdf9d450019c5e255"},"dialog":{"referent":null}},"skill":{"id":null},"general":{"release":"1.9.2"}}}
+====================
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:15.082Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4237
+Binary HEX preview: 4f676753000040bf00000000000073483366020000000cd4061219a1a1a1a1a1a1b5ada9a1c2adb8babca1a1a1a1a1a1a1a1a0a2b801218a14f02147658bbbdce63fc60c2576684a872a0f0177021449f76d4cf482c81819893f899a77db1a600dfb828a56295b80e48a3685c92ded5c1575e17bb335b3e7119580049467bce9
+====================
+TIMING {"at":"2026-04-15T04:07:15.088Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":2,"length":4237,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"48960","bitstreamSerial":1714636915,"pageSequenceNo":2,"checksum":302437388,"pageSegments":25,"headerLen":52,"payloadLen":4185,"expectedTotalLen":4237,"actualLen":4237,"lacingPreview":[161,161,161,161,161,161,181,173,169,161,194,173]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:15.089Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4160
+Binary HEX preview: 4f6767530000c02001000000000073483366030000008b1581061aa197a1aaa2a1a1a1a19fa3a19493a6b7a19284b68d8bb088b589b811b33e6b22d3d1a7e8ccf985c0c05379e6451ecfa563ed79c6c06ea81bd3fe12b4cbe868b2507bcd14ea492839c1f3b54c122bc2a9e921ca869cea59c30396be68fcd452cfcf18caae16
+====================
+TIMING {"at":"2026-04-15T04:07:15.090Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":3,"length":4160,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"73920","bitstreamSerial":1714636915,"pageSequenceNo":3,"checksum":109122955,"pageSegments":26,"headerLen":53,"payloadLen":4107,"expectedTotalLen":4160,"actualLen":4160,"lacingPreview":[161,151,161,170,162,161,161,161,161,159,163,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:15.091Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4158
+Binary HEX preview: 4f67675300004082010000000000734833660400000029fecab91ab18b8b8e92919ea1a1a1a1a1a1c492929ca1a1a1a1a1a1a1a1a1b82eaeefdc157ee2a8f87ed39c389fe6fa25ccd3183fe77e4bb5c26c470074d43ee6d0df8ff37e851884f5519be472c96edd7cdc5a91136c72b091fd45e189c389256bfa4ee0a3447603cb
+====================
+TIMING {"at":"2026-04-15T04:07:15.092Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":4,"length":4158,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"98880","bitstreamSerial":1714636915,"pageSequenceNo":4,"checksum":3117088297,"pageSegments":26,"headerLen":53,"payloadLen":4105,"expectedTotalLen":4158,"actualLen":4158,"lacingPreview":[177,139,139,142,146,145,158,161,161,161,161,161]}
+TIMING {"at":"2026-04-15T04:07:15.093Z","event":"ws_begin_finalize","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","reason":"early-start","audioFrames":5,"audioBytes":16888,"finalizeGraceMs":1200}
+TIMING {"at":"2026-04-15T04:07:15.100Z","event":"ws_normalized_ogg_written","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","normalizedSize":16888}
+TIMING {"at":"2026-04-15T04:07:15.101Z","event":"ws_finalize_attempt","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","reason":"begin","audioFrames":5,"audioBytes":16888,"oggSize":16888}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:15.108Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4239
+Binary HEX preview: 4f6767530000c0e301000000000073483366050000007f46628e1ab2949db39f959da1a1a1a1ccc3959393939299a1a1a1a1a1a1a1b81e2f49a80f53ecca46e034718f20b2a5250bb029ec287417e205e15c871b9f0495526d0fc7248e809c64272f922ac4c430666ec732fb5d617a6d35eec679ed4d9a5784774ac380e68932
+====================
+TIMING {"at":"2026-04-15T04:07:15.109Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":5,"length":4239,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"123840","bitstreamSerial":1714636915,"pageSequenceNo":5,"checksum":2388805247,"pageSegments":26,"headerLen":53,"payloadLen":4186,"expectedTotalLen":4239,"actualLen":4239,"lacingPreview":[178,148,157,179,159,149,157,161,161,161,161,204]}
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:15.111Z
+Remote: 192.168.8.170 36364
+======================
+TLS SNI host: api.jibo.com
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+==== HTTPS REQUEST ====
+ReqId: 1776226035158-f02cedd5
+Time: 2026-04-15T04:07:15.158Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Update_20160301.GetUpdateFrom
+BodyLength: 61
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.45 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Update_20160301.GetUpdateFrom",
+  "x-amz-content-sha256": "6e08900346af61111dd4602fc62edfac5410ea331828442447f38685665c0dd7",
+  "content-length": "61",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040713Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/update/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=fa9cff86329cf433b949bf038d816eeb661f6e994b7586c3c6a23d95b718dcea",
+  "connection": "keep-alive"
+}
+Body (utf8): {"fromVersion":"10.0.18","subsystem":"@be/be","filter":"fcs"}
+=======================
+UPDATE OPERATION: GetUpdateFrom BODY: {"fromVersion":"10.0.18","subsystem":"@be/be","filter":"fcs"}
+==== HTTPS RESPONSE ====
+ReqId: 1776226035158-f02cedd5
+Time: 2026-04-15T04:07:15.160Z
+Status: 200
+Note: Returned placeholder no-op update
+Body: {
+  "_id": "noop-update-@be/be-10.0.18",
+  "created": 1776226035160,
+  "accountId": "usr_test_001",
+  "fromVersion": "10.0.18",
+  "toVersion": "10.0.18",
+  "changes": "No update available",
+  "url": "https://api.jibo.com/update/noop",
+  "shaHash": "noop",
+  "length": 0,
+  "subsystem": "@be/be",
+  "filter": "fcs",
+  "dependencies": {}
+}
+========================
+TIMING {"at":"2026-04-15T04:07:15.227Z","event":"ws_finalize_wav","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","wavSize":65998}
+TIMING {"at":"2026-04-15T04:07:15.349Z","event":"ws_finalize_wav_trimmed","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","wavSize":82282}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:16.091Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4239
+Binary HEX preview: 4f676753000040450200000000007348336606000000e0a12aeb1aa1c4929698a1a1a1a1b4a89a97b0b4969b9a98999fa1a1a1a1a1b8104bcdee61a742c4cbfe2cddc67c0e87f24a4dd9cd8485cb37ecdfba8c6f2d1910ff5c38bf81395ea3398d036635e70cd168c62f03bc12dcfbaa0b17e065110bab2b81ec50b81ea80c73
+====================
+TIMING {"at":"2026-04-15T04:07:16.098Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":6,"length":4239,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"148800","bitstreamSerial":1714636915,"pageSequenceNo":6,"checksum":3945439712,"pageSegments":26,"headerLen":53,"payloadLen":4186,"expectedTotalLen":4239,"actualLen":4239,"lacingPreview":[161,196,146,150,152,161,161,161,161,180,168,154]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:16.100Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4276
+Binary HEX preview: 4f6767530000c0a60200000000007348336607000000933c4cf61aa1a2a79aa1a1a1a1a1a1a1a1bbb6999a9898979da1b39898a1c6b801338de34c5045b76d7c0a38fc585093eac85d158102f4ffec7cb35b6bdba59f1e5455418f035da877d7dbd5b2cf1203407fbf678698cdb52089217777f8496cfcaba2123b33a659eff2
+====================
+TIMING {"at":"2026-04-15T04:07:16.101Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":7,"length":4276,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"173760","bitstreamSerial":1714636915,"pageSequenceNo":7,"checksum":4132191379,"pageSegments":26,"headerLen":53,"payloadLen":4223,"expectedTotalLen":4276,"actualLen":4276,"lacingPreview":[161,162,167,154,161,161,161,161,161,161,161,161]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:17.103Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4231
+Binary HEX preview: 4f6767530000400803000000000073483366080000006697b0971a9e9c9c979b99a1a1a1a1b499a19d9c9fa1a1a1a39fa1a1a1a1beb8ac124737c3fe3dbc07b98daaa41e77730d0edbd77ecfd5f73768894deb7c107a7555258eede894577b7a15522be9b62fe9e7f07f0f4179cd7cf0d2a1f5627520b84436ed0e9a71a862e9
+====================
+TIMING {"at":"2026-04-15T04:07:17.109Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":8,"length":4231,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"198720","bitstreamSerial":1714636915,"pageSequenceNo":8,"checksum":2544932710,"pageSegments":26,"headerLen":53,"payloadLen":4178,"expectedTotalLen":4231,"actualLen":4231,"lacingPreview":[158,156,156,151,155,153,161,161,161,161,180,153]}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:17.111Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4210
+Binary HEX preview: 4f6767530000c0690300000000007348336609000000c3af8b641a9c9a9abcb0a7a19a9b9b9c9699999aabb798a3999b999ea1a1a1b8afd93b57da18ff2fe6a4d48cabbda00035bf202a93c042a99b45061d47aee54629ce5752a0b0b9495dc673c50b39f6ad0badc474673a4d5f3407926188b7f33961d73a3b64592454287c
+====================
+TIMING {"at":"2026-04-15T04:07:17.112Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":9,"length":4210,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"223680","bitstreamSerial":1714636915,"pageSequenceNo":9,"checksum":1686876099,"pageSegments":26,"headerLen":53,"payloadLen":4157,"expectedTotalLen":4210,"actualLen":4210,"lacingPreview":[156,154,154,188,176,167,161,154,155,155,156,150]}
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:17.235Z
+Remote: 192.168.8.170 36371
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776226037285-404e2322
+Time: 2026-04-15T04:07:17.285Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Update_20160301.GetUpdateFrom
+BodyLength: 67
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.45 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Update_20160301.GetUpdateFrom",
+  "x-amz-content-sha256": "a3d75f24685521215559f740b818c421500ff05751ebf3da7a081c7c51b51229",
+  "content-length": "67",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040717Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/update/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=6ff3ba87758fb7ad9965e7077c9a171d1d90883b7c5befd3a4029a64738cc879",
+  "connection": "keep-alive"
+}
+Body (utf8): {"fromVersion":"3.0.0","subsystem":"fin-goods-test","filter":"fcs"}
+=======================
+UPDATE OPERATION: GetUpdateFrom BODY: {"fromVersion":"3.0.0","subsystem":"fin-goods-test","filter":"fcs"}
+==== HTTPS RESPONSE ====
+ReqId: 1776226037285-404e2322
+Time: 2026-04-15T04:07:17.286Z
+Status: 200
+Note: Returned placeholder no-op update
+Body: {
+  "_id": "noop-update-fin-goods-test-3.0.0",
+  "created": 1776226037286,
+  "accountId": "usr_test_001",
+  "fromVersion": "3.0.0",
+  "toVersion": "3.0.0",
+  "changes": "No update available",
+  "url": "https://api.jibo.com/update/noop",
+  "shaHash": "noop",
+  "length": 0,
+  "subsystem": "fin-goods-test",
+  "filter": "fcs",
+  "dependencies": {}
+}
+========================
+TIMING {"at":"2026-04-15T04:07:17.918Z","event":"whisper_cli_result","wavPath":"/tmp/openjibo-asr/1776226035094_tid-9479acf8-3880-11f1-846c-5cf821ea55ae.trimmed.wav","stdout":"\n[00:00:00.000 --> 00:00:01.440]   Tell me a joke.\n","stderr":"whisper_init_from_file_with_params_no_state: loading model from '/home/jake-dubin/whisper.cpp/models/ggml-base.en.bin'\nwhisper_init_with_params_no_state: use gpu    = 1\nwhisper_init_with_params_no_state: flash attn = 1\nwhisper_init_with_params_no_state: gpu_device = 0\nwhisper_init_with_params_no_state: dtw        = 0\nwhisper_init_with_params_no_state: devices    = 1\nwhisper_init_with_params_no_state: backends   = 1\nwhisper_model_load: loading model\nwhisper_model_load: n_vocab       = 51864\nwhisper_model_load: n_audio_ctx   = 1500\nwhisper_model_load: n_audio_state = 512\nwhisper_model_load: n_audio_head  = 8\nwhisper_model_load: n_audio_layer = 6\nwhisper_model_load: n_text_ctx    = 448\nwhisper_model_load: n_text_state  = 512\nwhisper_model_load: n_text_head   = 8\nwhisper_model_load: n_text_layer  = 6\nwhisper_model_load: n_mels        = 80\nwhisper_model_load: ftype         = 1\nwhisper_model_load: qntvr         = 0\nwhisper_model_load: type          = 2 (base)\nwhisper_model_load: adding 1607 extra tokens\nwhisper_model_load: n_langs       = 99\nwhisper_model_load:          CPU total size =   147.37 MB\nwhisper_model_load: model size    =  147.37 MB\nwhisper_backend_init_gpu: device 0: CPU (type: 0)\nwhisper_backend_init_gpu: no GPU found\nwhisper_init_state: kv self size  =    6.29 MB\nwhisper_init_state: kv cross size =   18.87 MB\nwhisper_init_state: kv pad  size  =    3.15 MB\nwhisper_init_state: compute buffer (conv)   =   16.28 MB\nwhisper_init_state: compute buffer (encode) =   23.09 MB\nwhisper_init_state: compute buffer (cross)  =    4.66 MB\nwhisper_init_state: compute buffer (decode) =   96.37 MB\n\nsystem_info: n_threads = 4 / 8 | WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | OPENMP = 1 | REPACK = 1 | \n\nmain: processing '/tmp/openjibo-asr/1776226035094_tid-9479acf8-3880-11f1-846c-5cf821ea55ae.trimmed.wav' (41102 samples, 2.6 sec), 4 threads, 1 processors, 5 beams + best of 5, lang = en, task = transcribe, timestamps = 1 ...\n\n\nwhisper_print_timings:     load time =   196.24 ms\nwhisper_print_timings:     fallbacks =   0 p /   0 h\nwhisper_print_timings:      mel time =    11.48 ms\nwhisper_print_timings:   sample time =    43.94 ms /    39 runs (     1.13 ms per run)\nwhisper_print_timings:   encode time =  1969.12 ms /     1 runs (  1969.12 ms per run)\nwhisper_print_timings:   decode time =    18.30 ms /     2 runs (     9.15 ms per run)\nwhisper_print_timings:   batchd time =   166.71 ms /    33 runs (     5.05 ms per run)\nwhisper_print_timings:   prompt time =     0.00 ms /     1 runs (     0.00 ms per run)\nwhisper_print_timings:    total time =  2498.61 ms\n"}
+TIMING {"at":"2026-04-15T04:07:17.925Z","event":"ws_finalize_transcript","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","transcript":"Tell me a joke.","source":"trimmed"}
+LOOKING FOR NORMALIZED TEXT {
+  "lower": "tell me a joke"
+}
+TIMING {"at":"2026-04-15T04:07:17.926Z","event":"ws_send_listen_result","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","intent":"joke","asrText":"Tell me a joke."}
+LOOKING FOR INTENT CHANGE {
+  "intent": "joke",
+  "heardText": "Tell me a joke.",
+  "normalizedText": "Tell me a joke.",
+  "isYesNo": false,
+  "rule": null,
+  "entities": {
+    "domain": "create"
+  }
+}
+GENERIC SYNTHETIC LISTEN PAYLOAD {
+  "intent": "joke",
+  "normalizedText": "Tell me a joke.",
+  "rules": [
+    "launch",
+    "globals/global_commands_launch"
+  ]
+}
+TIMING {"at":"2026-04-15T04:07:17.929Z","event":"ws_send_eos","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae"}
+CompleteTurnWithRoute {
+  "listenData": {
+    "lang": "en-US",
+    "hotphrase": true,
+    "rules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "mode": "",
+    "asr": {
+      "hints": [],
+      "earlyEOS": [],
+      "encoding": "OGG_OPUS",
+      "sampleRate": 16000,
+      "sosTimeout": 7000,
+      "maxSpeechTimeout": 20000
+    }
+  },
+  "rules": [
+    "launch",
+    "globals/global_commands_launch"
+  ],
+  "isYesNoIntent": false,
+  "yesNoSession": false
+}
+==== WS MESSAGE ====
+WsId: ws-1776226032561-f3c4d8
+Time: 2026-04-15T04:07:17.932Z
+Host: neo-hub.jibo.com
+Path: /v1/listen
+WS KIND: neo-hub-listen
+IsBinary: true
+Length: 4239
+Binary HEX preview: 4f676753000040cb030000000000734833660a0000004f250e0d1aa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a89ba0b81d72918df0d4f489142a3f5655f0a49d167e43e6744d49c7435d31fb720c9252d49a612b686683cc92631448c07fb367a5982f9a1d0d1567434959b77b9277088618e2f8ef7d687cd244
+====================
+TIMING {"at":"2026-04-15T04:07:17.933Z","event":"ogg_page_in","transID":"tid-9479acf8-3880-11f1-846c-5cf821ea55ae","chunkIndex":10,"length":4239,"ok":true,"capture":"OggS","version":0,"headerType":0,"continued":false,"bos":false,"eos":false,"granulePos":"248640","bitstreamSerial":1714636915,"pageSequenceNo":10,"checksum":219030863,"pageSegments":26,"headerLen":53,"payloadLen":4186,"expectedTotalLen":4239,"actualLen":4239,"lacingPreview":[161,161,161,161,161,161,161,161,161,161,161,161]}
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:20.305Z
+Remote: 192.168.8.170 36387
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776226040346-e6749216
+Time: 2026-04-15T04:07:20.346Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Update_20160301.GetUpdateFrom
+BodyLength: 70
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.45 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Update_20160301.GetUpdateFrom",
+  "x-amz-content-sha256": "77e9439aa6a1468b5a140debe0da6d66ab729b7ce921eaa87cb8782a76634cbc",
+  "content-length": "70",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040719Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/update/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=c13777c8ef7f0bc20e4762ae9f3dd4f0d246632c3b4bc27f70d2ac9905d9309c",
+  "connection": "keep-alive"
+}
+Body (utf8): {"fromVersion":"6.0.18","subsystem":"jibo-diagnostics","filter":"fcs"}
+=======================
+UPDATE OPERATION: GetUpdateFrom BODY: {"fromVersion":"6.0.18","subsystem":"jibo-diagnostics","filter":"fcs"}
+==== HTTPS RESPONSE ====
+ReqId: 1776226040346-e6749216
+Time: 2026-04-15T04:07:20.346Z
+Status: 200
+Note: Returned placeholder no-op update
+Body: {
+  "_id": "noop-update-jibo-diagnostics-6.0.18",
+  "created": 1776226040346,
+  "accountId": "usr_test_001",
+  "fromVersion": "6.0.18",
+  "toVersion": "6.0.18",
+  "changes": "No update available",
+  "url": "https://api.jibo.com/update/noop",
+  "shaHash": "noop",
+  "length": 0,
+  "subsystem": "jibo-diagnostics",
+  "filter": "fcs",
+  "dependencies": {}
+}
+========================
+WS ping: ws-1776225951126-e0e6bf api-socket len= 0 
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:40.260Z
+Remote: 192.168.8.170 36429
+======================
+TLS SNI host: api.jibo.com
+==== HTTPS REQUEST ====
+ReqId: 1776226060325-eeaee503
+Time: 2026-04-15T04:07:40.325Z
+Host: api.jibo.com
+Method: POST
+URL: /
+X-Amz-Target: Update_20160301.GetUpdateFrom
+BodyLength: 61
+Headers: {
+  "user-agent": "jibo-server-client-nodejs/3.0.45 linux/v6.9.2",
+  "content-type": "application/json",
+  "x-amz-target": "Update_20160301.GetUpdateFrom",
+  "x-amz-content-sha256": "6e08900346af61111dd4602fc62edfac5410ea331828442447f38685665c0dd7",
+  "content-length": "61",
+  "host": "api.jibo.com",
+  "x-amz-date": "20260415T040724Z",
+  "authorization": "AWS4-HMAC-SHA256 Credential=a3ksSqxDYDpzZrV8j4md/20260415/us-east-1/update/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date;x-amz-target, Signature=74e9ed1872583f7761ed21b8f031799a0350742a457993035d546b7437b8bec1",
+  "connection": "keep-alive"
+}
+Body (utf8): {"fromVersion":"10.0.18","subsystem":"@be/be","filter":"fcs"}
+=======================
+UPDATE OPERATION: GetUpdateFrom BODY: {"fromVersion":"10.0.18","subsystem":"@be/be","filter":"fcs"}
+==== HTTPS RESPONSE ====
+ReqId: 1776226060325-eeaee503
+Time: 2026-04-15T04:07:40.326Z
+Status: 200
+Note: Returned placeholder no-op update
+Body: {
+  "_id": "noop-update-@be/be-10.0.18",
+  "created": 1776226060326,
+  "accountId": "usr_test_001",
+  "fromVersion": "10.0.18",
+  "toVersion": "10.0.18",
+  "changes": "No update available",
+  "url": "https://api.jibo.com/update/noop",
+  "shaHash": "noop",
+  "length": 0,
+  "subsystem": "@be/be",
+  "filter": "fcs",
+  "dependencies": {}
+}
+========================
+=== TCP CONNECTION ===
+Time: 2026-04-15T04:07:43.271Z
+Remote: 192.168.8.170 36497
+======================
+TLS SNI host: api.jibo.com
+^C
+
