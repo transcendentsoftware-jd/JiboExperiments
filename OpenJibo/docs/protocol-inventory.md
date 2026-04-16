@@ -108,6 +108,65 @@ What remains intentionally unclaimed for that slice:
 - whether additional websocket messages appear in other successful skill paths
 - whether any timing gaps besides the observed 75 ms `EOS -> SKILL_ACTION` delay matter
 
+### Latest Live Capture Additions From April 16, 2026
+
+The newest repo-root websocket capture at [captures/websocket/20260416.events.ndjson](/C:/Projects/JiboExperiments/captures/websocket/20260416.events.ndjson) adds more grounded websocket discovery without implying broad protocol coverage.
+
+Observed `CLIENT_ASR` transcript-bearing turns now include:
+
+- `tell me a joke`
+- `do a dance`
+- `surprise me`
+- `personal report`
+- `tell me about the weather`
+- `tell me about my calendar`
+- `what does my commute look like`
+- `tell me about the news`
+
+Observed menu-driven `CLIENT_NLU` intents now include:
+
+- `loadMenu`
+- `askForTime`
+- `askForDate`
+- `start`
+- `timerValue`
+- `set`
+- `alarmValue`
+
+Observed entity/rule shapes from those menu flows include:
+
+- `askForTime` with `entities.domain = "clock"` and `rules = ["clock/clock_menu"]`
+- `askForDate` with the same `clock` menu rule family
+- `timerValue` with timer duration entities
+- `alarmValue` with alarm time entities such as `ampm` and `time`
+
+Current `.NET` parity for that new slice is still intentionally partial:
+
+- menu-side `CLIENT_NLU` replies now preserve the observed inbound intent/rules/entities in the synthetic outbound `LISTEN` payload
+- `askForTime` and `askForDate` are now fixture-backed as mapped menu intents
+- `do a dance` is now recognized as a distinct chat/dance intent in the current synthetic path
+
+Still unknown:
+
+- whether `surprise me`, `personal report`, weather, calendar, commute, and news should map to richer skill-specific websocket payloads
+- whether menu-side clock/timer/alarm flows require additional websocket messages beyond the currently observed `LISTEN` and `EOS`
+- how much of those flows are actually completed robot-side versus merely acknowledged by the cloud
+
+### Buffered Audio / ASR Direction
+
+The `.NET` hosted implementation now has two STT lanes:
+
+- existing synthetic transcript-hint replay for fixture-driven parity work
+- a new opt-in local buffered-audio path that preserves websocket Ogg/Opus frames and can invoke external `ffmpeg` plus `whisper.cpp`
+
+That local tool-based path is intentionally experimental and disabled by default. Its purpose is to let us iterate on real buffered-audio decoding in `.NET` without changing the stable cloud-first architecture or claiming production ASR parity yet.
+
+Future provider options still under consideration:
+
+- local decode/transcribe in `.NET` using preserved websocket audio plus external tools
+- Azure Speech as a hosted STT option for the long-term cloud path
+- direct managed Opus decode later if a library proves stable enough for the hosted deployment target
+
 Current raw-audio fallback behavior remains explicitly synthetic:
 
 - when a buffered-audio turn can be resolved through the synthetic transcript-hint seam, `.NET` now auto-finalizes and emits `LISTEN` + `EOS` + `SKILL_ACTION`

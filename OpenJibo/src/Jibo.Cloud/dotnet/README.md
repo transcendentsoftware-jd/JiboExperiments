@@ -108,3 +108,25 @@ Current raw-audio behavior is still a compatibility bridge:
 - if buffered audio has a synthetic transcript hint, the server now auto-finalizes the turn and emits `LISTEN` + `EOS` + `SKILL_ACTION`
 - if buffered audio crosses the finalize threshold without a usable transcript, the server now emits a Node-style fallback completion with `EOS` instead of hanging the turn forever
 - this is intentionally not a claim of real ASR parity
+
+## Buffered Audio STT
+
+The current `.NET` websocket stack now preserves buffered Ogg/Opus websocket frames in memory for each in-flight turn.
+
+That enables two distinct STT paths:
+
+- fixture-oriented synthetic transcript hints for replay and parity tests
+- an opt-in local tool-based path that can normalize the buffered Ogg pages, call `ffmpeg`, and then call `whisper.cpp`
+
+The local tool path is intentionally off by default. It exists to help map real robot audio behavior while the stable hosted cloud remains the primary goal.
+
+Configuration lives under `OpenJibo:Stt`:
+
+- `EnableLocalWhisperCpp`
+- `FfmpegPath`
+- `WhisperCliPath`
+- `WhisperModelPath`
+- `WhisperLanguage`
+- `TempDirectory`
+
+This is not yet a claim of production-ready onboard ASR. It is a `.NET` discovery seam that keeps us compatible with the Node oracle while we evaluate longer-term options such as Azure-hosted STT or a managed decode/transcribe stack.

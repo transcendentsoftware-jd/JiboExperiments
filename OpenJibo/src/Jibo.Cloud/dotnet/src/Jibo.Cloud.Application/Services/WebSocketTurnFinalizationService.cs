@@ -23,6 +23,10 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.FirstAudioReceivedUtc ??= DateTimeOffset.UtcNow;
         turnState.BufferedAudioChunkCount += 1;
         turnState.BufferedAudioBytes += envelope.Binary?.Length ?? 0;
+        if (envelope.Binary is { Length: > 0 })
+        {
+            turnState.BufferedAudioFrames.Add(envelope.Binary.ToArray());
+        }
         turnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow;
         turnState.AwaitingTurnCompletion = true;
         session.Metadata["lastAudioBytes"] = envelope.Binary?.Length ?? 0;
@@ -223,6 +227,7 @@ public sealed class WebSocketTurnFinalizationService(
         session.TurnState.BufferedAudioChunkCount = 0;
         session.TurnState.FirstAudioReceivedUtc = null;
         session.TurnState.LastAudioReceivedUtc = null;
+        session.TurnState.BufferedAudioFrames.Clear();
         session.TurnState.FinalizeAttemptCount = 0;
         session.Metadata.Remove("audioTranscriptHint");
     }
@@ -236,6 +241,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.LastAudioReceivedUtc = null;
         turnState.BufferedAudioChunkCount = 0;
         turnState.BufferedAudioBytes = 0;
+        turnState.BufferedAudioFrames.Clear();
         turnState.FinalizeAttemptCount = 0;
         turnState.AwaitingTurnCompletion = false;
         turnState.SawListen = false;

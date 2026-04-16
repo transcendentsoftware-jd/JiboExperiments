@@ -10,11 +10,20 @@ public sealed class ResponsePlanToSocketMessagesMapper
     {
         var speak = plan.Actions.OfType<SpeakAction>().FirstOrDefault();
         var skill = plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault();
+        var messageType = ReadAttribute(turn, "messageType");
         var transId = turn.Attributes.TryGetValue("transID", out var transIdValue)
             ? transIdValue?.ToString() ?? string.Empty
             : session.LastTransId ?? string.Empty;
         var transcript = turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty;
-        var rules = ReadRules(turn);
+        var clientIntent = ReadAttribute(turn, "clientIntent");
+        var rules = ReadRules(turn, messageType);
+        var outboundIntent = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
+            ? clientIntent!
+            : plan.IntentName ?? "unknown";
+        var outboundAsrText = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
+            ? clientIntent!
+            : transcript;
+        var entities = ReadEntities(turn, messageType);
         var messages = new List<SocketReplyPlan>();
 
         messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
@@ -27,18 +36,18 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     confidence = 0.95,
                     final = true,
-                    text = transcript
+                    text = outboundAsrText
                 },
                 nlu = new
                 {
                     confidence = 0.95,
-                    intent = plan.IntentName ?? "unknown",
+                    intent = outboundIntent,
                     rules,
-                    entities = new Dictionary<string, object?>()
+                    entities
                 },
                 match = new
                 {
-                    intent = plan.IntentName ?? "unknown",
+                    intent = outboundIntent,
                     rule = rules.FirstOrDefault() ?? string.Empty,
                     score = 0.95
                 }
@@ -107,9 +116,13 @@ public sealed class ResponsePlanToSocketMessagesMapper
         ];
     }
 
-    private static IReadOnlyList<string> ReadRules(TurnContext turn)
+    private static IReadOnlyList<string> ReadRules(TurnContext turn, string? messageType)
     {
-        if (!turn.Attributes.TryGetValue("listenRules", out var value))
+        var attributeName = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
+            ? "clientRules"
+            : "listenRules";
+
+        if (!turn.Attributes.TryGetValue(attributeName, out var value))
         {
             return [];
         }
@@ -122,12 +135,42 @@ public sealed class ResponsePlanToSocketMessagesMapper
         };
     }
 
+    private static object ReadEntities(TurnContext turn, string? messageType)
+    {
+        if (!string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
+        {
+            return new Dictionary<string, object?>();
+        }
+
+        if (!turn.Attributes.TryGetValue("clientEntities", out var value) || value is null)
+        {
+            return new Dictionary<string, object?>();
+        }
+
+        return value switch
+        {
+            JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.Object => jsonElement,
+            IDictionary<string, object?> dictionary => dictionary,
+            _ => new Dictionary<string, object?>()
+        };
+    }
+
+    private static string? ReadAttribute(TurnContext turn, string key)
+    {
+        return turn.Attributes.TryGetValue(key, out var value)
+            ? value?.ToString()
+            : null;
+    }
+
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
     {
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
+        var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
         var skillId = isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill";
-        var esml = isJoke
+        var esml = isDance
+            ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
+            : isJoke
             ? $"<speak><es cat='happy' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>"
             : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>";
         var mimId = isJoke ? "runtime-joke" : "runtime-chat";

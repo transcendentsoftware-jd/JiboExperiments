@@ -9,6 +9,7 @@ public sealed class WebSocketTurnState
     public DateTimeOffset? LastAudioReceivedUtc { get; set; }
     public int BufferedAudioChunkCount { get; set; }
     public int BufferedAudioBytes { get; set; }
+    public List<byte[]> BufferedAudioFrames { get; } = [];
     public int FinalizeAttemptCount { get; set; }
     public bool AwaitingTurnCompletion { get; set; }
     public bool SawListen { get; set; }

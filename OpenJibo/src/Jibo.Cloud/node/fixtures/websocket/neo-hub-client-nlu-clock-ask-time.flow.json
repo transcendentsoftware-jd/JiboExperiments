@@ -1,0 +1,82 @@
+{
+  "name": "neo-hub client nlu clock ask time flow",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/listen",
+    "kind": "neo-hub-listen",
+    "token": "fixture-clock-nlu-token"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "transID": "fixture-trans-clock-time",
+        "data": {
+          "lang": "en-US",
+          "rules": [
+            "clock/clock_menu",
+            "globals/global_commands_launch"
+          ],
+          "mode": "CLIENT_NLU"
+        }
+      },
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_NLU",
+        "transID": "fixture-trans-clock-time",
+        "data": {
+          "entities": {
+            "domain": "clock"
+          },
+          "intent": "askForTime",
+          "rules": [
+            "clock/clock_menu"
+          ]
+        }
+      },
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS"
+      ],
+      "expectedReplies": [
+        {
+          "type": "LISTEN",
+          "jsonSubset": {
+            "type": "LISTEN",
+            "transID": "fixture-trans-clock-time",
+            "data": {
+              "asr": {
+                "text": "askForTime"
+              },
+              "nlu": {
+                "intent": "askForTime",
+                "rules": [
+                  "clock/clock_menu"
+                ],
+                "entities": {
+                  "domain": "clock"
+                }
+              },
+              "match": {
+                "intent": "askForTime",
+                "rule": "clock/clock_menu"
+              }
+            }
+          }
+        },
+        {
+          "type": "EOS",
+          "jsonSubset": {
+            "type": "EOS",
+            "transID": "fixture-trans-clock-time",
+            "data": {}
+          }
+        }
+      ]
+    }
+  ]
+}

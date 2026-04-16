@@ -108,6 +108,8 @@ The current websocket bridge now also includes server-driven raw-audio turn comp
 The current richer websocket parity slice is still intentionally narrow:
 
 - the successful joke path now has fixture-backed reply sequencing and partial payload-shape fidelity through `CLIENT_ASR -> LISTEN -> EOS -> delayed SKILL_ACTION`
+- menu-side `CLIENT_NLU` parity is beginning to expand from live captures, starting with preserved clock-menu intent/rules/entities
+- `.NET` now preserves buffered websocket audio frames so local tool-based ASR experiments can run without changing the stable cloud-first architecture
 - this is not a claim of broad skill parity or full Jibo websocket coverage
 
 ## Important Docs

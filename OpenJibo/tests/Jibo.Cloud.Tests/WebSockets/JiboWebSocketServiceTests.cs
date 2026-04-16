@@ -295,6 +295,42 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientNlu_ClockAskForTime_PreservesObservedIntentRulesAndEntities()
+    {
+        var listenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-menu-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-time","data":{"lang":"en-US","rules":["clock/clock_menu","globals/global_commands_launch"],"mode":"CLIENT_NLU"}}"""
+        });
+
+        Assert.Single(listenReplies);
+        Assert.Equal("OPENJIBO_TURN_PENDING", ReadReplyType(listenReplies[0]));
+
+        var nluReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-menu-token",
+            Text = """{"type":"CLIENT_NLU","transID":"trans-clock-time","data":{"entities":{"domain":"clock"},"intent":"askForTime","rules":["clock/clock_menu"]}}"""
+        });
+
+        Assert.Equal(2, nluReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(nluReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(nluReplies[1]));
+
+        using var listenPayload = JsonDocument.Parse(nluReplies[0].Text!);
+        Assert.Equal("askForTime", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("askForTime", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+        Assert.Equal("clock/clock_menu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        Assert.Equal("clock/clock_menu", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
     public async Task BufferedAudio_WithSyntheticTranscriptHint_FinalizesThroughSttSeam()
     {
         var listenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -562,6 +598,7 @@ public sealed class JiboWebSocketServiceTests
     [Theory]
     [InlineData("fixtures\\neo-hub-client-asr-joke.flow.json")]
     [InlineData("fixtures\\neo-hub-context-client-nlu.flow.json")]
+    [InlineData("fixtures\\neo-hub-client-nlu-clock-ask-time.flow.json")]
     [InlineData("fixtures\\neo-hub-buffered-audio-synthetic-asr.flow.json")]
     [InlineData("fixtures\\neo-hub-multichunk-audio-chat.flow.json")]
     [InlineData("fixtures\\neo-hub-buffered-audio-pending.flow.json")]

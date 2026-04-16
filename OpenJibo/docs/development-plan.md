@@ -55,6 +55,20 @@ Right now the strongest implemented vertical slice beyond basic listen completio
 
 That should remain the model for future websocket work: capture first, fixture second, parity third.
 
+The latest live captures also support a second discovery track:
+
+- menu-driven `CLIENT_NLU` parity for clock, timer, and alarm flows
+- richer transcript-bearing `CLIENT_ASR` discovery beyond jokes
+- buffered-audio preservation for eventual real ASR in `.NET`
+
+Near-term ASR work should stay staged:
+
+1. preserve and replay the websocket audio payloads honestly
+2. validate a local tool-based decode/transcribe loop in `.NET`
+3. compare that against Azure-hosted STT before choosing a default production path
+
+That keeps Node as the reverse-engineering oracle while letting the long-term `.NET` cloud gain real STT seams without pretending they are finished.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

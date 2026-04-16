@@ -1,5 +1,6 @@
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
+using Jibo.Cloud.Infrastructure.Audio;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Infrastructure.Telemetry;
 using Jibo.Runtime.Abstractions;
@@ -12,14 +13,19 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddOpenJiboCloud(this IServiceCollection services, IConfiguration? configuration = null)
     {
+        var sttOptions = new BufferedAudioSttOptions();
         if (configuration is not null)
         {
             services.Configure<WebSocketTelemetryOptions>(configuration.GetSection("OpenJibo:Telemetry"));
             services.Configure<ProtocolTelemetryOptions>(configuration.GetSection("OpenJibo:ProtocolTelemetry"));
+            configuration.GetSection("OpenJibo:Stt").Bind(sttOptions);
         }
 
+        services.AddSingleton(sttOptions);
         services.AddSingleton<ICloudStateStore, InMemoryCloudStateStore>();
         services.AddSingleton<IConversationBroker, DemoConversationBroker>();
+        services.AddSingleton<IExternalProcessRunner, ExternalProcessRunner>();
+        services.AddSingleton<ISttStrategy, LocalWhisperCppBufferedAudioSttStrategy>();
         services.AddSingleton<ISttStrategy, SyntheticBufferedAudioSttStrategy>();
         services.AddSingleton<ISttStrategySelector, DefaultSttStrategySelector>();
         services.AddSingleton<IWebSocketTelemetrySink, FileWebSocketTelemetrySink>();

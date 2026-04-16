@@ -9,12 +9,12 @@ public sealed class ProtocolToTurnContextMapper
     public TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session, string messageType)
     {
         var turnState = session.TurnState;
-        var text = ExtractTranscript(envelope.Text);
         var protocolOperation = messageType.ToLowerInvariant();
         var attributes = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
             ["messageType"] = messageType
         };
+        var text = ExtractTranscript(envelope.Text, attributes);
 
         if (!string.IsNullOrWhiteSpace(turnState.TransId))
         {
@@ -35,6 +35,7 @@ public sealed class ProtocolToTurnContextMapper
         {
             attributes["bufferedAudioBytes"] = turnState.BufferedAudioBytes;
             attributes["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount;
+            attributes["bufferedAudioFrames"] = turnState.BufferedAudioFrames.Select(frame => frame.ToArray()).ToArray();
         }
 
         if (!string.IsNullOrWhiteSpace(turnState.AudioTranscriptHint))
@@ -66,7 +67,7 @@ public sealed class ProtocolToTurnContextMapper
         };
     }
 
-    private static string? ExtractTranscript(string? text)
+    private static string? ExtractTranscript(string? text, IDictionary<string, object?> attributes)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -99,6 +100,25 @@ public sealed class ProtocolToTurnContextMapper
                 }
 
                 if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
+                {
+                    attributes["clientIntent"] = intent.GetString();
+                }
+
+                if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
+                {
+                    attributes["clientRules"] = rules.EnumerateArray()
+                        .Where(item => item.ValueKind == JsonValueKind.String)
+                        .Select(item => item.GetString() ?? string.Empty)
+                        .Where(rule => !string.IsNullOrWhiteSpace(rule))
+                        .ToArray();
+                }
+
+                if (data.TryGetProperty("entities", out var entities) && entities.ValueKind == JsonValueKind.Object)
+                {
+                    attributes["clientEntities"] = entities.Clone();
+                }
+
+                if (intent.ValueKind == JsonValueKind.String)
                 {
                     return intent.GetString();
                 }
