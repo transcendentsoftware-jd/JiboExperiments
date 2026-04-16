@@ -36,6 +36,70 @@
         "LISTEN",
         "EOS",
         "SKILL_ACTION"
+      ],
+      "expectedReplies": [
+        {
+          "type": "LISTEN",
+          "jsonSubset": {
+            "type": "LISTEN",
+            "transID": "fixture-trans-joke",
+            "data": {
+              "asr": {
+                "text": "tell me a joke"
+              },
+              "nlu": {
+                "intent": "joke",
+                "rules": [
+                  "wake-word"
+                ]
+              },
+              "match": {
+                "intent": "joke",
+                "rule": "wake-word"
+              }
+            }
+          }
+        },
+        {
+          "type": "EOS",
+          "jsonSubset": {
+            "type": "EOS",
+            "transID": "fixture-trans-joke",
+            "data": {}
+          }
+        },
+        {
+          "type": "SKILL_ACTION",
+          "delayMs": 75,
+          "jsonSubset": {
+            "type": "SKILL_ACTION",
+            "transID": "fixture-trans-joke",
+            "data": {
+              "skill": {
+                "id": "@be/joke"
+              },
+              "action": {
+                "config": {
+                  "jcp": {
+                    "type": "SLIM",
+                    "config": {
+                      "play": {
+                        "meta": {
+                          "prompt_id": "RUNTIME_PROMPT",
+                          "prompt_sub_category": "AN",
+                          "mim_id": "runtime-joke",
+                          "mim_type": "announcement"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "analytics": {},
+              "final": true
+            }
+          }
+        }
       ]
     }
   ]

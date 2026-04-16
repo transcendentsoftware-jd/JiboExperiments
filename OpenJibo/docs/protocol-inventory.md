@@ -74,6 +74,7 @@ The current .NET pass covers only a narrow, explicitly synthetic subset of obser
 - `EOS` emission after completed turns
 - delayed `SKILL_ACTION` emission after `EOS` on completed turn flows to better match the Node oracle timing
 - first richer vertical slice for joke/chat `SKILL_ACTION` playback
+- fixture-backed joke-turn payload fidelity for `CLIENT_ASR -> LISTEN -> EOS -> delayed SKILL_ACTION`, including Node-like `EOS` envelope fields and the currently observed joke `SKILL_ACTION` metadata shape
 
 This does not yet mean parity for:
 
@@ -81,7 +82,31 @@ This does not yet mean parity for:
 - real STT provider integration and external ASR lifecycle timing
 - early-EOS behavior
 - multi-step skill lifecycles beyond the current synthetic playback response
+- broad `SKILL_ACTION` payload coverage outside the currently observed joke/chat playback slice
 - broader interaction, animation, or ESML command families
+
+### Successful Joke Turn: What Is Grounded Now
+
+The highest-confidence websocket vertical slice after the starter parity pass is now:
+
+- inbound `CLIENT_ASR` carrying `"tell me a joke"`
+- outbound synthetic `LISTEN` result with joke intent and remembered rules
+- outbound `EOS` carrying `ts`, `msgID`, `transID`, and an empty `data` object
+- outbound `SKILL_ACTION` about 75 ms later
+- joke `SKILL_ACTION` payload shape aligned with the Node oracle for:
+  - `data.skill.id = "@be/joke"`
+  - `data.action.config.jcp.type = "SLIM"`
+  - `data.action.config.jcp.config.play.meta.prompt_id = "RUNTIME_PROMPT"`
+  - `data.action.config.jcp.config.play.meta.prompt_sub_category = "AN"`
+  - `data.action.config.jcp.config.play.meta.mim_id = "runtime-joke"`
+  - `data.action.config.jcp.config.play.meta.mim_type = "announcement"`
+
+What remains intentionally unclaimed for that slice:
+
+- whether the joke payload is complete beyond those fields
+- whether other successful skills use the same payload shape
+- whether additional websocket messages appear in other successful skill paths
+- whether any timing gaps besides the observed 75 ms `EOS -> SKILL_ACTION` delay matter
 
 Current raw-audio fallback behavior remains explicitly synthetic:
 

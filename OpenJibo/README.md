@@ -105,6 +105,11 @@ The current websocket bridge now also includes server-driven raw-audio turn comp
 - `EOS` is emitted on that auto-finalize path so turns do not remain open indefinitely
 - transcript-less raw-audio turns still fall back to a synthetic compatibility response, not real ASR
 
+The current richer websocket parity slice is still intentionally narrow:
+
+- the successful joke path now has fixture-backed reply sequencing and partial payload-shape fidelity through `CLIENT_ASR -> LISTEN -> EOS -> delayed SKILL_ACTION`
+- this is not a claim of broad skill parity or full Jibo websocket coverage
+
 ## Important Docs
 
 - [Cloud overview](/src/Jibo.Cloud/README.md)

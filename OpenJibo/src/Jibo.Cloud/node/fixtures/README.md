@@ -9,4 +9,9 @@ Current fixture groups:
 - `websocket/`
   Sanitized Neo-Hub turn-flow examples used to replay `LISTEN`, `CONTEXT`, `CLIENT_NLU`, `CLIENT_ASR`, buffered-audio accumulation, pending/finalize states, and synthetic `EOS` / `SKILL_ACTION` behavior against the .NET implementation.
 
+Current websocket fixture depth is uneven on purpose:
+
+- `neo-hub-client-asr-joke.flow.json` now asserts a richer vertical slice than reply types alone. It captures the observed Node-oriented `CLIENT_ASR -> LISTEN -> EOS -> delayed SKILL_ACTION` joke turn with payload-shape expectations for `EOS` and joke `SKILL_ACTION`.
+- The other websocket fixtures are still mainly sequencing fixtures. They are useful for replay and guardrails, but they should not be read as proof of broader payload parity.
+
 Expand this folder whenever new robot traffic is captured and cleaned.

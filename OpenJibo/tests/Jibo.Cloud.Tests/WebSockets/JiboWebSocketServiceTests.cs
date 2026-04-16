@@ -54,6 +54,25 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("hello jibo", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("chat", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        using var eosPayload = JsonDocument.Parse(replies[1].Text!);
+        Assert.True(eosPayload.RootElement.TryGetProperty("ts", out _));
+        Assert.StartsWith("mid-", eosPayload.RootElement.GetProperty("msgID").GetString());
+        Assert.Equal("trans-hello", eosPayload.RootElement.GetProperty("transID").GetString());
+        Assert.Equal(JsonValueKind.Object, eosPayload.RootElement.GetProperty("data").ValueKind);
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.StartsWith("mid-", skillPayload.RootElement.GetProperty("msgID").GetString());
+        var meta = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("meta");
+        Assert.False(meta.TryGetProperty("intent", out _));
+        Assert.False(meta.TryGetProperty("transcript", out _));
     }
 
     [Fact]
@@ -427,6 +446,60 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsrJokeFlow_MatchesNodePayloadShapeForEosAndSkillAction()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-joke-token",
+            Text = """{"type":"LISTEN","transID":"trans-joke-shape","data":{"rules":["wake-word"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-joke-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-joke-shape","data":{"text":"tell me a joke"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal(75, replies[2].DelayMs);
+
+        using var eosPayload = JsonDocument.Parse(replies[1].Text!);
+        Assert.Equal("EOS", eosPayload.RootElement.GetProperty("type").GetString());
+        Assert.Equal("trans-joke-shape", eosPayload.RootElement.GetProperty("transID").GetString());
+        Assert.True(eosPayload.RootElement.TryGetProperty("ts", out _));
+        Assert.StartsWith("mid-", eosPayload.RootElement.GetProperty("msgID").GetString());
+        Assert.Empty(eosPayload.RootElement.GetProperty("data").EnumerateObject());
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("SKILL_ACTION", skillPayload.RootElement.GetProperty("type").GetString());
+        Assert.Equal("trans-joke-shape", skillPayload.RootElement.GetProperty("transID").GetString());
+        Assert.StartsWith("mid-", skillPayload.RootElement.GetProperty("msgID").GetString());
+        Assert.Equal("@be/joke", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+
+        var meta = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("meta");
+
+        Assert.Equal("RUNTIME_PROMPT", meta.GetProperty("prompt_id").GetString());
+        Assert.Equal("AN", meta.GetProperty("prompt_sub_category").GetString());
+        Assert.Equal("runtime-joke", meta.GetProperty("mim_id").GetString());
+        Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
+        Assert.False(meta.TryGetProperty("intent", out _));
+        Assert.False(meta.TryGetProperty("transcript", out _));
+    }
+
+    [Fact]
     public async Task FollowUpTurn_UsesNewTurnStateWithoutLeakingBufferedAudio()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -501,6 +574,71 @@ public sealed class JiboWebSocketServiceTests
             var replies = await _service.HandleMessageAsync(step.Message);
             var actualTypes = replies.Select(ReadReplyType).ToArray();
             Assert.Equal(step.ExpectedReplyTypes, actualTypes);
+
+            if (step.ExpectedReplies.Count > 0)
+            {
+                Assert.Equal(replies.Count, step.ExpectedReplies.Count);
+
+                for (var index = 0; index < step.ExpectedReplies.Count; index += 1)
+                {
+                    var expectedReply = step.ExpectedReplies[index];
+                    Assert.Equal(expectedReply.Type, actualTypes[index]);
+
+                    if (expectedReply.DelayMs.HasValue)
+                    {
+                        Assert.Equal(expectedReply.DelayMs.Value, replies[index].DelayMs);
+                    }
+
+                    if (expectedReply.JsonSubset is { ValueKind: JsonValueKind.Object } jsonSubset)
+                    {
+                        using var actualPayload = JsonDocument.Parse(replies[index].Text!);
+                        AssertJsonContains(jsonSubset, actualPayload.RootElement);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void AssertJsonContains(JsonElement expected, JsonElement actual)
+    {
+        Assert.Equal(expected.ValueKind, actual.ValueKind);
+
+        switch (expected.ValueKind)
+        {
+            case JsonValueKind.Object:
+                foreach (var property in expected.EnumerateObject())
+                {
+                    Assert.True(actual.TryGetProperty(property.Name, out var actualProperty), $"Expected property '{property.Name}' was not found.");
+                    AssertJsonContains(property.Value, actualProperty);
+                }
+                break;
+            case JsonValueKind.Array:
+            {
+                var expectedItems = expected.EnumerateArray().ToArray();
+                var actualItems = actual.EnumerateArray().ToArray();
+                Assert.Equal(expectedItems.Length, actualItems.Length);
+                for (var index = 0; index < expectedItems.Length; index += 1)
+                {
+                    AssertJsonContains(expectedItems[index], actualItems[index]);
+                }
+                break;
+            }
+            case JsonValueKind.String:
+                Assert.Equal(expected.GetString(), actual.GetString());
+                break;
+            case JsonValueKind.Number:
+                Assert.Equal(expected.GetRawText(), actual.GetRawText());
+                break;
+            case JsonValueKind.True:
+            case JsonValueKind.False:
+                Assert.Equal(expected.GetBoolean(), actual.GetBoolean());
+                break;
+            case JsonValueKind.Null:
+                Assert.Equal(JsonValueKind.Null, actual.ValueKind);
+                break;
+            default:
+                Assert.Equal(expected.GetRawText(), actual.GetRawText());
+                break;
         }
     }
 

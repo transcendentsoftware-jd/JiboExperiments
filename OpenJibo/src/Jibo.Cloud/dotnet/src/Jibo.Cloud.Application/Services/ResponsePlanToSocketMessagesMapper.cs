@@ -48,11 +48,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
         messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
         {
             type = "EOS",
-            data = new
-            {
-                sessionId = plan.SessionId,
-                transID = transId
-            }
+            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            msgID = CreateHubMessageId(),
+            transID = transId,
+            data = new { }
         })));
 
         if (emitSkillActions && speak is not null)
@@ -99,11 +98,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
             new SocketReplyPlan(JsonSerializer.Serialize(new
             {
                 type = "EOS",
-                data = new
-                {
-                    sessionId = session.SessionId,
-                    transID = transId
-                }
+                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                msgID = CreateHubMessageId(),
+                transID = transId,
+                data = new { }
             })),
             new SocketReplyPlan(JsonSerializer.Serialize(BuildGenericFallbackSkillPayload(transId)), DelayMs: 75)
         ];
@@ -138,7 +136,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         {
             type = "SKILL_ACTION",
             ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            msgID = $"msg-{Guid.NewGuid():N}",
+            msgID = CreateHubMessageId(),
             transID = transId,
             data = new
             {
@@ -163,9 +161,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         prompt_id = "RUNTIME_PROMPT",
                                         prompt_sub_category = "AN",
                                         mim_id = mimId,
-                                        mim_type = "announcement",
-                                        intent = plan.IntentName ?? "unknown",
-                                        transcript = turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty
+                                        mim_type = "announcement"
                                     }
                                 }
                             }
@@ -184,7 +180,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         {
             type = "SKILL_ACTION",
             ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            msgID = $"msg-{Guid.NewGuid():N}",
+            msgID = CreateHubMessageId(),
             transID = transId,
             data = new
             {
@@ -209,9 +205,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         prompt_id = "RUNTIME_PROMPT",
                                         prompt_sub_category = "AN",
                                         mim_id = "runtime-chat",
-                                        mim_type = "announcement",
-                                        intent = "unknown",
-                                        transcript = string.Empty
+                                        mim_type = "announcement"
                                     }
                                 }
                             }
@@ -232,6 +226,11 @@ public sealed class ResponsePlanToSocketMessagesMapper
             .Replace(">", "&gt;", StringComparison.Ordinal)
             .Replace("\"", "&quot;", StringComparison.Ordinal)
             .Replace("'", "&apos;", StringComparison.Ordinal);
+    }
+
+    private static string CreateHubMessageId()
+    {
+        return $"mid-{Guid.NewGuid()}";
     }
 
     public sealed record SocketReplyPlan(string Text, int DelayMs = 0);

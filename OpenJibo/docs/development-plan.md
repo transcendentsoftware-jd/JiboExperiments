@@ -19,6 +19,7 @@ It is intentionally broader than the current Node server. The Node server is a p
 
 - expand HTTP `X-Amz-Target` coverage from observed traffic and fixtures
 - grow WebSocket compatibility from stub acceptance into realistic turn orchestration
+- keep websocket parity fixture-driven, starting with exact sequencing and payload-shape fidelity for the successful joke vertical slice before claiming broader skill coverage
 - replace in-memory state with Azure SQL-backed persistence
 - add structured fixture replay tests
 - harden region/bootstrap docs by software version
@@ -33,6 +34,26 @@ We still need to map more than the current Node server expresses. Priority disco
 - richer embodied speech and animation behaviors
 - upload, logging, backup, and key-sharing flows
 - per-version configuration differences and region handling
+
+## Current WebSocket Discovery Focus
+
+The next fixture-driven websocket work should continue to separate three buckets:
+
+- discovered behavior
+  Grounded by the Node oracle, sanitized fixtures, and live captures
+- implemented parity
+  Only the narrow slices currently replayed and tested in `.NET`
+- future hypotheses
+  Ideas to investigate later, but not behaviors to silently bake into the hosted cloud
+
+Right now the strongest implemented vertical slice beyond basic listen completion is the successful joke turn:
+
+- `CLIENT_ASR` transcript-carrying turn completion
+- synthetic `LISTEN` result shaping
+- `EOS`
+- delayed joke `SKILL_ACTION`
+
+That should remain the model for future websocket work: capture first, fixture second, parity third.
 
 ## Speech, Animation, And ESML
 

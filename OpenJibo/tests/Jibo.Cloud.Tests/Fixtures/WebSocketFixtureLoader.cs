@@ -5,6 +5,11 @@ namespace Jibo.Cloud.Tests.Fixtures;
 
 internal static class WebSocketFixtureLoader
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public static WebSocketFixture Load(string relativePath)
     {
         var fullPath = Path.Combine(AppContext.BaseDirectory, relativePath);
@@ -32,7 +37,10 @@ internal static class WebSocketFixtureLoader
                     .EnumerateArray()
                     .Select(item => item.GetString() ?? string.Empty)
                     .Where(item => !string.IsNullOrWhiteSpace(item))
-                    .ToArray()
+                    .ToArray(),
+                ExpectedReplies = stepElement.TryGetProperty("expectedReplies", out var expectedReplies) && expectedReplies.ValueKind == JsonValueKind.Array
+                    ? JsonSerializer.Deserialize<List<ExpectedWebSocketReply>>(expectedReplies.GetRawText(), SerializerOptions) ?? []
+                    : []
             });
         }
 
@@ -54,4 +62,12 @@ internal sealed class WebSocketFixtureStep
 {
     public WebSocketMessageEnvelope Message { get; init; } = new();
     public IReadOnlyList<string> ExpectedReplyTypes { get; init; } = [];
+    public IReadOnlyList<ExpectedWebSocketReply> ExpectedReplies { get; init; } = [];
+}
+
+internal sealed class ExpectedWebSocketReply
+{
+    public string Type { get; init; } = string.Empty;
+    public int? DelayMs { get; init; }
+    public JsonElement? JsonSubset { get; init; }
 }
