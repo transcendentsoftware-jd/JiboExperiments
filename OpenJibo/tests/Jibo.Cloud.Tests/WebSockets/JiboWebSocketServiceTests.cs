@@ -2,6 +2,7 @@ using System.Text.Json;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
+using Jibo.Cloud.Infrastructure.Content;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Tests.Fixtures;
 
@@ -16,7 +17,9 @@ public sealed class JiboWebSocketServiceTests
     {
         _store = new InMemoryCloudStateStore();
         var turnContextMapper = new ProtocolToTurnContextMapper();
-        var conversationBroker = new DemoConversationBroker();
+        var contentRepository = new InMemoryJiboExperienceContentRepository();
+        var contentCache = new JiboExperienceContentCache(contentRepository);
+        var conversationBroker = new DemoConversationBroker(new JiboInteractionService(contentCache, new DefaultJiboRandomizer()));
         var replyMapper = new ResponsePlanToSocketMessagesMapper();
         var sttSelector = new DefaultSttStrategySelector(
         [
@@ -53,7 +56,7 @@ public sealed class JiboWebSocketServiceTests
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("hello jibo", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
-        Assert.Equal("chat", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("hello", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
 
         using var eosPayload = JsonDocument.Parse(replies[1].Text!);
         Assert.True(eosPayload.RootElement.TryGetProperty("ts", out _));
@@ -475,7 +478,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(3, finalizeReplies.Count);
         using var listenPayload = JsonDocument.Parse(finalizeReplies[0].Text!);
         Assert.Equal("hello from buffered audio", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
-        Assert.Equal("chat", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("hello", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
 
         using var skillPayload = JsonDocument.Parse(finalizeReplies[2].Text!);
         Assert.Equal("chitchat-skill", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
@@ -533,6 +536,45 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
         Assert.False(meta.TryGetProperty("intent", out _));
         Assert.False(meta.TryGetProperty("transcript", out _));
+    }
+
+    [Fact]
+    public async Task ClientAsrDanceFlow_EmitsAnimatedSkillAction()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-dance-token",
+            Text = """{"type":"LISTEN","transID":"trans-dance-shape","data":{"rules":["wake-word"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-dance-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-dance-shape","data":{"text":"do a dance"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        var esml = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+
+        Assert.Contains("<anim cat='dance' filter='music, ", esml, StringComparison.Ordinal);
+        Assert.Equal("chitchat-skill", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
     }
 
     [Fact]

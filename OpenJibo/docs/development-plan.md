@@ -69,6 +69,19 @@ Near-term ASR work should stay staged:
 
 That keeps Node as the reverse-engineering oracle while letting the long-term `.NET` cloud gain real STT seams without pretending they are finished.
 
+## Working Cloud Framework
+
+The current evidence in captures, fixtures, and Node behavior supports three main cloud interaction paths:
+
+1. local Jibo behavior observed by the cloud
+   The robot or its local skill stack already interpreted the turn and the cloud mainly tracks, acknowledges, or lightly completes it.
+2. local Jibo behavior overridden or redirected by the cloud
+   The robot reports the turn state, but the cloud chooses a different synthetic reply path.
+3. raw audio interpreted by the cloud
+   The robot sends buffered audio and the cloud performs transcript resolution before sending back `LISTEN`, `EOS`, and ESML-driven playback.
+
+Those are the right primary buckets for now. Additional side channels may still emerge later, especially around proactive traffic, direct skill/service sockets, or future on-device OS changes, but they should be treated as extensions to this model until captures prove otherwise.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

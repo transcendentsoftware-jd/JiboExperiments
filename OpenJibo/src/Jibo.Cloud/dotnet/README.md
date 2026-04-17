@@ -120,6 +120,13 @@ That enables two distinct STT paths:
 
 The local tool path is intentionally off by default. It exists to help map real robot audio behavior while the stable hosted cloud remains the primary goal.
 
+For local Ubuntu testing, the checked-in API host config now enables that path by default with the current Node-aligned tool locations:
+
+- `/usr/bin/ffmpeg`
+- `/usr/bin/whisper.cpp/build/bin/whisper-cli`
+- `/usr/bin/whisper.cpp/models/ggml-base.en.bin`
+- temp audio under `/tmp/openjibo-stt`
+
 Configuration lives under `OpenJibo:Stt`:
 
 - `EnableLocalWhisperCpp`
@@ -130,3 +137,13 @@ Configuration lives under `OpenJibo:Stt`:
 - `TempDirectory`
 
 This is not yet a claim of production-ready onboard ASR. It is a `.NET` discovery seam that keeps us compatible with the Node oracle while we evaluate longer-term options such as Azure-hosted STT or a managed decode/transcribe stack.
+
+## Current Interaction Paths
+
+The working cloud model currently looks like three main paths:
+
+1. Jibo reports what already happened locally and the cloud tracks or lightly completes the turn.
+2. Jibo reports what happened locally and the cloud responds with a different synthetic completion path.
+3. Jibo streams raw audio and the cloud interprets the turn before sending ESML back.
+
+That framing matches the repo evidence so far and is a good operating model for current discovery. There may still be smaller side paths around proactive traffic, direct skill-to-service communication, or future on-robot extensions, but those are not the main cloud revive loop yet.

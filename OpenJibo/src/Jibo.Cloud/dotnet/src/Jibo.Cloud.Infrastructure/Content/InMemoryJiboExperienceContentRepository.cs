@@ -1,0 +1,81 @@
+using Jibo.Cloud.Application.Abstractions;
+
+namespace Jibo.Cloud.Infrastructure.Content;
+
+public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceContentRepository
+{
+    private static readonly JiboExperienceCatalog Catalog = new()
+    {
+        Jokes =
+        [
+            "Why did the robot cross the road? Because it was programmed by the chicken.",
+            "Why was the robot tired when it got home? It had a hard drive.",
+            "What do you call a pirate robot? Arrrr two dee two.",
+            "Why did the robot go on vacation? It needed to recharge.",
+            "What kind of shoes do frogs wear? Open-toed."
+        ],
+        DanceAnimations =
+        [
+            "rom-upbeat",
+            "rom-ballroom",
+            "rom-silly",
+            "rom-slowdance",
+            "rom-electronic",
+            "rom-twerk"
+        ],
+        GreetingReplies =
+        [
+            "Hi there. It is really good to talk with you.",
+            "Hello there. I am glad you said hi.",
+            "Hey. I am happy to see you."
+        ],
+        HowAreYouReplies =
+        [
+            "I am feeling cheerful and robotic.",
+            "I am doing great. Thanks for asking.",
+            "I am feeling bright-eyed and ready to help."
+        ],
+        SurpriseReplies =
+        [
+            "I can definitely surprise you. We are still mapping that path, but I am ready for the next experiment.",
+            "Surprise mode is still taking shape, but I heard you loud and clear.",
+            "That sounds fun. I am not all the way there yet, but we can keep teaching me."
+        ],
+        PersonalReportReplies =
+        [
+            "I heard your personal report request. That cloud path is still being mapped.",
+            "Personal report is recognized, but I am not ready to deliver the real report yet."
+        ],
+        WeatherReplies =
+        [
+            "I heard your weather request. We still need to wire the real provider behind it.",
+            "Weather is on the map now, even though the real forecast path is not finished yet."
+        ],
+        CalendarReplies =
+        [
+            "I heard your calendar request. The cloud knows the phrase, but the real calendar integration is still ahead.",
+            "Calendar is recognized. We still need to connect the actual service path."
+        ],
+        CommuteReplies =
+        [
+            "I heard your commute request. That one is recognized, but not fully implemented yet.",
+            "Commute is on the discovery list now. The real travel answer still needs a provider."
+        ],
+        NewsReplies =
+        [
+            "I heard your news request. That path is still a future cloud integration.",
+            "News is recognized, but I do not have the full news service behind it yet."
+        ],
+        GenericFallbackReplies =
+        [
+            "Okay. You said, {transcript}.",
+            "I heard you say, {transcript}.",
+            "Thanks. I heard, {transcript}."
+        ]
+    };
+
+    public Task<JiboExperienceCatalog> GetCatalogAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(Catalog);
+    }
+}

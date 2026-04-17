@@ -1,6 +1,7 @@
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Infrastructure.Audio;
+using Jibo.Cloud.Infrastructure.Content;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Infrastructure.Telemetry;
 using Jibo.Runtime.Abstractions;
@@ -23,6 +24,10 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(sttOptions);
         services.AddSingleton<ICloudStateStore, InMemoryCloudStateStore>();
+        services.AddSingleton<IJiboExperienceContentRepository, InMemoryJiboExperienceContentRepository>();
+        services.AddSingleton<JiboExperienceContentCache>();
+        services.AddSingleton<IJiboRandomizer, DefaultJiboRandomizer>();
+        services.AddSingleton<JiboInteractionService>();
         services.AddSingleton<IConversationBroker, DemoConversationBroker>();
         services.AddSingleton<IExternalProcessRunner, ExternalProcessRunner>();
         services.AddSingleton<ISttStrategy, LocalWhisperCppBufferedAudioSttStrategy>();

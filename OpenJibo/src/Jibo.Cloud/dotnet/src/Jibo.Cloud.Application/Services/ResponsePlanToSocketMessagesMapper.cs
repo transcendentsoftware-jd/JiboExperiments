@@ -164,16 +164,18 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
     {
+        var skillPayload = skill?.Payload;
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
-        var skillId = isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill";
-        var esml = isDance
+        var skillId = ReadPayloadString(skillPayload, "skillId") ?? (isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill");
+        var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
             ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
             : isJoke
             ? $"<speak><es cat='happy' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>"
-            : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>";
-        var mimId = isJoke ? "runtime-joke" : "runtime-chat";
+            : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>");
+        var mimId = ReadPayloadString(skillPayload, "mim_id") ?? (isJoke ? "runtime-joke" : "runtime-chat");
+        var mimType = ReadPayloadString(skillPayload, "mim_type") ?? "announcement";
 
         return new
         {
@@ -204,7 +206,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         prompt_id = "RUNTIME_PROMPT",
                                         prompt_sub_category = "AN",
                                         mim_id = mimId,
-                                        mim_type = "announcement"
+                                        mim_type = mimType
                                     }
                                 }
                             }
@@ -269,6 +271,16 @@ public sealed class ResponsePlanToSocketMessagesMapper
             .Replace(">", "&gt;", StringComparison.Ordinal)
             .Replace("\"", "&quot;", StringComparison.Ordinal)
             .Replace("'", "&apos;", StringComparison.Ordinal);
+    }
+
+    private static string? ReadPayloadString(IDictionary<string, object?>? payload, string key)
+    {
+        if (payload is null || !payload.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value?.ToString();
     }
 
     private static string CreateHubMessageId()
