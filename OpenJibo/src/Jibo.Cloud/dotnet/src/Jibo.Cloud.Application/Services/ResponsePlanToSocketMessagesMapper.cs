@@ -49,7 +49,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
         if (!isWordOfDayLaunch)
         {
-            messages.AddRange(new SocketReplyPlan(JsonSerializer.Serialize(new
+            messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
                 {
                     type = "LISTEN",
                     transID = transId,
@@ -75,16 +75,17 @@ public sealed class ResponsePlanToSocketMessagesMapper
                             score = 0.95
                         }
                     }
-                })),
-                new SocketReplyPlan(JsonSerializer.Serialize(new
-                {
-                    type = "EOS",
-                    ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    msgID = CreateHubMessageId(),
-                    transID = transId,
-                    data = new { }
                 })));
         }
+
+        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
+            {
+                type = "EOS",
+                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                msgID = CreateHubMessageId(),
+                transID = transId,
+                data = new { }
+            })));
 
         if (emitSkillActions && speak is not null)
         {
