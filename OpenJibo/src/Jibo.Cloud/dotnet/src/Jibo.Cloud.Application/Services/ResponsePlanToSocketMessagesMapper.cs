@@ -45,47 +45,44 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? ["main-menu/execute_fun_stuff"]
             : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
         var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
-        var messages = new List<SocketReplyPlan>();
-
-        if (!isWordOfDayLaunch)
+        var messages = new List<SocketReplyPlan>
         {
-            messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
+            new(JsonSerializer.Serialize(new
+            {
+                type = "LISTEN",
+                transID = transId,
+                data = new
                 {
-                    type = "LISTEN",
-                    transID = transId,
-                    data = new
+                    asr = new
                     {
-                        asr = new
-                        {
-                            confidence = 0.95,
-                            final = true,
-                            text = outboundAsrText
-                        },
-                        nlu = new
-                        {
-                            confidence = 0.95,
-                            intent = outboundIntent,
-                            rules = outboundRules,
-                            entities
-                        },
-                        match = new
-                        {
-                            intent = outboundIntent,
-                            rule = outboundRules.FirstOrDefault() ?? string.Empty,
-                            score = 0.95
-                        }
+                        confidence = 0.95,
+                        final = true,
+                        text = outboundAsrText
+                    },
+                    nlu = new
+                    {
+                        confidence = 0.95,
+                        intent = outboundIntent,
+                        rules = outboundRules,
+                        entities
+                    },
+                    match = new
+                    {
+                        intent = outboundIntent,
+                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
+                        score = 0.95
                     }
-                })));
-        }
-
-        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
+                }
+            })),
+            new(JsonSerializer.Serialize(new
             {
                 type = "EOS",
                 ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 msgID = CreateHubMessageId(),
                 transID = transId,
                 data = new { }
-            })));
+            }))
+        };
 
         if (emitSkillActions && speak is not null)
         {
@@ -305,11 +302,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
     {
         var skillPayload = skill?.Payload;
+        var isWordOfTheDay = plan.IntentName is not null && string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
         var payloadSkill = ReadPayloadString(skillPayload, "skillId");
-        var skillId = string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
+        var skillId = isWordOfTheDay ? "@be/word-of-the-day" : string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
         var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
             ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
             : isJoke
