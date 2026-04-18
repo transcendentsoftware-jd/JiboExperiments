@@ -45,44 +45,46 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? ["main-menu/execute_fun_stuff"]
             : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
         var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
-        var messages = new List<SocketReplyPlan>
+        var messages = new List<SocketReplyPlan>();
+
+        if (!isWordOfDayLaunch)
         {
-            new(JsonSerializer.Serialize(new
-            {
-                type = "LISTEN",
-                transID = transId,
-                data = new
+            messages.AddRange(new SocketReplyPlan(JsonSerializer.Serialize(new
                 {
-                    asr = new
+                    type = "LISTEN",
+                    transID = transId,
+                    data = new
                     {
-                        confidence = 0.95,
-                        final = true,
-                        text = outboundAsrText
-                    },
-                    nlu = new
-                    {
-                        confidence = 0.95,
-                        intent = outboundIntent,
-                        rules = outboundRules,
-                        entities
-                    },
-                    match = new
-                    {
-                        intent = outboundIntent,
-                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
-                        score = 0.95
+                        asr = new
+                        {
+                            confidence = 0.95,
+                            final = true,
+                            text = outboundAsrText
+                        },
+                        nlu = new
+                        {
+                            confidence = 0.95,
+                            intent = outboundIntent,
+                            rules = outboundRules,
+                            entities
+                        },
+                        match = new
+                        {
+                            intent = outboundIntent,
+                            rule = outboundRules.FirstOrDefault() ?? string.Empty,
+                            score = 0.95
+                        }
                     }
-                }
-            })),
-            new(JsonSerializer.Serialize(new
-            {
-                type = "EOS",
-                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                msgID = CreateHubMessageId(),
-                transID = transId,
-                data = new { }
-            }))
-        };
+                })),
+                new SocketReplyPlan(JsonSerializer.Serialize(new
+                {
+                    type = "EOS",
+                    ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    msgID = CreateHubMessageId(),
+                    transID = transId,
+                    data = new { }
+                })));
+        }
 
         if (emitSkillActions && speak is not null)
         {
