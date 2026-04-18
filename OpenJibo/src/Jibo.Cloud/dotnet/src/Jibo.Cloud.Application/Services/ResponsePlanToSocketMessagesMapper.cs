@@ -84,7 +84,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
             }))
         };
 
-        if (emitSkillActions && speak is not null && !isWordOfDayLaunch && !isWordOfDayGuess)
+        if (emitSkillActions && speak is not null)
         {
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildSkillPayload(plan, turn, transId, speak, skill)),

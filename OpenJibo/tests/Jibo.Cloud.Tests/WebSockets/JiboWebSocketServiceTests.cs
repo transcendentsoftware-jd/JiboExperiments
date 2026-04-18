@@ -426,7 +426,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-spoken-guess","data":{"text":"pastoral"}}"""
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
 
@@ -458,7 +458,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-line-guess","data":{"text":"Two."}}"""
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("guess", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -486,7 +486,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-launch","data":{"text":"Play word of the day."}}"""
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("loadMenu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("word-of-the-day", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("destination").GetString());
