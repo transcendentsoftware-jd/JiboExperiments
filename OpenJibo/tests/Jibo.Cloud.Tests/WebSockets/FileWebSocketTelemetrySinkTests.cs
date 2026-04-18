@@ -36,9 +36,12 @@ public sealed class FileWebSocketTelemetrySinkTests : IDisposable
         {
             Token = "token-1",
             HostName = "neo-hub.jibo.com",
-            Path = "/listen"
+            Path = "/listen",
+            TurnState =
+            {
+                TransId = "trans-1"
+            }
         };
-        session.TurnState.TransId = "trans-1";
 
         await sink.RecordConnectionOpenedAsync(envelope, session);
         await sink.RecordInboundAsync(envelope, session, "LISTEN");
@@ -70,7 +73,7 @@ public sealed class FileWebSocketTelemetrySinkTests : IDisposable
     {
         Directory.CreateDirectory(_repoRoot);
         Directory.CreateDirectory(_appBaseDirectory);
-        File.WriteAllText(Path.Combine(_repoRoot, "OpenJibo.slnx"), string.Empty);
+        await File.WriteAllTextAsync(Path.Combine(_repoRoot, "OpenJibo.slnx"), string.Empty);
         var captureDirectory = CapturePathResolver.Resolve("captures/websocket", _repoRoot, _appBaseDirectory);
 
         var sink = new FileWebSocketTelemetrySink(

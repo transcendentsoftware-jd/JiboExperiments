@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Runtime.Abstractions;
 
@@ -8,7 +9,9 @@ public sealed class WebSocketTurnFinalizationService(
     ProtocolToTurnContextMapper turnContextMapper,
     IConversationBroker conversationBroker,
     ResponsePlanToSocketMessagesMapper replyMapper,
-    ISttStrategySelector sttStrategySelector)
+    ISttStrategySelector sttStrategySelector,
+    ITurnTelemetrySink sink
+)
 {
     private const int AutoFinalizeMinBufferedAudioBytes = 12000;
     private const int AutoFinalizeMinBufferedAudioChunks = 5;
@@ -155,8 +158,9 @@ public sealed class WebSocketTurnFinalizationService(
                 Attributes = attributes
             };
         }
-        catch
+        catch (Exception ex)
         {
+            await sink.RecordTranscriptError(ex, "Error during STT processing", cancellationToken);
             return turn;
         }
     }

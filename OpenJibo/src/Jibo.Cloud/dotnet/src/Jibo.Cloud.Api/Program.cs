@@ -43,6 +43,7 @@ app.Use(async (context, next) =>
 
     var webSocketService = context.RequestServices.GetRequiredService<JiboWebSocketService>();
     var telemetrySink = context.RequestServices.GetRequiredService<IWebSocketTelemetrySink>();
+    
     using var socket = await context.WebSockets.AcceptWebSocketAsync();
 
     var openEnvelope = new WebSocketMessageEnvelope
@@ -56,15 +57,29 @@ app.Use(async (context, next) =>
     var openSession = ResolveSession(webSocketService, openEnvelope);
     await telemetrySink.RecordConnectionOpenedAsync(openEnvelope, openSession, context.RequestAborted);
 
+    var isPrematureClose = false;
+
     while (socket.State == WebSocketState.Open)
     {
-        var received = await ReceiveAsync(socket, context.RequestAborted);
-        if (received.MessageType == WebSocketMessageType.Close)
+        ReceivedSocketMessage received = null!;
+        try
         {
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", context.RequestAborted);
-            break;
+            received = await ReceiveAsync(socket, context.RequestAborted);
+            if (received.MessageType == WebSocketMessageType.Close)
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", context.RequestAborted);
+                break;
+            }
         }
-
+        catch (WebSocketException exception)
+        {
+            if (exception.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+            {
+                isPrematureClose = true;
+                break;
+            }
+        }
+        
         var envelope = new WebSocketMessageEnvelope
         {
             ConnectionId = Guid.NewGuid().ToString("N"),
@@ -107,7 +122,7 @@ app.Use(async (context, next) =>
         Token = token
     };
     var closeSession = ResolveSession(webSocketService, closeEnvelope);
-    await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, closeSession, "socket-loop-ended", context.RequestAborted);
+    await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, closeSession, $"socket-loop-ended{(isPrematureClose ? "-prematurely" : string.Empty)}", context.RequestAborted);
 });
 
 app.MapGet("/health", () => Results.Json(new { ok = true, service = "OpenJibo Cloud Api" }));

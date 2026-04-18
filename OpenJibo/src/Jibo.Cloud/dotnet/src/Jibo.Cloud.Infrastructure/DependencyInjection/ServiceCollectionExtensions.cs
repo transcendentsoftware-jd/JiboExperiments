@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         {
             services.Configure<WebSocketTelemetryOptions>(configuration.GetSection("OpenJibo:Telemetry"));
             services.Configure<ProtocolTelemetryOptions>(configuration.GetSection("OpenJibo:ProtocolTelemetry"));
+            services.Configure<TurnTelemetryOptions>(configuration.GetSection("OpenJibo:TurnTelemetry"));
             configuration.GetSection("OpenJibo:Stt").Bind(sttOptions);
         }
 
@@ -35,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISttStrategySelector, DefaultSttStrategySelector>();
         services.AddSingleton<IWebSocketTelemetrySink, FileWebSocketTelemetrySink>();
         services.AddSingleton<IProtocolTelemetrySink, FileProtocolTelemetrySink>();
+        services.AddSingleton<ITurnTelemetrySink, FileTurnTelemetrySink>();
         services.AddSingleton<ProtocolToTurnContextMapper>();
         services.AddSingleton<ResponsePlanToSocketMessagesMapper>();
         services.AddSingleton<WebSocketTurnFinalizationService>();

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.Content;
@@ -25,6 +24,7 @@ public sealed class JiboWebSocketServiceTests
         [
             new SyntheticBufferedAudioSttStrategy()
         ]);
+        var sink = new NullTurnTelemetrySink();
 
         _service = new JiboWebSocketService(
             _store,
@@ -33,7 +33,8 @@ public sealed class JiboWebSocketServiceTests
                 turnContextMapper,
                 conversationBroker,
                 replyMapper,
-                sttSelector));
+                sttSelector,
+                sink));
     }
 
     [Fact]
@@ -118,7 +119,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CONTEXT","transID":"trans-auto","data":{"audioTranscriptHint":"tell me a joke"}}"""
         });
 
-        IReadOnlyList<WebSocketReply> replies = [];
+        IReadOnlyList<WebSocketReply> replies;
         for (var index = 0; index < 4; index += 1)
         {
             replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -175,7 +176,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CONTEXT","transID":"trans-auto-fallback","data":{"topic":"conversation"}}"""
         });
 
-        IReadOnlyList<WebSocketReply> replies = [];
+        IReadOnlyList<WebSocketReply> replies;
         for (var index = 0; index < 4; index += 1)
         {
             replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -249,7 +250,7 @@ public sealed class JiboWebSocketServiceTests
 
         var session = _store.FindSessionByToken("hub-multichunk-token");
         Assert.NotNull(session);
-        Assert.Equal(7, session!.TurnState.BufferedAudioBytes);
+        Assert.Equal(7, session.TurnState.BufferedAudioBytes);
         Assert.Equal(2, session.TurnState.BufferedAudioChunkCount);
     }
 
@@ -292,7 +293,7 @@ public sealed class JiboWebSocketServiceTests
 
         var session = _store.FindSessionByToken("hub-follow-up-token");
         Assert.NotNull(session);
-        Assert.True(session!.FollowUpOpen);
+        Assert.True(session.FollowUpOpen);
         Assert.Equal("joke", session.LastIntent);
         Assert.Equal("trans-follow-up", session.LastTransId);
     }
@@ -393,7 +394,7 @@ public sealed class JiboWebSocketServiceTests
 
         var session = _store.FindSessionByToken("hub-audio-token");
         Assert.NotNull(session);
-        Assert.Equal(0, session!.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
         Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
         Assert.False(session.Metadata.ContainsKey("audioTranscriptHint"));
     }
@@ -632,7 +633,7 @@ public sealed class JiboWebSocketServiceTests
 
         var session = _store.FindSessionByToken("hub-followup-audio-token");
         Assert.NotNull(session);
-        Assert.Equal("trans-second", session!.TurnState.TransId);
+        Assert.Equal("trans-second", session.TurnState.TransId);
         Assert.Equal(0, session.TurnState.BufferedAudioBytes);
         Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
     }

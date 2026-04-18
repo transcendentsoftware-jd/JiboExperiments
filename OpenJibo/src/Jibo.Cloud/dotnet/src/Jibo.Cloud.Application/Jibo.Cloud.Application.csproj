@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Jibo.Cloud.Domain\Jibo.Cloud.Domain.csproj" />
-    <ProjectReference Include="..\..\..\..\Jibo.Runtime.Abstractions\Jibo.Runtime.Abstractions.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Jibo.Cloud.Domain\Jibo.Cloud.Domain.csproj" />
+		<ProjectReference Include="..\..\..\..\Jibo.Runtime.Abstractions\Jibo.Runtime.Abstractions.csproj" />
+	</ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
 </Project>
