@@ -135,6 +135,10 @@ public sealed class JiboWebSocketServiceTests
             Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(replies[0]));
         }
 
+        var session = _store.FindSessionByToken("hub-auto-finalize-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+
         replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
             HostName = "neo-hub.jibo.com",
@@ -191,6 +195,10 @@ public sealed class JiboWebSocketServiceTests
             Assert.Single(replies);
             Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(replies[0]));
         }
+
+        var session = _store.FindSessionByToken("hub-auto-fallback-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
 
         replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {

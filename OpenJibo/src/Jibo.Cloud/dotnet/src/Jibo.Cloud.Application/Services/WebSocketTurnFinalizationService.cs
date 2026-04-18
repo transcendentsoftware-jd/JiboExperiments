@@ -15,6 +15,7 @@ public sealed class WebSocketTurnFinalizationService(
 {
     private const int AutoFinalizeMinBufferedAudioBytes = 12000;
     private const int AutoFinalizeMinBufferedAudioChunks = 5;
+    private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1800);
 
     public async Task<IReadOnlyList<WebSocketReply>> HandleBinaryAudioAsync(
         CloudSession session,
@@ -119,10 +120,28 @@ public sealed class WebSocketTurnFinalizationService(
             return turn;
         }
 
+        ISttStrategy? strategy = null;
         try
         {
-            var strategy = await sttStrategySelector.SelectAsync(turn, cancellationToken);
+            strategy = await sttStrategySelector.SelectAsync(turn, cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (string.Equals(ex.Message, "No STT strategy can handle the current turn.", StringComparison.Ordinal))
+        {
+            return turn;
+        }
+        catch (Exception ex)
+        {
+            session.TurnState.LastSttError = ex.Message;
+            session.TurnState.LastSttErrorUtc = DateTimeOffset.UtcNow;
+            await sink.RecordTranscriptError(ex, "Error during STT processing", cancellationToken);
+            return turn;
+        }
+
+        try
+        {
             var sttResult = await strategy.TranscribeAsync(turn, cancellationToken);
+            session.TurnState.LastSttError = null;
+            session.TurnState.LastSttErrorUtc = null;
 
             var attributes = new Dictionary<string, object?>(turn.Attributes, StringComparer.OrdinalIgnoreCase)
             {
@@ -160,6 +179,8 @@ public sealed class WebSocketTurnFinalizationService(
         }
         catch (Exception ex)
         {
+            session.TurnState.LastSttError = ex.Message;
+            session.TurnState.LastSttErrorUtc = DateTimeOffset.UtcNow;
             await sink.RecordTranscriptError(ex, "Error during STT processing", cancellationToken);
             return turn;
         }
@@ -229,6 +250,8 @@ public sealed class WebSocketTurnFinalizationService(
     {
         session.TurnState.BufferedAudioBytes = 0;
         session.TurnState.BufferedAudioChunkCount = 0;
+        session.TurnState.LastSttError = null;
+        session.TurnState.LastSttErrorUtc = null;
         session.TurnState.FirstAudioReceivedUtc = null;
         session.TurnState.LastAudioReceivedUtc = null;
         session.TurnState.BufferedAudioFrames.Clear();
@@ -241,6 +264,8 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.TransId = transId;
         turnState.ContextPayload = null;
         turnState.AudioTranscriptHint = null;
+        turnState.LastSttError = null;
+        turnState.LastSttErrorUtc = null;
         turnState.FirstAudioReceivedUtc = null;
         turnState.LastAudioReceivedUtc = null;
         turnState.BufferedAudioChunkCount = 0;
@@ -272,7 +297,9 @@ public sealed class WebSocketTurnFinalizationService(
                 turnState.FinalizeAttemptCount += 1;
             }
 
-            if (allowFallbackOnMissingTranscript && turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes)
+            if (allowFallbackOnMissingTranscript &&
+                turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
+                string.IsNullOrWhiteSpace(turnState.LastSttError))
             {
                 turnState.AwaitingTurnCompletion = false;
                 session.LastTranscript = string.Empty;
@@ -331,12 +358,16 @@ public sealed class WebSocketTurnFinalizationService(
     private static bool ShouldAutoFinalize(CloudSession session)
     {
         var turnState = session.TurnState;
+        var turnAge = turnState.FirstAudioReceivedUtc.HasValue
+            ? DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value
+            : TimeSpan.Zero;
         return turnState.AwaitingTurnCompletion &&
                turnState is
                {
                    SawListen: true, SawContext: true, BufferedAudioChunkCount: >= AutoFinalizeMinBufferedAudioChunks,
                    BufferedAudioBytes: >= AutoFinalizeMinBufferedAudioBytes
-               };
+               } &&
+               turnAge >= AutoFinalizeMinTurnAge;
     }
 
     private static string? ExtractDataPayload(string? text)

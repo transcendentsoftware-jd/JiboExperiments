@@ -5,6 +5,8 @@ public sealed class WebSocketTurnState
     public string? TransId { get; set; }
     public string? ContextPayload { get; set; }
     public string? AudioTranscriptHint { get; set; }
+    public string? LastSttError { get; set; }
+    public DateTimeOffset? LastSttErrorUtc { get; set; }
     public DateTimeOffset? FirstAudioReceivedUtc { get; set; }
     public DateTimeOffset? LastAudioReceivedUtc { get; set; }
     public int BufferedAudioChunkCount { get; set; }
