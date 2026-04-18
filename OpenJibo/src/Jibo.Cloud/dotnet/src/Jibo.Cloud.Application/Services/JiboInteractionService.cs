@@ -80,12 +80,10 @@ public sealed class JiboInteractionService(
             return "Good afternoon. I am happy to be here.";
         }
 
-        if (lowered.Contains("good night", StringComparison.Ordinal))
-        {
-            return "Good night. Sleep tight.";
-        }
-
-        return randomizer.Choose(catalog.GenericFallbackReplies).Replace("{transcript}", transcript, StringComparison.Ordinal);
+        return lowered.Contains("good night", StringComparison.Ordinal)
+            ? "Good night. Sleep tight."
+            : randomizer.Choose(catalog.GenericFallbackReplies)
+                .Replace("{transcript}", transcript, StringComparison.Ordinal);
     }
 
     private static string ResolveSemanticIntent(string loweredTranscript, string? clientIntent)

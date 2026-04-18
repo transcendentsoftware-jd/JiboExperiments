@@ -6,7 +6,7 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class ResponsePlanToSocketMessagesMapper
 {
-    public IReadOnlyList<SocketReplyPlan> Map(ResponsePlan plan, TurnContext turn, CloudSession session, bool emitSkillActions)
+    public static IReadOnlyList<SocketReplyPlan> Map(ResponsePlan plan, TurnContext turn, CloudSession session, bool emitSkillActions)
     {
         var speak = plan.Actions.OfType<SpeakAction>().FirstOrDefault();
         var skill = plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault();
@@ -18,50 +18,50 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var clientIntent = ReadAttribute(turn, "clientIntent");
         var rules = ReadRules(turn, messageType);
         var outboundIntent = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
-            ? clientIntent!
+            ? clientIntent
             : plan.IntentName ?? "unknown";
         var outboundAsrText = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
-            ? clientIntent!
+            ? clientIntent
             : transcript;
         var entities = ReadEntities(turn, messageType);
-        var messages = new List<SocketReplyPlan>();
-
-        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
+        var messages = new List<SocketReplyPlan>
         {
-            type = "LISTEN",
-            transID = transId,
-            data = new
+            new(JsonSerializer.Serialize(new
             {
-                asr = new
+                type = "LISTEN",
+                transID = transId,
+                data = new
                 {
-                    confidence = 0.95,
-                    final = true,
-                    text = outboundAsrText
-                },
-                nlu = new
-                {
-                    confidence = 0.95,
-                    intent = outboundIntent,
-                    rules,
-                    entities
-                },
-                match = new
-                {
-                    intent = outboundIntent,
-                    rule = rules.FirstOrDefault() ?? string.Empty,
-                    score = 0.95
+                    asr = new
+                    {
+                        confidence = 0.95,
+                        final = true,
+                        text = outboundAsrText
+                    },
+                    nlu = new
+                    {
+                        confidence = 0.95,
+                        intent = outboundIntent,
+                        rules,
+                        entities
+                    },
+                    match = new
+                    {
+                        intent = outboundIntent,
+                        rule = rules.FirstOrDefault() ?? string.Empty,
+                        score = 0.95
+                    }
                 }
-            }
-        })));
-
-        messages.Add(new SocketReplyPlan(JsonSerializer.Serialize(new
-        {
-            type = "EOS",
-            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            msgID = CreateHubMessageId(),
-            transID = transId,
-            data = new { }
-        })));
+            })),
+            new(JsonSerializer.Serialize(new
+            {
+                type = "EOS",
+                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                msgID = CreateHubMessageId(),
+                transID = transId,
+                data = new { }
+            }))
+        };
 
         if (emitSkillActions && speak is not null)
         {
@@ -73,7 +73,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return messages;
     }
 
-    public IReadOnlyList<SocketReplyPlan> MapFallback(CloudSession session, string transId, IReadOnlyList<string> rules)
+    public static IReadOnlyList<SocketReplyPlan> MapFallback(CloudSession session, string transId, IReadOnlyList<string> rules)
     {
         return
         [
@@ -149,7 +149,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
         return value switch
         {
-            JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.Object => jsonElement,
+            JsonElement { ValueKind: JsonValueKind.Object } jsonElement => jsonElement,
             IDictionary<string, object?> dictionary => dictionary,
             _ => new Dictionary<string, object?>()
         };

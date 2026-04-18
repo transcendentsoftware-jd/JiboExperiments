@@ -9,11 +9,8 @@ public sealed class DefaultSttStrategySelector(IEnumerable<ISttStrategy> strateg
     public Task<ISttStrategy> SelectAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
         var strategy = _strategies.FirstOrDefault(candidate => candidate.CanHandle(turn));
-        if (strategy is null)
-        {
-            throw new InvalidOperationException("No STT strategy can handle the current turn.");
-        }
-
-        return Task.FromResult(strategy);
+        return strategy is null
+            ? throw new InvalidOperationException("No STT strategy can handle the current turn.")
+            : Task.FromResult(strategy);
     }
 }

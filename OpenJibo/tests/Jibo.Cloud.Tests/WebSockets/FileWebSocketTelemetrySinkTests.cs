@@ -98,9 +98,12 @@ public sealed class FileWebSocketTelemetrySinkTests : IDisposable
         {
             Token = "token-relative",
             HostName = "neo-hub.jibo.com",
-            Path = "/listen"
+            Path = "/listen",
+            TurnState =
+            {
+                TransId = "trans-relative"
+            }
         };
-        session.TurnState.TransId = "trans-relative";
 
         await sink.RecordConnectionOpenedAsync(envelope, session);
         await sink.RecordOutboundAsync(envelope, session, [new WebSocketReply { Text = """{"type":"LISTEN"}""" }]);

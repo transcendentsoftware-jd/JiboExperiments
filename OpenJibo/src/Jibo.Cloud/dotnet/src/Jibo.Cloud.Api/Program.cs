@@ -35,7 +35,7 @@ app.Use(async (context, next) =>
         return;
     }
 
-    if ((kind is "neo-hub-listen" or "neo-hub-proactive") && string.IsNullOrWhiteSpace(token))
+    if (kind is "neo-hub-listen" or "neo-hub-proactive" && string.IsNullOrWhiteSpace(token))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         return;

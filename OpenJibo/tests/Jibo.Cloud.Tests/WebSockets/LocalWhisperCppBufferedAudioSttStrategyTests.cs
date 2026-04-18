@@ -105,8 +105,8 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategyTests
 
             if (string.Equals(fileName, "ffmpeg", StringComparison.OrdinalIgnoreCase))
             {
-                var outputPath = arguments.Last();
-                File.WriteAllBytes(outputPath, [0x52, 0x49, 0x46, 0x46]);
+                var outputPath = arguments[^1];
+                File.WriteAllBytes(outputPath, "RIFF"u8);
                 return Task.FromResult(new ExternalProcessResult(0, string.Empty, string.Empty));
             }
 

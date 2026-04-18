@@ -22,7 +22,7 @@ internal static class CapturePathResolver
         }
 
         var directory = new DirectoryInfo(Path.GetFullPath(startPath));
-        if (!directory.Exists && directory.Parent is not null)
+        if (directory is { Exists: false, Parent: not null })
         {
             directory = directory.Parent;
         }

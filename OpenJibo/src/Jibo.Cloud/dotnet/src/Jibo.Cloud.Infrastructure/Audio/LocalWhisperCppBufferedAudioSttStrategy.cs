@@ -92,7 +92,7 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
             byte[][] jagged => jagged,
             IReadOnlyList<byte[]> typed => typed,
             IEnumerable<byte[]> enumerable => enumerable.ToArray(),
-            JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.Array => jsonElement.EnumerateArray()
+            JsonElement { ValueKind: JsonValueKind.Array } jsonElement => jsonElement.EnumerateArray()
                 .Where(static item => item.ValueKind == JsonValueKind.Array)
                 .Select(static item => item.EnumerateArray().Select(static b => (byte)b.GetInt32()).ToArray())
                 .ToArray(),
@@ -128,12 +128,7 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
             .Where(static line => !string.IsNullOrWhiteSpace(line))
             .ToArray();
 
-        if (timecoded.Length > 0)
-        {
-            return string.Join(" ", timecoded).Trim();
-        }
-
-        return string.Join(" ", lines).Trim();
+        return timecoded.Length > 0 ? string.Join(" ", timecoded).Trim() : string.Join(" ", lines).Trim();
     }
 
     private static void TryDelete(string path)

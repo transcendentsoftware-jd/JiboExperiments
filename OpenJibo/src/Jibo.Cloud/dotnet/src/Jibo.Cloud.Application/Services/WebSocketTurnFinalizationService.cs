@@ -260,7 +260,7 @@ public sealed class WebSocketTurnFinalizationService(
         bool allowFallbackOnMissingTranscript,
         CancellationToken cancellationToken)
     {
-        var turn = turnContextMapper.MapListenMessage(envelope, session, messageType);
+        var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, messageType);
         var finalizedTurn = await ResolveTranscriptAsync(turn, session, cancellationToken);
         var turnState = session.TurnState;
         if (string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
@@ -278,7 +278,7 @@ public sealed class WebSocketTurnFinalizationService(
                 session.LastTranscript = string.Empty;
                 session.LastIntent = "heyJibo";
                 session.LastListenType = "fallback";
-                var fallbackReplies = replyMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
+                var fallbackReplies = ResponsePlanToSocketMessagesMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
                     .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
                     .ToArray();
                 ResetBufferedAudio(session);
@@ -318,7 +318,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.AwaitingTurnCompletion = false;
 
         var emitSkillActions = messageType != "CLIENT_NLU";
-        var replies = replyMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
+        var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
             Text = map.Text,
             DelayMs = map.DelayMs
@@ -332,10 +332,11 @@ public sealed class WebSocketTurnFinalizationService(
     {
         var turnState = session.TurnState;
         return turnState.AwaitingTurnCompletion &&
-               turnState.SawListen &&
-               turnState.SawContext &&
-               turnState.BufferedAudioChunkCount >= AutoFinalizeMinBufferedAudioChunks &&
-               turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes;
+               turnState is
+               {
+                   SawListen: true, SawContext: true, BufferedAudioChunkCount: >= AutoFinalizeMinBufferedAudioChunks,
+                   BufferedAudioBytes: >= AutoFinalizeMinBufferedAudioBytes
+               };
     }
 
     private static string? ExtractDataPayload(string? text)

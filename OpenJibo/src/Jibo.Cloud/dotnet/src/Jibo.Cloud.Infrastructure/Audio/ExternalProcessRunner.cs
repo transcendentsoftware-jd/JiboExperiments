@@ -32,11 +32,9 @@ public sealed class ExternalProcessRunner : IExternalProcessRunner
         var stdOut = await stdOutTask;
         var stdErr = await stdErrTask;
 
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException($"External process '{fileName}' failed with exit code {process.ExitCode}: {stdErr}");
-        }
-
-        return new ExternalProcessResult(process.ExitCode, stdOut, stdErr);
+        return process.ExitCode != 0
+            ? throw new InvalidOperationException(
+                $"External process '{fileName}' failed with exit code {process.ExitCode}: {stdErr}")
+            : new ExternalProcessResult(process.ExitCode, stdOut, stdErr);
     }
 }

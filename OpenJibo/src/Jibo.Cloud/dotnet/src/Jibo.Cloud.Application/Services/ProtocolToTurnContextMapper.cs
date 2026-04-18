@@ -6,7 +6,7 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class ProtocolToTurnContextMapper
 {
-    public TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session, string messageType)
+    public static TurnContext MapListenMessage(WebSocketMessageEnvelope envelope, CloudSession session, string messageType)
     {
         var turnState = session.TurnState;
         var protocolOperation = messageType.ToLowerInvariant();

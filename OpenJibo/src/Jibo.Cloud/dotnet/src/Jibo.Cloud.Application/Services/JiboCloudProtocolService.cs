@@ -317,7 +317,7 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
         }).ToArray());
     }
 
-    private ProtocolDispatchResult HandleLog(string operation, ProtocolEnvelope envelope)
+    private static ProtocolDispatchResult HandleLog(string operation, ProtocolEnvelope envelope)
     {
         return operation switch
         {
@@ -393,22 +393,16 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
 
     private ProtocolDispatchResult HandlePerson(string operation)
     {
-        if (operation.Equals("ListHolidays", StringComparison.OrdinalIgnoreCase))
-        {
-            return ProtocolDispatchResult.Ok(stateStore.GetHolidays());
-        }
-
-        return ProtocolDispatchResult.Ok(Array.Empty<object>());
+        return ProtocolDispatchResult.Ok(operation.Equals("ListHolidays", StringComparison.OrdinalIgnoreCase)
+            ? stateStore.GetHolidays()
+            : []);
     }
 
     private ProtocolDispatchResult HandleBackup(string operation)
     {
-        if (operation.Equals("List", StringComparison.OrdinalIgnoreCase))
-        {
-            return ProtocolDispatchResult.Ok(stateStore.GetBackups());
-        }
-
-        return ProtocolDispatchResult.Ok(Array.Empty<object>());
+        return operation.Equals("List", StringComparison.OrdinalIgnoreCase)
+            ? ProtocolDispatchResult.Ok(stateStore.GetBackups())
+            : ProtocolDispatchResult.Ok(Array.Empty<object>());
     }
 
     private ProtocolDispatchResult HandleKey(string operation, ProtocolEnvelope envelope)

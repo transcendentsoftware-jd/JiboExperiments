@@ -72,12 +72,9 @@ internal static class OggOpusAudioNormalizer
         }
 
         var expectedLength = 27 + pageSegments + payloadLength;
-        if (buffer.Length < expectedLength)
-        {
-            throw new InvalidOperationException("Buffered Ogg page payload was truncated.");
-        }
-
-        return new ParsedOggPage(BinaryPrimitives.ReadUInt64LittleEndian(buffer.AsSpan(6, 8)));
+        return buffer.Length < expectedLength
+            ? throw new InvalidOperationException("Buffered Ogg page payload was truncated.")
+            : new ParsedOggPage(BinaryPrimitives.ReadUInt64LittleEndian(buffer.AsSpan(6, 8)));
     }
 
     private static uint ComputeCrc(byte[] buffer)

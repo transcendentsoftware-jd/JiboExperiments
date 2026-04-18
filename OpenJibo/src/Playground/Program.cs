@@ -177,6 +177,8 @@ while (!cts.IsCancellationRequested)
     }
 }
 
+return;
+
 static string PickBestUtterance(List<AsrUtterance>? utterances)
 {
     if (utterances == null || utterances.Count == 0)
@@ -201,7 +203,7 @@ static string NormalizeUtterance(string? text)
 
     // Very light cleanup for occasional weird leading duplication like "wWhat"
     if (s.Length >= 2 && char.ToLowerInvariant(s[0]) == char.ToLowerInvariant(s[1]))
-        s = s.Substring(1);
+        s = s[1..];
 
     return s;
 }
@@ -216,10 +218,7 @@ static string BuildReply(string heard)
     if (text.Contains("hello") || text.Contains("hi"))
         return "Hello! I heard you loud and clear.";
 
-    if (text.Contains("your name"))
-        return "I am Jibo, running with a local demo bridge.";
-
-    return $"You said: {heard}";
+    return text.Contains("your name") ? "I am Jibo, running with a local demo bridge." : $"You said: {heard}";
 }
 
 public sealed class AsrEvent
