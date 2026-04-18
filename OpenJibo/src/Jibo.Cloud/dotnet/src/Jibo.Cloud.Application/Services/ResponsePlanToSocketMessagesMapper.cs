@@ -24,7 +24,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var outboundIntent = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
             ? clientIntent
             : plan.IntentName ?? "unknown";
-        var outboundAsrText = isYesNoTurn && isYesNoIntent
+        var nluGuess = ReadClientEntity(turn, "guess");
+        var outboundAsrText = string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
+            ? nluGuess
+            : isYesNoTurn && isYesNoIntent
             ? transcript
             : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
                 ? clientIntent
@@ -204,6 +207,26 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return turn.Attributes.TryGetValue(key, out var value)
             ? value?.ToString()
             : null;
+    }
+
+    private static string? ReadClientEntity(TurnContext turn, string entityName)
+    {
+        if (!turn.Attributes.TryGetValue("clientEntities", out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            JsonElement { ValueKind: JsonValueKind.Object } jsonElement
+                when jsonElement.TryGetProperty(entityName, out var property) && property.ValueKind == JsonValueKind.String
+                => property.GetString(),
+            IReadOnlyDictionary<string, string> typed when typed.TryGetValue(entityName, out var entityValue)
+                => entityValue,
+            IDictionary<string, object?> dictionary when dictionary.TryGetValue(entityName, out var entityValue)
+                => entityValue?.ToString(),
+            _ => null
+        };
     }
 
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)

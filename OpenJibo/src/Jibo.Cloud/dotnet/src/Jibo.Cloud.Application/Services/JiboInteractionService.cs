@@ -16,9 +16,11 @@ public sealed class JiboInteractionService(
         var clientIntent = turn.Attributes.TryGetValue("clientIntent", out var rawClientIntent)
             ? rawClientIntent?.ToString()
             : null;
+        var clientRules = ReadRules(turn, "clientRules").ToArray();
+        var clientEntities = ReadEntities(turn);
         var isYesNoTurn = IsYesNoTurn(turn);
 
-        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent, isYesNoTurn);
+        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent, clientRules, clientEntities, isYesNoTurn);
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
@@ -29,6 +31,8 @@ public sealed class JiboInteractionService(
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
             "no" => new JiboInteractionDecision("no", "No."),
+            "word_of_the_day" => new JiboInteractionDecision("word_of_the_day", "Word of the day is ready."),
+            "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities),
             "surprise" => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies)),
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
             "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
@@ -90,8 +94,26 @@ public sealed class JiboInteractionService(
                 .Replace("{transcript}", transcript, StringComparison.Ordinal);
     }
 
-    private static string ResolveSemanticIntent(string loweredTranscript, string? clientIntent, bool isYesNoTurn)
+    private static string ResolveSemanticIntent(
+        string loweredTranscript,
+        string? clientIntent,
+        IReadOnlyList<string> clientRules,
+        IReadOnlyDictionary<string, string> clientEntities,
+        bool isYesNoTurn)
     {
+        if (string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) &&
+            clientRules.Any(rule => string.Equals(rule, "word-of-the-day/puzzle", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "word_of_the_day_guess";
+        }
+
+        if (string.Equals(clientIntent, "loadMenu", StringComparison.OrdinalIgnoreCase) &&
+            clientEntities.TryGetValue("destination", out var destination) &&
+            string.Equals(destination, "word-of-the-day", StringComparison.OrdinalIgnoreCase))
+        {
+            return "word_of_the_day";
+        }
+
         if (string.Equals(clientIntent, "askForTime", StringComparison.OrdinalIgnoreCase))
         {
             return "time";
@@ -178,6 +200,19 @@ public sealed class JiboInteractionService(
         return "chat";
     }
 
+    private static JiboInteractionDecision BuildWordOfTheDayGuessDecision(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        var guess = clientEntities.TryGetValue("guess", out var guessValue)
+            ? guessValue
+            : string.Empty;
+
+        var reply = string.IsNullOrWhiteSpace(guess)
+            ? "I heard your word of the day guess."
+            : $"I heard {guess}.";
+
+        return new JiboInteractionDecision("word_of_the_day_guess", reply);
+    }
+
     private static bool IsYesNoTurn(TurnContext turn)
     {
         return ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules"))
@@ -201,6 +236,26 @@ public sealed class JiboInteractionService(
                 .Where(static item => item.ValueKind == JsonValueKind.String)
                 .Select(static item => item.GetString() ?? string.Empty),
             _ => []
+        };
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadEntities(TurnContext turn)
+    {
+        if (!turn.Attributes.TryGetValue("clientEntities", out var value) || value is null)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        return value switch
+        {
+            JsonElement { ValueKind: JsonValueKind.Object } json => json.EnumerateObject()
+                .Where(static property => property.Value.ValueKind == JsonValueKind.String)
+                .ToDictionary(property => property.Name, property => property.Value.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase),
+            IReadOnlyDictionary<string, string> typed => typed,
+            IDictionary<string, object?> dictionary => dictionary
+                .Where(pair => pair.Value is not null)
+                .ToDictionary(pair => pair.Key, pair => pair.Value?.ToString() ?? string.Empty, StringComparer.OrdinalIgnoreCase),
+            _ => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         };
     }
 

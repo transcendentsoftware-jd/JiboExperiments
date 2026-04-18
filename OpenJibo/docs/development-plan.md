@@ -83,12 +83,30 @@ Evidence from the latest `2026-04-18` captures:
 - some recognized phrases fell into placeholder provider replies because the intent was recognized but the feature path behind it is still a stub
 - short yes/no responses need the same session-aware treatment already prototyped in Node, especially for create-flow style follow-ups
 
+Evidence from the latest word-of-the-day capture round:
+
+- yes/no photo confirmation improved and now completes through the constrained follow-up path
+- `CLIENT_NLU` menu navigation is surfacing richer `destination` entities such as `snapshot`, `fun`, and `word-of-the-day`
+- word-of-the-day guesses can arrive as structured `CLIENT_NLU` turns with `intent=guess`, `rules=["word-of-the-day/puzzle"]`, and `entities.guess=<word>`
+- those structured turns should be treated as first-class cloud inputs even when no free-form transcript is present
+
 Near-term interaction work should now prioritize:
 
 1. preserve and interpret yes/no turn constraints from observed listen rules
 2. broaden phrase-to-intent matching for the small set of known working skills before moving to larger NLU ambitions
 3. keep synthetic transcript hints as the most reliable parity path when captures already provide them
 4. continue evaluating whether local preprocessing is worth further investment or whether managed STT should replace it for the next serious testing phase
+
+## Capture Storage Direction
+
+Repo-local NDJSON plus zipped capture bundles are still good enough for current reverse-engineering and single-operator testing.
+
+For hosted group testing, the next direction should be:
+
+1. keep local file sinks for dev and laptop workflows
+2. add a cleaner export/archive boundary so noteworthy sessions can be promoted without copying raw capture trees around manually
+3. plan for hosted durable storage separately from the runtime node that is serving live robot traffic
+4. keep fixture generation and sanitized replay artifacts as the stable handoff format between local testing and hosted debugging
 
 ## Working Cloud Framework
 

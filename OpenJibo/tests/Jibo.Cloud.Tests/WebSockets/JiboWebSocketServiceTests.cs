@@ -374,6 +374,38 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientNlu_WordOfDayGuess_UsesGuessEntityAsAsrTextAndCompletesTurn()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-guess-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-guess","data":{"rules":["word-of-the-day/puzzle","globals/gui_nav"],"asr":{"hints":["pastoral","doodad","escarpment"],"earlyEOS":["pastoral","doodad","escarpment"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-guess-token",
+            Text = """{"type":"CLIENT_NLU","transID":"trans-wod-guess","data":{"entities":{"guess":"pastoral"},"intent":"guess","rules":["word-of-the-day/puzzle"]}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("guess", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("guess").GetString());
+        Assert.Equal("word-of-the-day/puzzle", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
     public async Task BufferedAudio_WithSyntheticTranscriptHint_FinalizesThroughSttSeam()
     {
         var listenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope

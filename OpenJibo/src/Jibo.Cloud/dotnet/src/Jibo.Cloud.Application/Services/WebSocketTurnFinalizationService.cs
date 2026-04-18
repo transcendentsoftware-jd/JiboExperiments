@@ -490,7 +490,16 @@ public sealed class WebSocketTurnFinalizationService(
 
     private static bool IsTranscriptUsable(TurnContext turn)
     {
+        var messageType = ReadMessageType(turn);
+        var clientIntent = ReadAttribute(turn, "clientIntent");
         var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
+
+        if (string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(clientIntent))
+        {
+            return true;
+        }
+
         if (string.IsNullOrWhiteSpace(transcript))
         {
             return false;
@@ -545,5 +554,17 @@ public sealed class WebSocketTurnFinalizationService(
         return Regex.Replace(transcript.Trim().ToLowerInvariant(), @"[^\w\s]", " ")
             .Replace("  ", " ", StringComparison.Ordinal)
             .Trim();
+    }
+
+    private static string? ReadMessageType(TurnContext turn)
+    {
+        return ReadAttribute(turn, "messageType");
+    }
+
+    private static string? ReadAttribute(TurnContext turn, string key)
+    {
+        return turn.Attributes.TryGetValue(key, out var value)
+            ? value?.ToString()
+            : null;
     }
 }

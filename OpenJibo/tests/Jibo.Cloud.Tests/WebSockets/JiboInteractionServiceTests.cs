@@ -1,6 +1,7 @@
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Infrastructure.Content;
 using Jibo.Runtime.Abstractions;
+using System.Text.Json;
 
 namespace Jibo.Cloud.Tests.WebSockets;
 
@@ -87,6 +88,27 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("joke", decision.IntentName);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WordOfDayGuess_UsesStructuredClientNluGuess()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "guess",
+            NormalizedTranscript = "guess",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "guess",
+                ["clientRules"] = new[] { "word-of-the-day/puzzle" },
+                ["clientEntities"] = JsonDocument.Parse("""{"guess":"pastoral"}""").RootElement.Clone()
+            }
+        });
+
+        Assert.Equal("word_of_the_day_guess", decision.IntentName);
+        Assert.Equal("I heard pastoral.", decision.ReplyText);
     }
 
     private static JiboInteractionService CreateService()

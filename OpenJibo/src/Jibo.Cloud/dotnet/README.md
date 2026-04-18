@@ -110,6 +110,7 @@ Current raw-audio behavior is still a compatibility bridge:
 - this is intentionally not a claim of real ASR parity
 - follow-up turns now preserve enough constraint state to distinguish yes/no-style replies from ordinary free-form chat
 - create-flow yes/no turns now preserve `create/is_it_a_keeper` and `domain=create` in the outbound synthetic `LISTEN` payload
+- structured word-of-the-day guesses now complete as `CLIENT_NLU` turns instead of falling back to pending/blank-audio behavior
 - phrase matching has been widened slightly for known test prompts such as joke, dance, surprise, weather, calendar, commute, and news variants
 
 ## Buffered Audio STT
@@ -147,6 +148,12 @@ Latest live-capture guidance after the `2026-04-18` round:
 - only use local `whisper.cpp` when the configured tool paths are real and the decode chain is behaving
 - treat `ffmpeg` decode failures on normalized Ogg captures as evidence that the local audio path still needs more hardening before it can be the default live-test expectation
 - keep the Node implementation as the oracle for yes/no turn semantics and audio preprocessing details until the `.NET` port catches up
+
+Capture-storage guidance while moving toward hosted group testing:
+
+- repo-local file captures remain the default for laptop-based reverse engineering
+- hosted deployments should keep runtime request handling decoupled from long-term capture retention
+- sanitized fixtures remain the preferred durable artifact for parity work and bug reproduction
 
 ## Current Interaction Paths
 
