@@ -8,4 +8,5 @@ public sealed class BufferedAudioSttOptions
     public string? WhisperModelPath { get; set; }
     public string WhisperLanguage { get; set; } = "en";
     public string? TempDirectory { get; set; }
+    public bool CleanupTempFiles { get; set; }
 }

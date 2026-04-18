@@ -75,8 +75,11 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
         }
         finally
         {
-            TryDelete(oggPath);
-            TryDelete(wavPath);
+            if (options.CleanupTempFiles)
+            {
+                TryDelete(oggPath);
+                TryDelete(wavPath);
+            }
         }
     }
 
