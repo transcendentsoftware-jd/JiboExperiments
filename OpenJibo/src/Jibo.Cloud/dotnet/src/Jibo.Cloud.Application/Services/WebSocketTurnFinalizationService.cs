@@ -235,13 +235,25 @@ public sealed class WebSocketTurnFinalizationService(
 
             if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
             {
-                if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
-                {
-                    turnState.ListenRules = rules.EnumerateArray()
-                        .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString())
-                        .Where(rule => !string.IsNullOrWhiteSpace(rule))
+            if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
+            {
+                turnState.ListenRules = rules.EnumerateArray()
+                    .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString())
+                    .Where(rule => !string.IsNullOrWhiteSpace(rule))
                         .ToArray();
                     session.Metadata["listenRules"] = turnState.ListenRules;
+                }
+
+                if (data.TryGetProperty("asr", out var asr) &&
+                    asr.ValueKind == JsonValueKind.Object &&
+                    asr.TryGetProperty("hints", out var hints) &&
+                    hints.ValueKind == JsonValueKind.Array)
+                {
+                    turnState.ListenAsrHints = hints.EnumerateArray()
+                        .Where(static item => item.ValueKind == JsonValueKind.String)
+                        .Select(static item => item.GetString() ?? string.Empty)
+                        .Where(static hint => !string.IsNullOrWhiteSpace(hint))
+                        .ToArray();
                 }
 
                 if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
@@ -292,6 +304,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.SawListen = false;
         turnState.SawContext = false;
         turnState.ListenRules = [];
+        turnState.ListenAsrHints = [];
     }
 
     private async Task<IReadOnlyList<WebSocketReply>> FinalizeTurnAsync(
@@ -302,6 +315,13 @@ public sealed class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken)
     {
         var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, messageType);
+        if (ShouldIgnoreBlankAudioHotphraseTurn(turn))
+        {
+            session.TurnState.AwaitingTurnCompletion = false;
+            ResetBufferedAudio(session);
+            return [];
+        }
+
         var finalizedTurn = await ResolveTranscriptAsync(turn, session, cancellationToken);
         if (!IsTranscriptUsable(finalizedTurn))
         {
@@ -513,6 +533,11 @@ public sealed class WebSocketTurnFinalizationService(
             return false;
         }
 
+        if (transcript is "blank_audio" or "blank audio")
+        {
+            return false;
+        }
+
         if (transcript.Length >= 6)
         {
             return true;
@@ -579,6 +604,18 @@ public sealed class WebSocketTurnFinalizationService(
         return turn.Attributes.TryGetValue(key, out var value)
             ? value?.ToString()
             : null;
+    }
+
+    private static bool ShouldIgnoreBlankAudioHotphraseTurn(TurnContext turn)
+    {
+        var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
+        if (transcript is not ("blank_audio" or "blank audio"))
+        {
+            return false;
+        }
+
+        return ReadRules(turn, "listenRules")
+            .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool ShouldIgnoreLateEmptyTurn(TurnContext turn, CloudSession session, string messageType)

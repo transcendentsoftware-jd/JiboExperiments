@@ -94,7 +94,9 @@ Evidence from the continued `2026-04-18` word-of-the-day and time captures:
 
 - spoken "start word of the day" style requests should route into the same word-of-the-day launch path as the menu destination
 - spoken puzzle answers like `pastoral` should be treated as valid guesses whenever the active listen rules show `word-of-the-day/puzzle`
+- spoken numeric line picks like `two` should resolve through the active word-of-the-day hint order instead of being treated as generic chat
 - after a successful word-of-the-day completion, late empty same-turn audio should be ignored instead of generating a stale blank-audio follow-up
+- post-game hotphrase blank-audio turns should be treated as cleanup noise, not a new cloud conversation turn
 - clock replies should use the user-facing hour format without a leading zero
 
 Near-term interaction work should now prioritize:

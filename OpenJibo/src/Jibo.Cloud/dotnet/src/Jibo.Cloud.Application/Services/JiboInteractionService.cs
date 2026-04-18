@@ -18,6 +18,7 @@ public sealed class JiboInteractionService(
             : null;
         var clientRules = ReadRules(turn, "clientRules").ToArray();
         var listenRules = ReadRules(turn, "listenRules").ToArray();
+        var listenAsrHints = ReadRules(turn, "listenAsrHints").ToArray();
         var clientEntities = ReadEntities(turn);
         var isYesNoTurn = IsYesNoTurn(turn);
 
@@ -32,8 +33,8 @@ public sealed class JiboInteractionService(
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
             "no" => new JiboInteractionDecision("no", "No."),
-            "word_of_the_day" => new JiboInteractionDecision("word_of_the_day", "Word of the day is ready."),
-            "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities, transcript),
+            "word_of_the_day" => BuildWordOfTheDayLaunchDecision(),
+            "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities, transcript, listenAsrHints),
             "surprise" => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies)),
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
             "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
@@ -221,19 +222,65 @@ public sealed class JiboInteractionService(
         return "chat";
     }
 
+    private static JiboInteractionDecision BuildWordOfTheDayLaunchDecision()
+    {
+        return new JiboInteractionDecision(
+            "word_of_the_day",
+            "Starting word of the day.",
+            null,
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["destination"] = "word-of-the-day"
+            });
+    }
+
     private static JiboInteractionDecision BuildWordOfTheDayGuessDecision(
         IReadOnlyDictionary<string, string> clientEntities,
-        string transcript)
+        string transcript,
+        IReadOnlyList<string> listenAsrHints)
     {
-        var guess = clientEntities.TryGetValue("guess", out var guessValue)
-            ? guessValue
-            : transcript;
+        var guess = ResolveWordOfTheDayGuess(clientEntities, transcript, listenAsrHints);
 
         var reply = string.IsNullOrWhiteSpace(guess)
             ? "I heard your word of the day guess."
             : $"I heard {guess}.";
 
-        return new JiboInteractionDecision("word_of_the_day_guess", reply);
+        return new JiboInteractionDecision(
+            "word_of_the_day_guess",
+            reply,
+            null,
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["guess"] = guess
+            });
+    }
+
+    private static string ResolveWordOfTheDayGuess(
+        IReadOnlyDictionary<string, string> clientEntities,
+        string transcript,
+        IReadOnlyList<string> listenAsrHints)
+    {
+        if (clientEntities.TryGetValue("guess", out var guessValue) &&
+            !string.IsNullOrWhiteSpace(guessValue))
+        {
+            return guessValue;
+        }
+
+        var loweredTranscript = transcript.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+        var hintIndex = loweredTranscript switch
+        {
+            "1" or "one" or "first" => 0,
+            "2" or "two" or "second" => 1,
+            "3" or "three" or "third" => 2,
+            _ => -1
+        };
+
+        if (hintIndex >= 0 && hintIndex < listenAsrHints.Count)
+        {
+            return listenAsrHints[hintIndex];
+        }
+
+        return transcript;
     }
 
     private static bool IsYesNoTurn(TurnContext turn)

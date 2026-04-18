@@ -31,6 +31,11 @@ public sealed class ProtocolToTurnContextMapper
             attributes["listenRules"] = turnState.ListenRules;
         }
 
+        if (turnState.ListenAsrHints.Count > 0)
+        {
+            attributes["listenAsrHints"] = turnState.ListenAsrHints;
+        }
+
         if (turnState.BufferedAudioBytes > 0)
         {
             attributes["bufferedAudioBytes"] = turnState.BufferedAudioBytes;

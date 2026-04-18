@@ -21,19 +21,30 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isYesNoTurn = !string.IsNullOrWhiteSpace(yesNoCreateRule);
         var isYesNoIntent = string.Equals(plan.IntentName, "yes", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
-        var outboundIntent = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
+        var isWordOfDayLaunch = string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
+        var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
+        var nluGuess = ReadClientEntity(turn, "guess");
+        var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
+        var outboundIntent = isWordOfDayLaunch
+            ? "loadMenu"
+            : isWordOfDayGuess
+            ? "guess"
+            : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
             ? clientIntent
             : plan.IntentName ?? "unknown";
-        var nluGuess = ReadClientEntity(turn, "guess");
-        var outboundAsrText = string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
+        var outboundAsrText = isWordOfDayGuess && !string.IsNullOrWhiteSpace(wordOfDayGuess)
+            ? wordOfDayGuess
+            : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
             ? nluGuess
             : isYesNoTurn && isYesNoIntent
             ? transcript
             : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
                 ? clientIntent
                 : transcript;
-        var outboundRules = isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
-        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent);
+        var outboundRules = isWordOfDayLaunch
+            ? ["main-menu/execute_fun_stuff"]
+            : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
+        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
         var messages = new List<SocketReplyPlan>
         {
             new(JsonSerializer.Serialize(new
@@ -73,7 +84,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
             }))
         };
 
-        if (emitSkillActions && speak is not null)
+        if (emitSkillActions && speak is not null && !isWordOfDayLaunch && !isWordOfDayGuess)
         {
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildSkillPayload(plan, turn, transId, speak, skill)),
@@ -145,13 +156,35 @@ public sealed class ResponsePlanToSocketMessagesMapper
         };
     }
 
-    private static object ReadEntities(TurnContext turn, string? messageType, bool yesNoCreateTurn)
+    private static object ReadEntities(
+        TurnContext turn,
+        string? messageType,
+        bool yesNoCreateTurn,
+        bool wordOfDayLaunch,
+        bool wordOfDayGuess,
+        string? guess)
     {
         if (yesNoCreateTurn)
         {
             return new Dictionary<string, object?>
             {
                 ["domain"] = "create"
+            };
+        }
+
+        if (wordOfDayLaunch)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["destination"] = "word-of-the-day"
+            };
+        }
+
+        if (wordOfDayGuess)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["guess"] = guess ?? string.Empty
             };
         }
 
@@ -227,6 +260,43 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 => entityValue?.ToString(),
             _ => null
         };
+    }
+
+    private static string? ReadSkillPayloadString(InvokeNativeSkillAction? skill, string key)
+    {
+        if (skill?.Payload is null || !skill.Payload.TryGetValue(key, out var value))
+        {
+            return null;
+        }
+
+        return value?.ToString();
+    }
+
+    private static string? ResolveWordOfDayGuess(TurnContext turn, string transcript, string? nluGuess)
+    {
+        if (!string.IsNullOrWhiteSpace(nluGuess))
+        {
+            return nluGuess;
+        }
+
+        var normalized = transcript.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+        var hintIndex = normalized switch
+        {
+            "1" or "one" or "first" => 0,
+            "2" or "two" or "second" => 1,
+            "3" or "three" or "third" => 2,
+            _ => -1
+        };
+
+        if (hintIndex < 0)
+        {
+            return transcript;
+        }
+
+        var hints = ReadRuleValues(turn, "listenAsrHints").ToArray();
+        return hintIndex < hints.Length
+            ? hints[hintIndex]
+            : transcript;
     }
 
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)

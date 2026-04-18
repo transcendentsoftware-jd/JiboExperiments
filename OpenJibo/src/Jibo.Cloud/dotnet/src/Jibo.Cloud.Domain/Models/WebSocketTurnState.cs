@@ -17,4 +17,5 @@ public sealed class WebSocketTurnState
     public bool SawListen { get; set; }
     public bool SawContext { get; set; }
     public IReadOnlyList<string> ListenRules { get; set; } = [];
+    public IReadOnlyList<string> ListenAsrHints { get; set; } = [];
 }

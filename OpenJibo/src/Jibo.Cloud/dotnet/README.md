@@ -112,8 +112,9 @@ Current raw-audio behavior is still a compatibility bridge:
 - create-flow yes/no turns now preserve `create/is_it_a_keeper` and `domain=create` in the outbound synthetic `LISTEN` payload
 - structured word-of-the-day guesses now complete as `CLIENT_NLU` turns instead of falling back to pending/blank-audio behavior
 - spoken word-of-the-day launch phrases now route into the same cloud intent as the on-screen menu path
-- spoken word-of-the-day puzzle answers now complete against `word-of-the-day/puzzle` listen rules instead of degrading into generic chat
-- late empty same-turn `CLIENT_ASR` follow-ons are ignored after a completed turn so word-of-the-day wins do not get tailed by stale blank-audio comments
+- spoken word-of-the-day puzzle answers now emit menu-compatible `guess` turns, including line-number picks resolved through the observed hint order
+- voice-triggered word-of-the-day launches now emit the same `loadMenu + destination=word-of-the-day` shape the robot already uses successfully from the menu
+- hotphrase `[BLANK_AUDIO]` cleanup turns are ignored instead of reopening the cloud into a stale blank-audio comment path after word-of-the-day completion
 - phrase matching has been widened slightly for known test prompts such as joke, dance, surprise, weather, calendar, commute, and news variants
 - time replies now use the natural hour format without a leading zero
 
