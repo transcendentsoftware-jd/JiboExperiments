@@ -17,13 +17,20 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var transcript = turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty;
         var clientIntent = ReadAttribute(turn, "clientIntent");
         var rules = ReadRules(turn, messageType);
+        var yesNoCreateRule = ReadYesNoCreateRule(turn);
+        var isYesNoTurn = !string.IsNullOrWhiteSpace(yesNoCreateRule);
+        var isYesNoIntent = string.Equals(plan.IntentName, "yes", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
         var outboundIntent = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
             ? clientIntent
             : plan.IntentName ?? "unknown";
-        var outboundAsrText = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
-            ? clientIntent
-            : transcript;
-        var entities = ReadEntities(turn, messageType);
+        var outboundAsrText = isYesNoTurn && isYesNoIntent
+            ? transcript
+            : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
+                ? clientIntent
+                : transcript;
+        var outboundRules = isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
+        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent);
         var messages = new List<SocketReplyPlan>
         {
             new(JsonSerializer.Serialize(new
@@ -42,13 +49,13 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     {
                         confidence = 0.95,
                         intent = outboundIntent,
-                        rules,
+                        rules = outboundRules,
                         entities
                     },
                     match = new
                     {
                         intent = outboundIntent,
-                        rule = rules.FirstOrDefault() ?? string.Empty,
+                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
                         score = 0.95
                     }
                 }
@@ -135,8 +142,16 @@ public sealed class ResponsePlanToSocketMessagesMapper
         };
     }
 
-    private static object ReadEntities(TurnContext turn, string? messageType)
+    private static object ReadEntities(TurnContext turn, string? messageType, bool yesNoCreateTurn)
     {
+        if (yesNoCreateTurn)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["domain"] = "create"
+            };
+        }
+
         if (!string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
         {
             return new Dictionary<string, object?>();
@@ -152,6 +167,35 @@ public sealed class ResponsePlanToSocketMessagesMapper
             JsonElement { ValueKind: JsonValueKind.Object } jsonElement => jsonElement,
             IDictionary<string, object?> dictionary => dictionary,
             _ => new Dictionary<string, object?>()
+        };
+    }
+
+    private static string? ReadYesNoCreateRule(TurnContext turn)
+    {
+        return ReadRuleValues(turn)
+            .FirstOrDefault(static rule => string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> ReadRuleValues(TurnContext turn)
+    {
+        return ReadRuleValues(turn, "listenRules").Concat(ReadRuleValues(turn, "clientRules"));
+    }
+
+    private static IEnumerable<string> ReadRuleValues(TurnContext turn, string key)
+    {
+        if (!turn.Attributes.TryGetValue(key, out var value) || value is null)
+        {
+            return [];
+        }
+
+        return value switch
+        {
+            IReadOnlyList<string> typedRules => typedRules,
+            IEnumerable<string> rules => rules,
+            JsonElement { ValueKind: JsonValueKind.Array } jsonElement => jsonElement.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.String)
+                .Select(static item => item.GetString() ?? string.Empty),
+            _ => []
         };
     }
 

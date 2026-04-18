@@ -2,6 +2,7 @@ using System.Text.Json;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Runtime.Abstractions;
+using System.Text.RegularExpressions;
 
 namespace Jibo.Cloud.Application.Services;
 
@@ -302,6 +303,32 @@ public sealed class WebSocketTurnFinalizationService(
     {
         var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, messageType);
         var finalizedTurn = await ResolveTranscriptAsync(turn, session, cancellationToken);
+        if (!IsTranscriptUsable(finalizedTurn))
+        {
+            finalizedTurn = new TurnContext
+            {
+                TurnId = finalizedTurn.TurnId,
+                SessionId = finalizedTurn.SessionId,
+                TimestampUtc = finalizedTurn.TimestampUtc,
+                InputMode = finalizedTurn.InputMode,
+                SourceKind = finalizedTurn.SourceKind,
+                WakePhrase = finalizedTurn.WakePhrase,
+                RawTranscript = null,
+                NormalizedTranscript = null,
+                DeviceId = finalizedTurn.DeviceId,
+                HostName = finalizedTurn.HostName,
+                RequestId = finalizedTurn.RequestId,
+                ProtocolService = finalizedTurn.ProtocolService,
+                ProtocolOperation = finalizedTurn.ProtocolOperation,
+                FirmwareVersion = finalizedTurn.FirmwareVersion,
+                ApplicationVersion = finalizedTurn.ApplicationVersion,
+                Locale = finalizedTurn.Locale,
+                TimeZone = finalizedTurn.TimeZone,
+                IsFollowUpEligible = finalizedTurn.IsFollowUpEligible,
+                Attributes = finalizedTurn.Attributes
+            };
+        }
+
         var turnState = session.TurnState;
         if (string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
             string.IsNullOrWhiteSpace(finalizedTurn.RawTranscript))
@@ -459,5 +486,64 @@ public sealed class WebSocketTurnFinalizationService(
         {
             return false;
         }
+    }
+
+    private static bool IsTranscriptUsable(TurnContext turn)
+    {
+        var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
+        if (string.IsNullOrWhiteSpace(transcript))
+        {
+            return false;
+        }
+
+        if (transcript.Length >= 6)
+        {
+            return true;
+        }
+
+        if (IsYesNoTurn(turn) && transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
+        {
+            return true;
+        }
+
+        return transcript is "joke" or "dance" or "time" or "date" or "today" or "day" or "hello" or "hi" or "hey";
+    }
+
+    private static bool IsYesNoTurn(TurnContext turn)
+    {
+        return ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules"))
+            .Any(static rule =>
+                string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> ReadRules(TurnContext turn, string key)
+    {
+        if (!turn.Attributes.TryGetValue(key, out var value) || value is null)
+        {
+            return [];
+        }
+
+        return value switch
+        {
+            IReadOnlyList<string> typed => typed,
+            IEnumerable<string> strings => strings,
+            JsonElement { ValueKind: JsonValueKind.Array } json => json.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.String)
+                .Select(static item => item.GetString() ?? string.Empty),
+            _ => []
+        };
+    }
+
+    private static string NormalizeTranscript(string? transcript)
+    {
+        if (string.IsNullOrWhiteSpace(transcript))
+        {
+            return string.Empty;
+        }
+
+        return Regex.Replace(transcript.Trim().ToLowerInvariant(), @"[^\w\s]", " ")
+            .Replace("  ", " ", StringComparison.Ordinal)
+            .Trim();
     }
 }

@@ -30,6 +30,30 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategyTests
     }
 
     [Fact]
+    public void CanHandle_ReturnsFalse_WhenConfiguredAbsoluteWhisperPathIsMissing()
+    {
+        var strategy = new LocalWhisperCppBufferedAudioSttStrategy(
+            new BufferedAudioSttOptions
+            {
+                EnableLocalWhisperCpp = true,
+                FfmpegPath = "/usr/bin/ffmpeg",
+                WhisperCliPath = "/path/that/does/not/exist/whisper-cli",
+                WhisperModelPath = "/path/that/does/not/exist/model.bin"
+            },
+            new FakeExternalProcessRunner());
+
+        var turn = new TurnContext
+        {
+            Attributes = new Dictionary<string, object?>
+            {
+                ["bufferedAudioFrames"] = new[] { BuildMinimalOggPage() }
+            }
+        };
+
+        Assert.False(strategy.CanHandle(turn));
+    }
+
+    [Fact]
     public async Task TranscribeAsync_UsesFfmpegAndWhisperCpp_WhenConfigured()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"openjibo-stt-test-{Guid.NewGuid():N}");

@@ -130,6 +130,23 @@ python3 ./scripts/cloud/import-websocket-capture-fixture.py \
 - whether EOS timing matched expectations
 - whether any unexpected message families appeared
 
+## Latest Test Notes To Carry Forward
+
+The most recent live round showed that startup and some Q-and-A paths are progressing, but audio-turn reliability is still uneven.
+
+Carry these expectations into the next run:
+
+- constrained yes/no replies should be tested intentionally because they need special handling and are easy to miss if STT drifts
+- phrases intended to trigger known skills should be repeated using a small, documented wording set so we can separate routing issues from Whisper errors
+- provider-backed placeholder answers are still expected for weather, commute, calendar, news, and similar routes unless that feature path is explicitly implemented
+
+For STT during live testing:
+
+- prefer runs where `audioTranscriptHint` or other synthetic replay cues are available
+- do not assume local `whisper.cpp` success means the audio pipeline is stable overall
+- if many turns stay pending or `ffmpeg` rejects normalized Ogg files, treat that as a speech-pipeline issue first, not an intent-mapping issue
+- keep the Node server available as the comparison path for yes/no and audio-preprocessing behavior
+
 ## What To Do If The Test Fails
 
 If the robot does not connect or the first turn fails:

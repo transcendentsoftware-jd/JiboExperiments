@@ -12,9 +12,9 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
     public bool CanHandle(TurnContext turn)
     {
         return options.EnableLocalWhisperCpp &&
-               !string.IsNullOrWhiteSpace(options.FfmpegPath) &&
-               !string.IsNullOrWhiteSpace(options.WhisperCliPath) &&
-               !string.IsNullOrWhiteSpace(options.WhisperModelPath) &&
+               IsConfiguredPathAvailable(options.FfmpegPath, checkFileExists: false) &&
+               IsConfiguredPathAvailable(options.WhisperCliPath, checkFileExists: true) &&
+               IsConfiguredPathAvailable(options.WhisperModelPath, checkFileExists: true) &&
                ReadBufferedAudioFrames(turn).Count > 0;
     }
 
@@ -147,5 +147,20 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
         {
             // Best-effort cleanup only.
         }
+    }
+
+    private static bool IsConfiguredPathAvailable(string? path, bool checkFileExists)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        if (!Path.IsPathRooted(path))
+        {
+            return true;
+        }
+
+        return checkFileExists ? File.Exists(path) : true;
     }
 }

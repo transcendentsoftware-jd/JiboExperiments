@@ -56,6 +56,39 @@ public sealed class JiboInteractionServiceTests
         Assert.Contains("Today is", decision.ReplyText, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task BuildDecisionAsync_YesNoFollowUp_MapsShortAffirmationToYesIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yeah",
+            NormalizedTranscript = "yeah",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "create/is_it_a_keeper" }
+            }
+        });
+
+        Assert.Equal("yes", decision.IntentName);
+        Assert.Equal("Yes.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SkillPhraseVariant_MapsToKnownIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "make me laugh",
+            NormalizedTranscript = "make me laugh"
+        });
+
+        Assert.Equal("joke", decision.IntentName);
+    }
+
     private static JiboInteractionService CreateService()
     {
         return new JiboInteractionService(

@@ -1,5 +1,6 @@
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Runtime.Abstractions;
+using System.Text.Json;
 
 namespace Jibo.Cloud.Application.Services;
 
@@ -15,8 +16,9 @@ public sealed class JiboInteractionService(
         var clientIntent = turn.Attributes.TryGetValue("clientIntent", out var rawClientIntent)
             ? rawClientIntent?.ToString()
             : null;
+        var isYesNoTurn = IsYesNoTurn(turn);
 
-        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent);
+        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent, isYesNoTurn);
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
@@ -25,6 +27,8 @@ public sealed class JiboInteractionService(
             "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
+            "yes" => new JiboInteractionDecision("yes", "Yes."),
+            "no" => new JiboInteractionDecision("no", "No."),
             "surprise" => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies)),
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
             "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
@@ -86,7 +90,7 @@ public sealed class JiboInteractionService(
                 .Replace("{transcript}", transcript, StringComparison.Ordinal);
     }
 
-    private static string ResolveSemanticIntent(string loweredTranscript, string? clientIntent)
+    private static string ResolveSemanticIntent(string loweredTranscript, string? clientIntent, bool isYesNoTurn)
     {
         if (string.Equals(clientIntent, "askForTime", StringComparison.OrdinalIgnoreCase))
         {
@@ -98,71 +102,111 @@ public sealed class JiboInteractionService(
             return "date";
         }
 
-        if (loweredTranscript.Contains("joke", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "joke", "funny", "make me laugh"))
         {
             return "joke";
         }
 
-        if (loweredTranscript.Contains("dance", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "dance", "boogie"))
         {
             return "dance";
         }
 
-        if (loweredTranscript.Contains("surprise", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "surprise", "surprise me", "show me something fun"))
         {
             return "surprise";
         }
 
-        if (loweredTranscript.Contains("personal report", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "personal report", "my report", "daily report", "my update"))
         {
             return "personal_report";
         }
 
-        if (loweredTranscript.Contains("weather", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "weather", "forecast", "weather report", "is it raining"))
         {
             return "weather";
         }
 
-        if (loweredTranscript.Contains("calendar", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "calendar", "schedule", "what's on my calendar", "what is on my calendar"))
         {
             return "calendar";
         }
 
-        if (loweredTranscript.Contains("commute", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "commute", "traffic", "drive to work", "how long to work"))
         {
             return "commute";
         }
 
-        if (loweredTranscript.Contains("news", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "news", "headlines", "news update", "tell me the news"))
         {
             return "news";
         }
 
-        if (loweredTranscript.Contains("how are you", StringComparison.Ordinal) ||
-            loweredTranscript.Contains("what's up", StringComparison.Ordinal) ||
-            loweredTranscript.Contains("what s up", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "how are you", "what's up", "what s up", "what up"))
         {
             return "how_are_you";
         }
 
-        if (loweredTranscript.Contains("hello", StringComparison.Ordinal) ||
-            loweredTranscript.Contains("hi", StringComparison.Ordinal) ||
-            loweredTranscript.Contains("hey", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "hello", "hi", "hey"))
         {
             return "hello";
         }
 
-        if (loweredTranscript.Contains("time", StringComparison.Ordinal))
+        if (isYesNoTurn && MatchesAny(loweredTranscript, "yes", "yeah", "yup", "sure", "uh huh"))
+        {
+            return "yes";
+        }
+
+        if (isYesNoTurn && MatchesAny(loweredTranscript, "no", "nope", "nah"))
+        {
+            return "no";
+        }
+
+        if (MatchesAny(loweredTranscript, "what time is it", "current time", "the time", "time is it") ||
+            loweredTranscript.Contains("time", StringComparison.Ordinal))
         {
             return "time";
         }
 
-        if (loweredTranscript.Contains("date", StringComparison.Ordinal) || loweredTranscript.Contains("day", StringComparison.Ordinal))
+        if (MatchesAny(loweredTranscript, "what day is it", "what is the date", "today s date", "today's date") ||
+            loweredTranscript.Contains("date", StringComparison.Ordinal) ||
+            loweredTranscript.Contains("day", StringComparison.Ordinal))
         {
             return "date";
         }
 
         return "chat";
+    }
+
+    private static bool IsYesNoTurn(TurnContext turn)
+    {
+        return ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules"))
+            .Any(static rule =>
+                string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> ReadRules(TurnContext turn, string key)
+    {
+        if (!turn.Attributes.TryGetValue(key, out var value) || value is null)
+        {
+            return [];
+        }
+
+        return value switch
+        {
+            IReadOnlyList<string> typed => typed,
+            IEnumerable<string> strings => strings,
+            JsonElement { ValueKind: JsonValueKind.Array } json => json.EnumerateArray()
+                .Where(static item => item.ValueKind == JsonValueKind.String)
+                .Select(static item => item.GetString() ?? string.Empty),
+            _ => []
+        };
+    }
+
+    private static bool MatchesAny(string loweredTranscript, params string[] candidates)
+    {
+        return candidates.Any(candidate => loweredTranscript.Contains(candidate, StringComparison.Ordinal));
     }
 }
 

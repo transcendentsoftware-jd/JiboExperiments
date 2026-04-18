@@ -108,6 +108,9 @@ Current raw-audio behavior is still a compatibility bridge:
 - if buffered audio has a synthetic transcript hint, the server now auto-finalizes the turn and emits `LISTEN` + `EOS` + `SKILL_ACTION`
 - if buffered audio crosses the finalize threshold without a usable transcript, the server now emits a Node-style fallback completion with `EOS` instead of hanging the turn forever
 - this is intentionally not a claim of real ASR parity
+- follow-up turns now preserve enough constraint state to distinguish yes/no-style replies from ordinary free-form chat
+- create-flow yes/no turns now preserve `create/is_it_a_keeper` and `domain=create` in the outbound synthetic `LISTEN` payload
+- phrase matching has been widened slightly for known test prompts such as joke, dance, surprise, weather, calendar, commute, and news variants
 
 ## Buffered Audio STT
 
@@ -137,6 +140,13 @@ Configuration lives under `OpenJibo:Stt`:
 - `TempDirectory`
 
 This is not yet a claim of production-ready onboard ASR. It is a `.NET` discovery seam that keeps us compatible with the Node oracle while we evaluate longer-term options such as Azure-hosted STT or a managed decode/transcribe stack.
+
+Latest live-capture guidance after the `2026-04-18` round:
+
+- prefer synthetic transcript hints when they are present in the observed turn
+- only use local `whisper.cpp` when the configured tool paths are real and the decode chain is behaving
+- treat `ffmpeg` decode failures on normalized Ogg captures as evidence that the local audio path still needs more hardening before it can be the default live-test expectation
+- keep the Node implementation as the oracle for yes/no turn semantics and audio preprocessing details until the `.NET` port catches up
 
 ## Current Interaction Paths
 

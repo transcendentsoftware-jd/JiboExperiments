@@ -69,6 +69,27 @@ Near-term ASR work should stay staged:
 
 That keeps Node as the reverse-engineering oracle while letting the long-term `.NET` cloud gain real STT seams without pretending they are finished.
 
+## Latest Capture Findings
+
+The latest live test round tightened up three priorities:
+
+- yes/no turns need explicit constrained follow-up handling instead of generic chat routing
+- skill invocation still depends too much on narrow phrase matching and is vulnerable to STT drift
+- local buffered-audio STT in `.NET` is useful for discovery, but it is not yet stable enough to be the default live-test assumption
+
+Evidence from the latest `2026-04-18` captures:
+
+- several buffered-audio turns never produced a usable transcript because the local `whisper.cpp` path was missing or the temporary normalized Ogg file was rejected by `ffmpeg`
+- some recognized phrases fell into placeholder provider replies because the intent was recognized but the feature path behind it is still a stub
+- short yes/no responses need the same session-aware treatment already prototyped in Node, especially for create-flow style follow-ups
+
+Near-term interaction work should now prioritize:
+
+1. preserve and interpret yes/no turn constraints from observed listen rules
+2. broaden phrase-to-intent matching for the small set of known working skills before moving to larger NLU ambitions
+3. keep synthetic transcript hints as the most reliable parity path when captures already provide them
+4. continue evaluating whether local preprocessing is worth further investment or whether managed STT should replace it for the next serious testing phase
+
 ## Working Cloud Framework
 
 The current evidence in captures, fixtures, and Node behavior supports three main cloud interaction paths:
