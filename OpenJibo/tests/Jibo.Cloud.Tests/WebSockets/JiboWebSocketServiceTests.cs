@@ -406,6 +406,72 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_WordOfDayGuess_UsesSpokenTranscriptDuringPuzzleTurn()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-spoken-guess-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-spoken-guess","data":{"rules":["word-of-the-day/puzzle"],"asr":{"hints":["pastoral","doodad","escarpment"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-spoken-guess-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-wod-spoken-guess","data":{"text":"pastoral"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("word_of_the_day_guess", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("word-of-the-day/puzzle", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task EmptyClientAsr_AfterCompletedWordOfDayTurn_IsIgnored()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-late-empty-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-late-empty","data":{"rules":["word-of-the-day/puzzle"]}}"""
+        });
+
+        var winReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-late-empty-token",
+            Text = """{"type":"CLIENT_NLU","transID":"trans-wod-late-empty","data":{"entities":{"guess":"pastoral"},"intent":"guess","rules":["word-of-the-day/puzzle"]}}"""
+        });
+
+        Assert.Equal(2, winReplies.Count);
+
+        var lateReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-late-empty-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-wod-late-empty","data":{}}"""
+        });
+
+        Assert.Empty(lateReplies);
+    }
+
+    [Fact]
     public async Task BufferedAudio_WithSyntheticTranscriptHint_FinalizesThroughSttSeam()
     {
         var listenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope

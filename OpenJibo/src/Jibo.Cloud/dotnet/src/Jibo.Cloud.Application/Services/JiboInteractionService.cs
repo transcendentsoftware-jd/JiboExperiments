@@ -17,22 +17,23 @@ public sealed class JiboInteractionService(
             ? rawClientIntent?.ToString()
             : null;
         var clientRules = ReadRules(turn, "clientRules").ToArray();
+        var listenRules = ReadRules(turn, "listenRules").ToArray();
         var clientEntities = ReadEntities(turn);
         var isYesNoTurn = IsYesNoTurn(turn);
 
-        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent, clientRules, clientEntities, isYesNoTurn);
+        var semanticIntent = ResolveSemanticIntent(lowered, clientIntent, clientRules, listenRules, clientEntities, isYesNoTurn);
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
             "dance" => BuildDanceDecision(catalog),
-            "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:hh:mm tt}."),
+            "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:h:mm tt}."),
             "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
             "no" => new JiboInteractionDecision("no", "No."),
             "word_of_the_day" => new JiboInteractionDecision("word_of_the_day", "Word of the day is ready."),
-            "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities),
+            "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities, transcript),
             "surprise" => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies)),
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
             "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
@@ -98,11 +99,15 @@ public sealed class JiboInteractionService(
         string loweredTranscript,
         string? clientIntent,
         IReadOnlyList<string> clientRules,
+        IReadOnlyList<string> listenRules,
         IReadOnlyDictionary<string, string> clientEntities,
         bool isYesNoTurn)
     {
+        var wordOfDayPuzzleTurn = clientRules.Concat(listenRules)
+            .Any(rule => string.Equals(rule, "word-of-the-day/puzzle", StringComparison.OrdinalIgnoreCase));
+
         if (string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) &&
-            clientRules.Any(rule => string.Equals(rule, "word-of-the-day/puzzle", StringComparison.OrdinalIgnoreCase)))
+            wordOfDayPuzzleTurn)
         {
             return "word_of_the_day_guess";
         }
@@ -122,6 +127,22 @@ public sealed class JiboInteractionService(
         if (string.Equals(clientIntent, "askForDate", StringComparison.OrdinalIgnoreCase))
         {
             return "date";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "word of the day",
+                "start word of the day",
+                "play word of the day",
+                "do word of the day",
+                "open word of the day"))
+        {
+            return "word_of_the_day";
+        }
+
+        if (wordOfDayPuzzleTurn && !string.IsNullOrWhiteSpace(loweredTranscript))
+        {
+            return "word_of_the_day_guess";
         }
 
         if (MatchesAny(loweredTranscript, "joke", "funny", "make me laugh"))
@@ -200,11 +221,13 @@ public sealed class JiboInteractionService(
         return "chat";
     }
 
-    private static JiboInteractionDecision BuildWordOfTheDayGuessDecision(IReadOnlyDictionary<string, string> clientEntities)
+    private static JiboInteractionDecision BuildWordOfTheDayGuessDecision(
+        IReadOnlyDictionary<string, string> clientEntities,
+        string transcript)
     {
         var guess = clientEntities.TryGetValue("guess", out var guessValue)
             ? guessValue
-            : string.Empty;
+            : transcript;
 
         var reply = string.IsNullOrWhiteSpace(guess)
             ? "I heard your word of the day guess."

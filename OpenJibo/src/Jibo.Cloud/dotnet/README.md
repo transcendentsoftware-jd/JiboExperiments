@@ -111,7 +111,11 @@ Current raw-audio behavior is still a compatibility bridge:
 - follow-up turns now preserve enough constraint state to distinguish yes/no-style replies from ordinary free-form chat
 - create-flow yes/no turns now preserve `create/is_it_a_keeper` and `domain=create` in the outbound synthetic `LISTEN` payload
 - structured word-of-the-day guesses now complete as `CLIENT_NLU` turns instead of falling back to pending/blank-audio behavior
+- spoken word-of-the-day launch phrases now route into the same cloud intent as the on-screen menu path
+- spoken word-of-the-day puzzle answers now complete against `word-of-the-day/puzzle` listen rules instead of degrading into generic chat
+- late empty same-turn `CLIENT_ASR` follow-ons are ignored after a completed turn so word-of-the-day wins do not get tailed by stale blank-audio comments
 - phrase matching has been widened slightly for known test prompts such as joke, dance, surprise, weather, calendar, commute, and news variants
+- time replies now use the natural hour format without a leading zero
 
 ## Buffered Audio STT
 

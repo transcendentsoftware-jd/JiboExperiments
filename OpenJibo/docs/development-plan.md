@@ -90,12 +90,20 @@ Evidence from the latest word-of-the-day capture round:
 - word-of-the-day guesses can arrive as structured `CLIENT_NLU` turns with `intent=guess`, `rules=["word-of-the-day/puzzle"]`, and `entities.guess=<word>`
 - those structured turns should be treated as first-class cloud inputs even when no free-form transcript is present
 
+Evidence from the continued `2026-04-18` word-of-the-day and time captures:
+
+- spoken "start word of the day" style requests should route into the same word-of-the-day launch path as the menu destination
+- spoken puzzle answers like `pastoral` should be treated as valid guesses whenever the active listen rules show `word-of-the-day/puzzle`
+- after a successful word-of-the-day completion, late empty same-turn audio should be ignored instead of generating a stale blank-audio follow-up
+- clock replies should use the user-facing hour format without a leading zero
+
 Near-term interaction work should now prioritize:
 
 1. preserve and interpret yes/no turn constraints from observed listen rules
 2. broaden phrase-to-intent matching for the small set of known working skills before moving to larger NLU ambitions
 3. keep synthetic transcript hints as the most reliable parity path when captures already provide them
 4. continue evaluating whether local preprocessing is worth further investment or whether managed STT should replace it for the next serious testing phase
+5. start separating laptop-local capture storage from the eventual hosted retention/export path so group testing does not depend on repo-local zip handling
 
 ## Capture Storage Direction
 

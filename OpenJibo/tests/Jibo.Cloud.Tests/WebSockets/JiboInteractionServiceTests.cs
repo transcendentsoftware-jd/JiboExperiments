@@ -111,6 +111,40 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("I heard pastoral.", decision.ReplyText);
     }
 
+    [Fact]
+    public async Task BuildDecisionAsync_WordOfDayGuess_UsesSpokenTranscriptDuringPuzzleTurn()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "pastoral",
+            NormalizedTranscript = "pastoral",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "word-of-the-day/puzzle" }
+            }
+        });
+
+        Assert.Equal("word_of_the_day_guess", decision.IntentName);
+        Assert.Equal("I heard pastoral.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WordOfDayStartPhrase_MapsToSkillIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "start word of the day",
+            NormalizedTranscript = "start word of the day"
+        });
+
+        Assert.Equal("word_of_the_day", decision.IntentName);
+        Assert.Equal("Word of the day is ready.", decision.ReplyText);
+    }
+
     private static JiboInteractionService CreateService()
     {
         return new JiboInteractionService(

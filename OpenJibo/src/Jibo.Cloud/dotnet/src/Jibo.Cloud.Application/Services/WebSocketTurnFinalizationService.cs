@@ -330,6 +330,13 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         var turnState = session.TurnState;
+        if (ShouldIgnoreLateEmptyTurn(finalizedTurn, session, messageType))
+        {
+            turnState.AwaitingTurnCompletion = false;
+            ResetBufferedAudio(session);
+            return [];
+        }
+
         if (string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
             string.IsNullOrWhiteSpace(finalizedTurn.RawTranscript))
         {
@@ -493,6 +500,7 @@ public sealed class WebSocketTurnFinalizationService(
         var messageType = ReadMessageType(turn);
         var clientIntent = ReadAttribute(turn, "clientIntent");
         var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
+        var listenRules = ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules")).ToArray();
 
         if (string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) &&
             !string.IsNullOrWhiteSpace(clientIntent))
@@ -511,6 +519,11 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         if (IsYesNoTurn(turn) && transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
+        {
+            return true;
+        }
+
+        if (listenRules.Any(rule => string.Equals(rule, "word-of-the-day/puzzle", StringComparison.OrdinalIgnoreCase)))
         {
             return true;
         }
@@ -566,5 +579,28 @@ public sealed class WebSocketTurnFinalizationService(
         return turn.Attributes.TryGetValue(key, out var value)
             ? value?.ToString()
             : null;
+    }
+
+    private static bool ShouldIgnoreLateEmptyTurn(TurnContext turn, CloudSession session, string messageType)
+    {
+        if (messageType is not ("CLIENT_ASR" or "CLIENT_NLU"))
+        {
+            return false;
+        }
+
+        if (session.TurnState.AwaitingTurnCompletion || session.TurnState.BufferedAudioBytes > 0)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        var turnTransId = ReadAttribute(turn, "transID");
+        return !string.IsNullOrWhiteSpace(turnTransId) &&
+               string.Equals(turnTransId, session.LastTransId, StringComparison.Ordinal) &&
+               !string.IsNullOrWhiteSpace(session.LastIntent);
     }
 }
