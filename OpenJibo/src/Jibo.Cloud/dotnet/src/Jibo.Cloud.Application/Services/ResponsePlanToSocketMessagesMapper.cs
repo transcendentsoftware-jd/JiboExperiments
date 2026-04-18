@@ -305,7 +305,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
-        var skillId = ReadPayloadString(skillPayload, "skillId") ?? (isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill");
+        var payloadSkill = ReadPayloadString(skillPayload, "skillId");
+        var skillId = string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
         var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
             ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
             : isJoke
