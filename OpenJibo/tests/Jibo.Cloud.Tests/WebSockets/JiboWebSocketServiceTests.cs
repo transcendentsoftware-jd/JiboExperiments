@@ -646,6 +646,77 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
     }
 
+    [Fact]
+    public async Task NewTransId_OnContext_ResetsStaleBufferedAudioBeforeFollowUpTurn()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Text = """{"type":"LISTEN","transID":"trans-first","data":{"rules":["wake-word"]}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Text = """{"type":"CONTEXT","transID":"trans-first","data":{"audioTranscriptHint":"tell me a joke"}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Binary = [1, 2, 3, 4]
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-first","data":{}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Binary = [9, 9, 9, 9]
+        });
+
+        var session = _store.FindSessionByToken("hub-context-reset-token");
+        Assert.NotNull(session);
+        Assert.Equal(4, session.TurnState.BufferedAudioBytes);
+
+        var contextReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-reset-token",
+            Text = """{"type":"CONTEXT","transID":"trans-second","data":{"topic":"conversation"}}"""
+        });
+
+        Assert.Single(contextReplies);
+        Assert.Equal("OPENJIBO_CONTEXT_ACK", ReadReplyType(contextReplies[0]));
+
+        session = _store.FindSessionByToken("hub-context-reset-token");
+        Assert.NotNull(session);
+        Assert.Equal("trans-second", session.TurnState.TransId);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+    }
+
     [Theory]
     [InlineData("fixtures\\neo-hub-client-asr-joke.flow.json")]
     [InlineData("fixtures\\neo-hub-context-client-nlu.flow.json")]

@@ -17,6 +17,21 @@ public sealed class WebSocketTurnFinalizationService(
     private const int AutoFinalizeMinBufferedAudioChunks = 5;
     private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1800);
 
+    public void ObserveIncomingMessage(CloudSession session, string? text)
+    {
+        if (!TryReadTransId(text, out var nextTransId) || string.IsNullOrWhiteSpace(nextTransId))
+        {
+            return;
+        }
+
+        if (!string.Equals(session.TurnState.TransId, nextTransId, StringComparison.Ordinal))
+        {
+            ResetTurnState(session.TurnState, nextTransId);
+        }
+
+        session.LastTransId = nextTransId;
+    }
+
     public async Task<IReadOnlyList<WebSocketReply>> HandleBinaryAudioAsync(
         CloudSession session,
         WebSocketMessageEnvelope envelope,
@@ -413,6 +428,32 @@ public sealed class WebSocketTurnFinalizationService(
 
             value = property.GetString();
             return !string.IsNullOrWhiteSpace(value);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryReadTransId(string? text, out string? transId)
+    {
+        transId = null;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            if (!document.RootElement.TryGetProperty("transID", out var transIdProperty) ||
+                transIdProperty.ValueKind != JsonValueKind.String)
+            {
+                return false;
+            }
+
+            transId = transIdProperty.GetString();
+            return !string.IsNullOrWhiteSpace(transId);
         }
         catch
         {

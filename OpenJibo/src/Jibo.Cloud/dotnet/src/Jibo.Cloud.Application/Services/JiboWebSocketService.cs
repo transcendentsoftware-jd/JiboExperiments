@@ -32,12 +32,7 @@ public sealed class JiboWebSocketService(
 
         var parsedType = ReadMessageType(envelope.Text);
         session.LastMessageType = parsedType;
-        var parsedTransId = ReadTransId(envelope.Text);
-        if (!string.IsNullOrWhiteSpace(parsedTransId))
-        {
-            session.LastTransId = parsedTransId;
-            session.TurnState.TransId = parsedTransId;
-        }
+        turnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
 
         if (parsedType == "CONTEXT")
         {
@@ -100,28 +95,5 @@ public sealed class JiboWebSocketService(
         }
 
         return "UNKNOWN";
-    }
-
-    private static string? ReadTransId(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(text);
-            if (document.RootElement.TryGetProperty("transID", out var transId) && transId.ValueKind == JsonValueKind.String)
-            {
-                return transId.GetString();
-            }
-        }
-        catch
-        {
-            return null;
-        }
-
-        return null;
     }
 }
