@@ -1,0 +1,4 @@
+{
+  "exception": "System.InvalidOperationException: whisper.cpp returned no transcript for the buffered audio turn.\n   at Jibo.Cloud.Infrastructure.Audio.LocalWhisperCppBufferedAudioSttStrategy.TranscribeAsync(TurnContext turn, CancellationToken cancellationToken) in /home/jake-dubin/JiboExperiments/OpenJibo/src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/Audio/LocalWhisperCppBufferedAudioSttStrategy.cs:line 58\n   at Jibo.Cloud.Application.Services.WebSocketTurnFinalizationService.ResolveTranscriptAsync(TurnContext turn, CloudSession session, CancellationToken cancellationToken) in /home/jake-dubin/JiboExperiments/OpenJibo/src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/WebSocketTurnFinalizationService.cs:line 158",
+  "message": "Error during STT processing"
+}

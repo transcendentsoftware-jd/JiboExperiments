@@ -708,6 +708,12 @@ public sealed class WebSocketTurnFinalizationService(
             return false;
         }
 
+        var messageType = ReadMessageType(turn);
+        if (messageType is not ("CLIENT_ASR" or "CLIENT_NLU"))
+        {
+            return false;
+        }
+
         if (!ReadBoolAttribute(turn, "listenHotphrase"))
         {
             return false;

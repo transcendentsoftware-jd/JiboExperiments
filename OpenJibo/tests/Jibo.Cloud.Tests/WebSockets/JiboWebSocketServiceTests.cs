@@ -573,6 +573,27 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task InitialHotphraseListen_RemainsPendingInsteadOfGreeting()
+    {
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-initial-hotphrase-token",
+            Text = """{"type":"LISTEN","transID":"trans-initial-hotphrase","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Single(replies);
+        Assert.Equal("OPENJIBO_TURN_PENDING", ReadReplyType(replies[0]));
+
+        var session = _store.FindSessionByToken("hub-initial-hotphrase-token");
+        Assert.NotNull(session);
+        Assert.Null(session.LastIntent);
+        Assert.Null(session.LastTranscript);
+    }
+
+    [Fact]
     public async Task SecondEmptyHotphraseTurn_BecomesGreetingAndKeepsFollowUpOpen()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
