@@ -486,19 +486,14 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-launch","data":{"text":"Play word of the day."}}"""
         });
 
-        Assert.Equal(3, replies.Count);
+        Assert.Equal(2, replies.Count);
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("loadMenu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("Play word of the day.", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("word-of-the-day", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("destination").GetString());
         Assert.Equal("main-menu/execute_fun_stuff", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
-
-        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
-        Assert.Equal("@be/word-of-the-day", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
-        Assert.Equal("REDIRECT", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("type").GetString());
-        Assert.Equal("menu", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("nlu").GetProperty("intent").GetString());
-        Assert.Equal("word-of-the-day", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
-        Assert.Equal(string.Empty, skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("@be/word-of-the-day", listenPayload.RootElement.GetProperty("skillID").GetString());
+        Assert.True(listenPayload.RootElement.GetProperty("onRobot").GetBoolean());
 
         var session = _store.FindSessionByToken("hub-wod-launch-token");
         Assert.NotNull(session);
@@ -554,10 +549,13 @@ public sealed class JiboWebSocketServiceTests
             Binary = new byte[3000]
         });
 
-        Assert.Equal(3, replies.Count);
+        Assert.Equal(2, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("@be/word-of-the-day", listenPayload.RootElement.GetProperty("skillID").GetString());
+        Assert.True(listenPayload.RootElement.GetProperty("onRobot").GetBoolean());
 
         var lateReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -629,6 +627,35 @@ public sealed class JiboWebSocketServiceTests
         });
 
         Assert.Empty(replies);
+    }
+
+    [Fact]
+    public async Task BinaryAudio_AfterWordOfDayRightWordListen_IsIgnoredDuringCleanupWindow()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-right-word-audio-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-right-word-audio","data":{"rules":["word-of-the-day/right_word","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-right-word-audio-token",
+            Binary = new byte[4096]
+        });
+
+        Assert.Empty(replies);
+
+        var session = _store.FindSessionByToken("hub-wod-right-word-audio-token");
+        Assert.NotNull(session);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.True(session.TurnState.IgnoreAdditionalAudioUntilUtc.HasValue);
     }
 
     [Fact]

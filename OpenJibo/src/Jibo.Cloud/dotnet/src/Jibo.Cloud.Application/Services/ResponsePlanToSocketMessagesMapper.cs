@@ -45,9 +45,42 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? ["main-menu/execute_fun_stuff"]
             : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
         var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
-        var messages = new List<SocketReplyPlan>
+        object listenMessage;
+        if (isWordOfDayLaunch)
         {
-            new(JsonSerializer.Serialize(new
+            listenMessage = new
+            {
+                type = "LISTEN",
+                transID = transId,
+                skillID = "@be/word-of-the-day",
+                onRobot = true,
+                data = new
+                {
+                    asr = new
+                    {
+                        confidence = 0.95,
+                        final = true,
+                        text = outboundAsrText
+                    },
+                    nlu = new
+                    {
+                        confidence = 0.95,
+                        intent = outboundIntent,
+                        rules = outboundRules,
+                        entities
+                    },
+                    match = new
+                    {
+                        intent = outboundIntent,
+                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
+                        score = 0.95
+                    }
+                }
+            };
+        }
+        else
+        {
+            listenMessage = new
             {
                 type = "LISTEN",
                 transID = transId,
@@ -73,7 +106,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         score = 0.95
                     }
                 }
-            })),
+            };
+        }
+
+        var messages = new List<SocketReplyPlan>
+        {
+            new(JsonSerializer.Serialize(listenMessage)),
             new(JsonSerializer.Serialize(new
             {
                 type = "EOS",
@@ -302,15 +340,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
     {
         var skillPayload = skill?.Payload;
-        var isWordOfTheDay = plan.IntentName is not null && string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
-        if (isWordOfTheDay)
-        {
-            return BuildWordOfTheDayLaunchSkillPayload(transId, skillPayload);
-        }
-
         var payloadSkill = ReadPayloadString(skillPayload, "skillId");
         var skillId = string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
         var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
@@ -352,56 +384,6 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         mim_id = mimId,
                                         mim_type = mimType
                                     }
-                                }
-                            }
-                        }
-                    }
-                },
-                analytics = new Dictionary<string, object?>(),
-                final = true
-            }
-        };
-    }
-
-    private static object BuildWordOfTheDayLaunchSkillPayload(string transId, IDictionary<string, object?>? payload)
-    {
-        var skillId = ReadPayloadString(payload, "skillId") ?? "@be/word-of-the-day";
-        var redirectIntent = ReadPayloadString(payload, "redirectIntent") ?? "menu";
-        var redirectDomain = ReadPayloadString(payload, "redirectDomain") ?? "word-of-the-day";
-
-        return new
-        {
-            type = "SKILL_ACTION",
-            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-            msgID = CreateHubMessageId(),
-            transID = transId,
-            data = new
-            {
-                skill = new
-                {
-                    id = skillId
-                },
-                action = new
-                {
-                    config = new
-                    {
-                        jcp = new
-                        {
-                            type = "REDIRECT",
-                            config = new
-                            {
-                                nlu = new
-                                {
-                                    intent = redirectIntent,
-                                    entities = new
-                                    {
-                                        domain = redirectDomain
-                                    }
-                                },
-                                asr = new
-                                {
-                                    text = string.Empty,
-                                    confidence = 1.0
                                 }
                             }
                         }
