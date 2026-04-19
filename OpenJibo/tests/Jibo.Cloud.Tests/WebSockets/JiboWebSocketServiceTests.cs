@@ -573,7 +573,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task EmptyHotphraseTurn_BecomesGreetingAndKeepsFollowUpOpen()
+    public async Task SecondEmptyHotphraseTurn_BecomesGreetingAndKeepsFollowUpOpen()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -583,6 +583,18 @@ public sealed class JiboWebSocketServiceTests
             Token = "hub-empty-hotphrase-token",
             Text = """{"type":"LISTEN","transID":"trans-empty-hotphrase","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
         });
+
+        var firstReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-empty-hotphrase-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-empty-hotphrase","data":{}}"""
+        });
+
+        Assert.Single(firstReplies);
+        Assert.Equal("OPENJIBO_TURN_PENDING", ReadReplyType(firstReplies[0]));
 
         var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {

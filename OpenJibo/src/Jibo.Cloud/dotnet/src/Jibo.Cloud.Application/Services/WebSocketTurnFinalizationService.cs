@@ -260,6 +260,7 @@ public sealed class WebSocketTurnFinalizationService(
                     (hotphrase.ValueKind == JsonValueKind.True || hotphrase.ValueKind == JsonValueKind.False))
                 {
                     turnState.ListenHotphrase = hotphrase.GetBoolean();
+                    turnState.HotphraseEmptyTurnCount = 0;
                 }
 
                 if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
@@ -310,6 +311,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.SawListen = false;
         turnState.SawContext = false;
         turnState.ListenHotphrase = false;
+        turnState.HotphraseEmptyTurnCount = 0;
         turnState.ListenRules = [];
         turnState.ListenAsrHints = [];
     }
@@ -362,6 +364,32 @@ public sealed class WebSocketTurnFinalizationService(
             turnState.AwaitingTurnCompletion = false;
             ResetBufferedAudio(session);
             return [];
+        }
+
+        if (ShouldIgnoreInitialEmptyHotphraseTurn(finalizedTurn, turnState))
+        {
+            turnState.HotphraseEmptyTurnCount += 1;
+            turnState.AwaitingTurnCompletion = true;
+            return
+            [
+                new WebSocketReply
+                {
+                    Text = JsonSerializer.Serialize(new
+                    {
+                        type = "OPENJIBO_TURN_PENDING",
+                        data = new
+                        {
+                            sessionId = session.SessionId,
+                            transID = session.LastTransId,
+                            bufferedAudioBytes = turnState.BufferedAudioBytes,
+                            bufferedAudioChunks = turnState.BufferedAudioChunkCount,
+                            awaitingAudio = turnState.BufferedAudioBytes == 0,
+                            awaitingTranscriptHint = turnState.BufferedAudioBytes > 0 && string.IsNullOrWhiteSpace(turnState.AudioTranscriptHint),
+                            finalizeAttempts = turnState.FinalizeAttemptCount
+                        }
+                    })
+                }
+            ];
         }
 
         if (ShouldTreatEmptyHotphraseTurnAsGreeting(finalizedTurn))
@@ -681,6 +709,33 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         if (!ReadBoolAttribute(turn, "listenHotphrase"))
+        {
+            return false;
+        }
+
+        return ReadRules(turn, "listenRules")
+            .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldIgnoreInitialEmptyHotphraseTurn(TurnContext turn, WebSocketTurnState turnState)
+    {
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        var messageType = ReadMessageType(turn);
+        if (messageType is not ("CLIENT_ASR" or "CLIENT_NLU"))
+        {
+            return false;
+        }
+
+        if (!ReadBoolAttribute(turn, "listenHotphrase"))
+        {
+            return false;
+        }
+
+        if (turnState.HotphraseEmptyTurnCount > 0)
         {
             return false;
         }
