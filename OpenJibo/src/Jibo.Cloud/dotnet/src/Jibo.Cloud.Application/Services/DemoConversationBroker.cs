@@ -7,6 +7,7 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
     public async Task<ResponsePlan> HandleTurnAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
         var decision = await interactionService.BuildDecisionAsync(turn, cancellationToken);
+        var keepMicOpen = ShouldKeepMicOpen(decision.IntentName);
 
         var plan = new ResponsePlan
         {
@@ -24,20 +25,16 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
                     Sequence = 0,
                     Text = decision.ReplyText,
                     Voice = "griffin"
-                },
-                new ListenAction
-                {
-                    Sequence = 1,
-                    Timeout = TimeSpan.FromSeconds(12),
-                    Mode = "follow-up"
                 }
             },
-            FollowUp = new FollowUpPolicy
-            {
-                KeepMicOpen = true,
-                Timeout = TimeSpan.FromSeconds(12),
-                ExpectedTopic = "conversation"
-            },
+            FollowUp = keepMicOpen
+                ? new FollowUpPolicy
+                {
+                    KeepMicOpen = true,
+                    Timeout = TimeSpan.FromSeconds(12),
+                    ExpectedTopic = "conversation"
+                }
+                : FollowUpPolicy.None,
             ProtocolMetadata = new Dictionary<string, object?>
             {
                 ["host"] = turn.HostName,
@@ -45,6 +42,16 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
                 ["operation"] = turn.ProtocolOperation
             }
         };
+
+        if (keepMicOpen)
+        {
+            plan.Actions.Add(new ListenAction
+            {
+                Sequence = 1,
+                Timeout = TimeSpan.FromSeconds(12),
+                Mode = "follow-up"
+            });
+        }
 
         if (!string.IsNullOrWhiteSpace(decision.SkillName))
         {
@@ -57,5 +64,15 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
         }
 
         return plan;
+    }
+
+    private static bool ShouldKeepMicOpen(string? intentName)
+    {
+        return intentName switch
+        {
+            "word_of_the_day" => false,
+            "word_of_the_day_guess" => false,
+            _ => true
+        };
     }
 }

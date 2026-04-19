@@ -235,7 +235,7 @@ public sealed class WebSocketTurnFinalizationService(
 
             if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
             {
-            if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
+                if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
             {
                 turnState.ListenRules = rules.EnumerateArray()
                     .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString())
@@ -254,6 +254,12 @@ public sealed class WebSocketTurnFinalizationService(
                         .Select(static item => item.GetString() ?? string.Empty)
                         .Where(static hint => !string.IsNullOrWhiteSpace(hint))
                         .ToArray();
+                }
+
+                if (data.TryGetProperty("hotphrase", out var hotphrase) &&
+                    (hotphrase.ValueKind == JsonValueKind.True || hotphrase.ValueKind == JsonValueKind.False))
+                {
+                    turnState.ListenHotphrase = hotphrase.GetBoolean();
                 }
 
                 if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
@@ -303,6 +309,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.AwaitingTurnCompletion = false;
         turnState.SawListen = false;
         turnState.SawContext = false;
+        turnState.ListenHotphrase = false;
         turnState.ListenRules = [];
         turnState.ListenAsrHints = [];
     }
@@ -350,6 +357,18 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         var turnState = session.TurnState;
+        if (ShouldIgnoreCompletedWordOfDayTurn(finalizedTurn))
+        {
+            turnState.AwaitingTurnCompletion = false;
+            ResetBufferedAudio(session);
+            return [];
+        }
+
+        if (ShouldTreatEmptyHotphraseTurnAsGreeting(finalizedTurn))
+        {
+            finalizedTurn = WithSyntheticTranscript(finalizedTurn, "hello");
+        }
+
         if (ShouldIgnoreLateEmptyTurn(finalizedTurn, session, messageType))
         {
             turnState.AwaitingTurnCompletion = false;
@@ -413,7 +432,9 @@ public sealed class WebSocketTurnFinalizationService(
             : null;
         turnState.AwaitingTurnCompletion = false;
 
-        var emitSkillActions = messageType != "CLIENT_NLU";
+        var emitSkillActions = messageType != "CLIENT_NLU" &&
+                               !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
             Text = map.Text,
@@ -639,5 +660,80 @@ public sealed class WebSocketTurnFinalizationService(
         return !string.IsNullOrWhiteSpace(turnTransId) &&
                string.Equals(turnTransId, session.LastTransId, StringComparison.Ordinal) &&
                !string.IsNullOrWhiteSpace(session.LastIntent);
+    }
+
+    private static bool ShouldIgnoreCompletedWordOfDayTurn(TurnContext turn)
+    {
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        return ReadRules(turn, "listenRules")
+            .Any(static rule => string.Equals(rule, "word-of-the-day/right_word", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldTreatEmptyHotphraseTurnAsGreeting(TurnContext turn)
+    {
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        if (!ReadBoolAttribute(turn, "listenHotphrase"))
+        {
+            return false;
+        }
+
+        return ReadRules(turn, "listenRules")
+            .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static TurnContext WithSyntheticTranscript(TurnContext turn, string transcript)
+    {
+        var attributes = new Dictionary<string, object?>(turn.Attributes, StringComparer.OrdinalIgnoreCase)
+        {
+            ["syntheticTranscript"] = true
+        };
+
+        return new TurnContext
+        {
+            TurnId = turn.TurnId,
+            SessionId = turn.SessionId,
+            TimestampUtc = turn.TimestampUtc,
+            InputMode = turn.InputMode,
+            SourceKind = turn.SourceKind,
+            WakePhrase = turn.WakePhrase,
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript,
+            DeviceId = turn.DeviceId,
+            HostName = turn.HostName,
+            RequestId = turn.RequestId,
+            ProtocolService = turn.ProtocolService,
+            ProtocolOperation = turn.ProtocolOperation,
+            FirmwareVersion = turn.FirmwareVersion,
+            ApplicationVersion = turn.ApplicationVersion,
+            Locale = turn.Locale,
+            TimeZone = turn.TimeZone,
+            IsFollowUpEligible = turn.IsFollowUpEligible,
+            Attributes = attributes
+        };
+    }
+
+    private static bool ReadBoolAttribute(TurnContext turn, string key)
+    {
+        if (!turn.Attributes.TryGetValue(key, out var value) || value is null)
+        {
+            return false;
+        }
+
+        return value switch
+        {
+            bool boolValue => boolValue,
+            JsonElement { ValueKind: JsonValueKind.True } => true,
+            JsonElement { ValueKind: JsonValueKind.False } => false,
+            _ when bool.TryParse(value.ToString(), out var parsed) => parsed,
+            _ => false
+        };
     }
 }

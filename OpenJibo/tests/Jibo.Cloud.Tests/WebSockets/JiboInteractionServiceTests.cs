@@ -144,6 +144,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("word_of_the_day", decision.IntentName);
         Assert.Equal("Starting word of the day.", decision.ReplyText);
         Assert.Equal("word-of-the-day", decision.SkillPayload!["destination"]);
+        Assert.Null(decision.SkillName);
     }
 
     [Fact]

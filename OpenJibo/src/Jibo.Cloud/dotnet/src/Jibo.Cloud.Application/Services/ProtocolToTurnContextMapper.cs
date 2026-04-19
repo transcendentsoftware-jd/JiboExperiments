@@ -26,6 +26,8 @@ public sealed class ProtocolToTurnContextMapper
             attributes["context"] = turnState.ContextPayload;
         }
 
+        attributes["listenHotphrase"] = turnState.ListenHotphrase;
+
         if (turnState.ListenRules.Count > 0)
         {
             attributes["listenRules"] = turnState.ListenRules;
