@@ -144,9 +144,8 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("word_of_the_day", decision.IntentName);
         Assert.Equal("Starting word of the day.", decision.ReplyText);
         Assert.Equal("@be/word-of-the-day", decision.SkillName);
-        Assert.Equal("word-of-the-day", decision.SkillPayload!["destination"]);
+        Assert.Equal("word-of-the-day", decision.SkillPayload!["domain"]);
         Assert.Equal("@be/word-of-the-day", decision.SkillPayload["skillId"]);
-        Assert.Equal("completion_only", decision.SkillPayload["cloudResponseMode"]);
     }
 
     [Fact]

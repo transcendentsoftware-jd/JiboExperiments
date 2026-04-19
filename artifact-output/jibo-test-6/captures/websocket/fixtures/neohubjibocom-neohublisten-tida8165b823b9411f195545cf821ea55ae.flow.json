@@ -1,0 +1,174 @@
+{
+  "name": "neohubjibocom-neohublisten-tida8165b823b9411f195545cf821ea55ae",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "token": "hub-usr_openjibo_owner-1776563295273"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "ts": 1776564508900,
+        "msgID": "mid-a83d9076-3b94-11f1-978d-5cf821ea55ae",
+        "transID": "tid-a8165b82-3b94-11f1-9554-5cf821ea55ae",
+        "data": {
+          "lang": "en-US",
+          "hotphrase": true,
+          "rules": [
+            "launch",
+            "globals/global_commands_launch"
+          ],
+          "mode": "",
+          "asr": {
+            "hints": [],
+            "earlyEOS": [],
+            "encoding": "OGG_OPUS",
+            "sampleRate": 16000,
+            "sosTimeout": 7000,
+            "maxSpeechTimeout": 20000
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    },
+    {
+      "text": null,
+      "binary": [
+        79,
+        103,
+        103,
+        83,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        62,
+        200,
+        6,
+        48,
+        0,
+        0,
+        0,
+        0,
+        146,
+        142,
+        146,
+        101,
+        1,
+        19,
+        79,
+        112,
+        117,
+        115,
+        72,
+        101,
+        97,
+        100,
+        1,
+        1,
+        0,
+        0,
+        128,
+        62,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedReplyTypes": [
+        "OPENJIBO_AUDIO_RECEIVED"
+      ]
+    },
+    {
+      "text": {
+        "type": "CONTEXT",
+        "ts": 1776564510009,
+        "msgID": "mid-a8e6d640-3b94-11f1-b2b0-5cf821ea55ae",
+        "transID": "tid-a8165b82-3b94-11f1-9554-5cf821ea55ae",
+        "data": {
+          "runtime": {
+            "character": {
+              "emotion": {
+                "name": "NEUTRAL",
+                "valence": 0.45,
+                "confidence": 0.2
+              },
+              "motivation": {
+                "social": 1,
+                "playful": 1
+              }
+            },
+            "perception": {
+              "speaker": null,
+              "peoplePresent": [
+                {
+                  "id": "NOT_TRAINED",
+                  "entityId": 1282,
+                  "type": "fused",
+                  "confidence": 0.25
+                }
+              ]
+            },
+            "location": {
+              "city": "Pleasant Hill",
+              "state": "Missouri",
+              "stateAbbr": "MO",
+              "country": "United States",
+              "countryCode": "US",
+              "lat": 38.8358494,
+              "lng": -94.1427229,
+              "iso": "2026-04-18T21:08:29.921-05:00"
+            },
+            "loop": {
+              "loopId": "5c0b221fdf9d450019c5e253",
+              "users": [
+                {
+                  "firstName": "Erin",
+                  "lastName": "Picone",
+                  "phoneticName": "Erin",
+                  "gender": "female",
+                  "birthdate": 649209600000,
+                  "id": "5c0b221fdf9d450019c5e255",
+                  "accountId": "5c0b20547c46170019235759"
+                }
+              ],
+              "jibo": {
+                "color": "WHITE",
+                "birthdate": 1544234645598,
+                "id": "5c0b221fdf9d450019c5e254"
+              },
+              "owner": "5c0b221fdf9d450019c5e255"
+            },
+            "dialog": {
+              "referent": null
+            }
+          },
+          "skill": {
+            "id": null
+          },
+          "general": {
+            "release": "1.9.2"
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "OPENJIBO_CONTEXT_ACK"
+      ]
+    }
+  ]
+}

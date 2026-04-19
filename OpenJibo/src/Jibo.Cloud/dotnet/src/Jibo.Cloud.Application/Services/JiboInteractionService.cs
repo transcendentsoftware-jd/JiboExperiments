@@ -230,9 +230,8 @@ public sealed class JiboInteractionService(
             "@be/word-of-the-day",
             SkillPayload: new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
-                ["destination"] = "word-of-the-day",
-                ["skillId"] = "@be/word-of-the-day",
-                ["cloudResponseMode"] = "completion_only"
+                ["domain"] = "word-of-the-day",
+                ["skillId"] = "@be/word-of-the-day"
             });
     }
 

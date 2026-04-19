@@ -26,7 +26,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var nluGuess = ReadClientEntity(turn, "guess");
         var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
         var outboundIntent = isWordOfDayLaunch
-            ? "loadMenu"
+            ? "menu"
             : isWordOfDayGuess
             ? "guess"
             : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
@@ -34,6 +34,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             : plan.IntentName ?? "unknown";
         var outboundAsrText = isWordOfDayGuess && !string.IsNullOrWhiteSpace(wordOfDayGuess)
             ? wordOfDayGuess
+            : isWordOfDayLaunch
+            ? string.Empty
             : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
             ? nluGuess
             : isYesNoTurn && isYesNoIntent
@@ -42,72 +44,30 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 ? clientIntent
                 : transcript;
         var outboundRules = isWordOfDayLaunch
-            ? ["main-menu/execute_fun_stuff"]
+            ? ["word-of-the-day/menu"]
             : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
         var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
-        object listenMessage;
-        if (isWordOfDayLaunch)
+        var listenMessage = new
         {
-            listenMessage = new
+            type = "LISTEN",
+            transID = transId,
+            data = new
             {
-                type = "LISTEN",
-                transID = transId,
-                skillID = "@be/word-of-the-day",
-                onRobot = true,
-                data = new
+                asr = new
                 {
-                    asr = new
-                    {
-                        confidence = 0.95,
-                        final = true,
-                        text = outboundAsrText
-                    },
-                    nlu = new
-                    {
-                        confidence = 0.95,
-                        intent = outboundIntent,
-                        rules = outboundRules,
-                        entities
-                    },
-                    match = new
-                    {
-                        intent = outboundIntent,
-                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
-                        score = 0.95
-                    }
-                }
-            };
-        }
-        else
-        {
-            listenMessage = new
-            {
-                type = "LISTEN",
-                transID = transId,
-                data = new
+                    confidence = 0.95,
+                    final = true,
+                    text = outboundAsrText
+                },
+                nlu = BuildNluPayload(outboundIntent, outboundRules, entities, isWordOfDayLaunch ? "@be/word-of-the-day" : null),
+                match = new
                 {
-                    asr = new
-                    {
-                        confidence = 0.95,
-                        final = true,
-                        text = outboundAsrText
-                    },
-                    nlu = new
-                    {
-                        confidence = 0.95,
-                        intent = outboundIntent,
-                        rules = outboundRules,
-                        entities
-                    },
-                    match = new
-                    {
-                        intent = outboundIntent,
-                        rule = outboundRules.FirstOrDefault() ?? string.Empty,
-                        score = 0.95
-                    }
+                    intent = outboundIntent,
+                    rule = outboundRules.FirstOrDefault() ?? string.Empty,
+                    score = 0.95
                 }
-            };
-        }
+            }
+        };
 
         var messages = new List<SocketReplyPlan>
         {
@@ -222,7 +182,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         {
             return new Dictionary<string, object?>
             {
-                ["destination"] = "word-of-the-day"
+                ["domain"] = "word-of-the-day"
             };
         }
 
@@ -408,6 +368,28 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 final = true
             }
         };
+    }
+
+    private static IReadOnlyDictionary<string, object?> BuildNluPayload(
+        string outboundIntent,
+        IReadOnlyList<string> outboundRules,
+        object entities,
+        string? skillId)
+    {
+        var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["confidence"] = 0.95,
+            ["intent"] = outboundIntent,
+            ["rules"] = outboundRules,
+            ["entities"] = entities
+        };
+
+        if (!string.IsNullOrWhiteSpace(skillId))
+        {
+            payload["skill"] = skillId;
+        }
+
+        return payload;
     }
 
     private static object BuildGenericFallbackSkillPayload(string transId)
