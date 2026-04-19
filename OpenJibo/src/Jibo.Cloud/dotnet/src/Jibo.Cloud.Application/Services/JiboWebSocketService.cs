@@ -44,7 +44,22 @@ public sealed class JiboWebSocketService(
             return replies;
         }
 
-        if (parsedType is "LISTEN" or "CLIENT_NLU" or "CLIENT_ASR")
+        if (parsedType == "LISTEN")
+        {
+            var replies = ContainsInlineTurnPayload(envelope.Text)
+                ? await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken)
+                : turnFinalizationService.HandleListenSetup(session, envelope);
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+            {
+                ["messageType"] = parsedType,
+                ["replyCount"] = replies.Count,
+                ["transcript"] = session.LastTranscript,
+                ["intent"] = session.LastIntent
+            }, cancellationToken);
+            return replies;
+        }
+
+        if (parsedType is "CLIENT_NLU" or "CLIENT_ASR")
         {
             var replies = await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
             await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
@@ -95,5 +110,39 @@ public sealed class JiboWebSocketService(
         }
 
         return "UNKNOWN";
+    }
+
+    private static bool ContainsInlineTurnPayload(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            if (!document.RootElement.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            if (data.TryGetProperty("text", out var transcript) &&
+                transcript.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(transcript.GetString()))
+            {
+                return true;
+            }
+
+            return data.TryGetProperty("asr", out var asr) &&
+                   asr.ValueKind == JsonValueKind.Object &&
+                   asr.TryGetProperty("text", out var asrText) &&
+                   asrText.ValueKind == JsonValueKind.String &&
+                   !string.IsNullOrWhiteSpace(asrText.GetString());
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

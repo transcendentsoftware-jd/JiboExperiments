@@ -630,6 +630,27 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ListenSetupWithoutTranscript_ReturnsPendingInsteadOfFinalizingTurn()
+    {
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-listen-setup-token",
+            Text = """{"type":"LISTEN","transID":"trans-listen-setup","data":{"rules":["main-menu/execute_fun_stuff","globals/global_commands_launch"],"mode":"CLIENT_NLU"}}"""
+        });
+
+        Assert.Single(replies);
+        Assert.Equal("OPENJIBO_TURN_PENDING", ReadReplyType(replies[0]));
+
+        var session = _store.FindSessionByToken("hub-listen-setup-token");
+        Assert.NotNull(session);
+        Assert.True(session.TurnState.AwaitingTurnCompletion);
+        Assert.Null(session.LastIntent);
+    }
+
+    [Fact]
     public async Task BinaryAudio_AfterWordOfDayRightWordListen_IsIgnoredDuringCleanupWindow()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

@@ -129,6 +129,43 @@ public sealed class WebSocketTurnFinalizationService(
         return await FinalizeTurnAsync(session, envelope, messageType, allowFallbackOnMissingTranscript: false, cancellationToken);
     }
 
+    public IReadOnlyList<WebSocketReply> HandleListenSetup(CloudSession session, WebSocketMessageEnvelope envelope)
+    {
+        PersistTurnHints(session, envelope.Text);
+
+        var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, "LISTEN");
+        if (ShouldIgnoreCompletedWordOfDayTurn(turn))
+        {
+            session.TurnState.AwaitingTurnCompletion = false;
+            session.TurnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
+            session.FollowUpExpiresUtc = null;
+            ResetBufferedAudio(session);
+            return [];
+        }
+
+        session.TurnState.AwaitingTurnCompletion = true;
+        return
+        [
+            new WebSocketReply
+            {
+                Text = JsonSerializer.Serialize(new
+                {
+                    type = "OPENJIBO_TURN_PENDING",
+                    data = new
+                    {
+                        sessionId = session.SessionId,
+                        transID = session.LastTransId,
+                        bufferedAudioBytes = session.TurnState.BufferedAudioBytes,
+                        bufferedAudioChunks = session.TurnState.BufferedAudioChunkCount,
+                        awaitingAudio = session.TurnState.BufferedAudioBytes == 0,
+                        awaitingTranscriptHint = session.TurnState.BufferedAudioBytes > 0 && string.IsNullOrWhiteSpace(session.TurnState.AudioTranscriptHint),
+                        finalizeAttempts = session.TurnState.FinalizeAttemptCount
+                    }
+                })
+            }
+        ];
+    }
+
     private async Task<TurnContext> ResolveTranscriptAsync(TurnContext turn, CloudSession session, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
