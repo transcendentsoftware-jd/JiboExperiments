@@ -39,6 +39,11 @@ public sealed class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken = default)
     {
         var turnState = session.TurnState;
+        if (ShouldIgnoreLateAudio(session))
+        {
+            return [];
+        }
+
         session.LastMessageType = "BINARY_AUDIO";
         turnState.FirstAudioReceivedUtc ??= DateTimeOffset.UtcNow;
         turnState.BufferedAudioChunkCount += 1;
@@ -312,6 +317,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.SawContext = false;
         turnState.ListenHotphrase = false;
         turnState.HotphraseEmptyTurnCount = 0;
+        turnState.IgnoreAdditionalAudioUntilUtc = null;
         turnState.ListenRules = [];
         turnState.ListenAsrHints = [];
     }
@@ -359,6 +365,11 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         var turnState = session.TurnState;
+        if (ShouldTreatBufferedHotphraseAsGreeting(finalizedTurn, turnState, allowFallbackOnMissingTranscript))
+        {
+            finalizedTurn = WithSyntheticTranscript(finalizedTurn, "hello");
+        }
+
         if (ShouldIgnoreCompletedWordOfDayTurn(finalizedTurn))
         {
             turnState.AwaitingTurnCompletion = false;
@@ -459,6 +470,9 @@ public sealed class WebSocketTurnFinalizationService(
             ? DateTimeOffset.UtcNow.Add(plan.FollowUp.Timeout)
             : null;
         turnState.AwaitingTurnCompletion = false;
+        turnState.IgnoreAdditionalAudioUntilUtc = plan.FollowUp.KeepMicOpen
+            ? null
+            : DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
 
         var emitSkillActions = messageType != "CLIENT_NLU" &&
                                !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
@@ -486,6 +500,15 @@ public sealed class WebSocketTurnFinalizationService(
                    BufferedAudioBytes: >= AutoFinalizeMinBufferedAudioBytes
                } &&
                turnAge >= AutoFinalizeMinTurnAge;
+    }
+
+    private static bool ShouldIgnoreLateAudio(CloudSession session)
+    {
+        var ignoreUntilUtc = session.TurnState.IgnoreAdditionalAudioUntilUtc;
+        return !session.TurnState.AwaitingTurnCompletion &&
+               !session.FollowUpOpen &&
+               ignoreUntilUtc.HasValue &&
+               ignoreUntilUtc.Value > DateTimeOffset.UtcNow;
     }
 
     private static string? ExtractDataPayload(string? text)
@@ -699,6 +722,31 @@ public sealed class WebSocketTurnFinalizationService(
 
         return ReadRules(turn, "listenRules")
             .Any(static rule => string.Equals(rule, "word-of-the-day/right_word", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldTreatBufferedHotphraseAsGreeting(
+        TurnContext turn,
+        WebSocketTurnState turnState,
+        bool allowFallbackOnMissingTranscript)
+    {
+        if (!allowFallbackOnMissingTranscript || !ReadBoolAttribute(turn, "listenHotphrase"))
+        {
+            return false;
+        }
+
+        if (!ReadRules(turn, "listenRules")
+            .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        return turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
+               (turnState.FinalizeAttemptCount > 0 || !string.IsNullOrWhiteSpace(turnState.LastSttError));
     }
 
     private static bool ShouldTreatEmptyHotphraseTurnAsGreeting(TurnContext turn)
