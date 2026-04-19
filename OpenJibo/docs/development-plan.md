@@ -99,6 +99,12 @@ Evidence from the continued `2026-04-18` word-of-the-day and time captures:
 - post-game hotphrase blank-audio turns should be treated as cleanup noise, not a new cloud conversation turn
 - clock replies should use the user-facing hour format without a leading zero
 
+Evidence from the smaller `2026-04-18/19` hotphrase and word-of-the-day verification bundle:
+
+- hotphrase silence can still auto-finalize into a generic `heyJibo` fallback, which sounds confused on-robot compared with a dedicated greeting path
+- voice-triggered `loadMenu + destination=word-of-the-day` reaches Nimbus successfully, but Nimbus still expects a follow-up cloud skill response and times out if launch stops at `LISTEN` + `EOS`
+- the local buffered-audio seam is still producing repeated `whisper.cpp returned no transcript` and `ffmpeg ... Codec not found` failures, so lightweight waveform or energy screening is worth considering once the core launch flow is stable
+
 Near-term interaction work should now prioritize:
 
 1. preserve and interpret yes/no turn constraints from observed listen rules

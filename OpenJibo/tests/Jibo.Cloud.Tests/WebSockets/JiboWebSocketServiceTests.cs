@@ -466,7 +466,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task ClientAsr_WordOfDayLaunch_EmitsMenuStyleLoadMenuWithoutSkillAction()
+    public async Task ClientAsr_WordOfDayLaunch_EmitsMenuStyleLoadMenuWithSkillAction()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -486,12 +486,15 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-launch","data":{"text":"Play word of the day."}}"""
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("loadMenu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("Play word of the day.", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("word-of-the-day", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("destination").GetString());
         Assert.Equal("main-menu/execute_fun_stuff", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/word-of-the-day", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
 
         var session = _store.FindSessionByToken("hub-wod-launch-token");
         Assert.NotNull(session);
@@ -547,9 +550,10 @@ public sealed class JiboWebSocketServiceTests
             Binary = new byte[3000]
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
 
         var lateReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {

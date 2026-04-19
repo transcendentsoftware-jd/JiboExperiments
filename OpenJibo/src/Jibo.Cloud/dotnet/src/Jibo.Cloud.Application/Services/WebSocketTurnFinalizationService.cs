@@ -16,7 +16,7 @@ public sealed class WebSocketTurnFinalizationService(
 {
     private const int AutoFinalizeMinBufferedAudioBytes = 12000;
     private const int AutoFinalizeMinBufferedAudioChunks = 5;
-    private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1800);
+    private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1400);
 
     public void ObserveIncomingMessage(CloudSession session, string? text)
     {
@@ -475,7 +475,6 @@ public sealed class WebSocketTurnFinalizationService(
             : DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
 
         var emitSkillActions = messageType != "CLIENT_NLU" &&
-                               !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
@@ -745,8 +744,7 @@ public sealed class WebSocketTurnFinalizationService(
             return false;
         }
 
-        return turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
-               (turnState.FinalizeAttemptCount > 0 || !string.IsNullOrWhiteSpace(turnState.LastSttError));
+        return turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes;
     }
 
     private static bool ShouldTreatEmptyHotphraseTurnAsGreeting(TurnContext turn)
