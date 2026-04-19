@@ -146,6 +146,11 @@ The current evidence in captures, fixtures, and Node behavior supports three mai
 
 Those are the right primary buckets for now. Additional side channels may still emerge later, especially around proactive traffic, direct skill/service sockets, or future on-device OS changes, but they should be treated as extensions to this model until captures prove otherwise.
 
+Latest stock-OS WOD findings:
+
+- `word-of-the-day/right_word` closeout should not emit a synthetic `match`; otherwise Jetstream promotes it into `globalTurnResult` and Global Service relaunches Nimbus a few seconds later with a `Cloud Skill Response Timeout`.
+- Voice `play word of the day` hotphrase launch still enters Global Service first, so a synthetic `LISTEN` result alone is not enough. The next-most-correct transport hint is a direct `SKILL_REDIRECT` event aimed at `@be/word-of-the-day`, alongside the menu-shaped `LISTEN` payload.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

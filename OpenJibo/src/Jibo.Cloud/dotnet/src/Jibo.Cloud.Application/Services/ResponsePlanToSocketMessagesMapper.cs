@@ -82,6 +82,19 @@ public sealed class ResponsePlanToSocketMessagesMapper
             }))
         };
 
+        if (isWordOfDayLaunch)
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "@be/word-of-the-day",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+        }
+
         if (emitSkillActions && speak is not null)
         {
             messages.Add(new SocketReplyPlan(
@@ -165,12 +178,6 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         intent = string.Empty,
                         rules,
                         entities = new Dictionary<string, object?>()
-                    },
-                    match = new
-                    {
-                        intent = string.Empty,
-                        rule = rules.FirstOrDefault() ?? string.Empty,
-                        score = 0.95
                     }
                 }
             })),
@@ -518,6 +525,44 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 },
                 analytics = new Dictionary<string, object?>(),
                 final = true
+            }
+        };
+    }
+
+    private static object BuildSkillRedirectPayload(
+        string transId,
+        string skillId,
+        string outboundIntent,
+        string outboundAsrText,
+        IReadOnlyList<string> outboundRules,
+        object entities)
+    {
+        return new
+        {
+            type = "SKILL_REDIRECT",
+            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            msgID = CreateHubMessageId(),
+            transID = transId,
+            data = new
+            {
+                match = new
+                {
+                    skillID = skillId,
+                    onRobot = true,
+                    launch = true
+                },
+                asr = new
+                {
+                    text = outboundAsrText,
+                    confidence = 0.95
+                },
+                nlu = new
+                {
+                    confidence = 0.95,
+                    intent = outboundIntent,
+                    rules = outboundRules,
+                    entities
+                }
             }
         };
     }

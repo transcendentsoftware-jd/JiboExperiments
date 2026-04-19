@@ -469,7 +469,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task ClientAsr_WordOfDayLaunch_EmitsMenuStyleLoadMenuWithSkillAction()
+    public async Task ClientAsr_WordOfDayLaunch_EmitsMenuStyleLoadMenuAndRedirect()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -489,13 +489,19 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-launch","data":{"text":"Play word of the day."}}"""
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("menu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("word-of-the-day", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
         Assert.Equal("@be/word-of-the-day", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
         Assert.Equal("word-of-the-day/menu", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/word-of-the-day", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.True(redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("onRobot").GetBoolean());
+        Assert.True(redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("launch").GetBoolean());
 
         var session = _store.FindSessionByToken("hub-wod-launch-token");
         Assert.NotNull(session);
@@ -551,9 +557,10 @@ public sealed class JiboWebSocketServiceTests
             Binary = new byte[3000]
         });
 
-        Assert.Equal(2, replies.Count);
+        Assert.Equal(3, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("menu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -632,6 +639,9 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(2, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.False(listenPayload.RootElement.GetProperty("data").TryGetProperty("match", out _));
     }
 
     [Fact]
@@ -682,7 +692,7 @@ public sealed class JiboWebSocketServiceTests
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
-        Assert.Equal("word-of-the-day/right_word", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        Assert.False(listenPayload.RootElement.GetProperty("data").TryGetProperty("match", out _));
 
         var binaryReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
