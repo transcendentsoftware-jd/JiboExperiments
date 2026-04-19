@@ -227,9 +227,13 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "word_of_the_day",
             "Starting word of the day.",
+            "@be/word-of-the-day",
             SkillPayload: new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
-                ["destination"] = "word-of-the-day"
+                ["destination"] = "word-of-the-day",
+                ["skillId"] = "@be/word-of-the-day",
+                ["redirectIntent"] = "menu",
+                ["redirectDomain"] = "word-of-the-day"
             });
     }
 

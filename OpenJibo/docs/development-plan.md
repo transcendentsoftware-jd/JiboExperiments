@@ -103,6 +103,7 @@ Evidence from the smaller `2026-04-18/19` hotphrase and word-of-the-day verifica
 
 - hotphrase silence can still auto-finalize into a generic `heyJibo` fallback, which sounds confused on-robot compared with a dedicated greeting path
 - voice-triggered `loadMenu + destination=word-of-the-day` reaches Nimbus successfully, but Nimbus still expects a follow-up cloud skill response and times out if launch stops at `LISTEN` + `EOS`
+- the newer `jibo test 2` bundle shows voice launch now reaches Nimbus and receives a cloud response, but a generic `SLIM/RUNTIME_PROMPT` just says "starting word of the day" instead of performing the menu-style redirect the on-screen path uses
 - the local buffered-audio seam is still producing repeated `whisper.cpp returned no transcript` and `ffmpeg ... Codec not found` failures, so lightweight waveform or energy screening is worth considering once the core launch flow is stable
 
 Near-term interaction work should now prioritize:

@@ -306,8 +306,13 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
+        if (isWordOfTheDay)
+        {
+            return BuildWordOfTheDayLaunchSkillPayload(transId, skillPayload);
+        }
+
         var payloadSkill = ReadPayloadString(skillPayload, "skillId");
-        var skillId = isWordOfTheDay ? "@be/word-of-the-day" : string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
+        var skillId = string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
         var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
             ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
             : isJoke
@@ -347,6 +352,56 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         mim_id = mimId,
                                         mim_type = mimType
                                     }
+                                }
+                            }
+                        }
+                    }
+                },
+                analytics = new Dictionary<string, object?>(),
+                final = true
+            }
+        };
+    }
+
+    private static object BuildWordOfTheDayLaunchSkillPayload(string transId, IDictionary<string, object?>? payload)
+    {
+        var skillId = ReadPayloadString(payload, "skillId") ?? "@be/word-of-the-day";
+        var redirectIntent = ReadPayloadString(payload, "redirectIntent") ?? "menu";
+        var redirectDomain = ReadPayloadString(payload, "redirectDomain") ?? "word-of-the-day";
+
+        return new
+        {
+            type = "SKILL_ACTION",
+            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            msgID = CreateHubMessageId(),
+            transID = transId,
+            data = new
+            {
+                skill = new
+                {
+                    id = skillId
+                },
+                action = new
+                {
+                    config = new
+                    {
+                        jcp = new
+                        {
+                            type = "REDIRECT",
+                            config = new
+                            {
+                                nlu = new
+                                {
+                                    intent = redirectIntent,
+                                    entities = new
+                                    {
+                                        domain = redirectDomain
+                                    }
+                                },
+                                asr = new
+                                {
+                                    text = string.Empty,
+                                    confidence = 1.0
                                 }
                             }
                         }

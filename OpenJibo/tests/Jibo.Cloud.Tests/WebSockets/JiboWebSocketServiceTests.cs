@@ -495,6 +495,10 @@ public sealed class JiboWebSocketServiceTests
 
         using var skillPayload = JsonDocument.Parse(replies[2].Text!);
         Assert.Equal("@be/word-of-the-day", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+        Assert.Equal("REDIRECT", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("type").GetString());
+        Assert.Equal("menu", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("word-of-the-day", skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+        Assert.Equal(string.Empty, skillPayload.RootElement.GetProperty("data").GetProperty("action").GetProperty("config").GetProperty("jcp").GetProperty("config").GetProperty("asr").GetProperty("text").GetString());
 
         var session = _store.FindSessionByToken("hub-wod-launch-token");
         Assert.NotNull(session);
