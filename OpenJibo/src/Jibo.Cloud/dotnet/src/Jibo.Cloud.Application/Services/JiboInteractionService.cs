@@ -231,7 +231,8 @@ public sealed class JiboInteractionService(
             SkillPayload: new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["destination"] = "word-of-the-day",
-                ["skillId"] = "@be/word-of-the-day"
+                ["skillId"] = "@be/word-of-the-day",
+                ["cloudResponseMode"] = "completion_only"
             });
     }
 
@@ -249,10 +250,12 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "word_of_the_day_guess",
             reply,
-            null,
+            "@be/word-of-the-day",
             new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
-                ["guess"] = guess
+                ["guess"] = guess,
+                ["skillId"] = "@be/word-of-the-day",
+                ["cloudResponseMode"] = "completion_only"
             });
     }
 

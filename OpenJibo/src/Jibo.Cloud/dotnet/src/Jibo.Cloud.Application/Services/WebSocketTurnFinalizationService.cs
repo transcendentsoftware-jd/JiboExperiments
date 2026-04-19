@@ -140,7 +140,15 @@ public sealed class WebSocketTurnFinalizationService(
             session.TurnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
             session.FollowUpExpiresUtc = null;
             ResetBufferedAudio(session);
-            return [];
+            return ResponsePlanToSocketMessagesMapper.MapCompletionOnly(
+                    session.TurnState.TransId ?? session.LastTransId ?? string.Empty,
+                    "@be/word-of-the-day")
+                .Select(map => new WebSocketReply
+                {
+                    Text = map.Text,
+                    DelayMs = map.DelayMs
+                })
+                .ToArray();
         }
 
         session.TurnState.AwaitingTurnCompletion = true;
@@ -513,9 +521,9 @@ public sealed class WebSocketTurnFinalizationService(
             ? null
             : DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
 
-        var emitSkillActions = messageType != "CLIENT_NLU" &&
-                               !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
+        var emitSkillActions = messageType != "CLIENT_NLU" ||
+                               string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
             Text = map.Text,

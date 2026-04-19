@@ -1,0 +1,868 @@
+2026-04-19T12:14:19.401Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: State changed from SELECT_INTENT to ALERT.
+2026-04-19T12:14:19.403Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Entering ALERT
+2026-04-19T12:14:19.414Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: No transitions between SELECT_INTENT and ALERT
+2026-04-19T12:14:19.476Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Brightness set to 0.4.
+2026-04-19T12:14:19.610Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Idle Face
+2026-04-19T12:14:22.808Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1610 has an identity of null
+2026-04-19T07:14:23.838622-05:00 Royal-Current-Sage-Canvas jibo-server-service[18074,info]: - P.NotificationSubsystem: NotificationSubsystem::connect Connecting to api-socket.jibo.com:443/token-Royal-Current-Sage-Canvas-1776600863830
+2026-04-19T07:14:24.001373-05:00 Royal-Current-Sage-Canvas jibo-server-service[18074,info]: - P.NotificationSubsystem: NotificationSubsystem::connect established connection to server
+2026-04-19T12:14:34.022Z Royal-Current-Sage-Canvas ssm[936,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Error.Logger: Removed L2-Cannot_connect_to_server
+2026-04-19T07:14:35.315785-05:00 Royal-Current-Sage-Canvas jibo-identity-service[660,info]: - P.ImageIdentifier: ImageIdentifier[deepid]::identify [["5c0b221fdf9d450019c5e255", "face", 0.458448]]
+2026-04-19T07:14:35.337545-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::measure input from: face with 1 hypotheses
+2026-04-19T07:14:35.337664-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity::Measure face Quality:1 Id: 5c0b221fdf9d450019c5e255 Conf: 0.458448 
+2026-04-19T07:14:35.337747-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion with 2 options from 2 inputs. 
+2026-04-19T07:14:35.337871-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::updateIdentity  Op: 5c0b221fdf9d450019c5e255 Score: 0.0487063 Op: NOT_TRAINED Score: 0.15
+2026-04-19T07:14:35.337916-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity Update Best Score: 0.15 Best ID: NOT_TRAINED
+2026-04-19T07:14:35.337951-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion REFRESH identity as NOT_TRAINED
+2026-04-19T07:14:35.970167-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-REMOVED 4886 86:69:1a:95:0b:6d
+2026-04-19T07:14:35.970349-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-REMOVED 4887 30:23:03:3f:51:e5
+2026-04-19T07:14:35.970456-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-REMOVED 4888 36:23:03:95:2b:b7
+2026-04-19T07:14:35.970554-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-REMOVED 4889 d6:e2:2f:ea:3e:fb
+2026-04-19T12:14:41.461Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Idle Face
+2026-04-19T12:14:49.072Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1610
+2026-04-19T12:14:49.442Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.RecLoop:  utterance: hey jibo score: 308 walign: ADE00728 palign: ADE3A4A8 {"word_alignment":"51330224 51330392 hey 0.00 51330392 51330660 jibo 0.00 "}
+2026-04-19T12:14:49.442Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.RecLoop: HJ: signal sent to ASR will be boosted 0 dB
+2026-04-19T12:14:49.443Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: hjw_JM_RECOG_HJ_EVENT
+2026-04-19T12:14:49.444Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Entering PH-W state
+2026-04-19T12:14:49.444Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_RECOG_HJ_EVENT in 1 ms.
+2026-04-19T12:14:49.445Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,debug]: - C.Jetstream.RecogSpeakerID: RecogSpeakerTD starting at 51330224
+2026-04-19T07:14:49.446381-05:00 Royal-Current-Sage-Canvas jibo-audio-service[639,notice]: - P.AudioService: detection: {"ts":[132872,392461],"type":"hotphrase","id":106,"location":{"ts":[132872,194325],"possibilities":[{"channels":[0,12],"position":{"x":0.7801986336708069,"y":0.5647974610328674,"z":0.46133726835250857},"confidence":0.1958221197128296}]},"utterances":[]}
+2026-04-19T12:14:49.469Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: hjHeard
+2026-04-19T12:14:49.573Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Hey Jibo'
+2026-04-19T12:14:49.607Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'HJOrient' to achieve goal 'Hey Jibo'
+2026-04-19T12:14:49.625Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from IDLE to COMMAND
+2026-04-19T12:14:49.667Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action: Initial face: { x: 0.7801986336708069,\n  y: 0.5647974610328674,\n  z: 0.46133726835250854 } null
+2026-04-19T12:14:49.683Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Received attendToTarget request
+2026-04-19T12:14:49.699Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,debug]: - C.Jetstream.RecLoop: Speaker: 5c0b221fdf9d450019c5e255 score: 16.1057 accepted: 1
+2026-04-19T12:14:49.700Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_RECOG_SPEAKER_EVENT
+2026-04-19T12:14:49.700Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_RECOG_SPEAKER_EVENT in 0 ms.
+2026-04-19T07:14:49.700911-05:00 Royal-Current-Sage-Canvas jibo-audio-service[639,notice]: - P.AudioService: detection: {"ts":[132872,646924],"type":"jet_speaker_id","id":106,"data":{"speakers":[{"speaker":"5c0b221fdf9d450019c5e255","score":16.10565948486328,"accepted":true,"high_confidence":true}],"snr":22.008525848388673}}
+2026-04-19T07:14:49.701737-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::measure input from: voice with 1 hypotheses
+2026-04-19T07:14:49.701816-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity::Measure voice Quality:22.0085 Id: 5c0b221fdf9d450019c5e255 Conf: 16.1057 
+2026-04-19T07:14:49.701935-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion with 2 options from 3 inputs. 
+2026-04-19T07:14:49.702019-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::updateIdentity  Op: 5c0b221fdf9d450019c5e255 Score: 0.333333 Op: NOT_TRAINED Score: 0.1
+2026-04-19T07:14:49.702081-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity Update Best Score: 0.333333 Best ID: 5c0b221fdf9d450019c5e255
+2026-04-19T07:14:49.702132-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion CHANGING identity from NOT_TRAINED to 5c0b221fdf9d450019c5e255
+2026-04-19T12:14:49.713Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION attendToTarget Command Look rule has fired!
+2026-04-19T12:14:49.714Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Command Look
+2026-04-19T12:14:49.722Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter.ConvTechSpeakerID: Speaker ID: 5c0b221fdf9d450019c5e255 | accepted: true | confidence: true | score: 16.10565948486328
+2026-04-19T12:14:49.726Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Emitting idAcquired from source: VOICE
+2026-04-19T12:14:49.731Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: ID_ACQUIRED
+2026-04-19T12:14:49.733Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Most recent speaker accepted.
+2026-04-19T12:14:50.066Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.LhubClient: Hub Client connection opened.
+2026-04-19T12:14:50.066Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_CLIENT_CONNECT_RESULT
+2026-04-19T12:14:50.066Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: [messageContext@1 gain="1.000000" requestID="GLOBAL" transID="tid-5cbc05d8-3be9-11f1-a7d0-5cf821ea55ae"] C.Jetstream.LhubClient: Hub LISTEN request keystone log entry
+2026-04-19T12:14:50.068Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,debug]: - C.Jetstream.LhubClient: Set Audio encoder to type: OGG_OPUS
+2026-04-19T12:14:50.267Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_CLIENT_CONNECT_RESULT in 201 ms.
+2026-04-19T12:14:50.267Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:50.268Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:14:50.268Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:50.269Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:14:50.269Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:14:50.273Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:50.284Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: globalTurnStarted
+2026-04-19T12:14:50.287Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:14:50.288Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:50.559Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION attendToTarget Command Look resolving with status:SUCCEEDED
+2026-04-19T12:14:50.791Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:50.791Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:14:50.792Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:14:50.798Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:50.799Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:14:50.800Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:50.803Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:14:50.804Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:51.654Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Primary face selected (position based): 1610
+2026-04-19T12:14:51.668Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Expression.Base.ResolveHandle: Someone tried to cancel ResolveHandle after it was resolved!
+2026-04-19T12:14:51.685Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Received attendToTarget request
+2026-04-19T12:14:51.708Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION attendToTarget Command Look rule has fired!
+2026-04-19T12:14:51.710Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Asserting attention rule after interruption: Command Look
+2026-04-19T12:14:51.785Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:51.786Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:14:51.786Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:14:51.786Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:14:51.786Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:51.789Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:51.787Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:51.789Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:14:52.455Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION attendToTarget Command Look resolving with status:SUCCEEDED
+2026-04-19T12:14:52.460Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Primary face selected (entity match): 1610
+2026-04-19T12:14:52.532Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1610
+2026-04-19T12:14:52.537Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T12:14:53.236Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Demand Face Detect found 1 faces
+2026-04-19T12:14:54.757Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_LISTEN
+2026-04-19T12:14:54.758Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_LISTEN in 1 ms.
+2026-04-19T12:14:54.758Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_EOS
+2026-04-19T12:14:54.758Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_EOS in 0 ms.
+2026-04-19T12:14:54.764Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: skillSwitch: { skillID: undefined,\n  onRobot: undefined,\n  isProactive: undefined,\n  skipSurprises: undefined,\n  transID: 'tid-5cbc05d8-3be9-11f1-a7d0-5cf821ea55ae',\n  data: \n   ListenResult {\n     asr: { confidence: 0.95, final: true, text: 'play word of the day.' },\n     nlu: \n      { confidence: 0.95,\n        entities: { destination: 'word-of-the-day' },\n        intent: 'loadMenu',\n        rules: [ 'main-menu/execute_fun_stuff' ] },\n     match: \n      { intent: 'loadMenu',\n        rule: 'main-menu/execute_fun_stuff',\n        score: 0.95 } } }
+2026-04-19T12:14:54.800Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from COMMAND to IDLE
+2026-04-19T12:14:54.771Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: globalTurnResult: { global: true,\n  result: \n   ListenResult {\n     asr: { confidence: 0.95, final: true, text: 'play word of the day.' },\n     nlu: \n      { confidence: 0.95,\n        entities: { destination: 'word-of-the-day' },\n        intent: 'loadMenu',\n        rules: [ 'main-menu/execute_fun_stuff' ] },\n     match: \n      { intent: 'loadMenu',\n        rule: 'main-menu/execute_fun_stuff',\n        score: 0.95 } },\n  status: 'SUCCEEDED',\n  transID: 'tid-5cbc05d8-3be9-11f1-a7d0-5cf821ea55ae' }
+2026-04-19T12:14:54.783Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: eos received
+2026-04-19T12:14:54.786Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.HJOrient: HJOrient: event waiter 'HJ Listen Complete'
+2026-04-19T12:14:54.792Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.HJOrient: HJOrient time to face: 2001
+2026-04-19T12:14:54.903Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from IDLE to ENGAGED
+2026-04-19T12:14:54.796Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.HJOrient: HJOrient had initial face?: false
+2026-04-19T12:14:54.811Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: skill relaunch command from Global Service { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:54.818Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/nimbus { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:54.820Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:14:54.832Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'HJOrient' with result: 'SUCCEEDED'
+2026-04-19T12:14:54.837Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/idle @be/nimbus
+2026-04-19T12:14:54.837Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/idle
+2026-04-19T12:14:54.838Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/idle
+2026-04-19T12:14:54.839Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Stopping
+2026-04-19T12:14:54.843Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: setting SLEEP to false
+2026-04-19T12:14:54.847Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Clearing animation queue.
+2026-04-19T12:14:54.854Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/idle
+2026-04-19T12:14:54.856Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:14:54.859Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/idle
+2026-04-19T12:14:54.860Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/nimbus { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:54.879Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/nimbus
+2026-04-19T12:14:54.886Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/nimbus''
+2026-04-19T12:14:54.888Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/nimbus''
+2026-04-19T12:14:54.891Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:14:54.893Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/nimbus
+2026-04-19T12:14:54.894Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/nimbus { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:54.896Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/idle @be/nimbus { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:54.901Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/nimbus
+2026-04-19T12:14:54.902Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/nimbus
+2026-04-19T12:14:54.904Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Nimbus: Nimbus Opening
+2026-04-19T12:14:54.917Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Nimbus: Awaiting Cloud Skill response...
+2026-04-19T12:14:54.919Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/nimbus { nlu: \n   { confidence: 0.95,\n     entities: { destination: 'word-of-the-day' },\n     intent: 'loadMenu',\n     rules: [ 'main-menu/execute_fun_stuff' ] },\n  asr: { text: '<user input removed>', confidence: 0.95 } }
+2026-04-19T12:14:55.658Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Engaged Primary Face
+2026-04-19T12:14:57.041Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1610 has an identity of 5c0b221fdf9d450019c5e255
+2026-04-19T12:15:00.478Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1610
+2026-04-19T12:15:02.931Z Royal-Current-Sage-Canvas be[1016,warning]: [1@1 frames="[{\"method\":\"setTimeout\",\"filename\":\"/opt/jibo/Jibo/Skills/@be/be/node_modules/jibo-cai-utils/lib/jibo-cai-utils.js\",\"line\":1218,\"column\":24}\]" message="Cloud Skill Response Timeout"][versions@1 release="1.9.2"] T.Be.Nimbus: Error in Core Nimbus Logic: Cloud Skill Response Timeout
+2026-04-19T12:15:02.935Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.Be.Nimbus: Proceeding to fallback error MiM
+2026-04-19T12:15:02.945Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Nimbus: Executing local error MIM: mims/CloudSkillError.mim
+2026-04-19T12:15:02.984Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1610
+2026-04-19T12:15:02.989Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T07:15:03.076280-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:03.076652-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - df6ac062-3013-43a6-b46d-00ab5c59134e
+2026-04-19T07:15:03.077128-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - df6ac062-3013-43a6-b46d-00ab5c59134e
+2026-04-19T12:15:03.025Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T07:15:03.118003-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:03.118324-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - bc59adf1-03a9-4221-a15a-77352fa6cae9
+2026-04-19T07:15:03.118666-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - bc59adf1-03a9-4221-a15a-77352fa6cae9
+2026-04-19T12:15:03.045Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:03.049Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T12:15:03.051Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: a8cede8f-faaf-4447-8d6b-47bb4d3c39f7
+2026-04-19T07:15:03.148802-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:03.149268-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 5fe45a32-f457-4026-aaf9-51dd9885ef12
+2026-04-19T07:15:03.149819-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 5fe45a32-f457-4026-aaf9-51dd9885ef12
+2026-04-19T07:15:03.171232-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:03.171681-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - efada11c-05f2-443c-8720-b5ec34fcfdf7
+2026-04-19T07:15:03.172589-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - efada11c-05f2-443c-8720-b5ec34fcfdf7
+2026-04-19T07:15:03.265246-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:03.266073-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> <BREAK size=\"0.833\"/> . sorry . something went wrong there . maybe you can try again in a little while . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:03.286945-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:03.287084-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:03.479569-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - 9bd07a9e-a051-4daa-838d-3efac2446efd
+2026-04-19T12:15:03.566Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:03.601Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:03.612Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:03.615Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: a8cede8f-faaf-4447-8d6b-47bb4d3c39f7
+2026-04-19T07:15:03.671162-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - 96f0071c-2f6c-4534-9df2-2a47405396cf
+2026-04-19T07:15:03.671286-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> <BREAK size=\"0.833\"/> . sorry . something went wrong there . maybe you can try again in a little while . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:03.671479-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - 96f0071c-2f6c-4534-9df2-2a47405396cf
+2026-04-19T07:15:03.671511-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T12:15:04.315Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Speaking Primary Face
+2026-04-19T12:15:04.779Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T12:15:06.721Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Asserting attention rule after interruption: Speaking Primary Face
+2026-04-19T12:15:06.866Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T12:15:07.510Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1610 has an identity of 5c0b221fdf9d450019c5e255
+2026-04-19T12:15:08.596Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Asserting attention rule after interruption: Speaking Primary Face
+2026-04-19T12:15:09.171Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T07:15:09.416093-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - 96f0071c-2f6c-4534-9df2-2a47405396cf
+2026-04-19T12:15:09.459Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Asserting attention rule after interruption: Speaking Primary Face
+2026-04-19T12:15:09.459Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: a8cede8f-faaf-4447-8d6b-47bb4d3c39f7
+2026-04-19T12:15:09.464Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to ENGAGED
+2026-04-19T12:15:09.469Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: a8cede8f-faaf-4447-8d6b-47bb4d3c39f7
+2026-04-19T12:15:09.474Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:09.480Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:09.485Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:09.488Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:09.501Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/surprises { lastSkill: '@be/nimbus', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:09.503Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:15:09.513Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/nimbus @be/surprises
+2026-04-19T12:15:09.514Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/nimbus
+2026-04-19T12:15:09.515Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/nimbus
+2026-04-19T12:15:09.517Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Nimbus: Nimbus Closing
+2026-04-19T12:15:09.520Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/nimbus
+2026-04-19T12:15:09.521Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:09.523Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/nimbus
+2026-04-19T12:15:09.524Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/surprises { lastSkill: '@be/nimbus', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:09.532Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/surprises
+2026-04-19T12:15:09.535Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/surprises''
+2026-04-19T12:15:09.542Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/surprises''
+2026-04-19T12:15:09.549Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:15:09.553Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/surprises
+2026-04-19T12:15:09.554Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/surprises { lastSkill: '@be/nimbus', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:09.557Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/nimbus @be/surprises { lastSkill: '@be/nimbus', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:09.565Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/surprises
+2026-04-19T12:15:09.569Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/surprises
+2026-04-19T12:15:09.570Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:09.573Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/surprises { lastSkill: '@be/nimbus', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:09.751Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SurprisesDate: Contextual Priority step 1
+2026-04-19T12:15:09.767Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:09.833Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SurprisesDate: Contextual Priority step 2
+2026-04-19T12:15:10.047Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Surprises: EoS category '@be/surprises-ota' selected
+2026-04-19T12:15:10.051Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Be: REDIRECT: skill redirect: @be/surprises-ota { lastSkill: '@be/nimbus', userID: '5c0b221fdf9d450019c5e255' }
+2026-04-19T12:15:10.054Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/surprises-ota { lastSkill: '@be/nimbus',\n  userID: '5c0b221fdf9d450019c5e255',\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:10.056Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:15:10.060Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/surprises @be/surprises-ota
+2026-04-19T12:15:10.061Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/surprises
+2026-04-19T12:15:10.062Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/surprises
+2026-04-19T12:15:10.064Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Surprises: Exiting
+2026-04-19T12:15:10.067Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/surprises
+2026-04-19T12:15:10.068Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:10.203Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Engaged Primary Face
+2026-04-19T12:15:10.070Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/surprises
+2026-04-19T12:15:10.072Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/surprises-ota { lastSkill: '@be/nimbus',\n  userID: '5c0b221fdf9d450019c5e255',\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:10.084Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/surprises-ota
+2026-04-19T07:15:10.254484-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:10.254843-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 3b7774e4-0e10-4f63-8f56-619e4c873ef5
+2026-04-19T07:15:10.255634-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 3b7774e4-0e10-4f63-8f56-619e4c873ef5
+2026-04-19T12:15:10.087Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/surprises-ota''
+2026-04-19T12:15:10.089Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/surprises-ota''
+2026-04-19T07:15:10.281494-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:10.281942-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 830c7975-28c2-4018-9acc-897099073ca1
+2026-04-19T07:15:10.284262-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 830c7975-28c2-4018-9acc-897099073ca1
+2026-04-19T12:15:10.092Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:15:10.093Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/surprises-ota
+2026-04-19T12:15:10.095Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/surprises-ota { lastSkill: '@be/nimbus',\n  userID: '5c0b221fdf9d450019c5e255',\n  asr: { text: '', confidence: 1 } }
+2026-04-19T07:15:10.312336-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:10.312812-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - d01d6315-0f8b-42dc-a6e4-1e3a58644b6f
+2026-04-19T07:15:10.313747-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - d01d6315-0f8b-42dc-a6e4-1e3a58644b6f
+2026-04-19T12:15:10.097Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/surprises @be/surprises-ota { lastSkill: '@be/nimbus',\n  userID: '5c0b221fdf9d450019c5e255',\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:10.104Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/surprises-ota
+2026-04-19T07:15:10.344263-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:10.345204-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> hey , I tried to do a backup and install my software update before , and it didn't work for some reason . i'll try again later . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T12:15:10.106Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/surprises-ota
+2026-04-19T12:15:10.108Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:10.112Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/surprises-ota { lastSkill: '@be/nimbus',\n  userID: '5c0b221fdf9d450019c5e255',\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:10.226Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:10.245Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:10.248Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T12:15:10.249Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: b4f7720f-7a0c-44d0-9f71-cae317baa84e
+2026-04-19T07:15:10.691176-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - 76dd2bcb-e907-457d-a07c-6403a7b97873
+2026-04-19T12:15:10.719Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:10.772Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:10.785Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:10.787Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: b4f7720f-7a0c-44d0-9f71-cae317baa84e
+2026-04-19T07:15:10.817648-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - d7f3d3da-3443-4f99-a4a9-0b167b23c792
+2026-04-19T07:15:10.817783-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> hey , I tried to do a backup and install my software update before , and it didn't work for some reason . i'll try again later . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:10.818099-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - d7f3d3da-3443-4f99-a4a9-0b167b23c792
+2026-04-19T07:15:10.818138-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T12:15:10.999Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: received tap event 4 670 294
+2026-04-19T12:15:11.509Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T12:15:11.941Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1610
+2026-04-19T12:15:12.247Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: deleting person entity 1610
+2026-04-19T12:15:12.248Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Attempting to set decay timer for an already decaying entity. This is likely indicative of a bug.
+2026-04-19T12:15:12.629Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Speaking Primary Face
+2026-04-19T12:15:14.647Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T12:15:15.333Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Asserting attention rule after interruption: Speaking Primary Face
+2026-04-19T12:15:16.420Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T07:15:18.036570-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - d7f3d3da-3443-4f99-a4a9-0b167b23c792
+2026-04-19T12:15:18.403Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: b4f7720f-7a0c-44d0-9f71-cae317baa84e
+2026-04-19T12:15:18.410Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to ENGAGED
+2026-04-19T12:15:18.419Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: b4f7720f-7a0c-44d0-9f71-cae317baa84e
+2026-04-19T12:15:18.420Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:18.423Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:18.425Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:18.427Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:18.472Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/idle { exitOptions: {}, asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:18.474Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:15:18.522Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to IDLE
+2026-04-19T12:15:18.476Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/surprises-ota @be/idle
+2026-04-19T12:15:18.478Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/surprises-ota
+2026-04-19T12:15:18.480Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/surprises-ota
+2026-04-19T12:15:18.487Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/surprises-ota
+2026-04-19T12:15:18.488Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:18.489Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/surprises-ota
+2026-04-19T12:15:18.490Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/idle { exitOptions: {}, asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:18.501Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/idle
+2026-04-19T12:15:18.505Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/idle''
+2026-04-19T12:15:18.507Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/idle''
+2026-04-19T12:15:18.510Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:15:18.511Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/idle
+2026-04-19T12:15:18.511Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/idle { exitOptions: {}, asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:18.513Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/surprises-ota @be/idle { exitOptions: {}, asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:18.518Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/idle
+2026-04-19T12:15:18.522Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/idle
+2026-04-19T12:15:18.523Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:18.526Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: adding listener for SLEEP
+2026-04-19T12:15:18.527Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: setting SLEEP to true
+2026-04-19T12:15:18.528Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Starting
+2026-04-19T12:15:18.531Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: State changed from ALERT to SELECT_INTENT.
+2026-04-19T12:15:18.533Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Entering: SELECT_INTENT
+2026-04-19T12:15:18.538Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/idle { exitOptions: {}, asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:18.544Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: State changed from SELECT_INTENT to ALERT.
+2026-04-19T12:15:18.550Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Entering ALERT
+2026-04-19T12:15:18.555Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: No transitions between SELECT_INTENT and ALERT
+2026-04-19T12:15:18.615Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Brightness set to 0.4.
+2026-04-19T12:15:19.519Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: received tap event 4 632 473
+2026-04-19T12:15:19.524Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Be: REDIRECT: skill redirect: @be/main-menu { intent: 'tap' }
+2026-04-19T12:15:19.526Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/main-menu { intent: 'tap', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:19.581Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from IDLE to ENGAGED
+2026-04-19T12:15:19.528Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:15:19.532Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/idle @be/main-menu
+2026-04-19T12:15:19.533Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/idle
+2026-04-19T12:15:19.534Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/idle
+2026-04-19T12:15:19.535Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Stopping
+2026-04-19T12:15:19.537Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: setting SLEEP to false
+2026-04-19T12:15:19.538Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Clearing animation queue.
+2026-04-19T12:15:19.542Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/idle
+2026-04-19T12:15:19.543Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:19.548Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/idle
+2026-04-19T12:15:19.549Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/main-menu { intent: 'tap', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:19.563Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/main-menu
+2026-04-19T12:15:19.568Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/main-menu''
+2026-04-19T12:15:19.570Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/main-menu''
+2026-04-19T12:15:19.573Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:15:19.575Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/main-menu
+2026-04-19T12:15:19.576Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/main-menu { intent: 'tap', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:19.577Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/idle @be/main-menu { intent: 'tap', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:19.580Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/main-menu
+2026-04-19T12:15:19.582Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/main-menu
+2026-04-19T12:15:19.583Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:19.585Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.MainMenu: open() from tap
+2026-04-19T12:15:19.587Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:19.602Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/main-menu { intent: 'tap', asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:19.630Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning Speaker 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:19.735Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Emitting idLost from ASR: 5c0b221fdf9d450019c5e255.
+2026-04-19T12:15:20.239Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to OFF
+2026-04-19T12:15:21.763Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: received tap event 4 993 346
+2026-04-19T12:15:21.803Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/start_local_turn
+2026-04-19T12:15:21.804Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_START_LOCAL_TURN
+2026-04-19T12:15:21.805Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_START_LOCAL_TURN in 1 ms.
+2026-04-19T12:15:21.783Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:21.785Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.Jibo.GUI.Component: Deprecation: the ability to set inputLocked is deprecated, please use lockInput(true|false) instead
+2026-04-19T12:15:21.818Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: globalTurnResult: { global: true,\n  message: '',\n  status: 'INTERRUPTED',\n  transID: 'tid-5cbc05d8-3be9-11f1-a7d0-5cf821ea55ae' }
+2026-04-19T12:15:21.833Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:21.958Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.LhubClient: Hub Client connection opened.
+2026-04-19T12:15:21.958Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_CLIENT_CONNECT_RESULT
+2026-04-19T12:15:22.065Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_CLIENT_CONNECT_RESULT in 107 ms.
+2026-04-19T12:15:22.065Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:22.066Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:22.066Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_LISTEN
+2026-04-19T12:15:22.059Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:22.069Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_LISTEN in 3 ms.
+2026-04-19T12:15:22.069Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_EOS
+2026-04-19T12:15:22.070Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_EOS in 1 ms.
+2026-04-19T12:15:22.072Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:22.073Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:22.066Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:22.077Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:22.080Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnStarted
+2026-04-19T12:15:22.085Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:22.087Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  result: \n   ListenResult {\n     asr: { confidence: 0.95, final: true, text: 'loadMenu' },\n     nlu: \n      { confidence: 0.95,\n        entities: { destination: 'fun' },\n        intent: 'loadMenu',\n        rules: [ 'main-menu/execute_main_menu' ] },\n     match: \n      { intent: 'loadMenu',\n        rule: 'main-menu/execute_main_menu',\n        score: 0.95 },\n     transID: 'tid-7005c548-3be9-11f1-b0cd-5cf821ea55ae',\n     cloudSkillResponse: Promise { <pending> } },\n  status: 'SUCCEEDED',\n  transID: 'tid-7005c548-3be9-11f1-b0cd-5cf821ea55ae' }
+2026-04-19T12:15:22.092Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: eos received
+2026-04-19T12:15:22.093Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:22.608Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from OFF to ENGAGED
+2026-04-19T12:15:22.611Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to OFF
+2026-04-19T12:15:24.039Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: received tap event 4 634 419
+2026-04-19T12:15:24.049Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:24.067Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/start_local_turn
+2026-04-19T12:15:24.052Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.Jibo.GUI.Component: Deprecation: the ability to set inputLocked is deprecated, please use lockInput(true|false) instead
+2026-04-19T12:15:24.068Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_START_LOCAL_TURN
+2026-04-19T12:15:24.070Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_START_LOCAL_TURN in 2 ms.
+2026-04-19T12:15:24.076Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.MainMenu: Attempting redirect to skill: word-of-the-day
+2026-04-19T12:15:24.089Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  message: '',\n  status: 'INTERRUPTED',\n  transID: 'tid-7005c548-3be9-11f1-b0cd-5cf821ea55ae' }
+2026-04-19T12:15:24.830Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Be: REDIRECT: skill redirect: @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' } }
+2026-04-19T12:15:24.832Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' },\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:24.833Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:15:24.854Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/main-menu @be/word-of-the-day
+2026-04-19T12:15:24.857Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/main-menu
+2026-04-19T12:15:24.859Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/main-menu
+2026-04-19T12:15:24.860Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.MainMenu: close()
+2026-04-19T12:15:24.861Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.MainMenu: close() flow requires stop and destroy followed by view clean up
+2026-04-19T12:15:24.867Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/main-menu
+2026-04-19T12:15:24.872Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:24.874Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/main-menu
+2026-04-19T12:15:24.875Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' },\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:24.888Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/word-of-the-day
+2026-04-19T12:15:24.906Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from OFF to ENGAGED
+2026-04-19T12:15:24.890Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/word-of-the-day''
+2026-04-19T12:15:24.893Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/word-of-the-day''
+2026-04-19T12:15:24.895Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:15:24.896Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/word-of-the-day
+2026-04-19T12:15:24.896Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' },\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:24.900Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/main-menu @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' },\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:24.908Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/word-of-the-day
+2026-04-19T12:15:24.954Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,warning]: - C.Jibohub_client.Connection: Socket to HUB opened in >500ms.
+2026-04-19T12:15:24.954Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.LhubClient: Hub Client connection opened.
+2026-04-19T12:15:24.954Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_CLIENT_CONNECT_RESULT
+2026-04-19T12:15:24.935Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/word-of-the-day
+2026-04-19T12:15:24.936Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:24.941Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:24.966Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/word-of-the-day { nlu: { entities: { domain: 'word-of-the-day' }, intent: 'menu' },\n  asr: { text: '', confidence: 1 } }
+2026-04-19T12:15:25.036Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:25.040Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_CLIENT_CONNECT_RESULT in 86 ms.
+2026-04-19T12:15:25.040Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:25.041Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:25.041Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_LISTEN
+2026-04-19T12:15:25.044Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_LISTEN in 3 ms.
+2026-04-19T12:15:25.044Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_EOS
+2026-04-19T12:15:25.046Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_EOS in 2 ms.
+2026-04-19T12:15:25.046Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:25.047Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:25.048Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:25.053Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:25.055Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnStarted
+2026-04-19T12:15:25.059Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:25.060Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  result: \n   ListenResult {\n     asr: { confidence: 0.95, final: true, text: 'loadMenu' },\n     nlu: \n      { confidence: 0.95,\n        entities: { destination: 'word-of-the-day' },\n        intent: 'loadMenu',\n        rules: [ 'main-menu/execute_fun_stuff' ] },\n     match: \n      { intent: 'loadMenu',\n        rule: 'main-menu/execute_fun_stuff',\n        score: 0.95 },\n     transID: 'tid-715f450e-3be9-11f1-bbe2-5cf821ea55ae',\n     cloudSkillResponse: Promise { <pending> } },\n  status: 'SUCCEEDED',\n  transID: 'tid-715f450e-3be9-11f1-bbe2-5cf821ea55ae' }
+2026-04-19T12:15:25.065Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: eos received
+2026-04-19T12:15:25.066Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:25.583Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:25.688605-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:25.688974-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 93c94420-143e-41e7-87cb-cbba2134e60e
+2026-04-19T07:15:25.689247-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 93c94420-143e-41e7-87cb-cbba2134e60e
+2026-04-19T12:15:25.672Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:25.706067-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T12:15:25.681Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T07:15:25.712003-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - ee8f021e-d135-4556-b2e2-9fb05f8590c3
+2026-04-19T07:15:25.712420-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - ee8f021e-d135-4556-b2e2-9fb05f8590c3
+2026-04-19T12:15:25.682Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T12:15:25.683Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: a36dc303-5941-469f-9d6d-0418466ef966
+2026-04-19T07:15:25.731539-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:25.732079-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 93cd0cd8-39e7-4fe9-80c7-2d3736d0eccc
+2026-04-19T07:15:25.732339-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 93cd0cd8-39e7-4fe9-80c7-2d3736d0eccc
+2026-04-19T07:15:25.749115-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:25.749473-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - b1b4ca9f-bb40-4d40-804b-94210be3a0ac
+2026-04-19T07:15:25.749666-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - b1b4ca9f-bb40-4d40-804b-94210be3a0ac
+2026-04-19T07:15:25.761553-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:25.761954-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 53ed3549-d85f-4441-8f70-f9bb5c4deea9
+2026-04-19T07:15:25.762357-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 53ed3549-d85f-4441-8f70-f9bb5c4deea9
+2026-04-19T07:15:25.776322-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:25.776891-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - faf5afca-bdb8-4a1a-a50f-0bce2f27b0cb
+2026-04-19T07:15:25.777736-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - faf5afca-bdb8-4a1a-a50f-0bce2f27b0cb
+2026-04-19T07:15:25.804745-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:25.805192-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 73765709-d931-4fa0-8225-04c189cd91fa
+2026-04-19T07:15:25.805749-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 73765709-d931-4fa0-8225-04c189cd91fa
+2026-04-19T07:15:25.837889-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:25.838610-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak>time to play <PITCH mult=\"1.2\"> word </PITCH> of the Day <BREAK size=\"1\"/> . <BREAK size=\"1\"/> I now present today's definition <BREAK size=\"1.533\"/></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:25.859117-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:25.859341-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:26.025324-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - ab620620-cf51-4bfb-b792-ebc529df8277
+2026-04-19T12:15:26.058Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:26.081Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:26.090Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:26.091Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: a36dc303-5941-469f-9d6d-0418466ef966
+2026-04-19T07:15:26.120469-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - c2c4f0cf-ddc6-4f92-83cf-74f284a9416c
+2026-04-19T07:15:26.120597-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak>time to play <PITCH mult=\"1.2\"> word </PITCH> of the Day <BREAK size=\"1\"/> . <BREAK size=\"1\"/> I now present today's definition <BREAK size=\"1.533\"/></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:26.120859-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - c2c4f0cf-ddc6-4f92-83cf-74f284a9416c
+2026-04-19T07:15:26.120897-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T07:15:31.884145-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - c2c4f0cf-ddc6-4f92-83cf-74f284a9416c
+2026-04-19T12:15:33.949Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to ENGAGED
+2026-04-19T12:15:33.945Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: a36dc303-5941-469f-9d6d-0418466ef966
+2026-04-19T12:15:33.982Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: a36dc303-5941-469f-9d6d-0418466ef966
+2026-04-19T12:15:33.984Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:33.987Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:33.989Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:33.992Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:34.142106-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:34.142551-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 7b60483c-cbb9-4f7a-9aa0-602f5642c9e3
+2026-04-19T07:15:34.143281-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 7b60483c-cbb9-4f7a-9aa0-602f5642c9e3
+2026-04-19T12:15:34.102Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:34.177589-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:34.178087-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 28020be0-0554-49a8-b3ef-eae9f33c7ee0
+2026-04-19T07:15:34.178359-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 28020be0-0554-49a8-b3ef-eae9f33c7ee0
+2026-04-19T12:15:34.122Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:34.123Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T07:15:34.229106-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:34.229610-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 9fc9d292-05ee-438e-a4e9-a59c403a220c
+2026-04-19T07:15:34.230948-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 9fc9d292-05ee-438e-a4e9-a59c403a220c
+2026-04-19T12:15:34.125Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: 562a0c41-8a4c-4ca0-8d8f-db02ed3ba606
+2026-04-19T07:15:34.266608-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:34.267467-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> a plastic or metal sheath , at the end of a shoelace <BREAK size=\"1.5\"/> . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:34.310290-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:34.452284-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - df6aad5b-1b90-4e4b-a64a-3040ce55f922
+2026-04-19T12:15:34.475Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:34.546Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:34.568Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:34.569Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: 562a0c41-8a4c-4ca0-8d8f-db02ed3ba606
+2026-04-19T07:15:34.586798-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - 11363737-59b7-44d1-8993-2cdbc25a8a76
+2026-04-19T07:15:34.586969-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> a plastic or metal sheath , at the end of a shoelace <BREAK size=\"1.5\"/> . </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:34.587268-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - 11363737-59b7-44d1-8993-2cdbc25a8a76
+2026-04-19T07:15:34.587321-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T12:15:34.695Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to MENU
+2026-04-19T12:15:34.753Z Royal-Current-Sage-Canvas be[1016,err]: [0@1 frames="[{\"method\":\"registry.forEach\",\"filename\":\"/opt/jibo/Jibo/Skills/@be/be/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":542,\"column\":39},{\"method\":\"Map.forEach\",\"filename\":\"native\",\"line\":null,\"column\":null},{\"method\":\"CloudResponseRegistry.cull\",\"filename\":\"/opt/jibo/Jibo/Skills/@be/be/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":539,\"column\":23},{\"method\":\"callback\",\"filename\":\"/opt/jibo/Jibo/Skills/@be/be/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":403,\"column\":49}\]" message="Timeout of 10000 ms reached. Culling cloud response"][versions@1 release="1.9.2"] T.Unhandled: Timeout of 10000 ms reached. Culling cloud response
+2026-04-19T07:15:36.993242-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-SCAN-STARTED 
+2026-04-19T12:15:37.744Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Menu Body Return
+2026-04-19T07:15:38.955682-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - 11363737-59b7-44d1-8993-2cdbc25a8a76
+2026-04-19T12:15:38.962Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: 562a0c41-8a4c-4ca0-8d8f-db02ed3ba606
+2026-04-19T12:15:38.972Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: 562a0c41-8a4c-4ca0-8d8f-db02ed3ba606
+2026-04-19T12:15:38.977Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:38.979Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:38.980Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:38.981Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:39.456Z Royal-Current-Sage-Canvas ssm[936,err]: [0@1 frames="[{\"method\":\"registry.forEach\",\"filename\":\"/usr/local/bin/jibo-ssm/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":542,\"column\":39},{\"method\":\"Map.forEach\",\"filename\":\"native\",\"line\":null,\"column\":null},{\"method\":\"CloudResponseRegistry.cull\",\"filename\":\"/usr/local/bin/jibo-ssm/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":539,\"column\":23},{\"method\":\"Timeout.callback [as _onTimeout\]\",\"filename\":\"/usr/local/bin/jibo-ssm/node_modules/@jibo/jetstream-client/lib/jetstream-client.js\",\"line\":403,\"column\":49},{\"method\":\"ontimeout\",\"filename\":\"timers.js\",\"line\":365,\"column\":14},{\"method\":\"tryOnTimeout\",\"filename\":\"timers.js\",\"line\":237,\"column\":5},{\"method\":\"Timer.listOnTimeout\",\"filename\":\"timers.js\",\"line\":207,\"column\":5}\]" message="Timeout of 10000 ms reached. Culling cloud response"][versions@1 release="1.9.2"] T.Unhandled: Timeout of 10000 ms reached. Culling cloud response
+2026-04-19T12:15:39.529Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from MENU to ENGAGED
+2026-04-19T07:15:40.184041-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:40.184383-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - e8ff091d-623c-473f-bb41-a995f8c6739b
+2026-04-19T07:15:40.184687-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - e8ff091d-623c-473f-bb41-a995f8c6739b
+2026-04-19T12:15:40.158Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:40.219456-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:40.222061-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - d4f397d8-5a5b-4fe6-bbeb-8f76380cab8a
+2026-04-19T07:15:40.222260-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - d4f397d8-5a5b-4fe6-bbeb-8f76380cab8a
+2026-04-19T12:15:40.175Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:40.177Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T07:15:40.242134-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:40.242701-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 75d66b51-397a-4a08-bc0d-12afdd080f97
+2026-04-19T07:15:40.243051-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 75d66b51-397a-4a08-bc0d-12afdd080f97
+2026-04-19T12:15:40.178Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: 243df127-6bd9-49dc-be23-0a6083929318
+2026-04-19T07:15:40.266135-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:40.266499-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 73bfc0b1-c04b-49f6-9acd-704729f5ea78
+2026-04-19T07:15:40.266792-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 73bfc0b1-c04b-49f6-9acd-704729f5ea78
+2026-04-19T07:15:40.285071-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:40.285465-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - b5b616f3-b5db-488d-ab23-258efe1f93ac
+2026-04-19T07:15:40.286163-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - b5b616f3-b5db-488d-ab23-258efe1f93ac
+2026-04-19T07:15:40.303616-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:40.304219-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 7f5e2951-83ca-48fb-bdfa-f8bd13dbcb94
+2026-04-19T07:15:40.305112-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 7f5e2951-83ca-48fb-bdfa-f8bd13dbcb94
+2026-04-19T07:15:40.323629-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:40.324480-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak>which is the right word . <BREAK size=\"0.8\"/> <PITCH mult=\"1.1\"> hovel <BREAK size=\"0.8\"/> aglet </PITCH> <BREAK size=\"0.8\"/> or wisenheimer .</speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:40.350566-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:40.518970-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - e20aadda-3713-4a7f-ad80-6cdefd474536
+2026-04-19T12:15:40.543Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:40.600Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:40.635Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:40.640Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: 243df127-6bd9-49dc-be23-0a6083929318
+2026-04-19T07:15:40.657108-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - fbaf22de-ba2f-44a4-b085-a6df8720e622
+2026-04-19T07:15:40.657219-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak>which is the right word . <BREAK size=\"0.8\"/> <PITCH mult=\"1.1\"> hovel <BREAK size=\"0.8\"/> aglet </PITCH> <BREAK size=\"0.8\"/> or wisenheimer .</speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:40.657435-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - fbaf22de-ba2f-44a4-b085-a6df8720e622
+2026-04-19T07:15:40.657478-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T12:15:40.784Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to MENU
+2026-04-19T07:15:41.996598-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4891 30:23:03:95:2b:b8
+2026-04-19T07:15:41.996962-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4892 80:69:1a:95:0b:6e
+2026-04-19T07:15:41.997194-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4893 80:69:1a:8b:a0:e3
+2026-04-19T07:15:41.997367-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4894 86:69:1a:8b:a0:e3
+2026-04-19T07:15:41.997557-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4895 36:23:03:d6:ca:1c
+2026-04-19T07:15:41.997794-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4896 b0:39:56:ea:f8:8e
+2026-04-19T07:15:41.998027-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-BSS-ADDED 4897 30:23:03:d6:cf:c1
+2026-04-19T07:15:41.998226-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,info]: - P.SystemManager.WPAControlInterface: <3>CTRL-EVENT-SCAN-RESULTS 
+2026-04-19T12:15:43.578Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: Ignoring tap event for y coord = 358!
+2026-04-19T12:15:43.804Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION AttentionManager not trying to do lookat, we have no dofs!!
+2026-04-19T12:15:44.703Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from MENU to SPEAKING
+2026-04-19T12:15:44.705Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to OFF
+2026-04-19T12:15:44.653Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.GUI.TouchManager: received tap event 4 227 355
+2026-04-19T07:15:44.727408-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: { "tts": { "stop_request" : "Calling TTS stop" } }
+2026-04-19T07:15:44.727453-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Stop called
+2026-04-19T12:15:44.732Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/start_local_turn
+2026-04-19T12:15:44.733Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_START_LOCAL_TURN
+2026-04-19T12:15:44.734Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_START_LOCAL_TURN in 1 ms.
+2026-04-19T12:15:44.658Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:44.659Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing stop request on active session: 243df127-6bd9-49dc-be23-0a6083929318
+2026-04-19T12:15:44.664Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Stopped
+2026-04-19T07:15:44.773977-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - fbaf22de-ba2f-44a4-b085-a6df8720e622
+2026-04-19T12:15:44.683Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:44.690Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:44.694Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:44.767Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  message: '',\n  status: 'INTERRUPTED',\n  transID: 'tid-715f450e-3be9-11f1-bbe2-5cf821ea55ae' }
+2026-04-19T12:15:44.790Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: 243df127-6bd9-49dc-be23-0a6083929318
+2026-04-19T12:15:44.801Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: 243df127-6bd9-49dc-be23-0a6083929318
+2026-04-19T12:15:44.802Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:44.937Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.LhubClient: Hub Client connection opened.
+2026-04-19T12:15:44.938Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_CLIENT_CONNECT_RESULT
+2026-04-19T12:15:45.028Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_CLIENT_CONNECT_RESULT in 90 ms.
+2026-04-19T12:15:45.029Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:45.019Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:45.029Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:45.029Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_LISTEN
+2026-04-19T12:15:45.030Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_LISTEN in 1 ms.
+2026-04-19T12:15:45.030Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_EOS
+2026-04-19T12:15:45.030Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_EOS in 0 ms.
+2026-04-19T12:15:45.029Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:45.033Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:45.034Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:45.035Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:45.039Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnStarted
+2026-04-19T12:15:45.042Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_TURN_PENDING'
+2026-04-19T12:15:45.044Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  result: \n   ListenResult {\n     asr: { confidence: 0.95, final: true, text: 'aglet' },\n     nlu: \n      { confidence: 0.95,\n        entities: { guess: 'aglet' },\n        intent: 'guess',\n        rules: [ 'word-of-the-day/puzzle' ] },\n     match: { intent: 'guess', rule: 'word-of-the-day/puzzle', score: 0.95 },\n     transID: 'tid-7db08b06-3be9-11f1-8472-5cf821ea55ae',\n     cloudSkillResponse: Promise { <pending> } },\n  status: 'SUCCEEDED',\n  transID: 'tid-7db08b06-3be9-11f1-8472-5cf821ea55ae' }
+2026-04-19T12:15:45.052Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: eos received
+2026-04-19T12:15:45.053Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:45.200Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from OFF to ENGAGED
+2026-04-19T07:15:45.841599-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T12:15:45.822Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:45.841936-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - e0e4e0bd-43d3-447c-9950-ba3ae3b6e322
+2026-04-19T07:15:45.842172-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - e0e4e0bd-43d3-447c-9950-ba3ae3b6e322
+2026-04-19T07:15:45.860395-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:45.860685-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - d958f6ae-534b-4e00-b9c8-3b92549e665d
+2026-04-19T07:15:45.860870-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - d958f6ae-534b-4e00-b9c8-3b92549e665d
+2026-04-19T12:15:45.836Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:45.837Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T07:15:45.881698-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:45.882027-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 6c66c2c0-153c-4fb8-8a23-2b0578eeb5bd
+2026-04-19T07:15:45.882766-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 6c66c2c0-153c-4fb8-8a23-2b0578eeb5bd
+2026-04-19T12:15:45.838Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: 3bf7d705-8bb6-49c1-a56f-b43280fe8821
+2026-04-19T07:15:45.903143-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:45.904030-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><BREAK size=\"2.133\"/> that is <PITCH mult=\"1.4\"> correct </PITCH></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:45.911201-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,warning]: - C.TTSService: TTSUtterance: Trying to create an empty phrase! Ignoring...
+2026-04-19T07:15:45.983413-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - b5bdfacc-fafb-4cf7-a1d3-4623ca097c6a
+2026-04-19T12:15:46.003Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:46.027Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:46.039Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:46.041Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: 3bf7d705-8bb6-49c1-a56f-b43280fe8821
+2026-04-19T07:15:46.063871-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - e9dd339a-0016-4a29-a7dd-8b0e5a24b191
+2026-04-19T07:15:46.063980-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><BREAK size=\"2.133\"/> that is <PITCH mult=\"1.4\"> correct </PITCH></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:46.064180-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - e9dd339a-0016-4a29-a7dd-8b0e5a24b191
+2026-04-19T07:15:46.064213-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T07:15:49.148887-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - e9dd339a-0016-4a29-a7dd-8b0e5a24b191
+2026-04-19T12:15:50.195Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: 3bf7d705-8bb6-49c1-a56f-b43280fe8821
+2026-04-19T12:15:50.200Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to ENGAGED
+2026-04-19T12:15:50.204Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: 3bf7d705-8bb6-49c1-a56f-b43280fe8821
+2026-04-19T12:15:50.206Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:50.207Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:50.208Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:50.209Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:50.285717-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS LEX 
+2026-04-19T07:15:50.286161-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session start - 8ba1ce86-ccda-464f-a2d9-fef34ab0bafe
+2026-04-19T07:15:50.286779-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get TTS Lex session end - 8ba1ce86-ccda-464f-a2d9-fef34ab0bafe
+2026-04-19T12:15:50.264Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T07:15:50.311891-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:50.312304-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 1d24d76e-b67b-41d9-a855-fdcdc14d0863
+2026-04-19T07:15:50.312686-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 1d24d76e-b67b-41d9-a855-fdcdc14d0863
+2026-04-19T12:15:50.276Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak request received
+2026-04-19T12:15:50.277Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Processing speak request
+2026-04-19T07:15:50.327462-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS POS Tags 
+2026-04-19T07:15:50.327775-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session start - 158b1fc4-2d4c-4bea-950b-b8c27f040091
+2026-04-19T07:15:50.328686-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get POS Tags session end - 158b1fc4-2d4c-4bea-950b-b8c27f040091
+2026-04-19T12:15:50.278Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Starting new speak session: f17b8c26-53b4-42a6-9bba-338d74f9a1f2
+2026-04-19T07:15:50.360075-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: GET TTS Token times 
+2026-04-19T07:15:50.360900-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> aglet . a plastic or metal sheath , at the end of a shoelace </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE","earlyStopTime":-1.0},"type":"token"}}
+2026-04-19T07:15:50.512532-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS Get Tokens session end - c8fd160d-2c30-4fff-a455-af7ab09727e7
+2026-04-19T12:15:50.543Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Pushing Speaking Attention Mode
+2026-04-19T12:15:50.568Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to SPEAKING
+2026-04-19T12:15:50.580Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Waiting for Embodied Listen to finish
+2026-04-19T12:15:50.583Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Dispatching Timeline: f17b8c26-53b4-42a6-9bba-338d74f9a1f2
+2026-04-19T07:15:50.602602-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session start - 054432c5-bfb3-4c13-8367-3eddf7155364
+2026-04-19T07:15:50.602716-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: {"tts":{"input_request":{"prompt":"<speak><STYLE set=\"NEUTRAL\"> aglet . a plastic or metal sheath , at the end of a shoelace </STYLE></speak>","pitch":999.0,"speed":999.0,"pitchBandwidth":999.0,"mode":"ssml","outputMode":"stream","allPass":999.0,"enableDefaultVoice":"","framerate":999.0,"gvMCEP":999.0,"postfilter":999.0,"samplerate":999.0,"unvoicedvoiced":999.0,"voice":"griffin","locale":"en-us","volume":999.0,"whisper":"FALSE","cached":"TRUE"},"type":"speak"}}
+2026-04-19T07:15:50.602981-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS calling speak - 054432c5-bfb3-4c13-8367-3eddf7155364
+2026-04-19T07:15:50.603019-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: Synthesizing cached
+2026-04-19T12:15:50.828Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from SPEAKING to MENU
+2026-04-19T12:15:53.852Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Menu Body Return
+2026-04-19T07:15:54.187598-05:00 Royal-Current-Sage-Canvas jibo-tts-service[708,info]: - C.TTSService: TTS session end - 054432c5-bfb3-4c13-8367-3eddf7155364
+2026-04-19T12:15:54.199Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Timeline Dispatch Complete: f17b8c26-53b4-42a6-9bba-338d74f9a1f2
+2026-04-19T12:15:54.210Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Speak Complete: f17b8c26-53b4-42a6-9bba-338d74f9a1f2
+2026-04-19T12:15:54.211Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Cleaning up session
+2026-04-19T12:15:54.212Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Ready for next speak request
+2026-04-19T12:15:54.234Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/start_local_turn
+2026-04-19T12:15:54.235Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_START_LOCAL_TURN
+2026-04-19T12:15:54.213Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Embodied.Speech: Stop request received
+2026-04-19T12:15:54.236Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_START_LOCAL_TURN in 1 ms.
+2026-04-19T12:15:54.239Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnStarted
+2026-04-19T12:15:54.241Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  message: '',\n  status: 'INTERRUPTED',\n  transID: 'tid-7db08b06-3be9-11f1-8472-5cf821ea55ae' }
+2026-04-19T12:15:54.960Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,warning]: - C.Jibohub_client.Connection: Socket to HUB opened in >500ms.
+2026-04-19T12:15:54.960Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.LhubClient: Hub Client connection opened.
+2026-04-19T12:15:54.960Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_CLIENT_CONNECT_RESULT
+2026-04-19T12:15:54.960Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: [messageContext@1 gain="1.000000" requestID="tid-835a5fe6-3be9-11f1-8e50-5cf821ea55ae" transID="tid-835a5fe6-3be9-11f1-8e50-5cf821ea55ae"] C.Jetstream.LhubClient: Hub LISTEN request keystone log entry
+2026-04-19T12:15:54.961Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,debug]: - C.Jetstream.LhubClient: Set Audio encoder to type: OGG_OPUS
+2026-04-19T12:15:55.010Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:15:55.015Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_CLIENT_CONNECT_RESULT in 55 ms.
+2026-04-19T12:15:55.018Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnStarted
+2026-04-19T12:15:55.027Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:55.028Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:55.029Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:55.031Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_CONTEXT_ACK'
+2026-04-19T12:15:57.926Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:57.926Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:15:57.927Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:57.930Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:57.928Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:57.931Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:57.931Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:57.931Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:57.997Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:57.998Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:15:57.998Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:58.000Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:58.875Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:15:58.875Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:15:58.876Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:15:58.876Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:02.918Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:02.919Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:02.919Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:02.928Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:03.057Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:03.058Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:03.060Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:03.063Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:03.255Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Primary face selected (position based): 1618
+2026-04-19T12:16:03.247Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1618
+2026-04-19T12:16:03.263Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Menu Primary Face
+2026-04-19T12:16:03.250Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T07:16:03.414708-05:00 Royal-Current-Sage-Canvas jibo-identity-service[660,info]: - P.ImageIdentifier: ImageIdentifier[deepid]::identify [["5c0b221fdf9d450019c5e255", "face", 0.409506]]
+2026-04-19T07:16:03.430471-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::measure input from: face with 1 hypotheses
+2026-04-19T07:16:03.430560-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity::Measure face Quality:1 Id: 5c0b221fdf9d450019c5e255 Conf: 0.409506 
+2026-04-19T07:16:03.430630-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion with 2 options from 1 inputs. 
+2026-04-19T07:16:03.430709-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::updateIdentity  Op: 5c0b221fdf9d450019c5e255 Score: 0.0158439 Op: NOT_TRAINED Score: 0.3
+2026-04-19T07:16:03.430760-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity Update Best Score: 0.3 Best ID: NOT_TRAINED
+2026-04-19T07:16:03.430799-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion CHANGING identity from UNKNOWN to NOT_TRAINED
+2026-04-19T12:16:03.917Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:03.917Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:03.918Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:03.920Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:04.919Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:04.920Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:04.920Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:04.928Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:07.754Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1618 has an identity of null
+2026-04-19T12:16:07.766Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1618
+2026-04-19T12:16:07.932Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:07.933Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:07.933Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:07.933Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:07.933Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:07.936Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:07.936Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:07.939Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:08.872Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:08.874Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 2 ms.
+2026-04-19T12:16:08.874Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:08.877Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:08.877Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:08.877Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:08.879Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:08.880Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:11.924Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Menu Body Return
+2026-04-19T12:16:12.003Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: deleting person entity 1618
+2026-04-19T12:16:12.452Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:12.452Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:12.453Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:12.460Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:12.957Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:12.958Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:12.958Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:12.961Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:13.936Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:13.936Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:13.937Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:13.944Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:14.001Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:14.001Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:14.002Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:14.003Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:15.912Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1619
+2026-04-19T12:16:15.913Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T07:16:16.171558-05:00 Royal-Current-Sage-Canvas jibo-identity-service[660,info]: - P.ImageIdentifier: ImageIdentifier[deepid]::identify [["5c0b221fdf9d450019c5e255", "face", 0.381441]]
+2026-04-19T07:16:16.175755-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::measure input from: face with 1 hypotheses
+2026-04-19T07:16:16.175900-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity::Measure face Quality:1 Id: 5c0b221fdf9d450019c5e255 Conf: 0.381441 
+2026-04-19T07:16:16.175994-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity::Measurement failed ratio test.
+2026-04-19T07:16:16.176063-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion with 2 options from 1 inputs. 
+2026-04-19T07:16:16.176152-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: IdentityFusion::updateIdentity  Op: 5c0b221fdf9d450019c5e255 Score: 0 Op: NOT_TRAINED Score: 0.09
+2026-04-19T07:16:16.176207-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion: Identity Update Best Score: 0.09 Best ID: NOT_TRAINED
+2026-04-19T07:16:16.176256-05:00 Royal-Current-Sage-Canvas jibo-lps-service[723,info]: - P.IdentityFusion:  IdentityFusion CHANGING identity from UNKNOWN to NOT_TRAINED
+2026-04-19T12:16:17.033Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1619
+2026-04-19T12:16:17.943Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:17.944Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:17.945Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:17.944Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:17.946Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:17.949Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:17.961Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:17.963Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:18.328Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Primary face selected (position based): 1619
+2026-04-19T12:16:18.331Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Menu Primary Face
+2026-04-19T12:16:18.880Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:18.880Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:18.882Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:18.883Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:18.881Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:18.885Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:18.881Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:18.891Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:19.362Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1619
+2026-04-19T12:16:19.363Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T12:16:20.421Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1619 has an identity of null
+2026-04-19T07:16:22.181303-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,127349],"touched":true,"pad_state":[true,true,false,false,false,false],"changed":[0,1],"raw_count":[326,329,411,203,256,329]}
+2026-04-19T12:16:22.185Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Head Touch'
+2026-04-19T12:16:22.191Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'HeadTouch' to achieve goal 'Head Touch'
+2026-04-19T07:16:22.243958-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,189744],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[2,4,5],"raw_count":[324,331,387,203,235,310]}
+2026-04-19T12:16:22.371Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:22.371Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 0 ms.
+2026-04-19T12:16:22.372Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:22.376Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T07:16:22.421370-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,367354],"touched":true,"pad_state":[true,true,true,false,true,false],"changed":[5],"raw_count":[318,321,366,192,225,313]}
+2026-04-19T07:16:22.483848-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,429835],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[5],"raw_count":[319,323,366,202,222,308]}
+2026-04-19T07:16:22.541309-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,487338],"touched":true,"pad_state":[true,true,true,false,true,false],"changed":[5],"raw_count":[320,320,365,190,223,312]}
+2026-04-19T07:16:22.607351-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,553217],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[5],"raw_count":[320,320,367,190,223,309]}
+2026-04-19T07:16:22.661397-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,607370],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[3],"raw_count":[317,317,368,192,221,310]}
+2026-04-19T07:16:22.781272-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,727318],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[3],"raw_count":[314,319,365,189,222,307]}
+2026-04-19T07:16:22.844977-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,789722],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[3],"raw_count":[313,322,368,188,221,310]}
+2026-04-19T12:16:22.940Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_HUB_SKILL_INFO
+2026-04-19T12:16:22.941Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_HUB_SKILL_INFO in 1 ms.
+2026-04-19T12:16:22.941Z Royal-Current-Sage-Canvas ssm[936,warning]: [versions@1 release="1.9.2"] T.SSM: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T12:16:22.941Z Royal-Current-Sage-Canvas be[1016,warning]: [versions@1 release="1.9.2"] T.JetstreamClient: Unknown event type received: 'OPENJIBO_AUDIO_RECEIVED'
+2026-04-19T07:16:23.021445-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132965,967404],"touched":true,"pad_state":[true,true,true,true,true,false],"changed":[5],"raw_count":[308,319,370,187,218,312]}
+2026-04-19T07:16:23.083517-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,29465],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[5],"raw_count":[311,320,367,190,223,309]}
+2026-04-19T12:16:23.208Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.HeadTouch: stopping listen jibo via touch
+2026-04-19T07:16:23.261472-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,207475],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[3],"raw_count":[316,319,365,190,218,307]}
+2026-04-19T12:16:23.276Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/cancel_any_turn
+2026-04-19T12:16:23.276Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: phw_JM_CANCEL_ANY_TURN
+2026-04-19T12:16:23.210Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:16:23.277Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Entering HJ-W state
+2026-04-19T12:16:23.277Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_CANCEL_ANY_TURN in 1 ms.
+2026-04-19T12:16:23.215Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:16:23.219Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Hold Switch to Idle Goal'
+2026-04-19T12:16:23.283Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.HttpHandler: Handling JetHttpHandler:/listen/cancel_local_turn
+2026-04-19T12:16:23.284Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: hjw_JM_CANCEL_LOCAL_TURN
+2026-04-19T12:16:23.284Z Royal-Current-Sage-Canvas jibo-jetstream-service[11394,info]: - C.Jetstream.ListenLoop: Handled JM_CANCEL_LOCAL_TURN in 0 ms.
+2026-04-19T12:16:23.224Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Skill Switch Action: '@be/idle'' to achieve goal 'Hold Switch to Idle Goal'
+2026-04-19T12:16:23.230Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: requested skill switch @be/idle { asr: { text: '', confidence: 1 } }
+2026-04-19T12:16:23.232Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: no pending skill. interrupting current skill
+2026-04-19T12:16:23.238Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: switching skill @be/word-of-the-day @be/idle
+2026-04-19T12:16:23.239Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting close skill @be/word-of-the-day
+2026-04-19T12:16:23.239Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: stopping @be/word-of-the-day
+2026-04-19T12:16:23.246Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:16:23.280Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Jetstream: Jetstream: localTurnResult: { global: false,\n  message: '',\n  status: 'CANCELED',\n  transID: 'tid-835a5fe6-3be9-11f1-8e50-5cf821ea55ae' }
+2026-04-19T07:16:23.326468-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,272356],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[3],"raw_count":[311,319,367,190,223,309]}
+2026-04-19T07:16:23.443593-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,389446],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[3],"raw_count":[310,319,366,189,222,308]}
+2026-04-19T07:16:23.501481-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,447473],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[3],"raw_count":[312,316,366,191,220,308]}
+2026-04-19T07:16:23.803445-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,749362],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[3],"raw_count":[312,319,366,191,218,308]}
+2026-04-19T12:16:23.808Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from MENU to ENGAGED
+2026-04-19T07:16:23.861297-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,807306],"touched":true,"pad_state":[true,true,true,true,true,true],"changed":[3],"raw_count":[313,317,368,192,220,310]}
+2026-04-19T07:16:23.924930-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,870848],"touched":true,"pad_state":[true,true,true,false,true,true],"changed":[3],"raw_count":[310,319,371,189,222,309]}
+2026-04-19T07:16:24.046082-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132966,991900],"touched":true,"pad_state":[true,true,true,false,false,false],"changed":[4,5],"raw_count":[353,323,376,202,256,329]}
+2026-04-19T07:16:24.101592-05:00 Royal-Current-Sage-Canvas jibo-body-service[623,notice]: - P.BodyService: Touch state change: {"ts":[132967,47582],"touched":false,"pad_state":[false,false,false,false,false,false],"changed":[0,1,2],"raw_count":[353,365,410,202,256,329]}
+2026-04-19T12:16:24.378Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.TimerSpy: The current skill cleaned up all timers @be/word-of-the-day
+2026-04-19T12:16:24.380Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:16:24.382Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: ending close skill @be/word-of-the-day
+2026-04-19T12:16:24.383Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: deferring to action system with pending skill: @be/idle { asr: { text: '', confidence: 1 } }
+2026-04-19T12:16:24.405Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: waiting on action system @be/idle
+2026-04-19T12:16:24.432Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Attention Mode changed from ENGAGED to IDLE
+2026-04-19T12:16:24.408Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action: Incoming new goal 'Be Skill Switch Goal: '@be/idle''
+2026-04-19T12:16:24.411Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Taking action: 'Be Skill Switch Action' to achieve goal 'Be Skill Switch Goal: '@be/idle''
+2026-04-19T12:16:24.417Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Be Skill Switch Action' with result: 'SUCCEEDED'
+2026-04-19T12:16:24.419Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: action system reported accomplished goal @be/idle
+2026-04-19T12:16:24.420Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: starting skill open @be/idle { asr: { text: '', confidence: 1 } }
+2026-04-19T12:16:24.426Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: BeSkill open @be/word-of-the-day @be/idle { asr: { text: '', confidence: 1 } }
+2026-04-19T12:16:24.430Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: new skill preload @be/idle
+2026-04-19T12:16:24.431Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchUtil: opening new skill @be/idle
+2026-04-19T12:16:24.436Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: Returning null speaker due to staleness.
+2026-04-19T12:16:24.438Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: adding listener for SLEEP
+2026-04-19T12:16:24.439Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Events.Global: setting SLEEP to true
+2026-04-19T12:16:24.440Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Starting
+2026-04-19T12:16:24.446Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: State changed from ALERT to SELECT_INTENT.
+2026-04-19T12:16:24.447Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Entering: SELECT_INTENT
+2026-04-19T12:16:24.451Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.SkillSwitchScheduler: skill open success @be/idle { asr: { text: '', confidence: 1 } }
+2026-04-19T12:16:24.461Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'Skill Switch Action: '@be/idle'' with result: 'SUCCEEDED'
+2026-04-19T12:16:24.463Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: State changed from SELECT_INTENT to ALERT.
+2026-04-19T12:16:24.464Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Entering ALERT
+2026-04-19T12:16:24.467Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: No transitions between SELECT_INTENT and ALERT
+2026-04-19T12:16:24.473Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Action.GoalDrivenAction: Completed action: 'HeadTouch' with result: 'SUCCEEDED'
+2026-04-19T12:16:24.512Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Be.Idle: Brightness set to 0.4.
+2026-04-19T12:16:26.150Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1619
+2026-04-19T12:16:27.914Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Idle Face
+2026-04-19T12:16:28.480Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1619
+2026-04-19T12:16:28.482Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T12:16:32.989Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1619 has an identity of null
+2026-04-19T12:16:34.093Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face stopped 1619
+2026-04-19T12:16:35.449Z Royal-Current-Sage-Canvas exp[785,info]: [versions@1 release="1.9.2"] T.SSM.Svc.Exp.AU: ATTENTION Switched Attention Rule:Idle Face
+2026-04-19T07:16:36.375489-05:00 Royal-Current-Sage-Canvas jibo-system-manager[470,warning]: - P.SystemManager.SkillManager: SkillManager::refresh Error reading package file for @be: File not found
+2026-04-19T12:16:36.400Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.SF.ServiceClients.Identity.DataConverter: visible face started 1619
+2026-04-19T12:16:36.406Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Emotion.Appraisal.IdentityRule: Appraising data from identity data: VISIBLE_FACE_STARTED
+2026-04-19T12:16:40.890Z Royal-Current-Sage-Canvas be[1016,info]: [versions@1 release="1.9.2"] T.Jibo.Action.Proactive.SignalFacePersisted: Persisting face entity ID 1619 has an identity of null
+# 
+
+

@@ -107,6 +107,7 @@ Evidence from the smaller `2026-04-18/19` hotphrase and word-of-the-day verifica
 - the `jibo test 3` bundle confirms Nimbus rejects `REDIRECT` in that cloud-skill slot, so the better next experiment is to hint the on-robot target skill directly on the synthetic `LISTEN` result and skip Nimbus `SKILL_ACTION` entirely for word-of-the-day launch
 - the same bundle also shows `word-of-the-day/right_word` cleanup turns need a short ignore window for trailing audio or the robot can stay stuck in a blue-ring listening state
 - the `jibo test 4` bundle exposed a broader websocket issue: inbound robot `LISTEN` setup packets were still being routed through turn finalization instead of just priming pending state, which can corrupt menu and word-of-the-day flows by treating setup turns like resolved intents
+- the `jibo test 5` bundle suggests the remaining WOD launch and post-win cleanup bugs share the same root cause: we were leaving the robot-side `cloudSkillResponse` promise unresolved on `word_of_the_day`, `word_of_the_day_guess`, and `word-of-the-day/right_word`, so the latest .NET pass now emits a completion-only silent `SKILL_ACTION` for those paths instead of stopping at `LISTEN` + `EOS` or going fully silent
 - the local buffered-audio seam is still producing repeated `whisper.cpp returned no transcript` and `ffmpeg ... Codec not found` failures, so lightweight waveform or energy screening is worth considering once the core launch flow is stable
 
 Near-term interaction work should now prioritize:

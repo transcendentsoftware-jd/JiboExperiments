@@ -146,6 +146,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("@be/word-of-the-day", decision.SkillName);
         Assert.Equal("word-of-the-day", decision.SkillPayload!["destination"]);
         Assert.Equal("@be/word-of-the-day", decision.SkillPayload["skillId"]);
+        Assert.Equal("completion_only", decision.SkillPayload["cloudResponseMode"]);
     }
 
     [Fact]
@@ -166,7 +167,10 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("word_of_the_day_guess", decision.IntentName);
         Assert.Equal("I heard pastoral.", decision.ReplyText);
+        Assert.Equal("@be/word-of-the-day", decision.SkillName);
         Assert.Equal("pastoral", decision.SkillPayload!["guess"]);
+        Assert.Equal("@be/word-of-the-day", decision.SkillPayload["skillId"]);
+        Assert.Equal("completion_only", decision.SkillPayload["cloudResponseMode"]);
     }
 
     private static JiboInteractionService CreateService()

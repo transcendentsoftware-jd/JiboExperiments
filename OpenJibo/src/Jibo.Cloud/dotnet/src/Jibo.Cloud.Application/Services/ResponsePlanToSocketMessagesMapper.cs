@@ -175,6 +175,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
         ];
     }
 
+    public static IReadOnlyList<SocketReplyPlan> MapCompletionOnly(string transId, string skillId, int delayMs = 0)
+    {
+        return
+        [
+            new SocketReplyPlan(JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, skillId)), delayMs)
+        ];
+    }
+
     private static IReadOnlyList<string> ReadRules(TurnContext turn, string? messageType)
     {
         var attributeName = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
@@ -340,6 +348,13 @@ public sealed class ResponsePlanToSocketMessagesMapper
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
     {
         var skillPayload = skill?.Payload;
+        if (string.Equals(ReadPayloadString(skillPayload, "cloudResponseMode"), "completion_only", StringComparison.OrdinalIgnoreCase))
+        {
+            return BuildCompletionOnlySkillPayload(
+                transId,
+                ReadPayloadString(skillPayload, "skillId") ?? skill?.SkillName ?? "chitchat-skill");
+        }
+
         var isJoke = string.Equals(plan.IntentName, "joke", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
@@ -426,6 +441,50 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                         prompt_id = "RUNTIME_PROMPT",
                                         prompt_sub_category = "AN",
                                         mim_id = "runtime-chat",
+                                        mim_type = "announcement"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                analytics = new Dictionary<string, object?>(),
+                final = true
+            }
+        };
+    }
+
+    private static object BuildCompletionOnlySkillPayload(string transId, string skillId)
+    {
+        return new
+        {
+            type = "SKILL_ACTION",
+            ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            msgID = CreateHubMessageId(),
+            transID = transId,
+            data = new
+            {
+                skill = new
+                {
+                    id = skillId
+                },
+                action = new
+                {
+                    config = new
+                    {
+                        jcp = new
+                        {
+                            type = "SLIM",
+                            config = new
+                            {
+                                play = new
+                                {
+                                    esml = "<speak><break time='1ms'/></speak>",
+                                    meta = new
+                                    {
+                                        prompt_id = "RUNTIME_PROMPT",
+                                        prompt_sub_category = "AN",
+                                        mim_id = "runtime-silent-complete",
                                         mim_type = "announcement"
                                     }
                                 }
