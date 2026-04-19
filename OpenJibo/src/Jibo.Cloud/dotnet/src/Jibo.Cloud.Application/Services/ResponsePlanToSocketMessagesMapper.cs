@@ -143,6 +143,48 @@ public sealed class ResponsePlanToSocketMessagesMapper
         ];
     }
 
+    public static IReadOnlyList<SocketReplyPlan> MapNoInput(string transId, IReadOnlyList<string> rules)
+    {
+        return
+        [
+            new SocketReplyPlan(JsonSerializer.Serialize(new
+            {
+                type = "LISTEN",
+                transID = transId,
+                data = new
+                {
+                    asr = new
+                    {
+                        confidence = 0.95,
+                        final = true,
+                        text = string.Empty
+                    },
+                    nlu = new
+                    {
+                        confidence = 0.95,
+                        intent = string.Empty,
+                        rules,
+                        entities = new Dictionary<string, object?>()
+                    },
+                    match = new
+                    {
+                        intent = string.Empty,
+                        rule = rules.FirstOrDefault() ?? string.Empty,
+                        score = 0.95
+                    }
+                }
+            })),
+            new SocketReplyPlan(JsonSerializer.Serialize(new
+            {
+                type = "EOS",
+                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                msgID = CreateHubMessageId(),
+                transID = transId,
+                data = new { }
+            }))
+        ];
+    }
+
     private static IReadOnlyList<string> ReadRules(TurnContext turn, string? messageType)
     {
         var attributeName = string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)

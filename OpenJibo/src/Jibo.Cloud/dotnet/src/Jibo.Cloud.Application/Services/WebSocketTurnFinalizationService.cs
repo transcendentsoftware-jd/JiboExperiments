@@ -150,9 +150,9 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             session.TurnState.SawListen = false;
             session.TurnState.SawContext = false;
-            return ResponsePlanToSocketMessagesMapper.MapCompletionOnly(
+            return ResponsePlanToSocketMessagesMapper.MapNoInput(
                     session.TurnState.TransId ?? session.LastTransId ?? string.Empty,
-                    "@be/word-of-the-day")
+                    session.TurnState.ListenRules)
                 .Select(map => new WebSocketReply
                 {
                     Text = map.Text,
@@ -433,7 +433,15 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             turnState.SawListen = false;
             turnState.SawContext = false;
-            return [];
+            return ResponsePlanToSocketMessagesMapper.MapNoInput(
+                    turnState.TransId ?? session.LastTransId ?? string.Empty,
+                    turnState.ListenRules)
+                .Select(map => new WebSocketReply
+                {
+                    Text = map.Text,
+                    DelayMs = map.DelayMs
+                })
+                .ToArray();
         }
 
         if (ShouldIgnoreInitialEmptyHotphraseTurn(finalizedTurn, turnState))

@@ -629,7 +629,9 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-right-word","data":{}}"""
         });
 
-        Assert.Empty(replies);
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
     }
 
     [Fact]
@@ -674,8 +676,13 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"LISTEN","transID":"trans-wod-right-word-audio","data":{"rules":["word-of-the-day/right_word","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
         });
 
-        Assert.Single(replies);
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[0]));
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("word-of-the-day/right_word", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
 
         var binaryReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
