@@ -150,9 +150,10 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             session.TurnState.SawListen = false;
             session.TurnState.SawContext = false;
-            return ResponsePlanToSocketMessagesMapper.MapNoInput(
+            return ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
                     session.TurnState.TransId ?? session.LastTransId ?? string.Empty,
-                    session.TurnState.ListenRules)
+                    session.TurnState.ListenRules,
+                    "@be/idle")
                 .Select(map => new WebSocketReply
                 {
                     Text = map.Text,
@@ -433,9 +434,10 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             turnState.SawListen = false;
             turnState.SawContext = false;
-            return ResponsePlanToSocketMessagesMapper.MapNoInput(
+            return ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
                     turnState.TransId ?? session.LastTransId ?? string.Empty,
-                    turnState.ListenRules)
+                    turnState.ListenRules,
+                    "@be/idle")
                 .Select(map => new WebSocketReply
                 {
                     Text = map.Text,

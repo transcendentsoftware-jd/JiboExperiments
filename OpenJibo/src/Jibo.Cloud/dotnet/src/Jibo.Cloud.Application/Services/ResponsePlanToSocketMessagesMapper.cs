@@ -93,6 +93,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     outboundRules,
                     entities)),
                 DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/word-of-the-day")),
+                DelayMs: 125));
         }
 
         if (emitSkillActions && speak is not null)
@@ -190,6 +193,27 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 data = new { }
             }))
         ];
+    }
+
+    public static IReadOnlyList<SocketReplyPlan> MapNoInputAndRedirectToSkill(
+        string transId,
+        IReadOnlyList<string> rules,
+        string skillId,
+        int redirectDelayMs = 75)
+    {
+        var messages = new List<SocketReplyPlan>(MapNoInput(transId, rules))
+        {
+            new(JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                transId,
+                skillId,
+                string.Empty,
+                string.Empty,
+                [],
+                new Dictionary<string, object?>())),
+                redirectDelayMs)
+        };
+
+        return messages;
     }
 
     private static IReadOnlyList<string> ReadRules(TurnContext turn, string? messageType)

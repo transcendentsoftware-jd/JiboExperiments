@@ -150,6 +150,8 @@ Latest stock-OS WOD findings:
 
 - `word-of-the-day/right_word` closeout should not emit a synthetic `match`; otherwise Jetstream promotes it into `globalTurnResult` and Global Service relaunches Nimbus a few seconds later with a `Cloud Skill Response Timeout`.
 - Voice `play word of the day` hotphrase launch still enters Global Service first, so a synthetic `LISTEN` result alone is not enough. The next-most-correct transport hint is a direct `SKILL_REDIRECT` event aimed at `@be/word-of-the-day`, alongside the menu-shaped `LISTEN` payload.
+- Stock OS also keeps the original hotphrase/global launch cloud response promise alive even after the redirect succeeds, so voice WOD launch needs an explicit silent `SKILL_ACTION` completion on the same transID to avoid later cloud-response culling and an interrupted game state.
+- Auto-dismissing `word-of-the-day/right_word` with a no-input `LISTEN`/`EOS` stops the listening ring, but it does not close the WOD UI by itself. Pairing that no-input closeout with an explicit redirect back to `@be/idle` is the current cleanest approximation.
 
 ## Speech, Animation, And ESML
 
