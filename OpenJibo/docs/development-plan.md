@@ -6,6 +6,8 @@ This document is the working implementation plan after the initial hosted-cloud 
 
 It is intentionally broader than the current Node server. The Node server is a protocol oracle and discovery tool, not the complete map of Jibo.
 
+Day-to-day feature sequencing now lives in [feature-backlog.md](/C:/Projects/JiboExperiments/OpenJibo/docs/feature-backlog.md).
+
 ## Current Scope
 
 - stable .NET cloud scaffold
