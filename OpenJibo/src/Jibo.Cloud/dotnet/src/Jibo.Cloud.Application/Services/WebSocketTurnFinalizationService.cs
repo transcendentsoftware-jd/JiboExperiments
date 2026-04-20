@@ -706,7 +706,9 @@ public sealed class WebSocketTurnFinalizationService(
             .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<string> ReadRules(TurnContext turn, string key)

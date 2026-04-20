@@ -154,6 +154,7 @@ Latest stock-OS WOD findings:
 - Auto-dismissing `word-of-the-day/right_word` with a no-input `LISTEN`/`EOS` stops the listening ring, but it does not close the WOD UI by itself. Pairing that no-input closeout with an explicit redirect back to `@be/idle` is the current cleanest approximation.
 - OTA/update yes-no prompts can advertise `$YESNO` only through ASR hints rather than `listenRules`, so short denials like `no` need to be recognized from `listenAsrHints` too.
 - Spoken WOD guesses should preferentially snap to the closest offered hint when Whisper lands very close to one of the menu words, since near-misses like `haglet` for `aglet` are common in live testing.
+- The stock robot still misroutes constrained local turns if the cloud echoes `globals/*` rules back on the reply. For spoken WOD guesses and settings/update `no`, we should only return the local rule (`word-of-the-day/puzzle`, `settings/download_now_later`, etc.) so Global Service does not relaunch Nimbus.
 
 ## Speech, Animation, And ESML
 

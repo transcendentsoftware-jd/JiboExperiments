@@ -17,8 +17,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var transcript = turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty;
         var clientIntent = ReadAttribute(turn, "clientIntent");
         var rules = ReadRules(turn, messageType);
-        var yesNoCreateRule = ReadYesNoCreateRule(turn);
-        var isYesNoTurn = !string.IsNullOrWhiteSpace(yesNoCreateRule);
+        var yesNoRule = ReadYesNoRule(turn);
+        var isYesNoTurn = !string.IsNullOrWhiteSpace(yesNoRule);
         var isYesNoIntent = string.Equals(plan.IntentName, "yes", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
         var isWordOfDayLaunch = string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
@@ -45,7 +45,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 : transcript;
         var outboundRules = isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
-            : isYesNoTurn && isYesNoIntent ? [yesNoCreateRule!] : rules;
+            : isWordOfDayGuess
+            ? ["word-of-the-day/puzzle"]
+            : isYesNoTurn && isYesNoIntent ? [yesNoRule!] : rules;
         var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
         var listenMessage = new
         {
@@ -285,10 +287,13 @@ public sealed class ResponsePlanToSocketMessagesMapper
         };
     }
 
-    private static string? ReadYesNoCreateRule(TurnContext turn)
+    private static string? ReadYesNoRule(TurnContext turn)
     {
         return ReadRuleValues(turn)
-            .FirstOrDefault(static rule => string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(static rule =>
+                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
     }
 
     private static IEnumerable<string> ReadRuleValues(TurnContext turn)

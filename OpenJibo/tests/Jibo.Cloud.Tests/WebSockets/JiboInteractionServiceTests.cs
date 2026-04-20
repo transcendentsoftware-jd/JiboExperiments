@@ -97,6 +97,25 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SettingsDownloadPrompt_MapsShortDenialToNoIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "No.",
+            NormalizedTranscript = "No.",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "settings/download_now_later", "globals/global_commands_launch" }
+            }
+        });
+
+        Assert.Equal("no", decision.IntentName);
+        Assert.Equal("No.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SkillPhraseVariant_MapsToKnownIntent()
     {
         var service = CreateService();

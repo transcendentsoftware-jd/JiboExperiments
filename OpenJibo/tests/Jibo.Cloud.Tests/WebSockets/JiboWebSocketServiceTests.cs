@@ -399,6 +399,8 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
     }
 
     [Fact]
@@ -523,6 +525,67 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("aglet", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("aglet", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("guess").GetString());
         Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+    }
+
+    [Fact]
+    public async Task ClientAsr_WordOfDayGuess_StripsGlobalRulesFromOutboundGuess()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-guess-rules-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-guess-rules","data":{"rules":["word-of-the-day/puzzle","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["aglet","hovel","wisenheimer"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-guess-rules-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-wod-guess-rules","data":{"text":"aglet"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("word-of-the-day/puzzle", rules[0].GetString());
+        Assert.Equal("word-of-the-day/puzzle", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SettingsDownloadNo_StripsGlobalRulesFromOutboundNo()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-settings-no-token",
+            Text = """{"type":"LISTEN","transID":"trans-settings-no","data":{"rules":["settings/download_now_later","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-settings-no-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-settings-no","data":{"text":"No."}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("settings/download_now_later", rules[0].GetString());
+        Assert.Equal("settings/download_now_later", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
     }
 
     [Fact]
