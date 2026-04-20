@@ -358,7 +358,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
             return nluGuess;
         }
 
-        var normalized = transcript.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+        var normalized = NormalizeGuessToken(transcript);
         var hintIndex = normalized switch
         {
             "1" or "one" or "first" => 0,
@@ -367,15 +367,90 @@ public sealed class ResponsePlanToSocketMessagesMapper
             _ => -1
         };
 
-        if (hintIndex < 0)
+        var hints = ReadRuleValues(turn, "listenAsrHints").ToArray();
+
+        if (hintIndex >= 0)
         {
-            return transcript;
+            return hintIndex < hints.Length
+                ? hints[hintIndex]
+                : transcript;
         }
 
-        var hints = ReadRuleValues(turn, "listenAsrHints").ToArray();
-        return hintIndex < hints.Length
-            ? hints[hintIndex]
-            : transcript;
+        var fuzzyHintMatch = FindClosestHint(normalized, hints);
+        return string.IsNullOrWhiteSpace(fuzzyHintMatch)
+            ? transcript
+            : fuzzyHintMatch;
+    }
+
+    private static string? FindClosestHint(string normalizedTranscript, IReadOnlyList<string> hints)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return null;
+        }
+
+        string? bestHint = null;
+        var bestDistance = int.MaxValue;
+
+        foreach (var hint in hints)
+        {
+            if (string.IsNullOrWhiteSpace(hint))
+            {
+                continue;
+            }
+
+            var normalizedHint = NormalizeGuessToken(hint);
+            if (string.IsNullOrWhiteSpace(normalizedHint))
+            {
+                continue;
+            }
+
+            if (string.Equals(normalizedTranscript, normalizedHint, StringComparison.Ordinal))
+            {
+                return hint;
+            }
+
+            var distance = ComputeEditDistance(normalizedTranscript, normalizedHint);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestHint = hint;
+            }
+        }
+
+        return bestDistance <= 2 ? bestHint : null;
+    }
+
+    private static string NormalizeGuessToken(string value)
+    {
+        return value.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+    }
+
+    private static int ComputeEditDistance(string left, string right)
+    {
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+
+        for (var column = 0; column <= right.Length; column += 1)
+        {
+            previous[column] = column;
+        }
+
+        for (var row = 1; row <= left.Length; row += 1)
+        {
+            current[0] = row;
+            for (var column = 1; column <= right.Length; column += 1)
+            {
+                var substitutionCost = left[row - 1] == right[column - 1] ? 0 : 1;
+                current[column] = Math.Min(
+                    Math.Min(current[column - 1] + 1, previous[column] + 1),
+                    previous[column - 1] + substitutionCost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 
     private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)

@@ -269,7 +269,7 @@ public sealed class JiboInteractionService(
             return guessValue;
         }
 
-        var loweredTranscript = transcript.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+        var loweredTranscript = NormalizeGuessToken(transcript);
         var hintIndex = loweredTranscript switch
         {
             "1" or "one" or "first" => 0,
@@ -283,15 +283,94 @@ public sealed class JiboInteractionService(
             return listenAsrHints[hintIndex];
         }
 
+        var fuzzyHintMatch = FindClosestHint(loweredTranscript, listenAsrHints);
+        if (!string.IsNullOrWhiteSpace(fuzzyHintMatch))
+        {
+            return fuzzyHintMatch;
+        }
+
         return transcript;
     }
 
     private static bool IsYesNoTurn(TurnContext turn)
     {
-        return ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules"))
+        return ReadRules(turn, "listenRules")
+            .Concat(ReadRules(turn, "clientRules"))
+            .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? FindClosestHint(string normalizedTranscript, IReadOnlyList<string> hints)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return null;
+        }
+
+        string? bestHint = null;
+        var bestDistance = int.MaxValue;
+
+        foreach (var hint in hints)
+        {
+            if (string.IsNullOrWhiteSpace(hint))
+            {
+                continue;
+            }
+
+            var normalizedHint = NormalizeGuessToken(hint);
+            if (string.IsNullOrWhiteSpace(normalizedHint))
+            {
+                continue;
+            }
+
+            if (string.Equals(normalizedTranscript, normalizedHint, StringComparison.Ordinal))
+            {
+                return hint;
+            }
+
+            var distance = ComputeEditDistance(normalizedTranscript, normalizedHint);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestHint = hint;
+            }
+        }
+
+        return bestDistance <= 2 ? bestHint : null;
+    }
+
+    private static string NormalizeGuessToken(string value)
+    {
+        return value.Trim().TrimEnd('.', '!', '?', ',').ToLowerInvariant();
+    }
+
+    private static int ComputeEditDistance(string left, string right)
+    {
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+
+        for (var column = 0; column <= right.Length; column += 1)
+        {
+            previous[column] = column;
+        }
+
+        for (var row = 1; row <= left.Length; row += 1)
+        {
+            current[0] = row;
+            for (var column = 1; column <= right.Length; column += 1)
+            {
+                var substitutionCost = left[row - 1] == right[column - 1] ? 0 : 1;
+                current[column] = Math.Min(
+                    Math.Min(current[column - 1] + 1, previous[column] + 1),
+                    previous[column - 1] + substitutionCost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 
     private static IEnumerable<string> ReadRules(TurnContext turn, string key)

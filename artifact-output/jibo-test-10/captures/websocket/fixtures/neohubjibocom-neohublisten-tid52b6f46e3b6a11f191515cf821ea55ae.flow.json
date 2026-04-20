@@ -1,0 +1,127 @@
+{
+  "name": "neohubjibocom-neohublisten-tid52b6f46e3b6a11f191515cf821ea55ae",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "token": "hub-usr_openjibo_owner-1776545569192"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "ts": 1776546327052,
+        "msgID": "mid-5303b5f6-3b6a-11f1-adc4-5cf821ea55ae",
+        "transID": "tid-52b6f46e-3b6a-11f1-9151-5cf821ea55ae",
+        "data": {
+          "lang": "en-US",
+          "hotphrase": true,
+          "rules": [
+            "launch",
+            "globals/global_commands_launch"
+          ],
+          "mode": "CLIENT_ASR",
+          "asr": {
+            "hints": [],
+            "earlyEOS": [],
+            "encoding": "OGG_OPUS",
+            "sampleRate": 16000,
+            "sosTimeout": 7000,
+            "maxSpeechTimeout": 20000
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    },
+    {
+      "text": {
+        "type": "CLIENT_ASR",
+        "ts": 1776546327052,
+        "msgID": "mid-5303bd76-3b6a-11f1-81d4-5cf821ea55ae",
+        "transID": "tid-52b6f46e-3b6a-11f1-9151-5cf821ea55ae",
+        "data": {
+          "text": "tell me about the news"
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "LISTEN",
+        "EOS",
+        "SKILL_ACTION"
+      ]
+    },
+    {
+      "text": {
+        "type": "CONTEXT",
+        "ts": 1776546327177,
+        "msgID": "mid-5316cf2e-3b6a-11f1-8aa7-5cf821ea55ae",
+        "transID": "tid-52b6f46e-3b6a-11f1-9151-5cf821ea55ae",
+        "data": {
+          "runtime": {
+            "character": {
+              "emotion": {
+                "name": "NEUTRAL",
+                "valence": 0.45,
+                "confidence": 0.2
+              },
+              "motivation": {
+                "social": 1,
+                "playful": 1
+              }
+            },
+            "perception": {
+              "speaker": null,
+              "peoplePresent": []
+            },
+            "location": {
+              "city": "Pleasant Hill",
+              "state": "Missouri",
+              "stateAbbr": "MO",
+              "country": "United States",
+              "countryCode": "US",
+              "lat": 38.8358494,
+              "lng": -94.1427229,
+              "iso": "2026-04-18T16:05:27.073-05:00"
+            },
+            "loop": {
+              "loopId": "5c0b221fdf9d450019c5e253",
+              "users": [
+                {
+                  "firstName": "Erin",
+                  "lastName": "Picone",
+                  "phoneticName": "Erin",
+                  "gender": "female",
+                  "birthdate": 649209600000,
+                  "id": "5c0b221fdf9d450019c5e255",
+                  "accountId": "5c0b20547c46170019235759"
+                }
+              ],
+              "jibo": {
+                "color": "WHITE",
+                "birthdate": 1544234645598,
+                "id": "5c0b221fdf9d450019c5e254"
+              },
+              "owner": "5c0b221fdf9d450019c5e255"
+            },
+            "dialog": {
+              "referent": null
+            }
+          },
+          "skill": {
+            "id": null
+          },
+          "general": {
+            "release": "1.9.2"
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "OPENJIBO_CONTEXT_ACK"
+      ]
+    }
+  ]
+}

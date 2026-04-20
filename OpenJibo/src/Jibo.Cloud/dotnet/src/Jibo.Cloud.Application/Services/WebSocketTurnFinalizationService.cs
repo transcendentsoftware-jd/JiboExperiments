@@ -701,7 +701,9 @@ public sealed class WebSocketTurnFinalizationService(
 
     private static bool IsYesNoTurn(TurnContext turn)
     {
-        return ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules"))
+        return ReadRules(turn, "listenRules")
+            .Concat(ReadRules(turn, "clientRules"))
+            .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase));

@@ -77,6 +77,26 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_YesNoFollowUp_FromAsrHints_MapsShortDenialToNoIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "no",
+            NormalizedTranscript = "no",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "surprises-ota/want_to_download_now" },
+                ["listenAsrHints"] = new[] { "$YESNO" }
+            }
+        });
+
+        Assert.Equal("no", decision.IntentName);
+        Assert.Equal("No.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SkillPhraseVariant_MapsToKnownIntent()
     {
         var service = CreateService();
@@ -170,6 +190,27 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("pastoral", decision.SkillPayload!["guess"]);
         Assert.Equal("@be/word-of-the-day", decision.SkillPayload["skillId"]);
         Assert.Equal("completion_only", decision.SkillPayload["cloudResponseMode"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WordOfDayGuess_FuzzyMatchesClosestHint()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "Haglet.",
+            NormalizedTranscript = "Haglet.",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "word-of-the-day/puzzle" },
+                ["listenAsrHints"] = new[] { "aglet", "hovel", "wisenheimer" }
+            }
+        });
+
+        Assert.Equal("word_of_the_day_guess", decision.IntentName);
+        Assert.Equal("I heard aglet.", decision.ReplyText);
+        Assert.Equal("aglet", decision.SkillPayload!["guess"]);
     }
 
     private static JiboInteractionService CreateService()

@@ -374,6 +374,34 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_YesNoPromptFromAsrHints_MapsShortDenialToNoIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-hints-token",
+            Text = """{"type":"LISTEN","transID":"trans-yesno-hints","data":{"rules":["surprises-ota/want_to_download_now"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-hints-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-yesno-hints","data":{"text":"no"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
     public async Task ClientNlu_WordOfDayGuess_UsesGuessEntityAsAsrTextAndCompletesTurn()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -465,6 +493,35 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("guess", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("pastoral", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("guess").GetString());
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+    }
+
+    [Fact]
+    public async Task ClientAsr_WordOfDayGuess_FuzzyMatchesClosestHint()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-fuzzy-guess-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-fuzzy-guess","data":{"rules":["word-of-the-day/puzzle"],"asr":{"hints":["aglet","hovel","wisenheimer"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-fuzzy-guess-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-wod-fuzzy-guess","data":{"text":"Haglet."}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("aglet", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("aglet", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("guess").GetString());
         Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
     }
 
