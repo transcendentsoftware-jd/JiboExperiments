@@ -564,6 +564,11 @@ public sealed class WebSocketTurnFinalizationService(
         var emitSkillActions = !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "clock_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "timer_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "alarm_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "timer_value", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "alarm_value", StringComparison.OrdinalIgnoreCase) &&
                                (messageType != "CLIENT_NLU" ||
                                 string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase));
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply

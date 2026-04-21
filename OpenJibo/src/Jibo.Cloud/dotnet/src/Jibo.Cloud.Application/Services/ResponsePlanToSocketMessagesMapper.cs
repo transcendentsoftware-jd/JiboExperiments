@@ -25,6 +25,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
+        var isClockSkillLaunch = string.Equals(skill?.SkillName, "@be/clock", StringComparison.OrdinalIgnoreCase);
+        var clockIntent = ReadSkillPayloadString(skill, "clockIntent");
+        var clockDomain = ReadSkillPayloadString(skill, "domain");
+        var timerHours = ReadSkillPayloadString(skill, "hours");
+        var timerMinutes = ReadSkillPayloadString(skill, "minutes");
+        var timerSeconds = ReadSkillPayloadString(skill, "seconds");
+        var alarmTime = ReadSkillPayloadString(skill, "time");
+        var alarmAmPm = ReadSkillPayloadString(skill, "ampm");
         var radioStation = ReadSkillPayloadString(skill, "station");
         var cloudSkill = ReadSkillPayloadString(skill, "cloudSkill");
         var nluGuess = ReadClientEntity(turn, "guess");
@@ -33,6 +41,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? "menu"
             : isRadioLaunch
             ? "menu"
+            : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
+            ? clockIntent
             : isWordOfDayGuess
             ? "guess"
             : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
@@ -43,6 +53,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             : isWordOfDayLaunch
             ? string.Empty
             : isRadioLaunch
+            ? transcript
+            : isClockSkillLaunch
             ? transcript
             : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
             ? nluGuess
@@ -55,6 +67,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? ["word-of-the-day/menu"]
             : isRadioLaunch
             ? Array.Empty<string>()
+            : isClockSkillLaunch
+            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
             : isWordOfDayGuess
             ? ["word-of-the-day/puzzle"]
             : isYesNoTurn && isYesNoIntent ? [yesNoRule!] : rules;
@@ -67,7 +81,15 @@ public sealed class ResponsePlanToSocketMessagesMapper
             isRadioLaunch,
             isWordOfDayGuess,
             wordOfDayGuess,
-            radioStation);
+            radioStation,
+            isClockSkillLaunch,
+            clockDomain,
+            clockIntent,
+            timerHours,
+            timerMinutes,
+            timerSeconds,
+            alarmTime,
+            alarmAmPm);
         var listenMessage = new
         {
             type = "LISTEN",
@@ -80,7 +102,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     final = true,
                     text = outboundAsrText
                 },
-                nlu = BuildNluPayload(outboundIntent, outboundRules, entities, isWordOfDayLaunch ? "@be/word-of-the-day" : isRadioLaunch ? "@be/radio" : null),
+                nlu = BuildNluPayload(
+                    outboundIntent,
+                    outboundRules,
+                    entities,
+                    isWordOfDayLaunch ? "@be/word-of-the-day" :
+                    isRadioLaunch ? "@be/radio" :
+                    isClockSkillLaunch ? "@be/clock" :
+                    null),
                 match = new
                 {
                     intent = outboundIntent,
@@ -133,6 +162,23 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 75));
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/radio")),
+                DelayMs: 125));
+        }
+
+        if (isClockSkillLaunch &&
+            !string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "@be/clock",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/clock")),
                 DelayMs: 125));
         }
 
@@ -282,7 +328,15 @@ public sealed class ResponsePlanToSocketMessagesMapper
         bool radioLaunch,
         bool wordOfDayGuess,
         string? guess,
-        string? radioStation)
+        string? radioStation,
+        bool clockSkillLaunch,
+        string? clockDomain,
+        string? clockIntent,
+        string? timerHours,
+        string? timerMinutes,
+        string? timerSeconds,
+        string? alarmTime,
+        string? alarmAmPm)
     {
         if (yesNoTurn)
         {
@@ -311,6 +365,30 @@ public sealed class ResponsePlanToSocketMessagesMapper
             if (!string.IsNullOrWhiteSpace(radioStation))
             {
                 entities["station"] = radioStation;
+            }
+
+            return entities;
+        }
+
+        if (clockSkillLaunch)
+        {
+            var entities = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(clockDomain))
+            {
+                entities["domain"] = clockDomain;
+            }
+
+            if (string.Equals(clockIntent, "timerValue", StringComparison.OrdinalIgnoreCase))
+            {
+                entities["hours"] = timerHours ?? "0";
+                entities["minutes"] = timerMinutes ?? "0";
+                entities["seconds"] = timerSeconds ?? "null";
+            }
+
+            if (string.Equals(clockIntent, "alarmValue", StringComparison.OrdinalIgnoreCase))
+            {
+                entities["time"] = alarmTime ?? string.Empty;
+                entities["ampm"] = alarmAmPm ?? string.Empty;
             }
 
             return entities;

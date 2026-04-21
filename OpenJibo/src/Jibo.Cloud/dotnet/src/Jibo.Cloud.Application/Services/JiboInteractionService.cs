@@ -1,6 +1,7 @@
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Runtime.Abstractions;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Jibo.Cloud.Application.Services;
 
@@ -29,9 +30,15 @@ public sealed class JiboInteractionService(
             "dance" => BuildDanceDecision(catalog),
             "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:h:mm tt}."),
             "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
+            "day" => new JiboInteractionDecision("day", $"Today is {DateTime.Now:dddd}."),
             "cloud_version" => new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion),
             "radio" => BuildRadioLaunchDecision(),
             "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
+            "clock_menu" => BuildClockLaunchDecision("clock", "Opening the clock."),
+            "timer_menu" => BuildClockLaunchDecision("timer", "Opening the timer."),
+            "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
+            "timer_value" => BuildTimerValueDecision(lowered),
+            "alarm_value" => BuildAlarmValueDecision(lowered),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
@@ -149,6 +156,33 @@ public sealed class JiboInteractionService(
             return "date";
         }
 
+        if (string.Equals(clientIntent, "askForDay", StringComparison.OrdinalIgnoreCase))
+        {
+            return "day";
+        }
+
+        if (string.Equals(clientIntent, "timerValue", StringComparison.OrdinalIgnoreCase))
+        {
+            return "timer_value";
+        }
+
+        if (string.Equals(clientIntent, "alarmValue", StringComparison.OrdinalIgnoreCase))
+        {
+            return "alarm_value";
+        }
+
+        if (string.Equals(clientIntent, "menu", StringComparison.OrdinalIgnoreCase) &&
+            clientEntities.TryGetValue("domain", out var clockDomain))
+        {
+            return clockDomain.ToLowerInvariant() switch
+            {
+                "clock" => "clock_menu",
+                "timer" => "timer_menu",
+                "alarm" => "alarm_menu",
+                _ => "chat"
+            };
+        }
+
         if (MatchesAny(
                 loweredTranscript,
                 "word of the day",
@@ -185,6 +219,31 @@ public sealed class JiboInteractionService(
         if (TryResolveRadioGenre(loweredTranscript) is not null)
         {
             return "radio_genre";
+        }
+
+        if (TryParseAlarmValue(loweredTranscript) is not null)
+        {
+            return "alarm_value";
+        }
+
+        if (TryParseTimerValue(loweredTranscript) is not null)
+        {
+            return "timer_value";
+        }
+
+        if (MatchesAny(loweredTranscript, "open the clock", "open clock", "show the clock", "show clock"))
+        {
+            return "clock_menu";
+        }
+
+        if (MatchesAny(loweredTranscript, "open the timer", "open timer", "show the timer", "show timer"))
+        {
+            return "timer_menu";
+        }
+
+        if (MatchesAny(loweredTranscript, "open the alarm", "open alarm", "show the alarm", "show alarm"))
+        {
+            return "alarm_menu";
         }
 
         if (MatchesAny(loweredTranscript, "open the radio", "play the radio", "turn on the radio", "radio"))
@@ -253,6 +312,11 @@ public sealed class JiboInteractionService(
             return "time";
         }
 
+        if (MatchesAny(loweredTranscript, "what day is it", "what day is today"))
+        {
+            return "day";
+        }
+
         if (MatchesAny(loweredTranscript, "what day is it", "what is the date", "today s date", "today's date") ||
             loweredTranscript.Contains("date", StringComparison.Ordinal) ||
             loweredTranscript.Contains("day", StringComparison.Ordinal))
@@ -285,6 +349,57 @@ public sealed class JiboInteractionService(
             new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["skillId"] = "@be/radio"
+            });
+    }
+
+    private static JiboInteractionDecision BuildClockLaunchDecision(string domain, string replyText)
+    {
+        return new JiboInteractionDecision(
+            $"{domain}_menu",
+            replyText,
+            "@be/clock",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/clock",
+                ["domain"] = domain,
+                ["clockIntent"] = "menu"
+            });
+    }
+
+    private static JiboInteractionDecision BuildTimerValueDecision(string loweredTranscript)
+    {
+        var timer = TryParseTimerValue(loweredTranscript) ?? new ClockTimerValue("0", "1", "null");
+
+        return new JiboInteractionDecision(
+            "timer_value",
+            "Setting your timer.",
+            "@be/clock",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/clock",
+                ["domain"] = "timer",
+                ["clockIntent"] = "timerValue",
+                ["hours"] = timer.Hours,
+                ["minutes"] = timer.Minutes,
+                ["seconds"] = timer.Seconds
+            });
+    }
+
+    private static JiboInteractionDecision BuildAlarmValueDecision(string loweredTranscript)
+    {
+        var alarm = TryParseAlarmValue(loweredTranscript) ?? new ClockAlarmValue("7:00", "am");
+
+        return new JiboInteractionDecision(
+            "alarm_value",
+            "Setting your alarm.",
+            "@be/clock",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/clock",
+                ["domain"] = "alarm",
+                ["clockIntent"] = "alarmValue",
+                ["time"] = alarm.Time,
+                ["ampm"] = alarm.AmPm
             });
     }
 
@@ -515,6 +630,116 @@ public sealed class JiboInteractionService(
             _ => station
         };
     }
+
+    private static ClockTimerValue? TryParseTimerValue(string loweredTranscript)
+    {
+        if (!loweredTranscript.Contains("timer", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var hours = ExtractDurationValue(loweredTranscript, "hour");
+        var minutes = ExtractDurationValue(loweredTranscript, "minute");
+        var seconds = ExtractDurationValue(loweredTranscript, "second");
+
+        if (hours is null && minutes is null && seconds is null)
+        {
+            return null;
+        }
+
+        return new ClockTimerValue(
+            (hours ?? 0).ToString(),
+            (minutes ?? 0).ToString(),
+            seconds is null ? "null" : seconds.Value.ToString());
+    }
+
+    private static ClockAlarmValue? TryParseAlarmValue(string loweredTranscript)
+    {
+        if (!loweredTranscript.Contains("alarm", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var match = AlarmPattern.Match(loweredTranscript);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var hourToken = match.Groups["hour"].Value;
+        var minuteToken = match.Groups["minute"].Success ? match.Groups["minute"].Value : "00";
+        var hour = ParseNumberToken(hourToken);
+        if (hour is null || hour is < 1 or > 12)
+        {
+            return null;
+        }
+
+        if (!int.TryParse(minuteToken, out var minute) || minute is < 0 or > 59)
+        {
+            return null;
+        }
+
+        var ampm = match.Groups["ampm"].Value.StartsWith("p", StringComparison.Ordinal) ? "pm" : "am";
+        return new ClockAlarmValue($"{hour}:{minute:00}", ampm);
+    }
+
+    private static int? ExtractDurationValue(string loweredTranscript, string unitStem)
+    {
+        var pattern = new Regex($@"\b(?<value>\d+|[a-z\-]+)\s+{unitStem}s?\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        var match = pattern.Match(loweredTranscript);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        return ParseNumberToken(match.Groups["value"].Value);
+    }
+
+    private static int? ParseNumberToken(string token)
+    {
+        var normalized = token.Trim().ToLowerInvariant();
+        if (int.TryParse(normalized, out var numeric))
+        {
+            return numeric;
+        }
+
+        return normalized switch
+        {
+            "a" or "an" => 1,
+            "one" => 1,
+            "two" => 2,
+            "three" => 3,
+            "four" => 4,
+            "five" => 5,
+            "six" => 6,
+            "seven" => 7,
+            "eight" => 8,
+            "nine" => 9,
+            "ten" => 10,
+            "eleven" => 11,
+            "twelve" => 12,
+            "thirteen" => 13,
+            "fourteen" => 14,
+            "fifteen" => 15,
+            "sixteen" => 16,
+            "seventeen" => 17,
+            "eighteen" => 18,
+            "nineteen" => 19,
+            "twenty" => 20,
+            "thirty" => 30,
+            "forty" => 40,
+            "fifty" => 50,
+            _ => null
+        };
+    }
+
+    private sealed record ClockTimerValue(string Hours, string Minutes, string Seconds);
+
+    private sealed record ClockAlarmValue(string Time, string AmPm);
+
+    private static readonly Regex AlarmPattern = new(
+        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s](?<minute>\d{2}))?\s*(?<ampm>a\.?m\.?|p\.?m\.?)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

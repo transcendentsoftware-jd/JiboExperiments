@@ -120,15 +120,20 @@ Parallel tags:
 
 ### 6. Clock Family Audit
 
-- Status: `ready`
+- Status: `in_progress`
 - Tags: `protocol`
 - Why now: clock, date, timer, and alarm menu hooks are already visible in captures and the robot repo has a real `@be/clock` skill.
 - Current evidence:
   - [protocol-inventory.md](C:/Projects/JiboExperiments/OpenJibo/docs/protocol-inventory.md) already tracks menu intents for `askForTime`, `askForDate`, `timerValue`, and `alarmValue`
   - `@be/clock` exists in the robot skill inventory
+  - `JiboOs` shows `@be/clock` branches on `entities.domain = clock | timer | alarm`, uses `intent = menu` for menu launches, and accepts direct `timerValue` / `alarmValue` utterances with structured entities
 - Implementation notes:
   - compare our custom time/date path against actual menu payloads
   - decide whether timer and alarm should stay robot-local with cloud acknowledgement, or whether cloud needs to shape the launch and follow-up turns
+- Progress so far:
+  - voice `open clock`, `open timer`, and `open alarm` now synthesize stock-shaped local `@be/clock` launches
+  - voice `set a timer for five minutes` and `set an alarm for 7:30 am` now emit direct `timerValue` / `alarmValue` payloads with the domain and value entities the local skill expects
+  - time/date remain on the existing custom cloud reply path for now
 - Exit criteria:
   - time/date behavior stays correct
   - timer and alarm launch or set correctly from both menu and voice where applicable
@@ -241,10 +246,19 @@ Parallel tags:
 - Questions to answer:
   - should calendar and commute be independent feature paths or sections inside personal report
   - what minimum provider data shape lets Jibo present these naturally
+  
+### 14. Stop Command
+- Status: `ready`
+- Tags: `protocol`
+- Why later: Jibo can be interrupted by any command, but it would be nice to have a dedicated "stop" type of command.
+- Current evidence:
+  - There is an Idle skill or subskill under @be so I think we can utilize it, but I am not sure if that was the default behavior.
+- Questions to answer:
+  - Can we find in the original source evidence for this skill or stop word phrase?
 
 ## Support Tracks
 
-### 14. Hosted Capture And Storage Plan
+### 15. Hosted Capture And Storage Plan
 
 - Status: `ready`
 - Tags: `docs`
@@ -253,7 +267,7 @@ Parallel tags:
   - define a clean boundary between local capture sinks and hosted archival/export
   - document how group testers should submit sessions without touching repo paths directly
 
-### 15. STT Upgrade And Noise Screening
+### 16. STT Upgrade And Noise Screening
 
 - Status: `ready`
 - Tags: `stt`

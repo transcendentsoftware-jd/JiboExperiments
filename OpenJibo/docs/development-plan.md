@@ -177,6 +177,13 @@ Latest news discovery findings:
 - The first OpenJibo news pass should therefore use a real cloud-skill shape, not a generic placeholder chat reply.
 - For now, the content can stay synthetic while the protocol is grounded: `match.cloudSkill = "news"` plus a supported `SLIM` announcement response is enough to validate the robot path before provider-backed headlines arrive later.
 
+Latest clock discovery findings:
+
+- `@be/clock` is a real local skill with `clock`, `timer`, and `alarm` domains.
+- Menu launches use `intent = "menu"` with `entities.domain` set to the target sub-area.
+- Direct timer and alarm actions use `timerValue` and `alarmValue` utterances, not a generic chat path.
+- A practical first OpenJibo slice is therefore: keep custom spoken time/date answers for now, but route `open clock`, `open timer`, `open alarm`, `set a timer ...`, and `set an alarm ...` through stock-shaped local `@be/clock` handoffs.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

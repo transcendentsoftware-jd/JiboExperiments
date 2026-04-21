@@ -182,6 +182,62 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_OpenTimer_MapsToLocalClockTimerMenu()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open timer",
+            NormalizedTranscript = "open timer"
+        });
+
+        Assert.Equal("timer_menu", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("timer", decision.SkillPayload!["domain"]);
+        Assert.Equal("menu", decision.SkillPayload["clockIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetTimerForFiveMinutes_MapsToTimerValue()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set a timer for five minutes",
+            NormalizedTranscript = "set a timer for five minutes"
+        });
+
+        Assert.Equal("timer_value", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("timer", decision.SkillPayload!["domain"]);
+        Assert.Equal("timerValue", decision.SkillPayload["clockIntent"]);
+        Assert.Equal("0", decision.SkillPayload["hours"]);
+        Assert.Equal("5", decision.SkillPayload["minutes"]);
+        Assert.Equal("null", decision.SkillPayload["seconds"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForSevenThirtyAm_MapsToAlarmValue()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 7:30 am",
+            NormalizedTranscript = "set an alarm for 7:30 am"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("alarmValue", decision.SkillPayload["clockIntent"]);
+        Assert.Equal("7:30", decision.SkillPayload["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TellMeTheNews_UsesNimbusCloudSkillPath()
     {
         var service = CreateService();

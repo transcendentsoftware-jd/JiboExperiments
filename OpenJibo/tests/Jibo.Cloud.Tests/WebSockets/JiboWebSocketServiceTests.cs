@@ -344,6 +344,77 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_SetTimerForFiveMinutes_RedirectsIntoClockSkillWithTimerEntities()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-timer-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-timer","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-timer-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-timer","data":{"text":"set a timer for five minutes"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("timerValue", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("timer", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+        Assert.Equal("0", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("hours").GetString());
+        Assert.Equal("5", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("minutes").GetString());
+        Assert.Equal("null", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("seconds").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("timerValue", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SetAlarmForSevenThirtyAm_RedirectsIntoClockSkillWithAlarmEntities()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-alarm-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-alarm","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-alarm-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-alarm","data":{"text":"set an alarm for 7:30 am"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("alarmValue", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+        Assert.Equal("7:30", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("time").GetString());
+        Assert.Equal("am", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("ampm").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_YesNoCreateFlow_PreservesCreateRuleAndDomain()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
