@@ -158,6 +158,13 @@ Latest stock-OS WOD findings:
 - Spoken WOD guesses should preferentially snap to the closest offered hint when Whisper lands very close to one of the menu words, since near-misses like `haglet` for `aglet` are common in live testing.
 - The stock robot still misroutes constrained local turns if the cloud echoes `globals/*` rules back on the reply. For spoken WOD guesses and settings/update `no`, we should only return the local rule (`word-of-the-day/puzzle`, `settings/download_now_later`, etc.) so Global Service does not relaunch Nimbus.
 
+Latest radio discovery findings:
+
+- `@be/radio` is a true local skill, not a cloud placeholder.
+- Its `open(result, refresh, previousSkillName)` path treats `result.nlu.intent === "menu"` as a `play` launch.
+- `result.nlu.entities.station` is the genre selector, and `Country` is a real supported station key from the robot's `genres.json`.
+- The smallest stock-shaped cloud handoff for voice launch is therefore a local `SKILL_REDIRECT` to `@be/radio` with `nlu.intent = "menu"`, optional `entities.station`, and a silent completion to settle the hotphrase cloud response.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

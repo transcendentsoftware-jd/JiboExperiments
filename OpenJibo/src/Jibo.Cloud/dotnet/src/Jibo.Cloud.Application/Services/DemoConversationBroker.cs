@@ -72,6 +72,8 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
         {
             "word_of_the_day" => false,
             "word_of_the_day_guess" => false,
+            "radio" => false,
+            "radio_genre" => false,
             _ => true
         };
     }

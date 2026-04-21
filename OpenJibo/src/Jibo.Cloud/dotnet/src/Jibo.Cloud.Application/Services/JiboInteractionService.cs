@@ -29,6 +29,8 @@ public sealed class JiboInteractionService(
             "dance" => BuildDanceDecision(catalog),
             "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:h:mm tt}."),
             "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
+            "radio" => BuildRadioLaunchDecision(),
+            "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
@@ -151,6 +153,16 @@ public sealed class JiboInteractionService(
             return "joke";
         }
 
+        if (TryResolveRadioGenre(loweredTranscript) is not null)
+        {
+            return "radio_genre";
+        }
+
+        if (MatchesAny(loweredTranscript, "open the radio", "play the radio", "turn on the radio", "radio"))
+        {
+            return "radio";
+        }
+
         if (MatchesAny(loweredTranscript, "dance", "boogie"))
         {
             return "dance";
@@ -232,6 +244,33 @@ public sealed class JiboInteractionService(
             {
                 ["domain"] = "word-of-the-day",
                 ["skillId"] = "@be/word-of-the-day"
+            });
+    }
+
+    private static JiboInteractionDecision BuildRadioLaunchDecision()
+    {
+        return new JiboInteractionDecision(
+            "radio",
+            "Opening the radio.",
+            "@be/radio",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/radio"
+            });
+    }
+
+    private static JiboInteractionDecision BuildRadioGenreLaunchDecision(string loweredTranscript)
+    {
+        var station = TryResolveRadioGenre(loweredTranscript) ?? "Country";
+
+        return new JiboInteractionDecision(
+            "radio_genre",
+            $"Playing {FormatRadioGenreForSpeech(station)} on the radio.",
+            "@be/radio",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/radio",
+                ["station"] = station
             });
     }
 
@@ -417,6 +456,66 @@ public sealed class JiboInteractionService(
     {
         return candidates.Any(candidate => loweredTranscript.Contains(candidate, StringComparison.Ordinal));
     }
+
+    private static string? TryResolveRadioGenre(string loweredTranscript)
+    {
+        foreach (var (phrase, station) in RadioGenreAliases)
+        {
+            if (loweredTranscript.Contains(phrase, StringComparison.Ordinal))
+            {
+                return station;
+            }
+        }
+
+        return null;
+    }
+
+    private static string FormatRadioGenreForSpeech(string station)
+    {
+        return station switch
+        {
+            "EightiesAndNinetiesHits" => "eighties and nineties hits",
+            "ChristianAndGospel" => "Christian and gospel",
+            "ClassicRock" => "classic rock",
+            "CollegeRadio" => "college radio",
+            "HipHop" => "hip hop",
+            "NewsAndTalk" => "news and talk",
+            "ReggaeAndIsland" => "reggae and island music",
+            "SoftRock" => "soft rock",
+            _ => station
+        };
+    }
+
+    private static readonly (string Phrase, string Station)[] RadioGenreAliases =
+    [
+        ("country music", "Country"),
+        ("country radio", "Country"),
+        ("country", "Country"),
+        ("classic rock", "ClassicRock"),
+        ("soft rock", "SoftRock"),
+        ("hip hop", "HipHop"),
+        ("hip-hop", "HipHop"),
+        ("news and talk", "NewsAndTalk"),
+        ("news talk", "NewsAndTalk"),
+        ("news radio", "NewsAndTalk"),
+        ("sports radio", "Sports"),
+        ("christian music", "ChristianAndGospel"),
+        ("gospel music", "ChristianAndGospel"),
+        ("oldies", "Oldies"),
+        ("pop music", "Pop"),
+        ("jazz", "Jazz"),
+        ("latin music", "Latin"),
+        ("dance music", "Dance"),
+        ("reggae", "ReggaeAndIsland"),
+        ("island music", "ReggaeAndIsland"),
+        ("alternative", "Alternative"),
+        ("blues", "Blues"),
+        ("classical music", "Classical"),
+        ("classical", "Classical"),
+        ("college radio", "CollegeRadio"),
+        ("comedy radio", "Comedy"),
+        ("npr", "NPR")
+    ];
 }
 
 public sealed record JiboInteractionDecision(

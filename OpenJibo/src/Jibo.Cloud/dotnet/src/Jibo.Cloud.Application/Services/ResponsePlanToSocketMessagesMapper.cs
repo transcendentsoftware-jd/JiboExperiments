@@ -23,9 +23,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
                             string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
         var isWordOfDayLaunch = string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
         var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
+        var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
+        var radioStation = ReadSkillPayloadString(skill, "station");
         var nluGuess = ReadClientEntity(turn, "guess");
         var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
         var outboundIntent = isWordOfDayLaunch
+            ? "menu"
+            : isRadioLaunch
             ? "menu"
             : isWordOfDayGuess
             ? "guess"
@@ -36,6 +41,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? wordOfDayGuess
             : isWordOfDayLaunch
             ? string.Empty
+            : isRadioLaunch
+            ? transcript
             : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
             ? nluGuess
             : isYesNoTurn && isYesNoIntent
@@ -45,10 +52,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 : transcript;
         var outboundRules = isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
+            : isRadioLaunch
+            ? Array.Empty<string>()
             : isWordOfDayGuess
             ? ["word-of-the-day/puzzle"]
             : isYesNoTurn && isYesNoIntent ? [yesNoRule!] : rules;
-        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isWordOfDayGuess, wordOfDayGuess);
+        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isRadioLaunch, isWordOfDayGuess, wordOfDayGuess, radioStation);
         var listenMessage = new
         {
             type = "LISTEN",
@@ -61,7 +70,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     final = true,
                     text = outboundAsrText
                 },
-                nlu = BuildNluPayload(outboundIntent, outboundRules, entities, isWordOfDayLaunch ? "@be/word-of-the-day" : null),
+                nlu = BuildNluPayload(outboundIntent, outboundRules, entities, isWordOfDayLaunch ? "@be/word-of-the-day" : isRadioLaunch ? "@be/radio" : null),
                 match = new
                 {
                     intent = outboundIntent,
@@ -97,6 +106,22 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 75));
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/word-of-the-day")),
+                DelayMs: 125));
+        }
+
+        if (isRadioLaunch)
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "@be/radio",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/radio")),
                 DelayMs: 125));
         }
 
@@ -242,8 +267,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
         string? messageType,
         bool yesNoCreateTurn,
         bool wordOfDayLaunch,
+        bool radioLaunch,
         bool wordOfDayGuess,
-        string? guess)
+        string? guess,
+        string? radioStation)
     {
         if (yesNoCreateTurn)
         {
@@ -259,6 +286,17 @@ public sealed class ResponsePlanToSocketMessagesMapper
             {
                 ["domain"] = "word-of-the-day"
             };
+        }
+
+        if (radioLaunch)
+        {
+            var entities = new Dictionary<string, object?>();
+            if (!string.IsNullOrWhiteSpace(radioStation))
+            {
+                entities["station"] = radioStation;
+            }
+
+            return entities;
         }
 
         if (wordOfDayGuess)

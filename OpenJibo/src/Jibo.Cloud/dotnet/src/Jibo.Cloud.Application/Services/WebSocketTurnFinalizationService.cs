@@ -544,6 +544,8 @@ public sealed class WebSocketTurnFinalizationService(
             : DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
 
         var emitSkillActions = !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase) &&
                                (messageType != "CLIENT_NLU" ||
                                 string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase));
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply

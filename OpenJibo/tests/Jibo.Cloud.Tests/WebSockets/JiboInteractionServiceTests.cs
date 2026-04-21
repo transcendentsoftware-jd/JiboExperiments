@@ -130,6 +130,38 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_OpenTheRadio_MapsToRadioLaunchIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open the radio",
+            NormalizedTranscript = "open the radio"
+        });
+
+        Assert.Equal("radio", decision.IntentName);
+        Assert.Equal("@be/radio", decision.SkillName);
+        Assert.Equal("@be/radio", decision.SkillPayload!["skillId"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PlayCountryMusic_MapsToRadioGenreLaunchIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "play country music",
+            NormalizedTranscript = "play country music"
+        });
+
+        Assert.Equal("radio_genre", decision.IntentName);
+        Assert.Equal("@be/radio", decision.SkillName);
+        Assert.Equal("Country", decision.SkillPayload!["station"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_WordOfDayGuess_UsesStructuredClientNluGuess()
     {
         var service = CreateService();

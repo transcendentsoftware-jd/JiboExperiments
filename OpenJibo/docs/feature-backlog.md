@@ -40,6 +40,7 @@ Parallel tags:
 - Current evidence:
   - [index.js](C:/Projects/JiboOs/V3.1/build/opt/jibo/Jibo/Skills/@be/be/node_modules/@be/radio/index.js) resumes from `lastStation`
   - the same file treats `menu` as a `play` launch and reads `result.nlu.entities.station`
+  - the same file confirms `menu + no station` is the clean resume path and `menu + station=Country` becomes a direct genre launch
 - Implementation notes:
   - add phrase routing for radio open/resume and genre launch
   - inspect radio genre and station metadata before locking the outbound entity values
