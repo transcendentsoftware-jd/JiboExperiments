@@ -405,6 +405,68 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task BufferedAudio_YesNoPromptWithSttFailure_AutoFinalizesAsLocalNoInput()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-yesno-noinput","data":{"rules":["surprises-ota/want_to_download_now","globals/gui_nav","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-noinput-token",
+            Text = """{"type":"CONTEXT","transID":"trans-yesno-noinput","data":{"topic":"conversation"}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var interimReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-yesno-noinput-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Single(interimReplies);
+            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(interimReplies[0]));
+        }
+
+        var session = _store.FindSessionByToken("hub-yesno-noinput-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+        session.TurnState.LastSttError = "whisper.cpp returned no transcript";
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-noinput-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("surprises-ota/want_to_download_now", rules[0].GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_SurprisesDateOfferPrompt_MapsYesWithoutGlobalRuleLeak()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
