@@ -79,9 +79,26 @@ Parallel tags:
   - spoken `yes` and `no` reliably work on backup and update prompts
   - empty or missed turns retry locally without relaunching Nimbus
 
+### 4. Proactive Share / Offer Yes-No Reliability
+
+- Status: `ready`
+- Tags: `protocol`, `stt`
+- Why now: the latest capture bundle shows a second yes-no family where the robot asks whether it can share something, and spoken `yes` is still being handled like unconstrained speech instead of a reply to the active prompt.
+- Current evidence:
+  - the attached `jibo test 13` session includes both examples in one bundle:
+    - a proactive or share-style prompt where spoken `yes` was treated as generic speech
+    - a later update prompt where spoken `no` was accepted correctly
+- Implementation notes:
+  - compare the active listen rules, ASR hints, and local skill ownership for the share-style prompt versus OTA prompts
+  - make constrained yes-no detection cover this prompt family without regressing the already-working update `no` path
+  - prefer local retry or local completion behavior over falling back into generic chat or Nimbus
+- Exit criteria:
+  - spoken `yes` and `no` work on share / offer prompts with the same reliability as the OTA path
+  - constrained yes-no handling is generalized by prompt family instead of hard-coded only for updates
+
 ## Near-Term Queue
 
-### 4. News Through Nimbus / Personal Report
+### 5. News Through Nimbus / Personal Report
 
 - Status: `ready`
 - Tags: `protocol`, `content`
@@ -96,7 +113,7 @@ Parallel tags:
   - `tell me the news` reaches a non-placeholder live path
   - robot behavior feels Nimbus-native rather than generic chat playback
 
-### 5. Clock Family Audit
+### 6. Clock Family Audit
 
 - Status: `ready`
 - Tags: `protocol`
@@ -111,7 +128,7 @@ Parallel tags:
   - time/date behavior stays correct
   - timer and alarm launch or set correctly from both menu and voice where applicable
 
-### 6. Photo Family Audit
+### 7. Photo Family Audit
 
 - Status: `ready`
 - Tags: `protocol`, `docs`
@@ -131,7 +148,7 @@ Parallel tags:
 
 ## Discovery Queue
 
-### 7. Weather As Cloud Report Plus Local Presentation
+### 8. Weather As Cloud Report Plus Local Presentation
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -144,7 +161,7 @@ Parallel tags:
   - what payload shape triggers the local animation / embodiment layer
   - whether the first pass should be cloud speech only or forecast plus presentation metadata
 
-### 8. Surprises Routing
+### 9. Surprises Routing
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -157,7 +174,7 @@ Parallel tags:
   - which categories still depend on cloud services versus fully local logic
   - whether stock OS `1.9` differs materially from the `3.1` source snapshot here
 
-### 9. Personal Report, Calendar, And Commute
+### 10. Personal Report, Calendar, And Commute
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -171,7 +188,7 @@ Parallel tags:
 
 ## Support Tracks
 
-### 10. Hosted Capture And Storage Plan
+### 11. Hosted Capture And Storage Plan
 
 - Status: `ready`
 - Tags: `docs`
@@ -180,7 +197,7 @@ Parallel tags:
   - define a clean boundary between local capture sinks and hosted archival/export
   - document how group testers should submit sessions without touching repo paths directly
 
-### 11. STT Upgrade And Noise Screening
+### 12. STT Upgrade And Noise Screening
 
 - Status: `ready`
 - Tags: `stt`
@@ -197,10 +214,11 @@ Parallel tags:
 1. Radio resume and genre launch
 2. ESML apostrophe fix
 3. Backup / OTA yes-no reliability
-4. News
-5. Clock family
-6. Photo family
-7. Weather
-8. Surprises
-9. Personal report, calendar, and commute
-10. Hosted capture/storage and STT improvements as parallel tracks
+4. Proactive share / offer yes-no reliability
+5. News
+6. Clock family
+7. Photo family
+8. Weather
+9. Surprises
+10. Personal report, calendar, and commute
+11. Hosted capture/storage and STT improvements as parallel tracks
