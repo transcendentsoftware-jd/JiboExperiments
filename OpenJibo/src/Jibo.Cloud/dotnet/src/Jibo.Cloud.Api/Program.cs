@@ -125,7 +125,12 @@ app.Use(async (context, next) =>
     await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, closeSession, $"socket-loop-ended{(isPrematureClose ? "-prematurely" : string.Empty)}", context.RequestAborted);
 });
 
-app.MapGet("/health", () => Results.Json(new { ok = true, service = "OpenJibo Cloud Api" }));
+app.MapGet("/health", () => Results.Json(new
+{
+    ok = true,
+    service = "OpenJibo Cloud Api",
+    version = OpenJiboCloudBuildInfo.Version
+}));
 
 app.MapMethods("/{**path}", ["GET", "POST", "PUT"], async (HttpContext context, JiboCloudProtocolService service, IProtocolTelemetrySink telemetrySink, CancellationToken cancellationToken) =>
 {

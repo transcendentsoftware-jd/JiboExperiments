@@ -201,6 +201,21 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_CloudVersion_UsesSharedBuildInfo()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the cloud version",
+            NormalizedTranscript = "what's the cloud version"
+        });
+
+        Assert.Equal("cloud_version", decision.IntentName);
+        Assert.Equal(OpenJiboCloudBuildInfo.SpokenVersion, decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_WordOfDayGuess_UsesStructuredClientNluGuess()
     {
         var service = CreateService();

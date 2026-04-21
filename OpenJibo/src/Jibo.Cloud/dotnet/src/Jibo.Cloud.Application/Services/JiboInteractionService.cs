@@ -29,6 +29,7 @@ public sealed class JiboInteractionService(
             "dance" => BuildDanceDecision(catalog),
             "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:h:mm tt}."),
             "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
+            "cloud_version" => new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion),
             "radio" => BuildRadioLaunchDecision(),
             "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
@@ -167,6 +168,18 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "joke", "funny", "make me laugh"))
         {
             return "joke";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "cloud version",
+                "open jibo cloud version",
+                "openjibo cloud version",
+                "what version is the cloud",
+                "what s the cloud version",
+                "what's the cloud version"))
+        {
+            return "cloud_version";
         }
 
         if (TryResolveRadioGenre(loweredTranscript) is not null)

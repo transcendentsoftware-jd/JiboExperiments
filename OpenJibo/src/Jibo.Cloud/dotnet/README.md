@@ -6,6 +6,13 @@
 
 This is the production-oriented path for restoring device connectivity and creating a foundation for future runtime, AI, and OTA work.
 
+Current spoken cloud version: `Open Jibo Cloud version 1.0.10.`
+
+Release hygiene reminder:
+
+- bump [OpenJiboCloudBuildInfo.cs](/C:/Projects/JiboExperiments/OpenJibo/src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/OpenJiboCloudBuildInfo.cs) whenever we ship a meaningful hosted-cloud update
+- keep the spoken version response and `/health` version field aligned from that single source of truth
+
 ## Architecture
 
 The first implementation is a modular monolith:

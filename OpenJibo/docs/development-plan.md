@@ -8,6 +8,12 @@ It is intentionally broader than the current Node server. The Node server is a p
 
 Day-to-day feature sequencing now lives in [feature-backlog.md](/C:/Projects/JiboExperiments/OpenJibo/docs/feature-backlog.md).
 
+Cloud release hygiene:
+
+- keep a visible OpenJibo Cloud version string
+- expose it through diagnostics such as `/health` and the spoken `cloud version` command
+- bump the shared version constant whenever we deploy a meaningful hosted-cloud change
+
 ## Current Scope
 
 - stable .NET cloud scaffold
