@@ -116,6 +116,26 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SurprisesDateOfferPrompt_MapsShortAffirmationToYesIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "Yes!",
+            NormalizedTranscript = "Yes!",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "surprises-date/offer_date_fact", "globals/global_commands_launch" },
+                ["listenAsrHints"] = new[] { "$YESNO" }
+            }
+        });
+
+        Assert.Equal("yes", decision.IntentName);
+        Assert.Equal("Yes.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SkillPhraseVariant_MapsToKnownIntent()
     {
         var service = CreateService();

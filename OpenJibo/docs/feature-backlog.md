@@ -89,6 +89,7 @@ Parallel tags:
   - the attached `jibo test 13` session includes both examples in one bundle:
     - a proactive or share-style prompt where spoken `yes` was treated as generic speech
     - a later update prompt where spoken `no` was accepted correctly
+  - the share prompt uses `surprises-date/offer_date_fact` with `$YESNO`, and the failing reply leaked `globals/*` rules back into a Nimbus relaunch
 - Implementation notes:
   - compare the active listen rules, ASR hints, and local skill ownership for the share-style prompt versus OTA prompts
   - make constrained yes-no detection cover this prompt family without regressing the already-working update `no` path

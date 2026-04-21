@@ -710,6 +710,7 @@ public sealed class WebSocketTurnFinalizationService(
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
     }
 

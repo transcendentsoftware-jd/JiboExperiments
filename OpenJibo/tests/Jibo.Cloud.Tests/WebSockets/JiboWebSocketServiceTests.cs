@@ -4,6 +4,7 @@ using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.Content;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Tests.Fixtures;
+using Jibo.Runtime.Abstractions;
 
 namespace Jibo.Cloud.Tests.WebSockets;
 
@@ -401,6 +402,85 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
         Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SurprisesDateOfferPrompt_MapsYesWithoutGlobalRuleLeak()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-share-yesno-token",
+            Text = """{"type":"LISTEN","transID":"trans-share-yes","data":{"rules":["surprises-date/offer_date_fact","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-share-yesno-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-share-yes","data":{"text":"Yes!"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("surprises-date/offer_date_fact", rules[0].GetString());
+        Assert.Equal("surprises-date/offer_date_fact", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        Assert.Equal(0, listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").EnumerateObject().Count());
+    }
+
+    [Fact]
+    public void ResponsePlanMapper_EscapesSpeechWithoutEncodingApostrophes()
+    {
+        var plan = new ResponsePlan
+        {
+            IntentName = "chat",
+            Actions =
+            {
+                new SpeakAction
+                {
+                    Sequence = 0,
+                    Text = "I'm glad you're here.",
+                    Voice = "griffin"
+                },
+                new InvokeNativeSkillAction
+                {
+                    Sequence = 1,
+                    SkillName = "chitchat-skill",
+                    Payload = new Dictionary<string, object?>()
+                }
+            }
+        };
+
+        var turn = new TurnContext
+        {
+            Attributes = new Dictionary<string, object?>
+            {
+                ["transID"] = "trans-apostrophe"
+            }
+        };
+
+        var replies = ResponsePlanToSocketMessagesMapper.Map(plan, turn, new CloudSession(), emitSkillActions: true);
+        using var payload = JsonDocument.Parse(replies[2].Text);
+        var esml = payload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+
+        Assert.Contains("I'm glad you're here.", esml, StringComparison.Ordinal);
+        Assert.DoesNotContain("&apos;", esml, StringComparison.Ordinal);
     }
 
     [Fact]

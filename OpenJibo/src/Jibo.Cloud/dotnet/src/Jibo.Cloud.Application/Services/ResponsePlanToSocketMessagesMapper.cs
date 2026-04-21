@@ -57,7 +57,16 @@ public sealed class ResponsePlanToSocketMessagesMapper
             : isWordOfDayGuess
             ? ["word-of-the-day/puzzle"]
             : isYesNoTurn && isYesNoIntent ? [yesNoRule!] : rules;
-        var entities = ReadEntities(turn, messageType, isYesNoTurn && isYesNoIntent, isWordOfDayLaunch, isRadioLaunch, isWordOfDayGuess, wordOfDayGuess, radioStation);
+        var entities = ReadEntities(
+            turn,
+            messageType,
+            isYesNoTurn && isYesNoIntent,
+            ShouldIncludeCreateDomain(yesNoRule),
+            isWordOfDayLaunch,
+            isRadioLaunch,
+            isWordOfDayGuess,
+            wordOfDayGuess,
+            radioStation);
         var listenMessage = new
         {
             type = "LISTEN",
@@ -265,15 +274,21 @@ public sealed class ResponsePlanToSocketMessagesMapper
     private static object ReadEntities(
         TurnContext turn,
         string? messageType,
-        bool yesNoCreateTurn,
+        bool yesNoTurn,
+        bool includeCreateDomain,
         bool wordOfDayLaunch,
         bool radioLaunch,
         bool wordOfDayGuess,
         string? guess,
         string? radioStation)
     {
-        if (yesNoCreateTurn)
+        if (yesNoTurn)
         {
+            if (!includeCreateDomain)
+            {
+                return new Dictionary<string, object?>();
+            }
+
             return new Dictionary<string, object?>
             {
                 ["domain"] = "create"
@@ -331,7 +346,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
             .FirstOrDefault(static rule =>
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldIncludeCreateDomain(string? yesNoRule)
+    {
+        return string.Equals(yesNoRule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(yesNoRule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
     }
 
     private static IEnumerable<string> ReadRuleValues(TurnContext turn)
@@ -715,8 +737,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
             .Replace("&", "&amp;", StringComparison.Ordinal)
             .Replace("<", "&lt;", StringComparison.Ordinal)
             .Replace(">", "&gt;", StringComparison.Ordinal)
-            .Replace("\"", "&quot;", StringComparison.Ordinal)
-            .Replace("'", "&apos;", StringComparison.Ordinal);
+            .Replace("\"", "&quot;", StringComparison.Ordinal);
     }
 
     private static string? ReadPayloadString(IDictionary<string, object?>? payload, string key)
