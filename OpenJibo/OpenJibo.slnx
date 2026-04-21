@@ -2,25 +2,36 @@
   <Folder Name="/docs/">
     <File Path="docs/development-plan.md" />
     <File Path="docs/device-bootstrap.md" />
+    <File Path="docs/feature-backlog.md" />
     <File Path="docs/live-jibo-capture.md" />
+    <File Path="docs/live-jibo-test-runbook.md" />
     <File Path="docs/protocol-inventory.md" />
     <File Path="docs/public-site-plan.md" />
     <File Path="docs/support-tiers.md" />
+  </Folder>
+  <Folder Name="/docs/prompts/">
+    <File Path="docs/prompts/cloud-deploy-and-jibo-rcm-path.md" />
+    <File Path="docs/prompts/stt-upgrade-path.md" />
   </Folder>
   <Folder Name="/scripts/" />
   <Folder Name="/scripts/bootstrap/">
     <File Path="scripts/bootstrap/Discover-JiboHosts.ps1" />
     <File Path="scripts/bootstrap/Generate-JiboDnsOverrides.ps1" />
     <File Path="scripts/bootstrap/README.md" />
+    <File Path="scripts/bootstrap/test-openjibo-routing.sh" />
     <File Path="scripts/bootstrap/Test-OpenJiboRouting.ps1" />
   </Folder>
   <Folder Name="/scripts/cloud/">
+    <File Path="scripts/cloud/get-websocket-capture-summary.sh" />
     <File Path="scripts/cloud/Get-WebSocketCaptureSummary.ps1" />
+    <File Path="scripts/cloud/import-websocket-capture-fixture.py" />
     <File Path="scripts/cloud/Import-WebSocketCaptureFixture.ps1" />
     <File Path="scripts/cloud/Invoke-CloudSmoke.ps1" />
+    <File Path="scripts/cloud/invoke-live-jibo-prep.sh" />
     <File Path="scripts/cloud/Invoke-LiveJiboPrep.ps1" />
     <File Path="scripts/cloud/Invoke-ProtocolFixture.ps1" />
     <File Path="scripts/cloud/README.md" />
+    <File Path="scripts/cloud/start-dotnet-with-node-cert.sh" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="NuGet.Config" />
