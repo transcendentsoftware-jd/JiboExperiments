@@ -76,6 +76,7 @@ Parallel tags:
   - keep local rules only on constrained replies
   - improve empty-turn retry behavior for settings and OTA prompts
   - capture whether stock OS uses a different yes-no prompt shape in backup versus update flows
+  - investigate why the current cloud wiring appears to make the robot think updates are constantly available
 - Exit criteria:
   - spoken `yes` and `no` reliably work on backup and update prompts
   - empty or missed turns retry locally without relaunching Nimbus
@@ -157,13 +158,36 @@ Parallel tags:
   - voice `open photo gallery` now launches local `@be/gallery` with a stock-shaped `menu` handoff
   - voice `snap a picture` now launches local `@be/create` with `createOnePhoto`
   - voice `open photobooth` now launches local `@be/create` with `createSomePhotos`
+- Open questions:
+  - whether stock Jibo treats captured media as a short-lived local cache until cloud upload completes
+  - what binary upload path and metadata are needed so gallery content persists instead of aging out locally
+  - whether hosted OpenJibo should store originals, thumbnails, or both
 - Exit criteria:
   - known photo menu and voice phrases map to the correct local path
   - capture storage expectations are documented for laptop versus hosted testing
 
+### 8. Update, Backup, And Restore End-To-End Proof
+
+- Status: `ready`
+- Tags: `protocol`, `docs`
+- Why now: prompt routing is only part of the lifecycle; we still need to prove a realistic maintenance and recovery story.
+- Current evidence:
+  - `@be/settings` contains update flows and explicit `jibo.kb.loop.hasKeyBackup(...)` checks for key-backup state
+  - `@be/restore` is a dedicated local skill that waits for a UGC key, runs `jibo.systemManager.restore(...)`, and reboots on completion or failure
+  - live behavior suggests the current cloud may be advertising updates too eagerly, leaving the robot thinking updates are always pending
+- Implementation notes:
+  - inspect how OpenJibo advertises update manifests so the robot does not repeatedly think an update exists when nothing meaningful is pending
+  - prove one successful backup path, one successful update delivery path, and one successful restore path
+  - document the operator steps, risk boundaries, and recovery expectations before broader rollout
+- Exit criteria:
+  - no phantom "always has updates" behavior in normal operation
+  - one controlled update can be delivered successfully
+  - one controlled backup can be taken successfully
+  - restore behavior is understood and documented well enough to recover a test robot intentionally
+
 ## Discovery Queue
 
-### 8. Weather As Cloud Report Plus Local Presentation
+### 9. Weather As Cloud Report Plus Local Presentation
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -176,7 +200,7 @@ Parallel tags:
   - what payload shape triggers the local animation / embodiment layer
   - whether the first pass should be cloud speech only or forecast plus presentation metadata
 
-### 9. Proactivity Selector And Surprise Offers
+### 10. Proactivity Selector And Surprise Offers
 
 - Status: `discovery`
 - Tags: `protocol`, `content`, `docs`
@@ -194,7 +218,7 @@ Parallel tags:
   - include offer, constrained yes/no, fulfillment, and dismissal behavior in the design
   - preserve the artifact linkage to the original architecture diagram and `jibo-test-13`
 
-### 10. Surprises Routing
+### 11. Surprises Routing
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -207,7 +231,7 @@ Parallel tags:
   - which categories still depend on cloud services versus fully local logic
   - whether stock OS `1.9` differs materially from the `3.1` source snapshot here
 
-### 11. History / Memory Layer
+### 12. History / Memory Layer
 
 - Status: `discovery`
 - Tags: `content`, `docs`
@@ -224,7 +248,7 @@ Parallel tags:
   - keep the first design privacy-aware and easy to host
   - treat this as shared infrastructure that other skills can consume rather than a standalone feature
 
-### 12. Lasso / Knowledge And Event Aggregation
+### 13. Lasso / Knowledge And Event Aggregation
 
 - Status: `discovery`
 - Tags: `content`
@@ -240,7 +264,7 @@ Parallel tags:
   - treat holidays and special dates as first-class backlog scope here
   - use this item to drive future provider work for news, weather, calendar, commute, and event awareness
 
-### 13. Personal Report, Calendar, And Commute
+### 14. Personal Report, Calendar, And Commute
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -252,18 +276,51 @@ Parallel tags:
   - should calendar and commute be independent feature paths or sections inside personal report
   - what minimum provider data shape lets Jibo present these naturally
   
-### 14. Stop Command
+### 15. Who Am I / Identity Management
+
+- Status: `discovery`
+- Tags: `protocol`, `content`, `docs`
+- Why later: there is a real local `@be/who-am-i` skill, which likely covers user identification, name capture, and enrollment cues that matter for a modern identity layer.
+- Current evidence:
+  - `@be/who-am-i` exists in the stock skill inventory
+  - the skill source references `jibo.kb.loop`, loop owner / loop member lookup, enrollment state, hypothesis views, and a `Who Am I_ Collect Name` flow
+- Questions to answer:
+  - whether `who am I` is primarily recognition, enrollment, or profile correction
+  - how name, face, and voice enrollment were originally split between robot-local state and cloud services
+  - what the minimum hosted-cloud contract is to make identity feel native again
+- Implementation notes:
+  - tie this work back to the broader `History / Memory Layer`
+  - capture whether the first useful slice is recognition-only, rename-only, or full enrollment support
+
+### 16. Onboarding, Loop Management, And Fresh Start
+
+- Status: `discovery`
+- Tags: `protocol`, `docs`
+- Why later: stock Jibo onboarding and household management were app-driven, and a hosted OpenJibo path will need a replacement for adding/removing people and setting ownership cleanly.
+- Current evidence:
+  - `@be/first-contact`, `@be/introductions`, `@be/tutorial`, and `@be/restore` all exist in the stock skill inventory
+  - `@be/who-am-i` and `@be/chitchat` both reference `jibo.kb.loop`, loop owner, and loop members
+  - `@be/restore` and `@be/settings` show explicit wipe / restore / reboot behavior, which suggests there is a meaningful "fresh start" lifecycle to support
+- Questions to answer:
+  - how a new owner or household should be provisioned without the original mobile app
+  - how to add, remove, and re-enroll loop members safely
+  - whether the right replacement is a lightweight web app, an operator-only admin flow, or both
+- Implementation notes:
+  - include ownership transfer, fresh start, and post-restore re-onboarding in scope
+  - figure out what minimum loop-management UI or API a hosted OpenJibo v1 needs
+
+### 17. Stop Command
 - Status: `ready`
 - Tags: `protocol`
 - Why later: Jibo can be interrupted by any command, but it would be nice to have a dedicated "stop" type of command.
 - Current evidence:
-  - There is an Idle skill or subskill under @be so I think we can utilize it, but I am not sure if that was the default behavior.
+  - `@be/idle` exists in the stock skill inventory, so there is at least a natural local resting target
 - Questions to answer:
   - Can we find in the original source evidence for this skill or stop word phrase?
 
 ## Support Tracks
 
-### 15. Hosted Capture And Storage Plan
+### 18. Hosted Capture And Storage Plan
 
 - Status: `ready`
 - Tags: `docs`
@@ -272,7 +329,7 @@ Parallel tags:
   - define a clean boundary between local capture sinks and hosted archival/export
   - document how group testers should submit sessions without touching repo paths directly
 
-### 16. STT Upgrade And Noise Screening
+### 19. STT Upgrade And Noise Screening
 
 - Status: `ready`
 - Tags: `stt`
@@ -293,10 +350,13 @@ Parallel tags:
 5. News
 6. Clock family
 7. Photo family
-8. Weather
-9. Proactivity selector and surprise offers
-10. Surprises
-11. History / memory layer
-12. Lasso / knowledge and event aggregation
-13. Personal report, calendar, and commute
-14. Hosted capture/storage and STT improvements as parallel tracks
+8. Update, backup, and restore proof
+9. Weather
+10. Proactivity selector and surprise offers
+11. Surprises
+12. History / memory layer
+13. Lasso / knowledge and event aggregation
+14. Personal report, calendar, and commute
+15. Who Am I / identity management
+16. Onboarding / loop management / fresh start
+17. Hosted capture/storage and STT improvements as parallel tracks
