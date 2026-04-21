@@ -546,6 +546,50 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_TellMeTheNews_EmitsNimbusCloudSkillMatchAndNewsSkillAction()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-news-token",
+            Text = """{"type":"LISTEN","transID":"trans-news","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-news-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-news","data":{"text":"tell me the news"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("news", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("news", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").GetString());
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("news", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+        var meta = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("meta");
+        Assert.Equal("runtime-news", meta.GetProperty("mim_id").GetString());
+        Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_OpenTheRadio_EmitsRadioRedirectAndSilentCompletion()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

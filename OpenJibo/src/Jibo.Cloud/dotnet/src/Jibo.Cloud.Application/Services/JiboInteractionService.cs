@@ -42,7 +42,7 @@ public sealed class JiboInteractionService(
             "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
             "calendar" => new JiboInteractionDecision("calendar", randomizer.Choose(catalog.CalendarReplies)),
             "commute" => new JiboInteractionDecision("commute", randomizer.Choose(catalog.CommuteReplies)),
-            "news" => new JiboInteractionDecision("news", randomizer.Choose(catalog.NewsReplies)),
+            "news" => BuildNewsDecision(catalog),
             _ => new JiboInteractionDecision("chat", BuildGenericReply(catalog, transcript, lowered))
         };
     }
@@ -71,6 +71,22 @@ public sealed class JiboInteractionService(
             {
                 ["esml"] = $"<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, {dance}' /></speak>",
                 ["mim_id"] = "runtime-chat",
+                ["mim_type"] = "announcement"
+            });
+    }
+
+    private JiboInteractionDecision BuildNewsDecision(JiboExperienceCatalog catalog)
+    {
+        var briefing = randomizer.Choose(catalog.NewsBriefings);
+        return new JiboInteractionDecision(
+            "news",
+            briefing,
+            "news",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "news",
+                ["cloudSkill"] = "news",
+                ["mim_id"] = "runtime-news",
                 ["mim_type"] = "announcement"
             });
     }

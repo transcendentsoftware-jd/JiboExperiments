@@ -17,5 +17,6 @@ public sealed class JiboExperienceCatalog
     public IReadOnlyList<string> CalendarReplies { get; init; } = [];
     public IReadOnlyList<string> CommuteReplies { get; init; } = [];
     public IReadOnlyList<string> NewsReplies { get; init; } = [];
+    public IReadOnlyList<string> NewsBriefings { get; init; } = [];
     public IReadOnlyList<string> GenericFallbackReplies { get; init; } = [];
 }

@@ -66,6 +66,11 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
             "I heard your news request. That path is still a future cloud integration.",
             "News is recognized, but I do not have the full news service behind it yet."
         ],
+        NewsBriefings =
+        [
+            "Here are your headlines. Space missions are preparing for new launches, climate and weather systems are staying active across the country, and AI tools keep pushing into everyday products.",
+            "Here is a quick news brief. Technology companies are still racing on AI, global leaders are trading policy updates, and science teams are sharing new research findings."
+        ],
         GenericFallbackReplies =
         [
             "Okay. You said, {transcript}.",

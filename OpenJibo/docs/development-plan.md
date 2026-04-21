@@ -165,6 +165,12 @@ Latest radio discovery findings:
 - `result.nlu.entities.station` is the genre selector, and `Country` is a real supported station key from the robot's `genres.json`.
 - The smallest stock-shaped cloud handoff for voice launch is therefore a local `SKILL_REDIRECT` to `@be/radio` with `nlu.intent = "menu"`, optional `entities.station`, and a silent completion to settle the hotphrase cloud response.
 
+Latest news discovery findings:
+
+- Nimbus explicitly treats `match.cloudSkill === "news"` like the GQA path and waits on `cloudSkillResponse`.
+- The first OpenJibo news pass should therefore use a real cloud-skill shape, not a generic placeholder chat reply.
+- For now, the content can stay synthetic while the protocol is grounded: `match.cloudSkill = "news"` plus a supported `SLIM` announcement response is enough to validate the robot path before provider-backed headlines arrive later.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

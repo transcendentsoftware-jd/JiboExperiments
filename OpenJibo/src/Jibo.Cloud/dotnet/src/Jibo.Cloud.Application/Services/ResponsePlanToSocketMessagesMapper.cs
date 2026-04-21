@@ -26,6 +26,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
         var radioStation = ReadSkillPayloadString(skill, "station");
+        var cloudSkill = ReadSkillPayloadString(skill, "cloudSkill");
         var nluGuess = ReadClientEntity(turn, "guess");
         var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
         var outboundIntent = isWordOfDayLaunch
@@ -84,7 +85,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     intent = outboundIntent,
                     rule = outboundRules.FirstOrDefault() ?? string.Empty,
-                    score = 0.95
+                    score = 0.95,
+                    cloudSkill
                 }
             }
         };

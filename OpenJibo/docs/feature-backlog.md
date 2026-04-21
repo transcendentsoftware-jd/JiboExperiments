@@ -111,6 +111,9 @@ Parallel tags:
 - Implementation notes:
   - decide whether the first pass is a simple headline summary or a closer personal-report style payload
   - confirm whether stock OS expects `news` as a dedicated cloud skill or under the broader personal-report family
+- Latest progress:
+  - first pass should use Nimbus's supported cloud path by setting `match.cloudSkill = news` and returning a supported `SLIM` announcement
+  - provider-backed headlines can follow later under the `Lasso / Knowledge And Event Aggregation` track
 - Exit criteria:
   - `tell me the news` reaches a non-placeholder live path
   - robot behavior feels Nimbus-native rather than generic chat playback

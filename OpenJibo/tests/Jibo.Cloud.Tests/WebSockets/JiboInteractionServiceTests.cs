@@ -182,6 +182,25 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_TellMeTheNews_UsesNimbusCloudSkillPath()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "tell me the news",
+            NormalizedTranscript = "tell me the news"
+        });
+
+        Assert.Equal("news", decision.IntentName);
+        Assert.Equal("news", decision.SkillName);
+        Assert.Equal("news", decision.SkillPayload!["skillId"]);
+        Assert.Equal("news", decision.SkillPayload["cloudSkill"]);
+        Assert.Equal("runtime-news", decision.SkillPayload["mim_id"]);
+        Assert.DoesNotContain("future cloud integration", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_WordOfDayGuess_UsesStructuredClientNluGuess()
     {
         var service = CreateService();
