@@ -184,6 +184,12 @@ Latest clock discovery findings:
 - Direct timer and alarm actions use `timerValue` and `alarmValue` utterances, not a generic chat path.
 - A practical first OpenJibo slice is therefore: keep custom spoken time/date answers for now, but route `open clock`, `open timer`, `open alarm`, `set a timer ...`, and `set an alarm ...` through stock-shaped local `@be/clock` handoffs.
 
+Latest photo discovery findings:
+
+- `@be/gallery` is the local gallery browser and opens from `intent = "menu"`.
+- `snapshot` and `photobooth` are not gallery submodes; stock main-menu logic remaps them into `@be/create` with `createOnePhoto` and `createSomePhotos`.
+- A practical first OpenJibo photo slice is therefore: route `open photo gallery` to `@be/gallery`, route `snap a picture` to `@be/create/createOnePhoto`, and route `open photobooth` to `@be/create/createSomePhotos`.
+
 ## Speech, Animation, And ESML
 
 The current joke flow is only a small foothold into Jibo expressiveness.

@@ -415,6 +415,103 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_OpenPhotoGallery_RedirectsIntoGallerySkill()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-photo-gallery-token",
+            Text = """{"type":"LISTEN","transID":"trans-photo-gallery","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-photo-gallery-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-photo-gallery","data":{"text":"open photo gallery"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("menu", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/gallery", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/gallery", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("menu", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SnapAPicture_RedirectsIntoCreateSkill()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-snapshot-token",
+            Text = """{"type":"LISTEN","transID":"trans-snapshot","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-snapshot-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-snapshot","data":{"text":"snap a picture"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("createOnePhoto", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/create", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/create", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("createOnePhoto", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_OpenPhotobooth_RedirectsIntoCreateSkill()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-photobooth-token",
+            Text = """{"type":"LISTEN","transID":"trans-photobooth","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-photobooth-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-photobooth","data":{"text":"open photobooth"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("createSomePhotos", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/create", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/create", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("createSomePhotos", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_YesNoCreateFlow_PreservesCreateRuleAndDomain()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

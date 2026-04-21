@@ -79,6 +79,9 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
             "alarm_menu" => false,
             "timer_value" => false,
             "alarm_value" => false,
+            "photo_gallery" => false,
+            "snapshot" => false,
+            "photobooth" => false,
             "news" => false,
             _ => true
         };

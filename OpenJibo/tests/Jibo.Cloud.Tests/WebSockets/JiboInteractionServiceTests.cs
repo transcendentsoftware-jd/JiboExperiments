@@ -238,6 +238,54 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_OpenPhotoGallery_MapsToGalleryLaunch()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open photo gallery",
+            NormalizedTranscript = "open photo gallery"
+        });
+
+        Assert.Equal("photo_gallery", decision.IntentName);
+        Assert.Equal("@be/gallery", decision.SkillName);
+        Assert.Equal("menu", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SnapAPicture_MapsToCreateOnePhoto()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "snap a picture",
+            NormalizedTranscript = "snap a picture"
+        });
+
+        Assert.Equal("snapshot", decision.IntentName);
+        Assert.Equal("@be/create", decision.SkillName);
+        Assert.Equal("createOnePhoto", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_OpenPhotobooth_MapsToCreateSomePhotos()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open photobooth",
+            NormalizedTranscript = "open photobooth"
+        });
+
+        Assert.Equal("photobooth", decision.IntentName);
+        Assert.Equal("@be/create", decision.SkillName);
+        Assert.Equal("createSomePhotos", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TellMeTheNews_UsesNimbusCloudSkillPath()
     {
         var service = CreateService();

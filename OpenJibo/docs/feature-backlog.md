@@ -140,18 +140,23 @@ Parallel tags:
 
 ### 7. Photo Family Audit
 
-- Status: `ready`
+- Status: `in_progress`
 - Tags: `protocol`, `docs`
 - Why now: photo confirmation improved already, and the robot skill inventory includes `gallery`.
 - Current evidence:
   - `@be/gallery` exists in the robot skill inventory
   - current captures already show `snapshot` and related menu destinations
+  - `JiboOs` shows `@be/gallery` opens from `intent = menu`, while `snapshot` and `photobooth` actually map into `@be/create` with `createOnePhoto` and `createSomePhotos`
 - Implementation notes:
   - separate three flows:
     - snap a picture
     - photo gallery
     - photobooth
   - document whether each one is local-only, cloud-assisted, or upload-backed
+- Progress so far:
+  - voice `open photo gallery` now launches local `@be/gallery` with a stock-shaped `menu` handoff
+  - voice `snap a picture` now launches local `@be/create` with `createOnePhoto`
+  - voice `open photobooth` now launches local `@be/create` with `createSomePhotos`
 - Exit criteria:
   - known photo menu and voice phrases map to the correct local path
   - capture storage expectations are documented for laptop versus hosted testing

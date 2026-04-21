@@ -39,6 +39,9 @@ public sealed class JiboInteractionService(
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered),
             "alarm_value" => BuildAlarmValueDecision(lowered),
+            "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
+            "snapshot" => BuildPhotoCreateDecision("snapshot", "Taking a picture.", "createOnePhoto"),
+            "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
@@ -146,6 +149,18 @@ public sealed class JiboInteractionService(
             return "word_of_the_day";
         }
 
+        if (string.Equals(clientIntent, "loadMenu", StringComparison.OrdinalIgnoreCase) &&
+            clientEntities.TryGetValue("destination", out var photoDestination))
+        {
+            return photoDestination.ToLowerInvariant() switch
+            {
+                "snapshot" => "snapshot",
+                "photobooth" => "photobooth",
+                "gallery" or "photo-gallery" or "photos" => "photo_gallery",
+                _ => "chat"
+            };
+        }
+
         if (string.Equals(clientIntent, "askForTime", StringComparison.OrdinalIgnoreCase))
         {
             return "time";
@@ -251,6 +266,38 @@ public sealed class JiboInteractionService(
             return "radio";
         }
 
+        if (MatchesAny(
+                loweredTranscript,
+                "snap a picture",
+                "take a picture",
+                "take a photo",
+                "snap a photo"))
+        {
+            return "snapshot";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "photo booth",
+                "photobooth",
+                "open photobooth",
+                "start photobooth"))
+        {
+            return "photobooth";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "photo gallery",
+                "open the gallery",
+                "open photo gallery",
+                "show my photos",
+                "open my photos",
+                "gallery"))
+        {
+            return "photo_gallery";
+        }
+
         if (MatchesAny(loweredTranscript, "dance", "boogie"))
         {
             return "dance";
@@ -349,6 +396,32 @@ public sealed class JiboInteractionService(
             new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["skillId"] = "@be/radio"
+            });
+    }
+
+    private static JiboInteractionDecision BuildPhotoGalleryLaunchDecision()
+    {
+        return new JiboInteractionDecision(
+            "photo_gallery",
+            "Opening the photo gallery.",
+            "@be/gallery",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/gallery",
+                ["localIntent"] = "menu"
+            });
+    }
+
+    private static JiboInteractionDecision BuildPhotoCreateDecision(string intentName, string replyText, string localIntent)
+    {
+        return new JiboInteractionDecision(
+            intentName,
+            replyText,
+            "@be/create",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/create",
+                ["localIntent"] = localIntent
             });
     }
 

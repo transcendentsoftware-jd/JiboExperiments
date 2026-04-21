@@ -25,7 +25,11 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
+        var isPhotoGalleryLaunch = string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase);
+        var isPhotoCreateLaunch = string.Equals(plan.IntentName, "snapshot", StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(plan.IntentName, "photobooth", StringComparison.OrdinalIgnoreCase);
         var isClockSkillLaunch = string.Equals(skill?.SkillName, "@be/clock", StringComparison.OrdinalIgnoreCase);
+        var localIntent = ReadSkillPayloadString(skill, "localIntent");
         var clockIntent = ReadSkillPayloadString(skill, "clockIntent");
         var clockDomain = ReadSkillPayloadString(skill, "domain");
         var timerHours = ReadSkillPayloadString(skill, "hours");
@@ -41,6 +45,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? "menu"
             : isRadioLaunch
             ? "menu"
+            : (isPhotoGalleryLaunch || isPhotoCreateLaunch) && !string.IsNullOrWhiteSpace(localIntent)
+            ? localIntent
             : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
             ? clockIntent
             : isWordOfDayGuess
@@ -53,6 +59,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             : isWordOfDayLaunch
             ? string.Empty
             : isRadioLaunch
+            ? transcript
+            : isPhotoGalleryLaunch || isPhotoCreateLaunch
             ? transcript
             : isClockSkillLaunch
             ? transcript
@@ -67,6 +75,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? ["word-of-the-day/menu"]
             : isRadioLaunch
             ? Array.Empty<string>()
+            : isPhotoGalleryLaunch || isPhotoCreateLaunch
+            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
             : isClockSkillLaunch
             ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
             : isWordOfDayGuess
@@ -108,6 +118,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     entities,
                     isWordOfDayLaunch ? "@be/word-of-the-day" :
                     isRadioLaunch ? "@be/radio" :
+                    isPhotoGalleryLaunch ? "@be/gallery" :
+                    isPhotoCreateLaunch ? "@be/create" :
                     isClockSkillLaunch ? "@be/clock" :
                     null),
                 match = new
@@ -179,6 +191,24 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 75));
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/clock")),
+                DelayMs: 125));
+        }
+
+        if ((isPhotoGalleryLaunch || isPhotoCreateLaunch) &&
+            !string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
+        {
+            var skillId = isPhotoGalleryLaunch ? "@be/gallery" : "@be/create";
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    skillId,
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, skillId)),
                 DelayMs: 125));
         }
 
