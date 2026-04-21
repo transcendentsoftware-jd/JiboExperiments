@@ -163,7 +163,25 @@ Parallel tags:
   - what payload shape triggers the local animation / embodiment layer
   - whether the first pass should be cloud speech only or forecast plus presentation metadata
 
-### 9. Surprises Routing
+### 9. Proactivity Selector And Surprise Offers
+
+- Status: `discovery`
+- Tags: `protocol`, `content`, `docs`
+- Why later: the original architecture and recent proactive captures suggest proactivity is a first-class cloud subsystem, not just ordinary chat that starts itself.
+- Current evidence:
+  - the attached original Jibo architecture diagram shows a cloud-side `Proactivity Selector`, `Proactivity Catalog`, and robot-side proactive trigger plumbing
+  - [jibo test 13.txt](C:/Projects/JiboExperiments/artifact-output/jibo-test-13/jibo%20test%2013.txt) and its websocket artifacts show a proactive-style `I have something to share with you` offer and later proactive `TRIGGER` traffic
+  - `@be/surprises`, `@be/surprises-date`, and `@be/surprises-ota` already exist as local robot-side building blocks
+- Questions to answer:
+  - what minimum cloud-side selector we need for stock-OS-compatible surprise offers
+  - how proactive `TRIGGER` traffic should map into a hosted OpenJibo proactivity service
+  - whether `surprises-date/offer_date_fact` should be the first end-to-end proactive offer we intentionally support
+- Implementation notes:
+  - model proactivity as its own orchestrator separate from ordinary conversational turn routing
+  - include offer, constrained yes/no, fulfillment, and dismissal behavior in the design
+  - preserve the artifact linkage to the original architecture diagram and `jibo-test-13`
+
+### 10. Surprises Routing
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -176,7 +194,40 @@ Parallel tags:
   - which categories still depend on cloud services versus fully local logic
   - whether stock OS `1.9` differs materially from the `3.1` source snapshot here
 
-### 10. Personal Report, Calendar, And Commute
+### 11. History / Memory Layer
+
+- Status: `discovery`
+- Tags: `content`, `docs`
+- Why later: the original architecture explicitly calls out `History`, and that likely maps to the kind of durable personal memory we want for names, preferences, and remembered facts.
+- Current evidence:
+  - the attached original Jibo architecture diagram includes a dedicated `History` component in cloud storage
+  - stock Jibo behavior historically included awareness of names, birthdays, holidays, and special dates
+- Questions to answer:
+  - what data belongs in memory versus account/profile versus skill-specific storage
+  - how much of the original behavior was robot-local versus cloud-backed
+  - what the first safe OpenJibo memory slice should be
+- Implementation notes:
+  - plan for person identity, preferred name, birthday, relationship facts, and notable dates
+  - keep the first design privacy-aware and easy to host
+  - treat this as shared infrastructure that other skills can consume rather than a standalone feature
+
+### 12. Lasso / Knowledge And Event Aggregation
+
+- Status: `discovery`
+- Tags: `content`
+- Why later: the original architecture diagram suggests `Lasso` sits between the hub and outside data sources, which likely explains how Jibo knew about news, calendar items, holidays, and other structured world events.
+- Current evidence:
+  - the attached original Jibo architecture diagram shows `Lasso` connected to 3rd-party data such as AP News, Dark Sky, GCalendar, Wolfram, and other external sources
+  - stock Jibo behavior historically covered holidays, birthdays, special events, and topical knowledge
+- Questions to answer:
+  - whether `Lasso` should be recreated as a single aggregation service or as several focused providers behind a shared interface
+  - which parts are needed for news, weather, calendar, commute, astrology/date facts, and holidays
+  - what subset is practical for a hosted OpenJibo v1
+- Implementation notes:
+  - treat holidays and special dates as first-class backlog scope here
+  - use this item to drive future provider work for news, weather, calendar, commute, and event awareness
+
+### 13. Personal Report, Calendar, And Commute
 
 - Status: `discovery`
 - Tags: `protocol`, `content`
@@ -190,7 +241,7 @@ Parallel tags:
 
 ## Support Tracks
 
-### 11. Hosted Capture And Storage Plan
+### 14. Hosted Capture And Storage Plan
 
 - Status: `ready`
 - Tags: `docs`
@@ -199,7 +250,7 @@ Parallel tags:
   - define a clean boundary between local capture sinks and hosted archival/export
   - document how group testers should submit sessions without touching repo paths directly
 
-### 12. STT Upgrade And Noise Screening
+### 15. STT Upgrade And Noise Screening
 
 - Status: `ready`
 - Tags: `stt`
@@ -221,6 +272,9 @@ Parallel tags:
 6. Clock family
 7. Photo family
 8. Weather
-9. Surprises
-10. Personal report, calendar, and commute
-11. Hosted capture/storage and STT improvements as parallel tracks
+9. Proactivity selector and surprise offers
+10. Surprises
+11. History / memory layer
+12. Lasso / knowledge and event aggregation
+13. Personal report, calendar, and commute
+14. Hosted capture/storage and STT improvements as parallel tracks
