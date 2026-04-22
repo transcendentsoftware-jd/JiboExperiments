@@ -321,6 +321,22 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForTenTwentyFiveWithHyphen_ParsesSplitTime()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 10-25",
+            NormalizedTranscript = "set an alarm for 10-25"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("10:25", decision.SkillPayload!["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TimerValueFollowUp_ParsesBareDuration()
     {
         var service = CreateService();
