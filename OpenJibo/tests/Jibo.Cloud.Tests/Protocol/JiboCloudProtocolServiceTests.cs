@@ -46,7 +46,7 @@ public sealed class JiboCloudProtocolServiceTests
     }
 
     [Fact]
-    public async Task GetUpdateFrom_ReturnsNoOpUpdate()
+    public async Task GetUpdateFrom_WithoutStagedUpdate_ReturnsEmptyPayload()
     {
         var result = await _service.DispatchAsync(new ProtocolEnvelope
         {
@@ -59,8 +59,8 @@ public sealed class JiboCloudProtocolServiceTests
 
         using var payload = JsonDocument.Parse(result.BodyText);
         Assert.Equal(200, result.StatusCode);
-        Assert.Equal("robot", payload.RootElement.GetProperty("subsystem").GetString());
-        Assert.True(payload.RootElement.TryGetProperty("url", out _));
+        Assert.Equal(JsonValueKind.Object, payload.RootElement.ValueKind);
+        Assert.Empty(payload.RootElement.EnumerateObject());
     }
 
     [Fact]
@@ -106,6 +106,82 @@ public sealed class JiboCloudProtocolServiceTests
 
         using var fetchedPayload = JsonDocument.Parse(fetched.BodyText);
         Assert.Single(fetchedPayload.RootElement.EnumerateArray());
+    }
+
+    [Fact]
+    public async Task MediaCreate_PersistsAcrossStoreRecreation_WhenPersistencePathIsConfigured()
+    {
+        var persistencePath = Path.Combine(Path.GetTempPath(), $"openjibo-state-{Guid.NewGuid():N}.json");
+        try
+        {
+            var firstService = new JiboCloudProtocolService(new InMemoryCloudStateStore(persistencePath));
+            await firstService.DispatchAsync(new ProtocolEnvelope
+            {
+                HostName = "api.jibo.com",
+                Method = "POST",
+                ServicePrefix = "Media_20160725",
+                Operation = "Create",
+                Headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Content-Type"] = "image/jpeg"
+                },
+                BodyText = """{"path":"persisted-photo","type":"image","reference":"photo"}"""
+            });
+
+            var secondService = new JiboCloudProtocolService(new InMemoryCloudStateStore(persistencePath));
+            var listed = await secondService.DispatchAsync(new ProtocolEnvelope
+            {
+                HostName = "api.jibo.com",
+                Method = "POST",
+                ServicePrefix = "Media_20160725",
+                Operation = "List",
+                BodyText = "{}"
+            });
+
+            using var listedPayload = JsonDocument.Parse(listed.BodyText);
+            Assert.Single(listedPayload.RootElement.EnumerateArray());
+            Assert.Equal("persisted-photo", listedPayload.RootElement[0].GetProperty("path").GetString());
+        }
+        finally
+        {
+            if (File.Exists(persistencePath))
+            {
+                File.Delete(persistencePath);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task MediaCreate_StoresBodyAndServesMediaUrl()
+    {
+        var result = await _service.DispatchAsync(new ProtocolEnvelope
+        {
+            HostName = "api.jibo.com",
+            Method = "POST",
+            ServicePrefix = "Media_20160725",
+            Operation = "Create",
+            Headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Content-Type"] = "image/jpeg",
+                ["x-path"] = "photo-blob-1",
+                ["x-type"] = "image"
+            },
+            BodyText = "binary-photo-placeholder"
+        });
+
+        using var createdPayload = JsonDocument.Parse(result.BodyText);
+        Assert.Equal("https://api.jibo.com/media/photo-blob-1", createdPayload.RootElement.GetProperty("url").GetString());
+
+        var mediaGet = await _service.DispatchAsync(new ProtocolEnvelope
+        {
+            HostName = "api.jibo.com",
+            Method = "GET",
+            Path = "/media/photo-blob-1"
+        });
+
+        Assert.Equal(200, mediaGet.StatusCode);
+        Assert.Equal("image/jpeg", mediaGet.ContentType);
+        Assert.Equal("binary-photo-placeholder", mediaGet.BodyText);
     }
 
     [Fact]

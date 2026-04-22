@@ -132,9 +132,10 @@ Parallel tags:
   - compare our custom time/date path against actual menu payloads
   - decide whether timer and alarm should stay robot-local with cloud acknowledgement, or whether cloud needs to shape the launch and follow-up turns
 - Progress so far:
-  - voice `open clock`, `open timer`, and `open alarm` now synthesize stock-shaped local `@be/clock` launches
-  - voice `set a timer for five minutes` and `set an alarm for 7:30 am` now emit direct `timerValue` / `alarmValue` payloads with the domain and value entities the local skill expects
-  - time/date remain on the existing custom cloud reply path for now
+  - voice `open the clock` now routes to the direct local `askForTime` clock-view path instead of the broader clock menu
+  - voice `what time is it`, `what's today's date`, and `what day is it` now use stock-shaped local `@be/clock` handoffs instead of custom cloud-only speech
+  - voice `set a timer for five minutes`, `set an alarm for 7:30 am`, `set an alarm for 830`, and `set an alarm for 8 30` now emit direct `timerValue` / `alarmValue` payloads with the entities the local skill expects
+  - partial timer/alarm requests such as `set a timer` and `set an alarm` now stay on a controlled clarification reply path instead of drifting into Nimbus/chat echo
 - Exit criteria:
   - time/date behavior stays correct
   - timer and alarm launch or set correctly from both menu and voice where applicable
@@ -158,10 +159,13 @@ Parallel tags:
   - voice `open photo gallery` now launches local `@be/gallery` with a stock-shaped `menu` handoff
   - voice `snap a picture` now launches local `@be/create` with `createOnePhoto`
   - voice `open photobooth` now launches local `@be/create` with `createSomePhotos`
+  - media and update metadata now persist to a local state file in the hosted `.NET` path, so gallery and staged update state are no longer strictly process-memory-only
+  - `Media.Create` now retains uploaded metadata plus a best-effort raw body placeholder and serves the same media URL back through `/media/{path}`
 - Open questions:
   - whether stock Jibo treats captured media as a short-lived local cache until cloud upload completes
   - what binary upload path and metadata are needed so gallery content persists instead of aging out locally
   - whether hosted OpenJibo should store originals, thumbnails, or both
+  - whether the current lossy HTTP body capture is enough for stock gallery thumbnails, or whether we need a binary-safe upload persistence path next
 - Exit criteria:
   - known photo menu and voice phrases map to the correct local path
   - capture storage expectations are documented for laptop versus hosted testing
@@ -179,6 +183,9 @@ Parallel tags:
   - inspect how OpenJibo advertises update manifests so the robot does not repeatedly think an update exists when nothing meaningful is pending
   - prove one successful backup path, one successful update delivery path, and one successful restore path
   - document the operator steps, risk boundaries, and recovery expectations before broader rollout
+- Latest progress:
+  - unstaged update queries no longer fabricate a placeholder no-op manifest, which should reduce the phantom `always has updates` behavior during normal operation
+  - real staged updates can still be created explicitly through the protocol layer when we are ready to prove end-to-end delivery
 - Exit criteria:
   - no phantom "always has updates" behavior in normal operation
   - one controlled update can be delivered successfully

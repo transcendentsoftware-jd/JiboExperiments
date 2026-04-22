@@ -28,17 +28,20 @@ public sealed class JiboInteractionService(
         {
             "joke" => BuildJokeDecision(catalog),
             "dance" => BuildDanceDecision(catalog),
-            "time" => new JiboInteractionDecision("time", $"It is {DateTime.Now:h:mm tt}."),
-            "date" => new JiboInteractionDecision("date", $"Today is {DateTime.Now:dddd, MMMM d}."),
-            "day" => new JiboInteractionDecision("day", $"Today is {DateTime.Now:dddd}."),
+            "time" => BuildClockLaunchDecision("time", "clock", "askForTime", "Showing the time."),
+            "date" => BuildClockLaunchDecision("date", "clock", "askForDate", "Showing the date."),
+            "day" => BuildClockLaunchDecision("day", "clock", "askForDay", "Showing the day."),
             "cloud_version" => new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion),
             "radio" => BuildRadioLaunchDecision(),
             "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
-            "clock_menu" => BuildClockLaunchDecision("clock", "Opening the clock."),
+            "clock_open" => BuildClockLaunchDecision("clock_open", "clock", "askForTime", "Opening the clock."),
+            "clock_menu" => BuildClockLaunchDecision("clock_menu", "clock", "menu", "Opening the clock menu."),
             "timer_menu" => BuildClockLaunchDecision("timer", "Opening the timer."),
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered),
             "alarm_value" => BuildAlarmValueDecision(lowered),
+            "timer_clarify" => new JiboInteractionDecision("timer_clarify", "How long should I set the timer for?"),
+            "alarm_clarify" => new JiboInteractionDecision("alarm_clarify", "What time should I set the alarm for?"),
             "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
             "snapshot" => BuildPhotoCreateDecision("snapshot", "Taking a picture.", "createOnePhoto"),
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
@@ -236,19 +239,9 @@ public sealed class JiboInteractionService(
             return "radio_genre";
         }
 
-        if (TryParseAlarmValue(loweredTranscript) is not null)
-        {
-            return "alarm_value";
-        }
-
-        if (TryParseTimerValue(loweredTranscript) is not null)
-        {
-            return "timer_value";
-        }
-
         if (MatchesAny(loweredTranscript, "open the clock", "open clock", "show the clock", "show clock"))
         {
-            return "clock_menu";
+            return "clock_open";
         }
 
         if (MatchesAny(loweredTranscript, "open the timer", "open timer", "show the timer", "show timer"))
@@ -259,6 +252,26 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "open the alarm", "open alarm", "show the alarm", "show alarm"))
         {
             return "alarm_menu";
+        }
+
+        if (TryParseAlarmValue(loweredTranscript) is not null)
+        {
+            return "alarm_value";
+        }
+
+        if (TryParseTimerValue(loweredTranscript) is not null)
+        {
+            return "timer_value";
+        }
+
+        if (IsAlarmRequest(loweredTranscript))
+        {
+            return "alarm_clarify";
+        }
+
+        if (IsTimerRequest(loweredTranscript))
+        {
+            return "timer_clarify";
         }
 
         if (MatchesAny(loweredTranscript, "open the radio", "play the radio", "turn on the radio", "radio"))
@@ -425,18 +438,23 @@ public sealed class JiboInteractionService(
             });
     }
 
-    private static JiboInteractionDecision BuildClockLaunchDecision(string domain, string replyText)
+    private static JiboInteractionDecision BuildClockLaunchDecision(string intentName, string domain, string clockIntent, string replyText)
     {
         return new JiboInteractionDecision(
-            $"{domain}_menu",
+            intentName,
             replyText,
             "@be/clock",
             new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["skillId"] = "@be/clock",
                 ["domain"] = domain,
-                ["clockIntent"] = "menu"
+                ["clockIntent"] = clockIntent
             });
+    }
+
+    private static JiboInteractionDecision BuildClockLaunchDecision(string domain, string replyText)
+    {
+        return BuildClockLaunchDecision($"{domain}_menu", domain, "menu", replyText);
     }
 
     private static JiboInteractionDecision BuildTimerValueDecision(string loweredTranscript)
@@ -733,7 +751,33 @@ public sealed class JiboInteractionService(
             return null;
         }
 
-        var match = AlarmPattern.Match(loweredTranscript);
+        var compactMatch = CompactAlarmPattern.Match(loweredTranscript);
+        if (compactMatch.Success)
+        {
+            var compact = compactMatch.Groups["compact"].Value;
+            if (int.TryParse(compact, out var compactValue))
+            {
+                var compactHour = compact.Length switch
+                {
+                    3 => compactValue / 100,
+                    4 => compactValue / 100,
+                    _ => -1
+                };
+                var compactMinute = compact.Length switch
+                {
+                    3 => compactValue % 100,
+                    4 => compactValue % 100,
+                    _ => -1
+                };
+                if (compactHour is >= 1 and <= 12 && compactMinute is >= 0 and <= 59)
+                {
+                    var compactAmPm = ResolveAmPm(compactMatch.Groups["ampm"].Value);
+                    return new ClockAlarmValue($"{compactHour}:{compactMinute:00}", compactAmPm);
+                }
+            }
+        }
+
+        var match = SplitAlarmPattern.Match(loweredTranscript);
         if (!match.Success)
         {
             return null;
@@ -752,8 +796,34 @@ public sealed class JiboInteractionService(
             return null;
         }
 
-        var ampm = match.Groups["ampm"].Value.StartsWith("p", StringComparison.Ordinal) ? "pm" : "am";
+        var ampm = ResolveAmPm(match.Groups["ampm"].Value);
         return new ClockAlarmValue($"{hour}:{minute:00}", ampm);
+    }
+
+    private static string ResolveAmPm(string token)
+    {
+        return token.StartsWith("p", StringComparison.OrdinalIgnoreCase) ? "pm" : "am";
+    }
+
+    private static bool IsTimerRequest(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "set a timer",
+            "set timer",
+            "start a timer",
+            "start timer",
+            "timer for");
+    }
+
+    private static bool IsAlarmRequest(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "set an alarm",
+            "set alarm",
+            "wake me up",
+            "alarm for");
     }
 
     private static int? ExtractDurationValue(string loweredTranscript, string unitStem)
@@ -810,8 +880,12 @@ public sealed class JiboInteractionService(
 
     private sealed record ClockAlarmValue(string Time, string AmPm);
 
-    private static readonly Regex AlarmPattern = new(
-        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s](?<minute>\d{2}))?\s*(?<ampm>a\.?m\.?|p\.?m\.?)\b",
+    private static readonly Regex SplitAlarmPattern = new(
+        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s](?<minute>\d{2}))?\s*(?<ampm>a\.?m\.?|p\.?m\.?)?\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex CompactAlarmPattern = new(
+        @"\b(?<compact>\d{3,4})\s*(?<ampm>a\.?m\.?|p\.?m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =

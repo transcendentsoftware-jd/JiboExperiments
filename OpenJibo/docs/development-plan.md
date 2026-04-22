@@ -182,13 +182,19 @@ Latest clock discovery findings:
 - `@be/clock` is a real local skill with `clock`, `timer`, and `alarm` domains.
 - Menu launches use `intent = "menu"` with `entities.domain` set to the target sub-area.
 - Direct timer and alarm actions use `timerValue` and `alarmValue` utterances, not a generic chat path.
-- A practical first OpenJibo slice is therefore: keep custom spoken time/date answers for now, but route `open clock`, `open timer`, `open alarm`, `set a timer ...`, and `set an alarm ...` through stock-shaped local `@be/clock` handoffs.
+- The newest `.NET` pass now routes `open the clock` into the direct `askForTime` clock-view path, moves plain time/date/day questions onto stock-shaped local `@be/clock` handoffs, and keeps malformed timer/alarm requests on a clarification reply path instead of generic chat echo.
 
 Latest photo discovery findings:
 
 - `@be/gallery` is the local gallery browser and opens from `intent = "menu"`.
 - `snapshot` and `photobooth` are not gallery submodes; stock main-menu logic remaps them into `@be/create` with `createOnePhoto` and `createSomePhotos`.
-- A practical first OpenJibo photo slice is therefore: route `open photo gallery` to `@be/gallery`, route `snap a picture` to `@be/create/createOnePhoto`, and route `open photobooth` to `@be/create/createSomePhotos`.
+- The newest `.NET` pass keeps that routing, adds local-file persistence for media metadata, and serves stored media URLs back through `/media/{path}` as a first hosted-gallery slice.
+- The remaining gap is binary fidelity: the current HTTP capture path stores request bodies as text, which is enough to preserve metadata and a placeholder payload, but may still be too lossy for perfect thumbnails/original fetches.
+
+Latest update and state findings:
+
+- unstaged update queries should not fabricate placeholder no-op manifests, because stock settings logic can treat any returned object like a pending update
+- the hosted `.NET` cloud now persists update/media/backups state to a local state file by default, which is a better bridge toward Azure SQL / Blob storage than the old process-memory-only behavior
 
 ## Speech, Animation, And ESML
 

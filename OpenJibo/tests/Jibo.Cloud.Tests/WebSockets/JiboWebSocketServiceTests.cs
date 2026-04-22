@@ -384,6 +384,67 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_OpenTheClock_RedirectsIntoClockSkillWithAskForTimeIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-open-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-open","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-open-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-open","data":{"text":"open the clock"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("askForTime", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("askForTime", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_WhatTimeIsIt_RedirectsIntoClockSkillWithAskForTimeIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-voice-time-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-voice-time","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-voice-time-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-voice-time","data":{"text":"what time is it"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("askForTime", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_SetAlarmForSevenThirtyAm_RedirectsIntoClockSkillWithAlarmEntities()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -412,6 +473,71 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
         Assert.Equal("7:30", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("time").GetString());
         Assert.Equal("am", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("ampm").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SetAlarmForEightThirty_ParsesCompactAlarmTime()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-compact-alarm-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-compact-alarm","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-compact-alarm-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-compact-alarm","data":{"text":"set an alarm for 830"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("8:30", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("time").GetString());
+        Assert.Equal("am", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("ampm").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SetAlarmWithoutTime_UsesClarificationSpeechInsteadOfClockRedirect()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-clarify-alarm-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-clarify-alarm","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-clarify-alarm-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-clarify-alarm","data":{"text":"set an alarm"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        var esml = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+        Assert.Contains("What time should I set the alarm for?", esml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1703,9 +1829,9 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"LISTEN","transID":"trans-second","data":{"text":"what time is it","rules":["follow-up"]}}"""
         });
 
-        Assert.Equal(3, followUpReplies.Count);
+        Assert.Equal(4, followUpReplies.Count);
         using var payload = JsonDocument.Parse(followUpReplies[0].Text!);
-        Assert.Equal("time", payload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("askForTime", payload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("trans-second", payload.RootElement.GetProperty("transID").GetString());
 
         var session = _store.FindSessionByToken("hub-followup-audio-token");

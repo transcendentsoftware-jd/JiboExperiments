@@ -7,6 +7,7 @@ using Jibo.Cloud.Infrastructure.Telemetry;
 using Jibo.Runtime.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace Jibo.Cloud.Infrastructure.DependencyInjection;
 
@@ -24,7 +25,9 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddSingleton(sttOptions);
-        services.AddSingleton<ICloudStateStore, InMemoryCloudStateStore>();
+        var statePersistencePath = configuration?["OpenJibo:State:PersistencePath"]
+            ?? Path.Combine(AppContext.BaseDirectory, "App_Data", "cloud-state.json");
+        services.AddSingleton<ICloudStateStore>(_ => new InMemoryCloudStateStore(statePersistencePath));
         services.AddSingleton<IJiboExperienceContentRepository, InMemoryJiboExperienceContentRepository>();
         services.AddSingleton<JiboExperienceContentCache>();
         services.AddSingleton<IJiboRandomizer, DefaultJiboRandomizer>();

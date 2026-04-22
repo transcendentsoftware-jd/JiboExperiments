@@ -29,6 +29,12 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             return Task.FromResult(ProtocolDispatchResult.Ok(new { ok = true, host = envelope.HostName }));
         }
 
+        if (envelope.Method.Equals("GET", StringComparison.OrdinalIgnoreCase) &&
+            envelope.Path.StartsWith("/media/", StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(HandleMediaContent(envelope));
+        }
+
         if (envelope.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase) &&
             (envelope.Path.Equals("/upload/asr-binary", StringComparison.OrdinalIgnoreCase) ||
              envelope.Path.Equals("/upload/log-events", StringComparison.OrdinalIgnoreCase) ||
@@ -383,7 +389,13 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             var type = ReadHeader(envelope, "x-type") ?? ReadString(body, "type") ?? "unknown";
             var reference = ReadHeader(envelope, "x-reference") ?? ReadString(body, "reference") ?? string.Empty;
             var isEncrypted = ReadBooleanHeader(envelope, "x-encrypted") || ReadBool(body, "isEncrypted");
-            var meta = ReadObject(body, "meta");
+            var meta = ReadObject(body, "meta") ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            var contentType = ReadHeader(envelope, "Content-Type") ?? "application/octet-stream";
+            meta["contentType"] = contentType;
+            if (!string.IsNullOrWhiteSpace(envelope.BodyText))
+            {
+                meta["bodyText"] = envelope.BodyText;
+            }
 
             return ProtocolDispatchResult.Ok(MapMedia(stateStore.CreateMedia(loopId, path, type, reference, isEncrypted, meta)));
         }
@@ -530,7 +542,7 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
                 .Where(update => fromVersion is null || update.FromVersion.Equals(fromVersion, StringComparison.OrdinalIgnoreCase))
                 .Select(MapUpdate)
                 .ToArray()),
-            "GetUpdateFrom" => ProtocolDispatchResult.Ok(MapUpdate(stateStore.GetUpdateFrom(subsystem, fromVersion, filter))),
+            "GetUpdateFrom" => HandleGetUpdateFrom(subsystem, fromVersion, filter),
             "CreateUpdate" => ProtocolDispatchResult.Ok(MapUpdate(stateStore.CreateUpdate(
                 fromVersion,
                 ReadString(body, "toVersion"),
@@ -543,6 +555,29 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             "RemoveUpdate" => ProtocolDispatchResult.Ok(MapUpdate(stateStore.RemoveUpdate(ReadString(body, "id")))),
             _ => ProtocolDispatchResult.Ok(Array.Empty<object>())
         };
+    }
+
+    private ProtocolDispatchResult HandleMediaContent(ProtocolEnvelope envelope)
+    {
+        var path = Uri.UnescapeDataString(envelope.Path["/media/".Length..]);
+        var candidatePaths = new[] { path, $"/{path}" };
+        var media = stateStore.GetMedia(candidatePaths).FirstOrDefault();
+        if (media is null || media.IsDeleted)
+        {
+            return ProtocolDispatchResult.Raw(404, string.Empty);
+        }
+
+        var contentType = TryReadMetaString(media.Meta, "contentType") ?? "application/octet-stream";
+        var bodyText = TryReadMetaString(media.Meta, "bodyText") ?? string.Empty;
+        return ProtocolDispatchResult.Raw(200, bodyText, contentType);
+    }
+
+    private ProtocolDispatchResult HandleGetUpdateFrom(string? subsystem, string? fromVersion, string? filter)
+    {
+        var update = stateStore.GetUpdateFrom(subsystem, fromVersion, filter);
+        return update is null
+            ? ProtocolDispatchResult.Ok(new { })
+            : ProtocolDispatchResult.Ok(MapUpdate(update));
     }
 
     private static object MapUpdate(UpdateManifest update)
@@ -575,10 +610,19 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             accountId = item.AccountId,
             loopId = item.LoopId,
             url = item.Url,
+            thumbnailUrl = item.Url,
+            originalUrl = item.Url,
             isEncrypted = item.IsEncrypted,
             isDeleted = item.IsDeleted,
             meta = item.Meta
         };
+    }
+
+    private static string? TryReadMetaString(IDictionary<string, object?> meta, string key)
+    {
+        return meta.TryGetValue(key, out var value)
+            ? value?.ToString()
+            : null;
     }
 
     private static string? ReadString(JsonElement? element, string propertyName)

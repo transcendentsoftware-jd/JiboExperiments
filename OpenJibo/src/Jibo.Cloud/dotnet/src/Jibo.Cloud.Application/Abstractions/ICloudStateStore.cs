@@ -14,7 +14,7 @@ public interface ICloudStateStore
     CloudSession? FindSessionByToken(string token);
     IReadOnlyList<LoopRecord> GetLoops();
     IReadOnlyList<UpdateManifest> ListUpdates(string? subsystem = null, string? filter = null);
-    UpdateManifest GetUpdateFrom(string? subsystem, string? fromVersion, string? filter);
+    UpdateManifest? GetUpdateFrom(string? subsystem, string? fromVersion, string? filter);
     UpdateManifest CreateUpdate(string? fromVersion, string? toVersion, string? changes, string? shaHash, long? length, string? subsystem, string? filter, IDictionary<string, object?>? dependencies);
     UpdateManifest RemoveUpdate(string? updateId);
     IReadOnlyList<MediaRecord> ListMedia(IReadOnlyList<string>? loopIds = null, long? after = null, long? before = null);

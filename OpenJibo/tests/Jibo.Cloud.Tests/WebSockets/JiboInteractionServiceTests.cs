@@ -54,7 +54,8 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("date", decision.IntentName);
-        Assert.Contains("Today is", decision.ReplyText, StringComparison.Ordinal);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("askForDate", decision.SkillPayload!["clockIntent"]);
     }
 
     [Fact]
@@ -199,6 +200,55 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_OpenClock_MapsToDirectClockView()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open the clock",
+            NormalizedTranscript = "open the clock"
+        });
+
+        Assert.Equal("clock_open", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("clock", decision.SkillPayload!["domain"]);
+        Assert.Equal("askForTime", decision.SkillPayload["clockIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WhatTimeIsIt_MapsToLocalClockTimeIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what time is it",
+            NormalizedTranscript = "what time is it"
+        });
+
+        Assert.Equal("time", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("askForTime", decision.SkillPayload!["clockIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TodaysDate_MapsToLocalClockDateIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's today's date",
+            NormalizedTranscript = "what's today's date"
+        });
+
+        Assert.Equal("date", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("askForDate", decision.SkillPayload!["clockIntent"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SetTimerForFiveMinutes_MapsToTimerValue()
     {
         var service = CreateService();
@@ -235,6 +285,70 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("alarmValue", decision.SkillPayload["clockIntent"]);
         Assert.Equal("7:30", decision.SkillPayload["time"]);
         Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForEightThirty_ParsesCompactTime()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 830",
+            NormalizedTranscript = "set an alarm for 830"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("8:30", decision.SkillPayload!["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForEightThirtySpokenDigits_ParsesSplitTime()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 8 30",
+            NormalizedTranscript = "set an alarm for 8 30"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("8:30", decision.SkillPayload!["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmWithoutTime_AsksForClarification()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm",
+            NormalizedTranscript = "set an alarm"
+        });
+
+        Assert.Equal("alarm_clarify", decision.IntentName);
+        Assert.Null(decision.SkillName);
+        Assert.Equal("What time should I set the alarm for?", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetTimerWithoutDuration_AsksForClarification()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set a timer",
+            NormalizedTranscript = "set a timer"
+        });
+
+        Assert.Equal("timer_clarify", decision.IntentName);
+        Assert.Null(decision.SkillName);
+        Assert.Equal("How long should I set the timer for?", decision.ReplyText);
     }
 
     [Fact]

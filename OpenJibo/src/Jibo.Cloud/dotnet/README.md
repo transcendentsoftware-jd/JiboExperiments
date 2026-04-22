@@ -124,6 +124,9 @@ Current raw-audio behavior is still a compatibility bridge:
 - hotphrase `[BLANK_AUDIO]` cleanup turns are ignored instead of reopening the cloud into a stale blank-audio comment path after word-of-the-day completion
 - phrase matching has been widened slightly for known test prompts such as joke, dance, surprise, weather, calendar, commute, and news variants
 - time replies now use the natural hour format without a leading zero
+- plain time/date/day questions now travel through stock-shaped local `@be/clock` handoffs, and `open the clock` uses the direct clock-view path instead of the menu path
+- timer/alarm voice launches now accept compact alarm forms like `830` and `8 30`, and malformed timer/alarm requests stay on a clarification reply instead of generic cloud chat
+- media and update metadata now persist to a local state file so gallery/update behavior is not lost on every process restart
 
 ## Buffered Audio STT
 
@@ -166,6 +169,12 @@ Capture-storage guidance while moving toward hosted group testing:
 - repo-local file captures remain the default for laptop-based reverse engineering
 - hosted deployments should keep runtime request handling decoupled from long-term capture retention
 - sanitized fixtures remain the preferred durable artifact for parity work and bug reproduction
+
+Current local state persistence:
+
+- default path: `App_Data/cloud-state.json` under the running API directory
+- current contents: media metadata, backup metadata, and staged update metadata
+- current limitation: media bodies are only preserved through the existing text-based HTTP body capture seam, so this is a hosted-gallery bridge, not final binary-safe media storage
 
 ## Current Interaction Paths
 

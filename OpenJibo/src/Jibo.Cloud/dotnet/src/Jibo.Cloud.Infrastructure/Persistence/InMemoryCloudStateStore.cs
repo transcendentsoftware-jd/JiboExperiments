@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Domain.Models;
 
@@ -6,11 +7,18 @@ namespace Jibo.Cloud.Infrastructure.Persistence;
 
 public sealed class InMemoryCloudStateStore : ICloudStateStore
 {
+    private static readonly JsonSerializerOptions PersistenceJsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
     private readonly AccountProfile _account = new();
     private readonly ConcurrentDictionary<string, DeviceRegistration> _devices = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, CloudSession> _sessionsByToken = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _symmetricKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, KeyRequestRecord> _keyRequests = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string? _persistencePath;
+    private readonly object _syncRoot = new();
     private readonly List<UpdateManifest> _updates;
     private readonly List<MediaRecord> _media = [];
     private readonly List<BackupRecord> _backups = [];
@@ -18,8 +26,9 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     private DeviceRegistration _robot;
     private RobotProfile _robotProfile;
 
-    public InMemoryCloudStateStore()
+    public InMemoryCloudStateStore(string? persistencePath = null)
     {
+        _persistencePath = persistencePath;
         _robot = new DeviceRegistration
         {
             HostMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -52,19 +61,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             }
         ];
 
-        _updates =
-        [
-            new UpdateManifest
-            {
-                UpdateId = "noop-update-robot",
-                FromVersion = "unknown",
-                ToVersion = "unknown",
-                Changes = "No update available",
-                Url = "https://api.jibo.com/update/noop",
-                ShaHash = "noop",
-                Subsystem = "robot"
-            }
-        ];
+        _updates = [];
+        LoadPersistentState();
     }
 
     public AccountProfile GetAccount() => _account;
@@ -159,16 +157,10 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             .ToArray();
     }
 
-    public UpdateManifest GetUpdateFrom(string? subsystem, string? fromVersion, string? filter)
+    public UpdateManifest? GetUpdateFrom(string? subsystem, string? fromVersion, string? filter)
     {
-        return ListUpdates(subsystem, filter).FirstOrDefault() ?? new UpdateManifest
-        {
-            UpdateId = $"noop-update-{subsystem ?? "robot"}-{fromVersion ?? "unknown"}",
-            FromVersion = fromVersion ?? "unknown",
-            ToVersion = fromVersion ?? "unknown",
-            Filter = filter,
-            Subsystem = subsystem ?? "robot"
-        };
+        return ListUpdates(subsystem, filter)
+            .FirstOrDefault(update => fromVersion is null || update.FromVersion.Equals(fromVersion, StringComparison.OrdinalIgnoreCase));
     }
 
     public UpdateManifest CreateUpdate(string? fromVersion, string? toVersion, string? changes, string? shaHash, long? length, string? subsystem, string? filter, IDictionary<string, object?>? dependencies)
@@ -187,6 +179,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         };
 
         _updates.Add(update);
+        PersistState();
         return update;
     }
 
@@ -196,6 +189,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         if (existing is not null)
         {
             _updates.Remove(existing);
+            PersistState();
             return existing;
         }
 
@@ -212,6 +206,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     public IReadOnlyList<MediaRecord> ListMedia(IReadOnlyList<string>? loopIds = null, long? after = null, long? before = null)
     {
         return _media
+            .Where(item => !item.IsDeleted)
             .Where(item => loopIds is null || loopIds.Count == 0 || loopIds.Contains(item.LoopId))
             .Where(item => after is null || item.CreatedUtc.ToUnixTimeMilliseconds() > after)
             .Where(item => before is null || item.CreatedUtc.ToUnixTimeMilliseconds() < before)
@@ -251,6 +246,11 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             replacements.Add(updated);
         }
 
+        if (replacements.Count > 0)
+        {
+            PersistState();
+        }
+
         return replacements;
     }
 
@@ -268,13 +268,23 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             Meta = meta ?? new Dictionary<string, object?>()
         };
 
-        _media.Add(item);
+        var existingIndex = _media.FindIndex(existing => existing.Path.Equals(path, StringComparison.OrdinalIgnoreCase));
+        if (existingIndex >= 0)
+        {
+            _media[existingIndex] = item;
+        }
+        else
+        {
+            _media.Add(item);
+        }
+
+        PersistState();
         return item;
     }
 
     public IReadOnlyList<BackupRecord> GetBackups() => _backups.ToArray();
 
-    public bool ShouldCreateSymmetricKey(string loopId) => true;
+    public bool ShouldCreateSymmetricKey(string loopId) => !_symmetricKeys.ContainsKey(loopId);
 
     public string GetOrCreateSymmetricKey(string loopId)
     {
@@ -350,5 +360,69 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             },
             UpdatedUtc = DateTimeOffset.UtcNow
         };
+        PersistState();
+    }
+
+    private void LoadPersistentState()
+    {
+        if (string.IsNullOrWhiteSpace(_persistencePath) || !File.Exists(_persistencePath))
+        {
+            return;
+        }
+
+        try
+        {
+            var snapshot = JsonSerializer.Deserialize<PersistentStateSnapshot>(File.ReadAllText(_persistencePath), PersistenceJsonOptions);
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            _updates.Clear();
+            _updates.AddRange(snapshot.Updates ?? []);
+
+            _media.Clear();
+            _media.AddRange(snapshot.Media ?? []);
+
+            _backups.Clear();
+            _backups.AddRange(snapshot.Backups ?? []);
+        }
+        catch
+        {
+            // Ignore corrupt state and continue with the in-memory defaults.
+        }
+    }
+
+    private void PersistState()
+    {
+        if (string.IsNullOrWhiteSpace(_persistencePath))
+        {
+            return;
+        }
+
+        lock (_syncRoot)
+        {
+            var directory = Path.GetDirectoryName(_persistencePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var snapshot = new PersistentStateSnapshot
+            {
+                Updates = _updates.ToArray(),
+                Media = _media.ToArray(),
+                Backups = _backups.ToArray()
+            };
+
+            File.WriteAllText(_persistencePath, JsonSerializer.Serialize(snapshot, PersistenceJsonOptions));
+        }
+    }
+
+    private sealed class PersistentStateSnapshot
+    {
+        public UpdateManifest[]? Updates { get; init; }
+        public MediaRecord[]? Media { get; init; }
+        public BackupRecord[]? Backups { get; init; }
     }
 }
