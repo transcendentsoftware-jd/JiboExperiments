@@ -23,6 +23,12 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
             "rom-electronic",
             "rom-twerk"
         ],
+        DanceReplies = [
+            "I am ready to dance.",
+            "Okay. Watch this.",
+            "Watch me dance.",
+            "Here's my favorite dance move."
+        ],
         GreetingReplies =
         [
             "Hi there. It is really good to talk with you.",

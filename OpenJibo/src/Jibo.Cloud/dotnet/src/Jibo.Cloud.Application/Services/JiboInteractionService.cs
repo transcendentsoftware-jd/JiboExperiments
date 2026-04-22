@@ -27,7 +27,8 @@ public sealed class JiboInteractionService(
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
-            "dance" => BuildDanceDecision(catalog),
+            "dance" => BuildRandomDanceDecision(catalog),
+            "twerk" => BuildDanceDecision("rom-twerk", "Watch me twerk."),
             "time" => BuildClockLaunchDecision("time", "clock", "askForTime", "Showing the time."),
             "date" => BuildClockLaunchDecision("date", "clock", "askForDate", "Showing the date."),
             "day" => BuildClockLaunchDecision("day", "clock", "askForDay", "Showing the day."),
@@ -74,12 +75,18 @@ public sealed class JiboInteractionService(
             });
     }
 
-    private JiboInteractionDecision BuildDanceDecision(JiboExperienceCatalog catalog)
+    private JiboInteractionDecision BuildRandomDanceDecision(JiboExperienceCatalog catalog)
     {
         var dance = randomizer.Choose(catalog.DanceAnimations);
+        var replyText = randomizer.Choose(catalog.DanceReplies);
+        return BuildDanceDecision(dance, replyText);
+    }
+
+    private static JiboInteractionDecision BuildDanceDecision(string dance, string replyText)
+    {
         return new JiboInteractionDecision(
             "dance",
-            "Okay. Watch this.",
+            replyText,
             "chitchat-skill",
             new Dictionary<string, object?>
             {
