@@ -337,6 +337,38 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForTenTwentyFivePm_ParsesPmSuffix()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 10:25 pm",
+            NormalizedTranscript = "set an alarm for 10:25 pm"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("10:25", decision.SkillPayload!["time"]);
+        Assert.Equal("pm", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForTenTwentyFiveSpacedPm_ParsesPmSuffix()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 10 25 p m",
+            NormalizedTranscript = "set an alarm for 10 25 p m"
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("10:25", decision.SkillPayload!["time"]);
+        Assert.Equal("pm", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TimerValueFollowUp_ParsesBareDuration()
     {
         var service = CreateService();

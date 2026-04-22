@@ -839,7 +839,9 @@ public sealed class JiboInteractionService(
 
     private static string ResolveAmPm(string token)
     {
-        return token.StartsWith("p", StringComparison.OrdinalIgnoreCase) ? "pm" : "am";
+        var normalized = token.Replace(" ", string.Empty, StringComparison.Ordinal)
+            .Replace(".", string.Empty, StringComparison.Ordinal);
+        return normalized.StartsWith("p", StringComparison.OrdinalIgnoreCase) ? "pm" : "am";
     }
 
     private static bool IsTimerRequest(string loweredTranscript)
@@ -971,11 +973,11 @@ public sealed class JiboInteractionService(
     private sealed record ClockAlarmValue(string Time, string AmPm);
 
     private static readonly Regex SplitAlarmPattern = new(
-        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s-](?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a\.?m\.?|p\.?m\.?)?\b",
+        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s-](?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex CompactAlarmPattern = new(
-        @"\b(?<compact>\d{3,4})\s*(?<ampm>a\.?m\.?|p\.?m\.?)?\b",
+        @"\b(?<compact>\d{3,4})\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
