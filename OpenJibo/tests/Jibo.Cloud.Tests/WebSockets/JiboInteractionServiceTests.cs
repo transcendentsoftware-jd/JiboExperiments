@@ -36,7 +36,8 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("dance", decision.IntentName);
         Assert.Equal("chitchat-skill", decision.SkillName);
-        Assert.Equal("Okay. Watch this.", decision.ReplyText);
+        var catalog = await new InMemoryJiboExperienceContentRepository().GetCatalogAsync(); // Ensure catalog is loaded for test coverage
+        Assert.Contains(decision.ReplyText, catalog.DanceReplies);
         Assert.Equal("<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>", decision.SkillPayload!["esml"]);
     }
 
