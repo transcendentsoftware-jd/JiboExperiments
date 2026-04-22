@@ -325,9 +325,75 @@ Parallel tags:
 - Questions to answer:
   - Can we find in the original source evidence for this skill or stop word phrase?
 
+### 18. Volume Up / Volume Down Voice Control
+- Status: `ready`
+- Tags: `protocol`
+- Why later: this is a simple, high-value device-control command that should feel native once the local payload shape is confirmed.
+- User goals:
+  - `turn it up`
+  - `turn it down`
+  - `increase the volume`
+  - `decrease the volume`
+- Current evidence:
+  - stock Jibo exposes volume control through the robot UX, so there should be an existing local path or service contract we can mirror
+  - this belongs with the other lightweight voice device controls rather than generic cloud chat
+- Implementation notes:
+  - inspect the stock `@be` inventory and captures for volume-related intents, rules, or settings hooks
+  - prefer a local robot control payload over synthetic cloud speech
+  - decide whether first pass should support relative changes only, or also absolute requests like `set volume to 5`
+- Exit criteria:
+  - voice increase and decrease commands adjust the robot volume reliably
+  - the behavior feels local and immediate, not like a chat reply
+
+### 19. How Old Are You / Robot Age Persona
+- Status: `discovery`
+- Tags: `protocol`, `content`
+- Why later: this is a strong personality/detail feature, but it may depend on first-power-up metadata or a stock persona path we have not mapped yet.
+- User goals:
+  - `how old are you`
+  - age replies that sound like stock Jibo, including first-boot date and zodiac/personality flavor when available
+- Current evidence:
+  - observed stock-style response from a YouTube transcript:
+    - `I was first powered up on January 31st, 2018, which makes me five days old. I'm an Aquarius.`
+  - this suggests the answer may be based on a stored first-powered-up date, not just a fixed build timestamp
+- Implementation notes:
+  - inspect the stock `@be` inventory and captures for age, birthday, zodiac, or first-contact metadata hooks
+  - decide whether the first OpenJibo slice should:
+    - use stored robot first-boot / first-cloud-seen metadata
+    - compute age dynamically from that date
+    - optionally add zodiac flavor from the same date
+  - if no stock path is found, provide a cloud-powered fallback that still sounds native
+- Exit criteria:
+  - `how old are you` returns a stable, personality-consistent answer
+  - the answer is grounded in stored robot lifecycle data instead of a hard-coded line
+
+### 20. Command Vs Question Reply Style
+- Status: `ready`
+- Tags: `content`, `polish`
+- Why later: Jibo historically responded differently when you commanded a skill versus when you asked about liking or wanting to do that skill, and that conversational nuance is part of what made him feel smart.
+- User goals:
+  - `dance` or `do a dance` should sound like a willing action reply, then perform the skill
+  - `do you like to dance` should sound like an answer to the question first, not the same canned command reply
+- Current evidence:
+  - observed behavior from stock Jibo:
+    - command-style `dance` -> something like `I like to dance` then dance
+    - question-style `do you like to dance?` -> something like `You bet I do`
+  - current OpenJibo skill replies are mostly canned by skill, without distinguishing question intent versus imperative intent
+- Implementation notes:
+  - evolve simple reply collections into structured variants such as:
+    - `commandReplies`
+    - `questionReplies`
+    - optional `confirmationReplies`
+  - add a lightweight classifier for imperative versus question tone before reaching for a full LLM
+  - start with `dance`, then reuse the pattern for other expressive skills where stock Jibo clearly answered differently depending on phrasing
+  - keep the first version rule-based and cheap so it still works well before a future LLM-backed layer exists
+- Exit criteria:
+  - at least one skill family such as `dance` gives distinct replies for command versus question forms
+  - the approach is reusable for other skill reply families without a large rewrite
+
 ## Support Tracks
 
-### 18. Hosted Capture And Storage Plan
+### 21. Hosted Capture And Storage Plan
 
 - Status: `ready`
 - Tags: `docs`
@@ -336,7 +402,7 @@ Parallel tags:
   - define a clean boundary between local capture sinks and hosted archival/export
   - document how group testers should submit sessions without touching repo paths directly
 
-### 19. STT Upgrade And Noise Screening
+### 22. STT Upgrade And Noise Screening
 
 - Status: `ready`
 - Tags: `stt`
@@ -366,4 +432,8 @@ Parallel tags:
 14. Personal report, calendar, and commute
 15. Who Am I / identity management
 16. Onboarding / loop management / fresh start
-17. Hosted capture/storage and STT improvements as parallel tracks
+17. Stop command
+18. Volume up / volume down voice control
+19. How old are you / robot age persona
+20. Command vs question reply style
+21. Hosted capture/storage and STT improvements as parallel tracks
