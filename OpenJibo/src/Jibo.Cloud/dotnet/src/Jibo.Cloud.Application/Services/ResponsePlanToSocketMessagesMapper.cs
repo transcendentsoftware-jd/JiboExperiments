@@ -408,14 +408,16 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 entities["domain"] = clockDomain;
             }
 
-            if (string.Equals(clockIntent, "timerValue", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(clockDomain, "timer", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(timerHours + timerMinutes + timerSeconds))
             {
                 entities["hours"] = timerHours ?? "0";
                 entities["minutes"] = timerMinutes ?? "0";
                 entities["seconds"] = timerSeconds ?? "null";
             }
 
-            if (string.Equals(clockIntent, "alarmValue", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(clockDomain, "alarm", StringComparison.OrdinalIgnoreCase) &&
+                (!string.IsNullOrWhiteSpace(alarmTime) || !string.IsNullOrWhiteSpace(alarmAmPm)))
             {
                 entities["time"] = alarmTime ?? string.Empty;
                 entities["ampm"] = alarmAmPm ?? string.Empty;

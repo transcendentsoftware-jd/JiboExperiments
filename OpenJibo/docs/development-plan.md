@@ -181,7 +181,8 @@ Latest clock discovery findings:
 
 - `@be/clock` is a real local skill with `clock`, `timer`, and `alarm` domains.
 - Menu launches use `intent = "menu"` with `entities.domain` set to the target sub-area.
-- Direct timer and alarm actions use `timerValue` and `alarmValue` utterances, not a generic chat path.
+- The `jibo test 15` bundle shows stock OS 1.9 rejecting our older top-level `timerValue` launch with `found no matching transition`, so the safer cloud contract is a stock-style `start` intent with the timer/alarm entities attached.
+- The same bundle also shows local follow-up rules like `clock/timer_set_value`, so bare replies such as `five minutes` or `ten twenty five` need to be parsed when the robot is already collecting a timer/alarm value.
 - The newest `.NET` pass now routes `open the clock` into the direct `askForTime` clock-view path, moves plain time/date/day questions onto stock-shaped local `@be/clock` handoffs, and keeps malformed timer/alarm requests on a clarification reply path instead of generic chat echo.
 
 Latest photo discovery findings:

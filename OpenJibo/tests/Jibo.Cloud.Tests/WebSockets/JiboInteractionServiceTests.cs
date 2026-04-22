@@ -250,7 +250,7 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_SetTimerForFiveMinutes_MapsToTimerValue()
+    public async Task BuildDecisionAsync_SetTimerForFiveMinutes_MapsToClockStartIntent()
     {
         var service = CreateService();
 
@@ -263,14 +263,14 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("timer_value", decision.IntentName);
         Assert.Equal("@be/clock", decision.SkillName);
         Assert.Equal("timer", decision.SkillPayload!["domain"]);
-        Assert.Equal("timerValue", decision.SkillPayload["clockIntent"]);
+        Assert.Equal("start", decision.SkillPayload["clockIntent"]);
         Assert.Equal("0", decision.SkillPayload["hours"]);
         Assert.Equal("5", decision.SkillPayload["minutes"]);
         Assert.Equal("null", decision.SkillPayload["seconds"]);
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_SetAlarmForSevenThirtyAm_MapsToAlarmValue()
+    public async Task BuildDecisionAsync_SetAlarmForSevenThirtyAm_MapsToClockStartIntent()
     {
         var service = CreateService();
 
@@ -283,7 +283,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("alarm_value", decision.IntentName);
         Assert.Equal("@be/clock", decision.SkillName);
         Assert.Equal("alarm", decision.SkillPayload!["domain"]);
-        Assert.Equal("alarmValue", decision.SkillPayload["clockIntent"]);
+        Assert.Equal("start", decision.SkillPayload["clockIntent"]);
         Assert.Equal("7:30", decision.SkillPayload["time"]);
         Assert.Equal("am", decision.SkillPayload["ampm"]);
     }
@@ -317,6 +317,49 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("alarm_value", decision.IntentName);
         Assert.Equal("8:30", decision.SkillPayload!["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TimerValueFollowUp_ParsesBareDuration()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "twenty five minutes",
+            NormalizedTranscript = "twenty five minutes",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "clock/timer_set_value" }
+            }
+        });
+
+        Assert.Equal("timer_value", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("start", decision.SkillPayload!["clockIntent"]);
+        Assert.Equal("25", decision.SkillPayload["minutes"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AlarmValueFollowUp_ParsesBareSpokenTime()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "ten twenty five",
+            NormalizedTranscript = "ten twenty five",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "clock/alarm_set_value" }
+            }
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("start", decision.SkillPayload!["clockIntent"]);
+        Assert.Equal("10:25", decision.SkillPayload["time"]);
         Assert.Equal("am", decision.SkillPayload["ampm"]);
     }
 

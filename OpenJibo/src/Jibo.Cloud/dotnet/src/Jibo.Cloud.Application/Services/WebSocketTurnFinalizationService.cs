@@ -105,6 +105,29 @@ public sealed class WebSocketTurnFinalizationService(
             session.Metadata["audioTranscriptHint"] = transcriptHint;
         }
 
+        if (ShouldIgnorePassiveLocalSkillContext(session, envelope.Text))
+        {
+            turnState.AwaitingTurnCompletion = false;
+            turnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
+            ResetBufferedAudio(session);
+            turnState.SawContext = false;
+            return
+            [
+                new WebSocketReply
+                {
+                    Text = JsonSerializer.Serialize(new
+                    {
+                        type = "OPENJIBO_CONTEXT_ACK",
+                        data = new
+                        {
+                            sessionId = session.SessionId,
+                            transID = session.LastTransId
+                        }
+                    })
+                }
+            ];
+        }
+
         if (ShouldAutoFinalize(session))
         {
             return await FinalizeTurnAsync(session, envelope, "AUTO_FINALIZE", allowFallbackOnMissingTranscript: true, cancellationToken);
@@ -614,6 +637,18 @@ public sealed class WebSocketTurnFinalizationService(
                ignoreUntilUtc.Value > DateTimeOffset.UtcNow;
     }
 
+    private static bool ShouldIgnorePassiveLocalSkillContext(CloudSession session, string? text)
+    {
+        if (session.FollowUpOpen || session.TurnState.SawListen)
+        {
+            return false;
+        }
+
+        var skillId = TryReadContextSkillId(text);
+        return string.Equals(skillId, "@be/gallery", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(skillId, "@be/create", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string? ExtractDataPayload(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -661,6 +696,32 @@ public sealed class WebSocketTurnFinalizationService(
         catch
         {
             return false;
+        }
+    }
+
+    private static string? TryReadContextSkillId(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            if (!document.RootElement.TryGetProperty("data", out var data) ||
+                !data.TryGetProperty("skill", out var skill) ||
+                !skill.TryGetProperty("id", out var id) ||
+                id.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            return id.GetString();
+        }
+        catch (JsonException)
+        {
+            return null;
         }
     }
 

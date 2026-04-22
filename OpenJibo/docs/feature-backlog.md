@@ -127,9 +127,11 @@ Parallel tags:
 - Current evidence:
   - [protocol-inventory.md](C:/Projects/JiboExperiments/OpenJibo/docs/protocol-inventory.md) already tracks menu intents for `askForTime`, `askForDate`, `timerValue`, and `alarmValue`
   - `@be/clock` exists in the robot skill inventory
-  - `JiboOs` shows `@be/clock` branches on `entities.domain = clock | timer | alarm`, uses `intent = menu` for menu launches, and accepts direct `timerValue` / `alarmValue` utterances with structured entities
-- Implementation notes:
-  - compare our custom time/date path against actual menu payloads
+  - `JiboOs` shows `@be/clock` branches on `entities.domain = clock | timer | alarm`, uses `intent = menu` for menu launches, and has distinct local value-collection rules such as `clock/timer_set_value`
+  - [artifact-output/jibo-test-15](C:/Projects/JiboExperiments/artifact-output/jibo-test-15) shows stock OS 1.9 rejecting our older `timerValue` top-level launch with `found no matching transition`, which points to a stock-style `start` flow plus local follow-up value rules instead
+  - Implementation notes:
+    - compare our custom time/date path against actual menu payloads
+    - keep direct clock/date/day local, but treat timer and alarm as a two-part flow: stock start intent plus bare follow-up parsing on `clock/*_set_value`
   - decide whether timer and alarm should stay robot-local with cloud acknowledgement, or whether cloud needs to shape the launch and follow-up turns
 - Progress so far:
   - voice `open the clock` now routes to the direct local `askForTime` clock-view path instead of the broader clock menu
