@@ -323,6 +323,11 @@ public sealed class JiboInteractionService(
             return "dance";
         }
 
+        if (MatchesAny(loweredTranscript, "twerk"))
+        {
+            return "twerk";
+        }
+
         if (MatchesAny(loweredTranscript, "surprise", "surprise me", "show me something fun"))
         {
             return "surprise";
