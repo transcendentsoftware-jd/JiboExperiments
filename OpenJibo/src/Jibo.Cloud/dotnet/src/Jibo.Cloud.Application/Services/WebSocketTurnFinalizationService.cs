@@ -469,6 +469,24 @@ public sealed class WebSocketTurnFinalizationService(
                 .ToArray();
         }
 
+        if (ShouldHandleAsLocalNoInput(finalizedTurn))
+        {
+            turnState.AwaitingTurnCompletion = false;
+            session.LastTranscript = string.Empty;
+            session.LastIntent = null;
+            session.LastListenType = "no-input";
+            var localRule = ReadPrimaryNoInputRule(finalizedTurn);
+            var noInputReplies = ResponsePlanToSocketMessagesMapper.MapNoInput(
+                    turnState.TransId ?? session.LastTransId ?? string.Empty,
+                    string.IsNullOrWhiteSpace(localRule) ? turnState.ListenRules : [localRule])
+                .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
+                .ToArray();
+            ResetBufferedAudio(session);
+            turnState.SawListen = false;
+            turnState.SawContext = false;
+            return noInputReplies;
+        }
+
         if (ShouldIgnoreInitialEmptyHotphraseTurn(finalizedTurn, turnState))
         {
             turnState.HotphraseEmptyTurnCount += 1;
@@ -639,7 +657,7 @@ public sealed class WebSocketTurnFinalizationService(
 
     private static bool ShouldIgnorePassiveLocalSkillContext(CloudSession session, string? text)
     {
-        if (session.FollowUpOpen || session.TurnState.SawListen)
+        if (session.FollowUpOpen)
         {
             return false;
         }
@@ -799,6 +817,31 @@ public sealed class WebSocketTurnFinalizationService(
             .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+                  string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
+                  string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldHandleAsLocalNoInput(TurnContext turn)
+    {
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        {
+            return false;
+        }
+
+        return ReadRules(turn, "listenRules")
+            .Concat(ReadRules(turn, "clientRules"))
+            .Any(static rule =>
+                string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? ReadPrimaryNoInputRule(TurnContext turn)
+    {
+        return ReadRules(turn, "listenRules")
+            .Concat(ReadRules(turn, "clientRules"))
+            .FirstOrDefault(static rule =>
+                string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||

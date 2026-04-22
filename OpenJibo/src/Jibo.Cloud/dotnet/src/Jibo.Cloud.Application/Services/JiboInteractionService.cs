@@ -14,6 +14,7 @@ public sealed class JiboInteractionService(
         var catalog = await contentCache.GetCatalogAsync(cancellationToken);
         var transcript = (turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty).Trim();
         var lowered = transcript.ToLowerInvariant();
+        var referenceLocalTime = TryResolveReferenceLocalTime(turn);
         var clientIntent = turn.Attributes.TryGetValue("clientIntent", out var rawClientIntent)
             ? rawClientIntent?.ToString()
             : null;
@@ -27,6 +28,7 @@ public sealed class JiboInteractionService(
         var isAlarmValueTurn = IsClockAlarmValueTurn(clientRules, listenRules);
         var semanticIntent = ResolveSemanticIntent(
             lowered,
+            referenceLocalTime,
             clientIntent,
             clientRules,
             listenRules,
@@ -38,7 +40,7 @@ public sealed class JiboInteractionService(
         {
             "joke" => BuildJokeDecision(catalog),
             "dance" => BuildRandomDanceDecision(catalog),
-            "twerk" => BuildDanceDecision("rom-twerk", "Watch me twerk."),
+            "twerk" => BuildDanceDecision("twerk", "rom-twerk", "Watch me twerk."),
             "time" => BuildClockLaunchDecision("time", "clock", "askForTime", "Showing the time."),
             "date" => BuildClockLaunchDecision("date", "clock", "askForDate", "Showing the date."),
             "day" => BuildClockLaunchDecision("day", "clock", "askForDay", "Showing the day."),
@@ -50,7 +52,7 @@ public sealed class JiboInteractionService(
             "timer_menu" => BuildClockLaunchDecision("timer", "Opening the timer."),
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn),
-            "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn),
+            "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime),
             "timer_clarify" => new JiboInteractionDecision("timer_clarify", "How long should I set the timer for?"),
             "alarm_clarify" => new JiboInteractionDecision("alarm_clarify", "What time should I set the alarm for?"),
             "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
@@ -89,13 +91,13 @@ public sealed class JiboInteractionService(
     {
         var dance = randomizer.Choose(catalog.DanceAnimations);
         var replyText = randomizer.Choose(catalog.DanceReplies);
-        return BuildDanceDecision(dance, replyText);
+        return BuildDanceDecision("dance", dance, replyText);
     }
 
-    private static JiboInteractionDecision BuildDanceDecision(string dance, string replyText)
+    private static JiboInteractionDecision BuildDanceDecision(string intentName, string dance, string replyText)
     {
         return new JiboInteractionDecision(
-            "dance",
+            intentName,
             replyText,
             "chitchat-skill",
             new Dictionary<string, object?>
@@ -147,6 +149,7 @@ public sealed class JiboInteractionService(
 
     private static string ResolveSemanticIntent(
         string loweredTranscript,
+        DateTimeOffset? referenceLocalTime,
         string? clientIntent,
         IReadOnlyList<string> clientRules,
         IReadOnlyList<string> listenRules,
@@ -285,7 +288,7 @@ public sealed class JiboInteractionService(
             return "alarm_menu";
         }
 
-        if (TryParseAlarmValue(loweredTranscript, isAlarmValueTurn) is not null)
+        if (TryParseAlarmValue(loweredTranscript, isAlarmValueTurn, referenceLocalTime) is not null)
         {
             return "alarm_value";
         }
@@ -342,14 +345,14 @@ public sealed class JiboInteractionService(
             return "photo_gallery";
         }
 
-        if (MatchesAny(loweredTranscript, "dance", "boogie"))
-        {
-            return "dance";
-        }
-
         if (MatchesAny(loweredTranscript, "twerk"))
         {
             return "twerk";
+        }
+
+        if (MatchesAny(loweredTranscript, "dance", "boogie"))
+        {
+            return "dance";
         }
 
         if (MatchesAny(loweredTranscript, "surprise", "surprise me", "show me something fun"))
@@ -512,9 +515,12 @@ public sealed class JiboInteractionService(
             });
     }
 
-    private static JiboInteractionDecision BuildAlarmValueDecision(string loweredTranscript, bool allowImplicit)
+    private static JiboInteractionDecision BuildAlarmValueDecision(
+        string loweredTranscript,
+        bool allowImplicit,
+        DateTimeOffset? referenceLocalTime)
     {
-        var alarm = TryParseAlarmValue(loweredTranscript, allowImplicit) ?? new ClockAlarmValue("7:00", "am");
+        var alarm = TryParseAlarmValue(loweredTranscript, allowImplicit, referenceLocalTime) ?? new ClockAlarmValue("7:00", "am");
 
         return new JiboInteractionDecision(
             "alarm_value",
@@ -724,6 +730,43 @@ public sealed class JiboInteractionService(
         };
     }
 
+    private static DateTimeOffset? TryResolveReferenceLocalTime(TurnContext turn)
+    {
+        if (!turn.Attributes.TryGetValue("context", out var value) || value is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var contextJson = value.ToString();
+            if (string.IsNullOrWhiteSpace(contextJson))
+            {
+                return null;
+            }
+
+            using var document = JsonDocument.Parse(contextJson);
+            if (!document.RootElement.TryGetProperty("runtime", out var runtime) ||
+                runtime.ValueKind != JsonValueKind.Object ||
+                !runtime.TryGetProperty("location", out var location) ||
+                location.ValueKind != JsonValueKind.Object ||
+                !location.TryGetProperty("iso", out var iso) ||
+                iso.ValueKind != JsonValueKind.String)
+            {
+                return null;
+            }
+
+            var isoValue = iso.GetString();
+            return DateTimeOffset.TryParse(isoValue, out var parsed)
+                ? parsed
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static bool MatchesAny(string loweredTranscript, params string[] candidates)
     {
         return candidates.Any(candidate => loweredTranscript.Contains(candidate, StringComparison.Ordinal));
@@ -780,7 +823,10 @@ public sealed class JiboInteractionService(
             seconds is null ? "null" : seconds.Value.ToString());
     }
 
-    private static ClockAlarmValue? TryParseAlarmValue(string loweredTranscript, bool allowImplicit = false)
+    private static ClockAlarmValue? TryParseAlarmValue(
+        string loweredTranscript,
+        bool allowImplicit = false,
+        DateTimeOffset? referenceLocalTime = null)
     {
         if (!allowImplicit && !loweredTranscript.Contains("alarm", StringComparison.Ordinal))
         {
@@ -807,7 +853,7 @@ public sealed class JiboInteractionService(
                 };
                 if (compactHour is >= 1 and <= 12 && compactMinute is >= 0 and <= 59)
                 {
-                    var compactAmPm = ResolveAmPm(compactMatch.Groups["ampm"].Value);
+                    var compactAmPm = ResolveAmPm(compactMatch.Groups["ampm"].Value, compactHour, compactMinute, referenceLocalTime);
                     return new ClockAlarmValue($"{compactHour}:{compactMinute:00}", compactAmPm);
                 }
             }
@@ -833,15 +879,59 @@ public sealed class JiboInteractionService(
             return null;
         }
 
-        var ampm = ResolveAmPm(match.Groups["ampm"].Value);
+        var ampm = ResolveAmPm(match.Groups["ampm"].Value, hour.Value, minute.Value, referenceLocalTime);
         return new ClockAlarmValue($"{hour}:{minute:00}", ampm);
     }
 
-    private static string ResolveAmPm(string token)
+    private static string ResolveAmPm(string token, int hour, int minute, DateTimeOffset? referenceLocalTime)
     {
         var normalized = token.Replace(" ", string.Empty, StringComparison.Ordinal)
             .Replace(".", string.Empty, StringComparison.Ordinal);
-        return normalized.StartsWith("p", StringComparison.OrdinalIgnoreCase) ? "pm" : "am";
+        if (normalized.StartsWith("p", StringComparison.OrdinalIgnoreCase))
+        {
+            return "pm";
+        }
+
+        if (normalized.StartsWith("a", StringComparison.OrdinalIgnoreCase))
+        {
+            return "am";
+        }
+
+        return referenceLocalTime.HasValue
+            ? ResolveNextOccurrenceAmPm(hour, minute, referenceLocalTime.Value)
+            : "am";
+    }
+
+    private static string ResolveNextOccurrenceAmPm(int hour, int minute, DateTimeOffset referenceLocalTime)
+    {
+        var amCandidate = BuildAlarmCandidate(referenceLocalTime, hour, minute, isPm: false);
+        var pmCandidate = BuildAlarmCandidate(referenceLocalTime, hour, minute, isPm: true);
+        return amCandidate <= pmCandidate ? "am" : "pm";
+    }
+
+    private static DateTimeOffset BuildAlarmCandidate(DateTimeOffset referenceLocalTime, int hour, int minute, bool isPm)
+    {
+        var hour24 = hour % 12;
+        if (isPm)
+        {
+            hour24 += 12;
+        }
+
+        var candidate = new DateTimeOffset(
+            referenceLocalTime.Year,
+            referenceLocalTime.Month,
+            referenceLocalTime.Day,
+            hour24,
+            minute,
+            0,
+            referenceLocalTime.Offset);
+
+        if (candidate <= referenceLocalTime)
+        {
+            candidate = candidate.AddDays(1);
+        }
+
+        return candidate;
     }
 
     private static bool IsTimerRequest(string loweredTranscript)

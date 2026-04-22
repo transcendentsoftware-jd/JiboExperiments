@@ -42,6 +42,21 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_TwerkQuestion_PrefersSpecificTwerkIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "can you twerk",
+            NormalizedTranscript = "can you twerk"
+        });
+
+        Assert.Equal("twerk", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ClientNluAskForDate_MapsToDateIntent()
     {
         var service = CreateService();
@@ -365,6 +380,46 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("alarm_value", decision.IntentName);
         Assert.Equal("10:25", decision.SkillPayload!["time"]);
+        Assert.Equal("pm", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForSevenEighteen_UsesNextOccurrenceFromContext()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 7:18",
+            NormalizedTranscript = "set an alarm for 7:18",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-22T07:15:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("7:18", decision.SkillPayload!["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetAlarmForSevenTen_UsesNextOccurrenceFromContext()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set an alarm for 7:10",
+            NormalizedTranscript = "set an alarm for 7:10",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-22T07:15:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("7:10", decision.SkillPayload!["time"]);
         Assert.Equal("pm", decision.SkillPayload["ampm"]);
     }
 

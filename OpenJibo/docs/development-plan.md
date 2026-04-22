@@ -184,6 +184,8 @@ Latest clock discovery findings:
 - The `jibo test 15` bundle shows stock OS 1.9 rejecting our older top-level `timerValue` launch with `found no matching transition`, so the safer cloud contract is a stock-style `start` intent with the timer/alarm entities attached.
 - The same bundle also shows local follow-up rules like `clock/timer_set_value`, so bare replies such as `five minutes` or `ten twenty five` need to be parsed when the robot is already collecting a timer/alarm value.
 - The newest `.NET` pass now routes `open the clock` into the direct `askForTime` clock-view path, moves plain time/date/day questions onto stock-shaped local `@be/clock` handoffs, and keeps malformed timer/alarm requests on a clarification reply path instead of generic chat echo.
+- The `jibo test 17` bundle shows two remaining clock realities on stock OS 1.9: some alarm misses are genuine STT loss before the cloud ever sees the minutes, and empty cleanup turns like `clock/alarm_timer_okay` must stay local instead of degrading into `heyJibo`/Nimbus.
+- When the robot context includes a usable local `runtime.location.iso`, ambiguous alarm times now prefer the next real local occurrence rather than defaulting blindly.
 
 Latest photo discovery findings:
 
@@ -191,11 +193,13 @@ Latest photo discovery findings:
 - `snapshot` and `photobooth` are not gallery submodes; stock main-menu logic remaps them into `@be/create` with `createOnePhoto` and `createSomePhotos`.
 - The newest `.NET` pass keeps that routing, adds local-file persistence for media metadata, and serves stored media URLs back through `/media/{path}` as a first hosted-gallery slice.
 - The remaining gap is binary fidelity: the current HTTP capture path stores request bodies as text, which is enough to preserve metadata and a placeholder payload, but may still be too lossy for perfect thumbnails/original fetches.
+- The `jibo test 17` gallery blue-ring report is at least partly tangled up with the gallery-empty path: stock `@be/gallery` says `there's nothing in the gallery yet. want to take a picture now?`, so lingering mic state there is not purely a launch-routing issue.
 
 Latest update and state findings:
 
 - unstaged update queries should not fabricate placeholder no-op manifests, because stock settings logic can treat any returned object like a pending update
 - the hosted `.NET` cloud now persists update/media/backups state to a local state file by default, which is a better bridge toward Azure SQL / Blob storage than the old process-memory-only behavior
+- The `jibo test 17` session also includes a real on-robot backup announcement and temporary settings connectivity turbulence, so not all sluggishness from that run should be attributed to the newer cloud protocol changes.
 
 ## Speech, Animation, And ESML
 
