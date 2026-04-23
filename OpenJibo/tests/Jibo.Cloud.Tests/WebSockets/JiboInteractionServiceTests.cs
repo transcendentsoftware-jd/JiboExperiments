@@ -114,6 +114,26 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SharedYesNoPrompt_MapsShortAffirmationToYesIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes",
+            NormalizedTranscript = "yes",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "shared/yes_no", "globals/gui_nav" },
+                ["listenAsrHints"] = new[] { "$YESNO" }
+            }
+        });
+
+        Assert.Equal("yes", decision.IntentName);
+        Assert.Equal("Yes.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SettingsDownloadPrompt_MapsShortDenialToNoIntent()
     {
         var service = CreateService();
@@ -480,6 +500,23 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("alarm_clarify", decision.IntentName);
         Assert.Null(decision.SkillName);
         Assert.Equal("What time should I set the alarm for?", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_CancelAlarm_MapsToClockDeleteIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "cancel alarm",
+            NormalizedTranscript = "cancel alarm"
+        });
+
+        Assert.Equal("alarm_delete", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("delete", decision.SkillPayload["clockIntent"]);
     }
 
     [Fact]

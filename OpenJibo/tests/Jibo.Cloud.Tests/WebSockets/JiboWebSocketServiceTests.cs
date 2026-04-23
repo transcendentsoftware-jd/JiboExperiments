@@ -688,6 +688,38 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_CancelAlarm_RedirectsIntoClockSkillWithDeleteIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-cancel-alarm-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-cancel-alarm","data":{"rules":["globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-cancel-alarm-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-cancel-alarm","data":{"text":"cancel alarm"}}"""
+        });
+
+        Assert.Equal(5, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("delete", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("delete", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_OpenPhotoGallery_RedirectsIntoGallerySkill()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -922,6 +954,37 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
         Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SharedYesNoPrompt_StripsGlobalRulesAndStaysLocal()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-token",
+            Text = """{"type":"LISTEN","transID":"trans-shared-yesno","data":{"rules":["shared/yes_no","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-shared-yesno","data":{"text":"yes"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("shared/yes_no", rules[0].GetString());
+        Assert.Equal("shared/yes_no", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
     }
 
     [Fact]

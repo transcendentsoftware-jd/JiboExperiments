@@ -228,6 +228,12 @@ Useful external references:
 - more capable skill/runtime integration
 - possible LLM or tool-use patterns inspired by workshop-era experimentation
 
+## Latest Notes
+
+- The `jibo test 19` bundle confirmed that gallery follow-up confirmation uses the stock local `shared/yes_no` rule family, not just the create/settings/surprise yes-no families. Spoken `yes` was being heard correctly, but leaking the global rules back into Nimbus instead of staying local.
+- The same bundle also confirmed some `OPENJIBO_AUDIO_RECEIVED` noise was still coming from an older running build, because the current `.NET` source no longer emits that synthetic websocket event. When a live session still shows it, operator workflow should treat that as a rebuild/restart sanity-check clue before assuming a new regression.
+- Spoken `cancel alarm` should map into stock `@be/clock` `delete` semantics, not generic chat. The current cloud path now mirrors that local intent so voice cancel can follow the same lane as the robot's clock skill.
+
 ## MCP-Like Ideas
 
 Recent MIT workshop materials suggest experimentation around modern AI tooling for Jibo, including an MCP-oriented idea. We should treat that as inspiration for future OpenJibo directions, not as a present dependency or supported integration.

@@ -51,6 +51,8 @@ public sealed class JiboInteractionService(
             "clock_menu" => BuildClockLaunchDecision("clock_menu", "clock", "menu", "Opening the clock menu."),
             "timer_menu" => BuildClockLaunchDecision("timer", "Opening the timer."),
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
+            "timer_delete" => BuildClockLaunchDecision("timer_delete", "timer", "delete", "Canceling the timer."),
+            "alarm_delete" => BuildClockLaunchDecision("alarm_delete", "alarm", "delete", "Canceling the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn),
             "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime),
             "timer_clarify" => new JiboInteractionDecision("timer_clarify", "How long should I set the timer for?"),
@@ -286,6 +288,28 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "open the alarm", "open alarm", "show the alarm", "show alarm"))
         {
             return "alarm_menu";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "cancel alarm",
+                "delete alarm",
+                "remove alarm",
+                "stop alarm",
+                "turn off alarm"))
+        {
+            return "alarm_delete";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "cancel timer",
+                "delete timer",
+                "remove timer",
+                "stop timer",
+                "turn off timer"))
+        {
+            return "timer_delete";
         }
 
         if (TryParseAlarmValue(loweredTranscript, isAlarmValueTurn, referenceLocalTime) is not null)
@@ -616,6 +640,7 @@ public sealed class JiboInteractionService(
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));

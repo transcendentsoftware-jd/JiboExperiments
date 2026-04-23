@@ -2,7 +2,7 @@ namespace Jibo.Cloud.Application.Services;
 
 public static class OpenJiboCloudBuildInfo
 {
-    public const string Version = "1.0.15";
+    public const string Version = "1.0.16";
 
     public static string VersionWords => Version.Replace(".", " dot ");
 
