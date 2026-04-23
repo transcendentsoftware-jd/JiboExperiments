@@ -81,7 +81,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task BinaryMessage_ReturnsAcknowledgementPayload()
+    public async Task BinaryMessage_BuffersAudioWithoutEmittingSyntheticAck()
     {
         var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -92,11 +92,11 @@ public sealed class JiboWebSocketServiceTests
             Binary = [1, 2, 3, 4]
         });
 
-        using var payload = JsonDocument.Parse(replies[0].Text!);
-        Assert.Equal("OPENJIBO_AUDIO_RECEIVED", payload.RootElement.GetProperty("type").GetString());
-        Assert.Equal(4, payload.RootElement.GetProperty("data").GetProperty("bytes").GetInt32());
-        Assert.Equal(4, payload.RootElement.GetProperty("data").GetProperty("bufferedBytes").GetInt32());
-        Assert.Equal(1, payload.RootElement.GetProperty("data").GetProperty("bufferedChunks").GetInt32());
+        Assert.Empty(replies);
+        var session = _store.FindSessionByToken("hub-test-token");
+        Assert.NotNull(session);
+        Assert.Equal(4, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(1, session.TurnState.BufferedAudioChunkCount);
     }
 
     [Fact]
@@ -132,8 +132,7 @@ public sealed class JiboWebSocketServiceTests
                 Binary = new byte[3000]
             });
 
-            Assert.Single(replies);
-            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(replies[0]));
+            Assert.Empty(replies);
         }
 
         var session = _store.FindSessionByToken("hub-auto-finalize-token");
@@ -193,8 +192,7 @@ public sealed class JiboWebSocketServiceTests
                 Binary = new byte[3000]
             });
 
-            Assert.Single(replies);
-            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(replies[0]));
+            Assert.Empty(replies);
         }
 
         var session = _store.FindSessionByToken("hub-auto-fallback-token");
@@ -251,11 +249,8 @@ public sealed class JiboWebSocketServiceTests
             Binary = [4, 5, 6, 7]
         });
 
-        using var firstPayload = JsonDocument.Parse(firstAudioReplies[0].Text!);
-        using var secondPayload = JsonDocument.Parse(secondAudioReplies[0].Text!);
-        Assert.Equal(3, firstPayload.RootElement.GetProperty("data").GetProperty("bufferedBytes").GetInt32());
-        Assert.Equal(7, secondPayload.RootElement.GetProperty("data").GetProperty("bufferedBytes").GetInt32());
-        Assert.Equal(2, secondPayload.RootElement.GetProperty("data").GetProperty("bufferedChunks").GetInt32());
+        Assert.Empty(firstAudioReplies);
+        Assert.Empty(secondAudioReplies);
 
         var session = _store.FindSessionByToken("hub-multichunk-token");
         Assert.NotNull(session);
@@ -961,8 +956,7 @@ public sealed class JiboWebSocketServiceTests
                 Binary = new byte[3000]
             });
 
-            Assert.Single(interimReplies);
-            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(interimReplies[0]));
+            Assert.Empty(interimReplies);
         }
 
         var session = _store.FindSessionByToken("hub-yesno-noinput-token");
@@ -1446,8 +1440,7 @@ public sealed class JiboWebSocketServiceTests
                 Binary = new byte[3000]
             });
 
-            Assert.Single(interimReplies);
-            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(interimReplies[0]));
+            Assert.Empty(interimReplies);
         }
 
         var session = _store.FindSessionByToken("hub-wod-auto-token");
@@ -1742,8 +1735,7 @@ public sealed class JiboWebSocketServiceTests
             Binary = [1, 2, 3, 4, 5, 6]
         });
 
-        Assert.Single(audioReplies);
-        Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(audioReplies[0]));
+        Assert.Empty(audioReplies);
 
         var finalizeReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -1889,8 +1881,7 @@ public sealed class JiboWebSocketServiceTests
                 Binary = new byte[3000]
             });
 
-            Assert.Single(interimReplies);
-            Assert.Equal("OPENJIBO_AUDIO_RECEIVED", ReadReplyType(interimReplies[0]));
+            Assert.Empty(interimReplies);
         }
 
         var session = _store.FindSessionByToken("hub-hotphrase-greeting-token");

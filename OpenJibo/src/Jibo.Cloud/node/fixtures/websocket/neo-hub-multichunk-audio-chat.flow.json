@@ -35,15 +35,11 @@
     },
     {
       "binary": [1, 2, 3],
-      "expectedReplyTypes": [
-        "OPENJIBO_AUDIO_RECEIVED"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "binary": [4, 5, 6, 7],
-      "expectedReplyTypes": [
-        "OPENJIBO_AUDIO_RECEIVED"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "text": {

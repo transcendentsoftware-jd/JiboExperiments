@@ -194,6 +194,7 @@ Latest photo discovery findings:
 - The newest `.NET` pass keeps that routing, adds local-file persistence for media metadata, and serves stored media URLs back through `/media/{path}` as a first hosted-gallery slice.
 - The remaining gap is binary fidelity: the current HTTP capture path stores request bodies as text, which is enough to preserve metadata and a placeholder payload, but may still be too lossy for perfect thumbnails/original fetches.
 - The `jibo test 17` gallery blue-ring report is at least partly tangled up with the gallery-empty path: stock `@be/gallery` says `there's nothing in the gallery yet. want to take a picture now?`, so lingering mic state there is not purely a launch-routing issue.
+- The `jibo test 18` bundle shows the more direct failure mode: short local replies like `yes` can stall if buffered-audio auto-finalize waits too long, and the old `OPENJIBO_AUDIO_RECEIVED` compatibility event only added robot-side warning noise while the ring stayed blue.
 
 Latest update and state findings:
 

@@ -23,9 +23,7 @@
     },
     {
       "binary": [1, 2, 3, 4],
-      "expectedReplyTypes": [
-        "OPENJIBO_AUDIO_RECEIVED"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "text": {

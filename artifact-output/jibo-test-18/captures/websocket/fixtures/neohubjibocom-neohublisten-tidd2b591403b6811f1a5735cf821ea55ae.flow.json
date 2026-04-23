@@ -1,0 +1,95 @@
+{
+  "name": "neohubjibocom-neohublisten-tidd2b591403b6811f1a5735cf821ea55ae",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "token": "hub-usr_openjibo_owner-1776545569192"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "LISTEN",
+        "ts": 1776545682509,
+        "msgID": "mid-d2d657ea-3b68-11f1-985b-5cf821ea55ae",
+        "transID": "tid-d2b59140-3b68-11f1-a573-5cf821ea55ae",
+        "data": {
+          "lang": "en-US",
+          "hotphrase": true,
+          "rules": [
+            "launch",
+            "globals/global_commands_launch"
+          ],
+          "mode": "",
+          "asr": {
+            "hints": [],
+            "earlyEOS": [],
+            "encoding": "OGG_OPUS",
+            "sampleRate": 16000,
+            "sosTimeout": 7000,
+            "maxSpeechTimeout": 20000
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": [
+        "OPENJIBO_TURN_PENDING"
+      ]
+    },
+    {
+      "text": null,
+      "binary": [
+        79,
+        103,
+        103,
+        83,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        94,
+        132,
+        99,
+        103,
+        0,
+        0,
+        0,
+        0,
+        234,
+        141,
+        12,
+        246,
+        1,
+        19,
+        79,
+        112,
+        117,
+        115,
+        72,
+        101,
+        97,
+        100,
+        1,
+        1,
+        0,
+        0,
+        128,
+        62,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedReplyTypes": [
+        "OPENJIBO_AUDIO_RECEIVED"
+      ]
+    }
+  ]
+}

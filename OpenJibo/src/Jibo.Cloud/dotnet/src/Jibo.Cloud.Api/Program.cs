@@ -11,6 +11,8 @@ builder.Services.AddOpenJiboCloud(builder.Configuration);
 
 var app = builder.Build();
 
+app.Logger.LogInformation("Starting Open Jibo Cloud Api version {Version}", OpenJiboCloudBuildInfo.Version);
+
 app.UseWebSockets();
 
 app.Use(async (context, next) =>

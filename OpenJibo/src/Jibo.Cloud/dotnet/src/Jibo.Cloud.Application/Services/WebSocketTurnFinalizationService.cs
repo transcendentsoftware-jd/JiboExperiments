@@ -15,7 +15,7 @@ public sealed class WebSocketTurnFinalizationService(
 )
 {
     private const int AutoFinalizeMinBufferedAudioBytes = 12000;
-    private const int AutoFinalizeMinBufferedAudioChunks = 5;
+    private const int AutoFinalizeMinBufferedAudioChunks = 4;
     private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1400);
 
     public void ObserveIncomingMessage(CloudSession session, string? text)
@@ -69,23 +69,7 @@ public sealed class WebSocketTurnFinalizationService(
             return await FinalizeTurnAsync(session, envelope, "AUTO_FINALIZE", allowFallbackOnMissingTranscript: true, cancellationToken);
         }
 
-        return
-        [
-            new WebSocketReply
-            {
-                Text = JsonSerializer.Serialize(new
-                {
-                    type = "OPENJIBO_AUDIO_RECEIVED",
-                    data = new
-                    {
-                        bytes = envelope.Binary?.Length ?? 0,
-                        bufferedBytes = turnState.BufferedAudioBytes,
-                        bufferedChunks = turnState.BufferedAudioChunkCount,
-                        sessionId = session.SessionId
-                    }
-                })
-            }
-        ];
+        return [];
     }
 
     public async Task<IReadOnlyList<WebSocketReply>> HandleContextAsync(
@@ -638,11 +622,9 @@ public sealed class WebSocketTurnFinalizationService(
             ? DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value
             : TimeSpan.Zero;
         return turnState.AwaitingTurnCompletion &&
-               turnState is
-               {
-                   SawListen: true, SawContext: true, BufferedAudioChunkCount: >= AutoFinalizeMinBufferedAudioChunks,
-                   BufferedAudioBytes: >= AutoFinalizeMinBufferedAudioBytes
-               } &&
+               turnState.SawListen &&
+               turnState.BufferedAudioChunkCount >= AutoFinalizeMinBufferedAudioChunks &&
+               turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
                turnAge >= AutoFinalizeMinTurnAge;
     }
 

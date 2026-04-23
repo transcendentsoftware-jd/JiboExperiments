@@ -6,12 +6,13 @@
 
 This is the production-oriented path for restoring device connectivity and creating a foundation for future runtime, AI, and OTA work.
 
-Current spoken cloud version: `Open Jibo Cloud version 1.0.14.`
+Current spoken cloud version: `Open Jibo Cloud version 1.0.15.`
 
 Release hygiene reminder:
 
 - bump [OpenJiboCloudBuildInfo.cs](/C:/Projects/JiboExperiments/OpenJibo/src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/OpenJiboCloudBuildInfo.cs) whenever we ship a meaningful hosted-cloud update
 - keep the spoken version response and `/health` version field aligned from that single source of truth
+- the API startup log now prints the same version on boot, which is useful for confirming the running build during live robot tests
 
 ## Architecture
 
