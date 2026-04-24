@@ -520,6 +520,53 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_ClientNluSetAlarmWithoutTime_AsksForClarification()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set",
+            NormalizedTranscript = "set",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "set",
+                ["clientEntities"] = new Dictionary<string, object?>
+                {
+                    ["domain"] = "alarm"
+                },
+                ["clientRules"] = new[] { "clock/clock_menu" }
+            }
+        });
+
+        Assert.Equal("alarm_clarify", decision.IntentName);
+        Assert.Null(decision.SkillName);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluCancelFromAlarmQueryMenu_UsesLastClockDomain()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "cancel",
+            NormalizedTranscript = "cancel",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "cancel",
+                ["clientRules"] = new[] { "clock/alarm_timer_query_menu" },
+                ["lastClockDomain"] = "alarm"
+            }
+        });
+
+        Assert.Equal("alarm_delete", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("delete", decision.SkillPayload["clockIntent"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SetTimerWithoutDuration_AsksForClarification()
     {
         var service = CreateService();

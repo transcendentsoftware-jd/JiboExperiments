@@ -22,6 +22,9 @@ public sealed class JiboInteractionService(
         var listenRules = ReadRules(turn, "listenRules").ToArray();
         var listenAsrHints = ReadRules(turn, "listenAsrHints").ToArray();
         var clientEntities = ReadEntities(turn);
+        var lastClockDomain = turn.Attributes.TryGetValue("lastClockDomain", out var rawLastClockDomain)
+            ? rawLastClockDomain?.ToString()
+            : null;
         var isYesNoTurn = IsYesNoTurn(turn);
 
         var isTimerValueTurn = IsClockTimerValueTurn(clientRules, listenRules);
@@ -33,6 +36,7 @@ public sealed class JiboInteractionService(
             clientRules,
             listenRules,
             clientEntities,
+            lastClockDomain,
             isYesNoTurn,
             isTimerValueTurn,
             isAlarmValueTurn);
@@ -53,8 +57,8 @@ public sealed class JiboInteractionService(
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
             "timer_delete" => BuildClockLaunchDecision("timer_delete", "timer", "delete", "Canceling the timer."),
             "alarm_delete" => BuildClockLaunchDecision("alarm_delete", "alarm", "delete", "Canceling the alarm."),
-            "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn),
-            "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime),
+            "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn, clientEntities),
+            "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime, clientEntities),
             "timer_clarify" => new JiboInteractionDecision("timer_clarify", "How long should I set the timer for?"),
             "alarm_clarify" => new JiboInteractionDecision("alarm_clarify", "What time should I set the alarm for?"),
             "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
@@ -156,6 +160,7 @@ public sealed class JiboInteractionService(
         IReadOnlyList<string> clientRules,
         IReadOnlyList<string> listenRules,
         IReadOnlyDictionary<string, string> clientEntities,
+        string? lastClockDomain,
         bool isYesNoTurn,
         bool isTimerValueTurn,
         bool isAlarmValueTurn)
@@ -219,10 +224,24 @@ public sealed class JiboInteractionService(
         {
             return startDomain.ToLowerInvariant() switch
             {
-                "timer" => "timer_value",
-                "alarm" => "alarm_value",
+                "timer" => HasStructuredTimerValue(clientEntities) || TryParseTimerValue(loweredTranscript, isTimerValueTurn) is not null
+                    ? "timer_value"
+                    : "timer_clarify",
+                "alarm" => HasStructuredAlarmValue(clientEntities) || TryParseAlarmValue(loweredTranscript, isAlarmValueTurn, referenceLocalTime) is not null
+                    ? "alarm_value"
+                    : "alarm_clarify",
                 _ => "chat"
             };
+        }
+
+        if ((string.Equals(clientIntent, "cancel", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(clientIntent, "delete", StringComparison.OrdinalIgnoreCase)) &&
+            clientRules.Concat(listenRules).Any(rule => string.Equals(rule, "clock/alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)))
+        {
+            var cancelDomain = ResolveClockDomain(clientEntities, clientRules, listenRules, lastClockDomain);
+            return string.Equals(cancelDomain, "timer", StringComparison.OrdinalIgnoreCase)
+                ? "timer_delete"
+                : "alarm_delete";
         }
 
         if (string.Equals(clientIntent, "menu", StringComparison.OrdinalIgnoreCase) &&
@@ -520,9 +539,14 @@ public sealed class JiboInteractionService(
         return BuildClockLaunchDecision($"{domain}_menu", domain, "menu", replyText);
     }
 
-    private static JiboInteractionDecision BuildTimerValueDecision(string loweredTranscript, bool allowImplicit)
+    private static JiboInteractionDecision BuildTimerValueDecision(
+        string loweredTranscript,
+        bool allowImplicit,
+        IReadOnlyDictionary<string, string> clientEntities)
     {
-        var timer = TryParseTimerValue(loweredTranscript, allowImplicit) ?? new ClockTimerValue("0", "1", "null");
+        var timer = TryReadStructuredTimerValue(clientEntities) ??
+                    TryParseTimerValue(loweredTranscript, allowImplicit) ??
+                    new ClockTimerValue("0", "1", "null");
 
         return new JiboInteractionDecision(
             "timer_value",
@@ -542,9 +566,12 @@ public sealed class JiboInteractionService(
     private static JiboInteractionDecision BuildAlarmValueDecision(
         string loweredTranscript,
         bool allowImplicit,
-        DateTimeOffset? referenceLocalTime)
+        DateTimeOffset? referenceLocalTime,
+        IReadOnlyDictionary<string, string> clientEntities)
     {
-        var alarm = TryParseAlarmValue(loweredTranscript, allowImplicit, referenceLocalTime) ?? new ClockAlarmValue("7:00", "am");
+        var alarm = TryReadStructuredAlarmValue(clientEntities) ??
+                    TryParseAlarmValue(loweredTranscript, allowImplicit, referenceLocalTime) ??
+                    new ClockAlarmValue("7:00", "am");
 
         return new JiboInteractionDecision(
             "alarm_value",
@@ -957,6 +984,81 @@ public sealed class JiboInteractionService(
         }
 
         return candidate;
+    }
+
+    private static bool HasStructuredTimerValue(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        return clientEntities.ContainsKey("hours") ||
+               clientEntities.ContainsKey("minutes") ||
+               clientEntities.ContainsKey("seconds");
+    }
+
+    private static bool HasStructuredAlarmValue(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        return clientEntities.TryGetValue("time", out var time) &&
+               !string.IsNullOrWhiteSpace(time);
+    }
+
+    private static ClockTimerValue? TryReadStructuredTimerValue(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        if (!HasStructuredTimerValue(clientEntities))
+        {
+            return null;
+        }
+
+        clientEntities.TryGetValue("hours", out var hours);
+        clientEntities.TryGetValue("minutes", out var minutes);
+        clientEntities.TryGetValue("seconds", out var seconds);
+        return new ClockTimerValue(
+            string.IsNullOrWhiteSpace(hours) ? "0" : hours,
+            string.IsNullOrWhiteSpace(minutes) ? "0" : minutes,
+            string.IsNullOrWhiteSpace(seconds) ? "null" : seconds);
+    }
+
+    private static ClockAlarmValue? TryReadStructuredAlarmValue(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        if (!clientEntities.TryGetValue("time", out var time) || string.IsNullOrWhiteSpace(time))
+        {
+            return null;
+        }
+
+        clientEntities.TryGetValue("ampm", out var ampm);
+        return new ClockAlarmValue(time, string.IsNullOrWhiteSpace(ampm) ? "am" : ampm.ToLowerInvariant());
+    }
+
+    private static string? ResolveClockDomain(
+        IReadOnlyDictionary<string, string> clientEntities,
+        IReadOnlyList<string> clientRules,
+        IReadOnlyList<string> listenRules,
+        string? lastClockDomain)
+    {
+        if (clientEntities.TryGetValue("domain", out var clientDomain) &&
+            !string.IsNullOrWhiteSpace(clientDomain))
+        {
+            return clientDomain;
+        }
+
+        if (!string.IsNullOrWhiteSpace(lastClockDomain))
+        {
+            return lastClockDomain;
+        }
+
+        var combinedRules = clientRules.Concat(listenRules);
+        if (combinedRules.Any(rule =>
+                rule.Contains("timer", StringComparison.OrdinalIgnoreCase) &&
+                !rule.Contains("alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "timer";
+        }
+
+        if (combinedRules.Any(rule =>
+                rule.Contains("alarm", StringComparison.OrdinalIgnoreCase) &&
+                !rule.Contains("alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "alarm";
+        }
+
+        return null;
     }
 
     private static bool IsTimerRequest(string loweredTranscript)

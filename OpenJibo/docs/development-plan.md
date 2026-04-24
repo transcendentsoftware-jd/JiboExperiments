@@ -233,6 +233,9 @@ Useful external references:
 - The `jibo test 19` bundle confirmed that gallery follow-up confirmation uses the stock local `shared/yes_no` rule family, not just the create/settings/surprise yes-no families. Spoken `yes` was being heard correctly, but leaking the global rules back into Nimbus instead of staying local.
 - The same bundle also confirmed some `OPENJIBO_AUDIO_RECEIVED` noise was still coming from an older running build, because the current `.NET` source no longer emits that synthetic websocket event. When a live session still shows it, operator workflow should treat that as a rebuild/restart sanity-check clue before assuming a new regression.
 - Spoken `cancel alarm` should map into stock `@be/clock` `delete` semantics, not generic chat. The current cloud path now mirrors that local intent so voice cancel can follow the same lane as the robot's clock skill.
+- The `jibo test 20` bundle suggests gallery itself is mostly okay in the latest pass, but clock and protocol polish still matter: stock `CLIENT_NLU intent="set"` with only `domain="alarm"` should stay on the local clarification path instead of defaulting the cloud payload to `7:00`, and stock `CLIENT_NLU intent="cancel"` on `clock/alarm_timer_query_menu` should reuse the last active clock domain so delete actually lands on alarm/timer instead of generic chat.
+- The same `jibo test 20` robot logs also showed `OPENJIBO_TURN_PENDING` and `OPENJIBO_CONTEXT_ACK` are just unknown-event noise on stock OS 1.9, so the compatibility layer now keeps that turn state internally and stops sending those synthetic websocket event types to the robot.
+- That bundle still contains real `ffmpeg` / `whisper.cpp` failures in the buffered-audio STT seam, and it also includes a genuine `jibo-server-service` broken-pipe / server-connection-lost episode, so not every freeze in that round should be blamed on cloud turn routing alone.
 
 ## MCP-Like Ideas
 

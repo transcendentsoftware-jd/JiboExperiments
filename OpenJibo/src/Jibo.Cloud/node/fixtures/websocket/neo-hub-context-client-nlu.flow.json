@@ -33,9 +33,7 @@
           "screen": "home"
         }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_CONTEXT_ACK"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "text": {

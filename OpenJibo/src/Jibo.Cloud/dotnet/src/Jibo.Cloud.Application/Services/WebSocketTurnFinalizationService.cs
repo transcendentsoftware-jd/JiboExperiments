@@ -95,21 +95,7 @@ public sealed class WebSocketTurnFinalizationService(
             turnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
             ResetBufferedAudio(session);
             turnState.SawContext = false;
-            return
-            [
-                new WebSocketReply
-                {
-                    Text = JsonSerializer.Serialize(new
-                    {
-                        type = "OPENJIBO_CONTEXT_ACK",
-                        data = new
-                        {
-                            sessionId = session.SessionId,
-                            transID = session.LastTransId
-                        }
-                    })
-                }
-            ];
+            return [];
         }
 
         if (ShouldAutoFinalize(session))
@@ -117,21 +103,7 @@ public sealed class WebSocketTurnFinalizationService(
             return await FinalizeTurnAsync(session, envelope, "AUTO_FINALIZE", allowFallbackOnMissingTranscript: true, cancellationToken);
         }
 
-        return
-        [
-            new WebSocketReply
-            {
-                Text = JsonSerializer.Serialize(new
-                {
-                    type = "OPENJIBO_CONTEXT_ACK",
-                    data = new
-                    {
-                        sessionId = session.SessionId,
-                        transID = session.LastTransId
-                    }
-                })
-            }
-        ];
+        return [];
     }
 
     public async Task<IReadOnlyList<WebSocketReply>> HandleTurnAsync(
@@ -170,26 +142,7 @@ public sealed class WebSocketTurnFinalizationService(
         }
 
         session.TurnState.AwaitingTurnCompletion = true;
-        return
-        [
-            new WebSocketReply
-            {
-                Text = JsonSerializer.Serialize(new
-                {
-                    type = "OPENJIBO_TURN_PENDING",
-                    data = new
-                    {
-                        sessionId = session.SessionId,
-                        transID = session.LastTransId,
-                        bufferedAudioBytes = session.TurnState.BufferedAudioBytes,
-                        bufferedAudioChunks = session.TurnState.BufferedAudioChunkCount,
-                        awaitingAudio = session.TurnState.BufferedAudioBytes == 0,
-                        awaitingTranscriptHint = session.TurnState.BufferedAudioBytes > 0 && string.IsNullOrWhiteSpace(session.TurnState.AudioTranscriptHint),
-                        finalizeAttempts = session.TurnState.FinalizeAttemptCount
-                    }
-                })
-            }
-        ];
+        return [];
     }
 
     private async Task<TurnContext> ResolveTranscriptAsync(TurnContext turn, CloudSession session, CancellationToken cancellationToken)
@@ -475,26 +428,7 @@ public sealed class WebSocketTurnFinalizationService(
         {
             turnState.HotphraseEmptyTurnCount += 1;
             turnState.AwaitingTurnCompletion = true;
-            return
-            [
-                new WebSocketReply
-                {
-                    Text = JsonSerializer.Serialize(new
-                    {
-                        type = "OPENJIBO_TURN_PENDING",
-                        data = new
-                        {
-                            sessionId = session.SessionId,
-                            transID = session.LastTransId,
-                            bufferedAudioBytes = turnState.BufferedAudioBytes,
-                            bufferedAudioChunks = turnState.BufferedAudioChunkCount,
-                            awaitingAudio = turnState.BufferedAudioBytes == 0,
-                            awaitingTranscriptHint = turnState.BufferedAudioBytes > 0 && string.IsNullOrWhiteSpace(turnState.AudioTranscriptHint),
-                            finalizeAttempts = turnState.FinalizeAttemptCount
-                        }
-                    })
-                }
-            ];
+            return [];
         }
 
         if (ShouldTreatEmptyHotphraseTurnAsGreeting(finalizedTurn))
@@ -551,26 +485,7 @@ public sealed class WebSocketTurnFinalizationService(
                 return fallbackReplies;
             }
 
-            return
-            [
-                new WebSocketReply
-                {
-                    Text = JsonSerializer.Serialize(new
-                    {
-                        type = "OPENJIBO_TURN_PENDING",
-                        data = new
-                        {
-                            sessionId = session.SessionId,
-                            transID = session.LastTransId,
-                            bufferedAudioBytes = turnState.BufferedAudioBytes,
-                            bufferedAudioChunks = turnState.BufferedAudioChunkCount,
-                            awaitingAudio = turnState.BufferedAudioBytes == 0,
-                            awaitingTranscriptHint = turnState.BufferedAudioBytes > 0 && string.IsNullOrWhiteSpace(turnState.AudioTranscriptHint),
-                            finalizeAttempts = turnState.FinalizeAttemptCount
-                        }
-                    })
-                }
-            ];
+            return [];
         }
 
         var plan = await conversationBroker.HandleTurnAsync(finalizedTurn, cancellationToken);
@@ -578,6 +493,12 @@ public sealed class WebSocketTurnFinalizationService(
         session.LastTranscript = finalizedTurn.NormalizedTranscript ?? finalizedTurn.RawTranscript;
         session.LastIntent = plan.IntentName;
         session.LastListenType = listenAction?.Mode;
+        if (plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault() is { SkillName: "@be/clock", Payload: not null } clockAction &&
+            clockAction.Payload.TryGetValue("domain", out var lastClockDomainValue) &&
+            lastClockDomainValue is not null)
+        {
+            session.Metadata["lastClockDomain"] = lastClockDomainValue.ToString();
+        }
         session.FollowUpExpiresUtc = plan.FollowUp.KeepMicOpen
             ? DateTimeOffset.UtcNow.Add(plan.FollowUp.Timeout)
             : null;

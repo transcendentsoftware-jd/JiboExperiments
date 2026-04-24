@@ -17,9 +17,7 @@
           ]
         }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_TURN_PENDING"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "text": {
@@ -30,9 +28,7 @@
           "audioTranscriptHint": "tell me a joke"
         }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_CONTEXT_ACK"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "binary": [1, 2, 3, 4, 5, 6],

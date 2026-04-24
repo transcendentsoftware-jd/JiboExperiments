@@ -17,9 +17,7 @@
           ]
         }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_TURN_PENDING"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "binary": [1, 2, 3, 4],
@@ -31,9 +29,7 @@
         "transID": "fixture-trans-pending",
         "data": { }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_TURN_PENDING"
-      ]
+      "expectedReplyTypes": []
     }
   ]
 }

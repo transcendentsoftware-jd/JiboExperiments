@@ -26,6 +26,13 @@ public sealed class ProtocolToTurnContextMapper
             attributes["context"] = turnState.ContextPayload;
         }
 
+        if (session.Metadata.TryGetValue("lastClockDomain", out var lastClockDomain) &&
+            lastClockDomain is string lastClockDomainText &&
+            !string.IsNullOrWhiteSpace(lastClockDomainText))
+        {
+            attributes["lastClockDomain"] = lastClockDomainText;
+        }
+
         attributes["listenHotphrase"] = turnState.ListenHotphrase;
 
         if (turnState.ListenRules.Count > 0)

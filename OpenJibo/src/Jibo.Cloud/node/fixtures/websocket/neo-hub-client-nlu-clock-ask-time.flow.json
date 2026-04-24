@@ -20,9 +20,7 @@
           "mode": "CLIENT_NLU"
         }
       },
-      "expectedReplyTypes": [
-        "OPENJIBO_TURN_PENDING"
-      ]
+      "expectedReplyTypes": []
     },
     {
       "text": {
