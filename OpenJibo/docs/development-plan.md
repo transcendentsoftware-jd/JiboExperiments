@@ -2,243 +2,159 @@
 
 ## Summary
 
-This document is the working implementation plan after the initial hosted-cloud scaffold.
+This document is the current working plan for the OpenJibo hosted cloud.
+
+The production lane is the `.NET` cloud in `src/Jibo.Cloud/dotnet`. The Node server remains the protocol oracle, capture harness, and fast reverse-engineering lab, but it is no longer the long-term hosted architecture.
+
+Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md). This file tracks release shape, current code truth, evidence sources, and the boundary between `1.0.18` closeout work and `1.0.19` follow-up work.
+
+## Current Release Snapshot
 
-It is intentionally broader than the current Node server. The Node server is a protocol oracle and discovery tool, not the complete map of Jibo.
+- Current OpenJibo Cloud release constant: `1.0.18`
+- Source of truth: [OpenJiboCloudBuildInfo.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/OpenJiboCloudBuildInfo.cs)
+- Spoken diagnostic: `Open Jibo Cloud version 1 dot 0 dot 18.`
+- HTTP diagnostic: `/health` returns the same version
+- Startup diagnostic: the API logs the same version on boot
+- .NET target framework: `net10.0` across the cloud projects and cloud test project
 
-Day-to-day feature sequencing now lives in [feature-backlog.md](/C:/Projects/JiboExperiments/OpenJibo/docs/feature-backlog.md).
+Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm and photo/gallery behavior on stock OS `1.9`, with a few small feature slices added while the test loop is warm.
 
-Cloud release hygiene:
+## Release Rhythm
 
-- keep a visible OpenJibo Cloud version string
-- expose it through diagnostics such as `/health` and the spoken `cloud version` command
-- bump the shared version constant whenever we deploy a meaningful hosted-cloud change
+This is the working pattern for each hosted-cloud release:
 
-## Current Scope
+1. Pick a narrow source-backed feature or compatibility slice.
+2. Confirm the stock payload shape from captures, Pegasus, the JiboOS reference tree, or live logs.
+3. Implement the smallest `.NET` path that can be tested honestly.
+4. Add focused tests around routing, websocket payload shape, and state behavior.
+5. Run the stock robot live test, collect captures, and record the result before moving on.
+6. Keep regressions and bug fixes in the current release; roll larger follow-up work into the next version.
 
-- stable .NET cloud scaffold
-- Azure-oriented architecture and data ownership
-- normalized runtime contracts for cloud-to-runtime handoff
-- bootstrap documentation for region injection and targeted device patching
-- starter endpoint coverage for account, notification, robot, loop, update, uploads, and core WebSocket acceptance
-- starter xUnit coverage for the .NET application layer
+For `1.0.18`, the remaining release work should stay small: finish one or two feature slices, run the live regression pass, and only patch bugs found in that pass before calling the version complete. `1.0.19` should then reopen the broader feature queue.
 
-## Next Implementation Scope
+## Current Code Truth
 
-- expand HTTP `X-Amz-Target` coverage from observed traffic and fixtures
-- grow WebSocket compatibility from stub acceptance into realistic turn orchestration
-- keep websocket parity fixture-driven, starting with exact sequencing and payload-shape fidelity for the successful joke vertical slice before claiming broader skill coverage
-- replace in-memory state with Azure SQL-backed persistence
-- add structured fixture replay tests
-- harden region/bootstrap docs by software version
+The hosted `.NET` cloud is a modular monolith:
+
+```text
+Jibo.Cloud.Api -> Jibo.Cloud.Application -> Jibo.Cloud.Domain -> Jibo.Cloud.Infrastructure
+```
 
-## Discovery Scope
+Current API and protocol scope:
 
-We still need to map more than the current Node server expresses. Priority discovery areas:
+- HTTP `X-Amz-Target` dispatch through `JiboCloudProtocolService`
+- `/health` diagnostics
+- WebSocket acceptance for `api-socket.jibo.com`, `neo-hub.jibo.com` listen, and `neo-hub.jibo.com/v1/proactive`
+- token/session issuance for account, hub, and robot startup flows
+- starter account, notification, loop, media, key, person, backup, robot, update, and upload/log handling
+- media lookup through `/media/{path}`
+- no placeholder no-op update from `GetUpdateFrom` when no staged update exists
 
-- all hostnames and service prefixes observed in real startup and turn traffic
-- skill launch and skill lifecycle flows
-- interactivity command families beyond the current joke flow
-- richer embodied speech and animation behaviors
-- upload, logging, backup, and key-sharing flows
-- per-version configuration differences and region handling
+Current websocket scope:
 
-## Current WebSocket Discovery Focus
+- long-lived cloud session state separated from per-turn websocket state
+- `LISTEN`, `CONTEXT`, `CLIENT_NLU`, `CLIENT_ASR`, and binary-audio handling
+- pending listen setup packets kept pending instead of finalized as turns
+- buffered Ogg/Opus audio preservation per turn
+- synthetic transcript hint support for fixture-driven parity
+- opt-in local `ffmpeg` plus `whisper.cpp` STT path for discovery
+- auto-finalize thresholds for buffered audio after a real listen phase
+- late-audio ignore windows after completed turns
+- no-input local completion for constrained prompts
+- unknown inbound websocket types dropped silently instead of echoing stock-OS-unknown OpenJibo events
+- file telemetry and fixture export for HTTP, websocket, and turn captures
 
-The next fixture-driven websocket work should continue to separate three buckets:
+Current state and persistence scope:
 
-- discovered behavior
-  Grounded by the Node oracle, sanitized fixtures, and live captures
-- implemented parity
-  Only the narrow slices currently replayed and tested in `.NET`
-- future hypotheses
-  Ideas to investigate later, but not behaviors to silently bake into the hosted cloud
+- `InMemoryCloudStateStore` remains the runtime store
+- a local JSON persistence bridge is enabled by default at `App_Data/cloud-state.json`
+- persisted state currently covers staged updates, media metadata, and backup metadata
+- this is a bridge toward Azure SQL and Blob Storage, not the final hosted storage architecture
 
-Right now the strongest implemented vertical slice beyond basic listen completion is the successful joke turn:
+## Implemented In Current `1.0.18` Source
 
-- `CLIENT_ASR` transcript-carrying turn completion
-- synthetic `LISTEN` result shaping
-- `EOS`
-- delayed joke `SKILL_ACTION`
+The following behavior is present in source and covered by focused tests:
 
-That should remain the model for future websocket work: capture first, fixture second, parity third.
+- `cloud version` speech and `/health` version reporting share `OpenJiboCloudBuildInfo.Version`
+- apostrophes are no longer escaped to `&apos;` in spoken ESML, while `&`, `<`, `>`, and `"` remain escaped
+- radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
+- news has a first Nimbus-shaped cloud path using `match.cloudSkill = news` and a `news` `SKILL_ACTION` with synthetic briefing content
+- stock-shaped clock handoffs cover time, date, day, clock open, timer/alarm menu, timer/alarm value, timer/alarm clarification, and timer/alarm delete
+- alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `10-25`, `10:25 pm`, and `10 25 p m`
+- ambiguous alarm times can prefer the next local occurrence when the robot context includes `runtime.location.iso`
+- `CLIENT_NLU intent=set` with only `domain=alarm` stays on the local clock clarification path instead of defaulting to a fabricated time
+- `CLIENT_NLU intent=cancel` on `clock/alarm_timer_query_menu` can reuse the last active clock domain
+- photo flows route `open photo gallery` to `@be/gallery`, `snap a picture` to `@be/create/createOnePhoto`, and `open photobooth` to `@be/create/createSomePhotos`
+- passive gallery/create context does not reopen a stale cloud turn
+- media metadata persists across store recreation and `/media/{path}` can serve the current text-body placeholder payload
+- constrained yes/no handling covers `create/is_it_a_keeper`, `shared/yes_no`, `settings/download_now_later`, `surprises-date/offer_date_fact`, `surprises-ota/want_to_download_now`, and `$YESNO` hints
+- outbound constrained yes/no responses strip unrelated `globals/*` rules so stock OS stays local
+- no-input fallback for constrained yes/no prompts emits local `LISTEN`/`EOS` instead of relaunching generic Nimbus speech
+- Word of the Day launch, spoken guesses, structured `CLIENT_NLU` guesses, hint-order guesses, fuzzy hint matching, right-word cleanup, and late audio cleanup are covered in the websocket layer
 
-The latest live captures also support a second discovery track:
+## Reference Sources
 
-- menu-driven `CLIENT_NLU` parity for clock, timer, and alarm flows
-- richer transcript-bearing `CLIENT_ASR` discovery beyond jokes
-- buffered-audio preservation for eventual real ASR in `.NET`
+Use these sources as evidence, not as code to copy blindly:
 
-Near-term ASR work should stay staged:
+- OpenJibo Node oracle: [open-jibo-link.js](../src/Jibo.Cloud/node/open-jibo-link.js)
+- Current hosted `.NET` cloud: [src/Jibo.Cloud/dotnet](../src/Jibo.Cloud/dotnet)
+- Live captures and robot logs: `C:\Projects\JiboExperiments\artifact-output`
+- Original Pegasus cloud source: `C:\Users\JacobDubin\Downloads\jibo\jibo copy\pegasus`
+- Original SDK and skill source snapshot: `C:\Users\JacobDubin\Downloads\jibo\jibo copy\sdk`
+- JiboOS reference tree: `C:\Projects\JiboOS`
+- JiboOS `V3.1` skill snapshot: `C:\Projects\JiboOS\V3.1\build\opt\jibo\Jibo\Skills\@be`
 
-1. preserve and replay the websocket audio payloads honestly
-2. validate a local tool-based decode/transcribe loop in `.NET`
-3. compare that against Azure-hosted STT before choosing a default production path
+The Pegasus tree is especially useful for cloud service intent: `packages/hub` documents `/v1/listen`, `/nlu`, and `/asr`; `packages/lasso` documents credential and provider aggregation; `packages/history` and the architecture materials are useful for future memory and proactivity work.
 
-That keeps Node as the reverse-engineering oracle while letting the long-term `.NET` cloud gain real STT seams without pretending they are finished.
+The JiboOS trees are especially useful for local skill ownership and payload shape: `@be/clock`, `@be/gallery`, `@be/create`, `@be/radio`, `@be/nimbus`, `@be/settings`, `@be/surprises*`, `@be/restore`, `@be/who-am-i`, and `@be/idle`.
 
-## Latest Capture Findings
+When sources disagree, prefer the newest live stock-OS capture for runtime behavior, then stock robot source for local ownership, then Pegasus for original cloud intent, then Node for known working compatibility behavior.
 
-The latest live test round tightened up three priorities:
+## `1.0.18` Closeout Gates
 
-- yes/no turns need explicit constrained follow-up handling instead of generic chat routing
-- skill invocation still depends too much on narrow phrase matching and is vulnerable to STT drift
-- local buffered-audio STT in `.NET` is useful for discovery, but it is not yet stable enough to be the default live-test assumption
+Before calling `1.0.18` complete, prove or explicitly defer these:
 
-Evidence from the latest `2026-04-18` captures:
+- Run the focused `.NET` cloud test suite after the last feature slice.
+- Confirm the running robot build reports cloud version `1.0.18`.
+- Regression test alarm flows: set with explicit time, set with compact/spoken time, clarify missing time, cancel alarm, and local cleanup prompts.
+- Regression test photo/gallery flows: open gallery, answer the stock `shared/yes_no` prompt, hand into create, take one photo, and avoid blue-ring stale turns.
+- Live-test radio launch: `open the radio` and `play country music`.
+- Live-test first news path: `tell me the news` should use the Nimbus cloud-skill lane instead of generic chat.
+- Recheck constrained yes/no prompts for update/backup/share/gallery without leaking global rules.
+- Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
+- Treat remaining `ffmpeg` / `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
 
-- several buffered-audio turns never produced a usable transcript because the local `whisper.cpp` path was missing or the temporary normalized Ogg file was rejected by `ffmpeg`
-- some recognized phrases fell into placeholder provider replies because the intent was recognized but the feature path behind it is still a stub
-- short yes/no responses need the same session-aware treatment already prototyped in Node, especially for create-flow style follow-ups
+## Known Gaps
 
-Evidence from the latest word-of-the-day capture round:
+These are not blockers for calling `1.0.18` complete unless the live test shows a regression in a current release path:
 
-- yes/no photo confirmation improved and now completes through the constrained follow-up path
-- `CLIENT_NLU` menu navigation is surfacing richer `destination` entities such as `snapshot`, `fun`, and `word-of-the-day`
-- word-of-the-day guesses can arrive as structured `CLIENT_NLU` turns with `intent=guess`, `rules=["word-of-the-day/puzzle"]`, and `entities.guess=<word>`
-- those structured turns should be treated as first-class cloud inputs even when no free-form transcript is present
+- local `whisper.cpp` STT remains a discovery seam, not production ASR
+- media upload/body handling is not binary-safe enough for final gallery originals and thumbnails
+- state persistence is local JSON, not Azure SQL / Blob Storage
+- update, backup, and restore are not end-to-end proven
+- news content is synthetic
+- weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
+- volume, stop, robot age, and command-versus-question personality routing are not implemented yet
 
-Evidence from the continued `2026-04-18` word-of-the-day and time captures:
+## `1.0.19` Direction
 
-- spoken "start word of the day" style requests should route into the same word-of-the-day launch path as the menu destination
-- spoken puzzle answers like `pastoral` should be treated as valid guesses whenever the active listen rules show `word-of-the-day/puzzle`
-- spoken numeric line picks like `two` should resolve through the active word-of-the-day hint order instead of being treated as generic chat
-- after a successful word-of-the-day completion, late empty same-turn audio should be ignored instead of generating a stale blank-audio follow-up
-- post-game hotphrase blank-audio turns should be treated as cleanup noise, not a new cloud conversation turn
-- clock replies should use the user-facing hour format without a leading zero
+After `1.0.18` is tested and tagged, `1.0.19` should move back into feature work:
 
-Evidence from the smaller `2026-04-18/19` hotphrase and word-of-the-day verification bundle:
+- one lightweight device-control feature, most likely stop or volume
+- end-to-end update/backup/restore proof
+- STT reliability improvements, including noise screening and a managed STT comparison
+- provider-backed first content path, likely news or weather
+- hosted capture/export boundary for group testing
+- continued Pegasus/JiboOS-backed mapping for proactivity, memory/history, Lasso-style aggregation, and identity
 
-- hotphrase silence can still auto-finalize into a generic `heyJibo` fallback, which sounds confused on-robot compared with a dedicated greeting path
-- voice-triggered `loadMenu + destination=word-of-the-day` reaches Nimbus successfully, but Nimbus still expects a follow-up cloud skill response and times out if launch stops at `LISTEN` + `EOS`
-- the newer `jibo test 2` bundle shows voice launch now reaches Nimbus and receives a cloud response, but a generic `SLIM/RUNTIME_PROMPT` just says "starting word of the day" instead of performing the menu-style redirect the on-screen path uses
-- the `jibo test 3` bundle confirms Nimbus rejects `REDIRECT` in that cloud-skill slot, so the better next experiment is to hint the on-robot target skill directly on the synthetic `LISTEN` result and skip Nimbus `SKILL_ACTION` entirely for word-of-the-day launch
-- the same bundle also shows `word-of-the-day/right_word` cleanup turns need a short ignore window for trailing audio or the robot can stay stuck in a blue-ring listening state
-- the `jibo test 4` bundle exposed a broader websocket issue: inbound robot `LISTEN` setup packets were still being routed through turn finalization instead of just priming pending state, which can corrupt menu and word-of-the-day flows by treating setup turns like resolved intents
-- the `jibo test 5` bundle suggests the remaining WOD launch and post-win cleanup bugs share the same root cause: we were leaving the robot-side `cloudSkillResponse` promise unresolved on `word_of_the_day`, `word_of_the_day_guess`, and `word-of-the-day/right_word`, so the latest .NET pass now emits a completion-only silent `SKILL_ACTION` for those paths instead of stopping at `LISTEN` + `EOS` or going fully silent
-- the `jibo test 6` bundle plus the attached `@be` source snapshot refine that diagnosis: Nimbus does accept the silent completion response, but treats it as a normal `SLIM/RUNTIME_PROMPT` instead of a skill redirect, while the successful on-robot path is built around `menu + domain=word-of-the-day` skill switching through `SkillSwitchScheduler`
-- the attached `be-framework.js` adds one more strong clue: the Be relaunch hook reads `skillData.nlu.skill`, so synthetic cloud launch turns for word-of-the-day should carry the explicit target skill name in the outbound NLU payload instead of expecting the robot to infer it from `intent/domain` alone
-- the `JiboOs/V3.1` Nimbus source confirms the hotphrase/global launch path still routes through `@be/nimbus` and waits on `listenResult.cloudSkillResponse`, while Nimbus only supports a narrow set of cloud JCP behaviors and does not use cloud `REDIRECT` to jump into local skills; by contrast, the post-win `word-of-the-day/right_word` turn is a local `Optional-Response`, so the cleaner robot-side closeout is to synthesize an immediate empty `LISTEN + EOS` no-response result rather than replying with only `SKILL_ACTION`
-- the same `jibo test 6` capture also shows the blue-ring cleanup loop was partly self-inflicted in `.NET`: after `word-of-the-day/right_word` we stopped the active turn, but later stray binary audio on the same transID could still re-arm buffering even without a fresh `LISTEN`, so the next pass now requires a real listen phase before post-turn audio can reopen buffered completion
-- the local buffered-audio seam is still producing repeated `whisper.cpp returned no transcript` and `ffmpeg ... Codec not found` failures, so lightweight waveform or energy screening is worth considering once the core launch flow is stable
+## Azure Direction
 
-Near-term interaction work should now prioritize:
+The target hosted footprint remains:
 
-1. preserve and interpret yes/no turn constraints from observed listen rules
-2. broaden phrase-to-intent matching for the small set of known working skills before moving to larger NLU ambitions
-3. keep synthetic transcript hints as the most reliable parity path when captures already provide them
-4. continue evaluating whether local preprocessing is worth further investment or whether managed STT should replace it for the next serious testing phase
-5. start separating laptop-local capture storage from the eventual hosted retention/export path so group testing does not depend on repo-local zip handling
+- Azure App Service for HTTP and WebSocket traffic
+- Azure SQL for accounts, devices, sessions, host mappings, updates, media metadata, and provisioning records
+- Azure Blob Storage for media bodies, upload artifacts, update payloads, and curated capture bundles
+- Azure Key Vault for secrets and certificates
+- Application Insights for diagnostics and live-test observability
 
-## Capture Storage Direction
-
-Repo-local NDJSON plus zipped capture bundles are still good enough for current reverse-engineering and single-operator testing.
-
-For hosted group testing, the next direction should be:
-
-1. keep local file sinks for dev and laptop workflows
-2. add a cleaner export/archive boundary so noteworthy sessions can be promoted without copying raw capture trees around manually
-3. plan for hosted durable storage separately from the runtime node that is serving live robot traffic
-4. keep fixture generation and sanitized replay artifacts as the stable handoff format between local testing and hosted debugging
-
-## Working Cloud Framework
-
-The current evidence in captures, fixtures, and Node behavior supports three main cloud interaction paths:
-
-1. local Jibo behavior observed by the cloud
-   The robot or its local skill stack already interpreted the turn and the cloud mainly tracks, acknowledges, or lightly completes it.
-2. local Jibo behavior overridden or redirected by the cloud
-   The robot reports the turn state, but the cloud chooses a different synthetic reply path.
-3. raw audio interpreted by the cloud
-   The robot sends buffered audio and the cloud performs transcript resolution before sending back `LISTEN`, `EOS`, and ESML-driven playback.
-
-Those are the right primary buckets for now. Additional side channels may still emerge later, especially around proactive traffic, direct skill/service sockets, or future on-device OS changes, but they should be treated as extensions to this model until captures prove otherwise.
-
-Latest stock-OS WOD findings:
-
-- `word-of-the-day/right_word` closeout should not emit a synthetic `match`; otherwise Jetstream promotes it into `globalTurnResult` and Global Service relaunches Nimbus a few seconds later with a `Cloud Skill Response Timeout`.
-- Voice `play word of the day` hotphrase launch still enters Global Service first, so a synthetic `LISTEN` result alone is not enough. The next-most-correct transport hint is a direct `SKILL_REDIRECT` event aimed at `@be/word-of-the-day`, alongside the menu-shaped `LISTEN` payload.
-- Stock OS also keeps the original hotphrase/global launch cloud response promise alive even after the redirect succeeds, so voice WOD launch needs an explicit silent `SKILL_ACTION` completion on the same transID to avoid later cloud-response culling and an interrupted game state.
-- Auto-dismissing `word-of-the-day/right_word` with a no-input `LISTEN`/`EOS` stops the listening ring, but it does not close the WOD UI by itself. Pairing that no-input closeout with an explicit redirect back to `@be/idle` is the current cleanest approximation.
-- OTA/update yes-no prompts can advertise `$YESNO` only through ASR hints rather than `listenRules`, so short denials like `no` need to be recognized from `listenAsrHints` too.
-- Spoken WOD guesses should preferentially snap to the closest offered hint when Whisper lands very close to one of the menu words, since near-misses like `haglet` for `aglet` are common in live testing.
-- The stock robot still misroutes constrained local turns if the cloud echoes `globals/*` rules back on the reply. For spoken WOD guesses and settings/update `no`, we should only return the local rule (`word-of-the-day/puzzle`, `settings/download_now_later`, etc.) so Global Service does not relaunch Nimbus.
-
-Latest radio discovery findings:
-
-- `@be/radio` is a true local skill, not a cloud placeholder.
-- Its `open(result, refresh, previousSkillName)` path treats `result.nlu.intent === "menu"` as a `play` launch.
-- `result.nlu.entities.station` is the genre selector, and `Country` is a real supported station key from the robot's `genres.json`.
-- The smallest stock-shaped cloud handoff for voice launch is therefore a local `SKILL_REDIRECT` to `@be/radio` with `nlu.intent = "menu"`, optional `entities.station`, and a silent completion to settle the hotphrase cloud response.
-
-Latest news discovery findings:
-
-- Nimbus explicitly treats `match.cloudSkill === "news"` like the GQA path and waits on `cloudSkillResponse`.
-- The first OpenJibo news pass should therefore use a real cloud-skill shape, not a generic placeholder chat reply.
-- For now, the content can stay synthetic while the protocol is grounded: `match.cloudSkill = "news"` plus a supported `SLIM` announcement response is enough to validate the robot path before provider-backed headlines arrive later.
-
-Latest clock discovery findings:
-
-- `@be/clock` is a real local skill with `clock`, `timer`, and `alarm` domains.
-- Menu launches use `intent = "menu"` with `entities.domain` set to the target sub-area.
-- The `jibo test 15` bundle shows stock OS 1.9 rejecting our older top-level `timerValue` launch with `found no matching transition`, so the safer cloud contract is a stock-style `start` intent with the timer/alarm entities attached.
-- The same bundle also shows local follow-up rules like `clock/timer_set_value`, so bare replies such as `five minutes` or `ten twenty five` need to be parsed when the robot is already collecting a timer/alarm value.
-- The newest `.NET` pass now routes `open the clock` into the direct `askForTime` clock-view path, moves plain time/date/day questions onto stock-shaped local `@be/clock` handoffs, and keeps malformed timer/alarm requests on a clarification reply path instead of generic chat echo.
-- The `jibo test 17` bundle shows two remaining clock realities on stock OS 1.9: some alarm misses are genuine STT loss before the cloud ever sees the minutes, and empty cleanup turns like `clock/alarm_timer_okay` must stay local instead of degrading into `heyJibo`/Nimbus.
-- When the robot context includes a usable local `runtime.location.iso`, ambiguous alarm times now prefer the next real local occurrence rather than defaulting blindly.
-
-Latest photo discovery findings:
-
-- `@be/gallery` is the local gallery browser and opens from `intent = "menu"`.
-- `snapshot` and `photobooth` are not gallery submodes; stock main-menu logic remaps them into `@be/create` with `createOnePhoto` and `createSomePhotos`.
-- The newest `.NET` pass keeps that routing, adds local-file persistence for media metadata, and serves stored media URLs back through `/media/{path}` as a first hosted-gallery slice.
-- The remaining gap is binary fidelity: the current HTTP capture path stores request bodies as text, which is enough to preserve metadata and a placeholder payload, but may still be too lossy for perfect thumbnails/original fetches.
-- The `jibo test 17` gallery blue-ring report is at least partly tangled up with the gallery-empty path: stock `@be/gallery` says `there's nothing in the gallery yet. want to take a picture now?`, so lingering mic state there is not purely a launch-routing issue.
-- The `jibo test 18` bundle shows the more direct failure mode: short local replies like `yes` can stall if buffered-audio auto-finalize waits too long, and the old `OPENJIBO_AUDIO_RECEIVED` compatibility event only added robot-side warning noise while the ring stayed blue.
-
-Latest update and state findings:
-
-- unstaged update queries should not fabricate placeholder no-op manifests, because stock settings logic can treat any returned object like a pending update
-- the hosted `.NET` cloud now persists update/media/backups state to a local state file by default, which is a better bridge toward Azure SQL / Blob storage than the old process-memory-only behavior
-- The `jibo test 17` session also includes a real on-robot backup announcement and temporary settings connectivity turbulence, so not all sluggishness from that run should be attributed to the newer cloud protocol changes.
-
-## Speech, Animation, And ESML
-
-The current joke flow is only a small foothold into Jibo expressiveness.
-
-Future work should map:
-
-- direct speech modifiers
-- animation selection and filtering
-- embodied speech behaviors
-- ESML and SSML subsets
-- interactions between speech, visuals, and timing
-
-Useful external references:
-
-- [Speak-Tweak Docs](https://hri2024.jibo.media.mit.edu/Speak-Tweak-Docs)
-- [ESML PDF](https://hri2024.jibo.media.mit.edu/attachments/SDK-SDK---ESML-121023-203758.pdf)
-
-## Future Scope
-
-- full endpoint inventory beyond the current Node mapping
-- OTA-driven recovery
-- paid hosted plans or donation-supported hosting
-- deeper on-device bridge and OS modernization
-- more capable skill/runtime integration
-- possible LLM or tool-use patterns inspired by workshop-era experimentation
-
-## Latest Notes
-
-- The `jibo test 19` bundle confirmed that gallery follow-up confirmation uses the stock local `shared/yes_no` rule family, not just the create/settings/surprise yes-no families. Spoken `yes` was being heard correctly, but leaking the global rules back into Nimbus instead of staying local.
-- The same bundle also confirmed some `OPENJIBO_AUDIO_RECEIVED` noise was still coming from an older running build, because the current `.NET` source no longer emits that synthetic websocket event. When a live session still shows it, operator workflow should treat that as a rebuild/restart sanity-check clue before assuming a new regression.
-- Spoken `cancel alarm` should map into stock `@be/clock` `delete` semantics, not generic chat. The current cloud path now mirrors that local intent so voice cancel can follow the same lane as the robot's clock skill.
-- The `jibo test 20` bundle suggests gallery itself is mostly okay in the latest pass, but clock and protocol polish still matter: stock `CLIENT_NLU intent="set"` with only `domain="alarm"` should stay on the local clarification path instead of defaulting the cloud payload to `7:00`, and stock `CLIENT_NLU intent="cancel"` on `clock/alarm_timer_query_menu` should reuse the last active clock domain so delete actually lands on alarm/timer instead of generic chat.
-  - The same `jibo test 20` robot logs also showed `OPENJIBO_TURN_PENDING` and `OPENJIBO_CONTEXT_ACK` are just unknown-event noise on stock OS 1.9, so the compatibility layer now keeps that turn state internally and stops sending those synthetic websocket event types to the robot.
-- The `jibo test 21` bundle confirms the first gallery path is healthy enough to open `@be/gallery`, ask the stock `shared/yes_no` follow-up, and hand into `@be/create` for a photo; the remaining alarm pain in that round was mostly the transcript collapsing to `set an alarm for suddenly` / `set an alarm for...`, which means the right fix is to keep `alarm_clarify` local by handing straight into `@be/clock` with `intent="set"` and `domain="alarm"` instead of asking the clarification through Nimbus-only cloud speech.
-  - The same bundle also showed stock OS 1.9 still logs fallback `OPENJIBO_ACK` packets as unknown-event noise, so the websocket compatibility layer now drops unrecognized inbound message types silently instead of replying with a synthetic ack the robot does not understand.
-- That bundle still contains real `ffmpeg` / `whisper.cpp` failures in the buffered-audio STT seam, and it also includes a genuine `jibo-server-service` broken-pipe / server-connection-lost episode, so not every freeze in that round should be blamed on cloud turn routing alone.
-
-## MCP-Like Ideas
-
-Recent MIT workshop materials suggest experimentation around modern AI tooling for Jibo, including an MCP-oriented idea. We should treat that as inspiration for future OpenJibo directions, not as a present dependency or supported integration.
+Local JSON persistence is only a stepping stone. Do not design new feature slices as if local file state were the final hosted store.

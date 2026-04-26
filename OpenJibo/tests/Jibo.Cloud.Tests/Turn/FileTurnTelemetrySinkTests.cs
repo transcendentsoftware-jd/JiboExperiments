@@ -59,9 +59,8 @@ public sealed class FileTurnTelemetrySinkTests
             new WebSocketMessageEnvelope { Text = """{"type":"CONTEXT","data":{"topic":"conversation"}}""" },
             CancellationToken.None);
 
-        Assert.Single(replies);
-        using var payload = System.Text.Json.JsonDocument.Parse(replies[0].Text!);
-        Assert.Equal("OPENJIBO_TURN_PENDING", payload.RootElement.GetProperty("type").GetString());
+        Assert.Empty(replies);
+        Assert.True(session.TurnState.AwaitingTurnCompletion);
         Assert.Equal(12000, session.TurnState.BufferedAudioBytes);
         Assert.Equal("ffmpeg failed", session.TurnState.LastSttError);
 
