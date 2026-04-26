@@ -110,7 +110,7 @@ What remains intentionally unclaimed for that slice:
 
 ### Latest Live Capture Additions From April 16, 2026
 
-The newest repo-root websocket capture at [captures/websocket/20260416.events.ndjson](/C:/Projects/JiboExperiments/captures/websocket/20260416.events.ndjson) adds more grounded websocket discovery without implying broad protocol coverage.
+The newest repo-root websocket capture at [captures/websocket/20260416.events.ndjson](/artifact-output/captures/websocket/20260416.events.ndjson) adds more grounded websocket discovery without implying broad protocol coverage.
 
 Observed `CLIENT_ASR` transcript-bearing turns now include:
 
