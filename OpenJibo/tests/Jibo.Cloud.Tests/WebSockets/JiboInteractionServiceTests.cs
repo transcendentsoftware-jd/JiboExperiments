@@ -498,7 +498,9 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("alarm_clarify", decision.IntentName);
-        Assert.Null(decision.SkillName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("set", decision.SkillPayload["clockIntent"]);
         Assert.Equal("What time should I set the alarm for?", decision.ReplyText);
     }
 
@@ -540,7 +542,9 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("alarm_clarify", decision.IntentName);
-        Assert.Null(decision.SkillName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("set", decision.SkillPayload["clockIntent"]);
     }
 
     [Fact]
@@ -578,7 +582,9 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("timer_clarify", decision.IntentName);
-        Assert.Null(decision.SkillName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("timer", decision.SkillPayload!["domain"]);
+        Assert.Equal("set", decision.SkillPayload["clockIntent"]);
         Assert.Equal("How long should I set the timer for?", decision.ReplyText);
     }
 

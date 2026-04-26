@@ -72,21 +72,7 @@ public sealed class JiboWebSocketService(
             return replies;
         }
 
-        return
-        [
-            new WebSocketReply
-            {
-                Text = JsonSerializer.Serialize(new
-                {
-                    type = "OPENJIBO_ACK",
-                    data = new
-                    {
-                        messageType = parsedType,
-                        sessionId = session.SessionId
-                    }
-                })
-            }
-        ];
+        return [];
     }
 
     private static string ReadMessageType(string? text)

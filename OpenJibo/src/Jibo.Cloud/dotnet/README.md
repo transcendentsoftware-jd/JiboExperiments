@@ -6,7 +6,7 @@
 
 This is the production-oriented path for restoring device connectivity and creating a foundation for future runtime, AI, and OTA work.
 
-Current spoken cloud version: `Open Jibo Cloud version 1.0.17.`
+Current spoken cloud version: `Open Jibo Cloud version 1.0.18.`
 
 Release hygiene reminder:
 

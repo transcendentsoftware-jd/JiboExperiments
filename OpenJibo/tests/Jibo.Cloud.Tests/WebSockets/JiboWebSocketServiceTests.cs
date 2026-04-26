@@ -649,7 +649,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task ClientAsr_SetAlarmWithoutTime_UsesClarificationSpeechInsteadOfClockRedirect()
+    public async Task ClientAsr_SetAlarmWithoutTime_RedirectsIntoClockSkillWithoutDefaultingTime()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -669,20 +669,20 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-clock-clarify-alarm","data":{"text":"set an alarm"}}"""
         });
 
-        Assert.Equal(3, replies.Count);
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
 
-        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
-        var esml = skillPayload.RootElement
-            .GetProperty("data")
-            .GetProperty("action")
-            .GetProperty("config")
-            .GetProperty("jcp")
-            .GetProperty("config")
-            .GetProperty("play")
-            .GetProperty("esml")
-            .GetString();
-        Assert.Contains("What time should I set the alarm for?", esml, StringComparison.Ordinal);
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("set", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+        Assert.False(listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").TryGetProperty("time", out _));
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("set", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
     }
 
     [Fact]

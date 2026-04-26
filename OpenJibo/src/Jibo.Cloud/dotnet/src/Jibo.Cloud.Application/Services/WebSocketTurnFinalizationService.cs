@@ -517,6 +517,8 @@ public sealed class WebSocketTurnFinalizationService(
                                !string.Equals(plan.IntentName, "clock_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "timer_clarify", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "alarm_clarify", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_value", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_value", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase) &&

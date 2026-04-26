@@ -59,8 +59,8 @@ public sealed class JiboInteractionService(
             "alarm_delete" => BuildClockLaunchDecision("alarm_delete", "alarm", "delete", "Canceling the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn, clientEntities),
             "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime, clientEntities),
-            "timer_clarify" => new JiboInteractionDecision("timer_clarify", "How long should I set the timer for?"),
-            "alarm_clarify" => new JiboInteractionDecision("alarm_clarify", "What time should I set the alarm for?"),
+            "timer_clarify" => BuildClockClarifyDecision("timer_clarify", "timer", "How long should I set the timer for?"),
+            "alarm_clarify" => BuildClockClarifyDecision("alarm_clarify", "alarm", "What time should I set the alarm for?"),
             "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
             "snapshot" => BuildPhotoCreateDecision("snapshot", "Taking a picture.", "createOnePhoto"),
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
@@ -537,6 +537,20 @@ public sealed class JiboInteractionService(
     private static JiboInteractionDecision BuildClockLaunchDecision(string domain, string replyText)
     {
         return BuildClockLaunchDecision($"{domain}_menu", domain, "menu", replyText);
+    }
+
+    private static JiboInteractionDecision BuildClockClarifyDecision(string intentName, string domain, string replyText)
+    {
+        return new JiboInteractionDecision(
+            intentName,
+            replyText,
+            "@be/clock",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/clock",
+                ["domain"] = domain,
+                ["clockIntent"] = "set"
+            });
     }
 
     private static JiboInteractionDecision BuildTimerValueDecision(
