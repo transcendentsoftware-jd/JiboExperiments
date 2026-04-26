@@ -4,7 +4,7 @@ Prepare OpenJibo for a lightweight v1 cloud deployment and the cleanest practica
 
 Current repo context:
 
-- workspace root: `C:\Projects\JiboExperiments\OpenJibo`
+- workspace root: `.\OpenJibo`
 - the current `.NET` cloud is the target runtime
 - the Node server remains a discovery oracle and fallback
 - latest live-test guidance is in:

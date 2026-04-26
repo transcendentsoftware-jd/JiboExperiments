@@ -4,7 +4,7 @@ Improve the OpenJibo `.NET` speech-to-text path for live robot testing.
 
 Current repo context:
 
-- workspace root: `C:\Projects\JiboExperiments\OpenJibo`
+- workspace root: `.\OpenJibo`
 - current live captures from `2026-04-18` showed that some turns succeeded, but many buffered-audio turns failed before producing a usable transcript
 - the current local `.NET` STT path is in:
   - `src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/Audio/LocalWhisperCppBufferedAudioSttStrategy.cs`

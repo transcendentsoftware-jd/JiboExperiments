@@ -98,11 +98,11 @@ Use these sources as evidence, not as code to copy blindly:
 
 - OpenJibo Node oracle: [open-jibo-link.js](../src/Jibo.Cloud/node/open-jibo-link.js)
 - Current hosted `.NET` cloud: [src/Jibo.Cloud/dotnet](../src/Jibo.Cloud/dotnet)
-- Live captures and robot logs: `C:\Projects\JiboExperiments\artifact-output`
-- Original Pegasus cloud source: `C:\Users\JacobDubin\Downloads\jibo\jibo copy\pegasus`
-- Original SDK and skill source snapshot: `C:\Users\JacobDubin\Downloads\jibo\jibo copy\sdk`
-- JiboOS reference tree: `C:\Projects\JiboOS`
-- JiboOS `V3.1` skill snapshot: `C:\Projects\JiboOS\V3.1\build\opt\jibo\Jibo\Skills\@be`
+- Live captures and robot logs: `.\artifact-output`
+- Original Pegasus cloud source: `..\jibo\pegasus`
+- Original SDK and skill source snapshot: `..\jibo\sdk`
+- JiboOS reference tree: `..\JiboOS`
+- JiboOS skill snapshot: `..\JiboOS\opt\jibo\Jibo\Skills\@be`
 
 The Pegasus tree is especially useful for cloud service intent: `packages/hub` documents `/v1/listen`, `/nlu`, and `/asr`; `packages/lasso` documents credential and provider aggregation; `packages/history` and the architecture materials are useful for future memory and proactivity work.
 

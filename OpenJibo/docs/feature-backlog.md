@@ -348,7 +348,7 @@ Current release theme:
 - Questions:
   - whether `surprise me` should enter the top-level surprise router
   - which categories depend on cloud services
-  - whether stock OS `1.9` differs from the `V3.1` source snapshot
+  - whether stock OS `1.9` differs from the `x.x` source snapshot
 
 ### 16. History / Memory Layer
 
