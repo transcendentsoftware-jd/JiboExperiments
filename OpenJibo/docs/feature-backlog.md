@@ -39,6 +39,7 @@ Current release theme:
 - radio, ESML apostrophe cleanup, and first news are implemented in source/tests; radio and basic news are live-proven as of `jibo test 23`
 - `jibo test 22` validated radio, exposed backup/load interference, exposed a shared yes/no no-input gap, exposed repeated create keeper prompts after photo handoff, and showed local whisper `ffmpeg` failures on unusable buffered audio
 - `jibo test 23` validated basic news, proved one alarm set/fire path at `7:43 AM`, exposed comma-separated/short alarm follow-up parsing risk, showed stock alarm replacement yes/no rules that needed cloud handling, and showed photo gallery still failing when `shared/yes_no` ASR came back empty
+- `jibo test 24` showed alarm replacement yes/no working, but exposed empty `clock/alarm_set_value` and `gallery/gallery_preview` turns falling into generic `I heard you` fallback speech; it also showed `CLIENT_NLU cancel` inside `clock/alarm_set_value` re-asking for an alarm value instead of closing the prompt
 
 ## Immediate `1.0.18` Queue
 
@@ -75,6 +76,7 @@ Current release theme:
   - JiboOS Nimbus checks `match.cloudSkill === "news"` and waits for a cloud response
   - `jibo test 22` captured the phrase `So, play the news.` reaching the `news` intent, but live behavior was not cleanly confirmed
   - `jibo test 23` successfully played the synthetic quick brief
+  - original Pegasus `report-skill` news tests cover the next expansion shape: category preferences, default categories, duplicate filtering, missing-summary filtering, child/unidentified-speaker content filtering, and headline image metadata
 - Exit criteria:
   - live `tell me the news` reaches the Nimbus-shaped path
   - the robot behavior feels like a cloud skill response, not generic chat playback
@@ -96,6 +98,7 @@ Current release theme:
 - Latest evidence:
   - `jibo test 22` did not show `Backup_*` HTTP traffic during the backup complaint
   - stock `@be/surprises-ota` drives the backup notification from robot-local `jibo.scheduler.backupStatus`
+  - original `surprises-ota` tests make backup and OTA notifications contextual-priority prompts, with repeat suppression through last-notification timestamps
   - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
   - `jibo test 23` again showed backup-in-progress sluggishness and update-menu blockage while backups were active; explicit backup voice launch remains unwired
 - Exit criteria:
@@ -113,10 +116,13 @@ Current release theme:
 - Current code:
   - alarm values parse explicit, compact, spaced, comma-separated, hyphenated, and local-context ambiguous times
   - short alarm/timer value replies are accepted during clock value follow-up rules instead of being filtered out before parsing
+  - empty alarm/timer value turns complete locally as no-input instead of falling through to generic Nimbus speech
   - missing alarm times stay in local `@be/clock` clarification
   - alarm cancel can reuse the last active clock domain
+  - cancel inside a clock value prompt maps to local clock `cancel`
   - stock alarm replacement/no-alarm prompts use the constrained yes/no path
   - gallery opens as `@be/gallery`; snapshot and photobooth open through `@be/create`
+  - empty `gallery/gallery_preview` turns complete locally as no-input instead of relaunching Nimbus fallback speech
   - passive gallery/create context no longer reopens stale cloud turns
   - `shared/yes_no` no-input fallback and repeated create keeper cleanup were added after `jibo test 22`
 - Latest evidence:
@@ -125,9 +131,14 @@ Current release theme:
   - `ffmpeg` failures were present during the same test window, so alarm/gallery retest should separate transcript quality from payload shape
   - `jibo test 23` set and fired a `7:43 AM` alarm, then failed a later clarify/replacement path when the robot heard `- Time. - 7, 14.` and stock NLU converted that to `7:00 PM`
   - `jibo test 23` photo gallery got stuck on `shared/yes_no` turns with empty ASR, not on a transcript-bearing `yes` that the cloud mapped incorrectly
+  - `jibo test 24` recognized `Yes.` for `clock/alarm_timer_change`, but empty `clock/alarm_set_value` produced `I heard you`; current source now keeps that as local no-input
+  - `jibo test 24` showed photo/gallery blue-ring cleanup improved and create keeper completion working, but empty `gallery/gallery_preview` produced `I heard you`; current source now keeps that as local no-input
+  - original clock tests confirm cancel inside the alarm value prompt must close without scheduling, existing-alarm `keep` must preserve KB/scheduler state, and existing-alarm `delete` or `cancel` must clear it
+  - original gallery tests confirm empty-gallery `yes` redirects to `@be/create`, empty-gallery `no` exits, media-load failure exits, and delete confirmation only deletes on a positive `yes`
 - Exit criteria:
   - gallery opens, offers to take a picture if empty, accepts `yes`, and hands into create
-  - alarm set, clarify, replacement yes/no, and cancel/delete flows behave locally and agree with the menu state
+  - alarm set, clarify, replacement yes/no, cancel from value prompt, and cancel/delete flows behave locally and agree with the menu state
+  - alarm replacement and deletion regression checks verify both websocket payload shape and persistent robot menu state where possible
   - failures caused by collapsed STT transcripts are logged as STT issues rather than misdiagnosed as payload bugs
 - Next action:
   - re-run a stock OS `1.9` regression bundle before declaring `1.0.18` complete
@@ -187,10 +198,13 @@ Current release theme:
   - timer/alarm menu, value, clarify, and delete are implemented
   - compact, spoken, comma-separated, and local-context alarm parsing has focused tests
   - short clock value replies under `clock/alarm_set_value` and `clock/timer_set_value` are not filtered out by websocket finalization
+  - empty clock value turns produce local no-input instead of generic Nimbus fallback speech
+  - `CLIENT_NLU cancel` inside a clock value prompt maps to local clock `cancel`
   - alarm replacement/no-alarm yes/no prompts are mapped as constrained local prompts
-  - client NLU alarm clarify/cancel cases from `jibo test 20` and `jibo test 21` are reflected in source
+  - client NLU alarm clarify/cancel cases from `jibo test 20`, `jibo test 21`, and `jibo test 24` are reflected in source
 - Follow-up:
   - live regression remains in the immediate queue
+  - add fixture coverage for original clock-test branches that are not yet mirrored in `.NET`: no-alarm query `yes`/`no`, existing-alarm `keep` versus `delete`, and cross-domain `OtherSet` behavior
 
 ### Photo / Gallery / Create Family
 
@@ -200,9 +214,11 @@ Current release theme:
   - gallery, snapshot, and photobooth voice paths route to the correct local skills
   - media metadata persists locally
   - `/media/{path}` serves the current text-body placeholder payload
+  - empty `gallery/gallery_preview` turns produce local no-input instead of generic Nimbus fallback speech
   - repeated empty `create/is_it_a_keeper` turns redirect to `@be/idle` after the second miss
 - Follow-up:
   - live regression remains in the immediate queue
+  - add fixture coverage for original gallery-test branches that are not yet mirrored in `.NET`: empty-gallery `yes` redirect to create, empty-gallery `no` exit, media-load failure exit, and delete confirmation `yes`/`no`
   - binary-safe media storage remains future work
 
 ### Constrained Yes-No Cleanup
@@ -294,6 +310,7 @@ Current release theme:
 - Current evidence:
   - `@be/settings` contains update and backup flows
   - `@be/restore` waits for a UGC key, runs restore, and reboots
+  - original OTA surprise tests treat backup/download status as robot-local scheduler state, not as a direct cloud backup command path
   - no-op update fabrication has been removed from `.NET`
 - Exit criteria:
   - no phantom "always has updates" behavior
@@ -310,6 +327,7 @@ Current release theme:
 - Current evidence:
   - `jibo test 22` showed `ffmpeg` and `whisper.cpp` failures
   - `jibo test 23` did not show the same decode failure pattern, but gallery yes/no turns still produced empty ASR
+  - `jibo test 24` still had collapsed or empty transcripts in alarm/gallery paths, including `Sudden alarm.`, `I'm setting alarm for seven.`, empty clock value input, and empty gallery preview input
   - current source now skips local whisper when buffered audio does not contain an Opus identification header
   - yes/no and alarm flows are especially sensitive to short or collapsed transcripts
 - Implementation notes:
@@ -362,6 +380,11 @@ Current release theme:
   - which source should provide headlines for hosted OpenJibo
   - whether news belongs under a broader Lasso-style aggregation service
   - how to keep content short and Jibo-native
+- Source-backed implementation notes:
+  - original report-skill news tests expect default general, technology, sports, and business headlines for unidentified users
+  - category counts are preference-dependent: one active category gets multiple headlines, two categories get two each, and three or more get one each
+  - filter items without summaries, corrections, duplicate headlines, banned words, and adult headlines for children or unidentified speakers
+  - include image view metadata with unique IDs, category labels, source image URLs, and sane scaling
 
 ### 14. Proactivity Selector And Surprise Offers
 

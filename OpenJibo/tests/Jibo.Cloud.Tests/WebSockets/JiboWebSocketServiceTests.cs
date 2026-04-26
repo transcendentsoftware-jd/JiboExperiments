@@ -778,6 +778,37 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientNlu_CancelFromAlarmValuePrompt_PassesClockCancelInsteadOfClarifyingAgain()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-cancel-alarm-value-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-cancel-alarm-value","data":{"rules":["clock/alarm_set_value","globals/gui_nav","globals/global_commands_launch"],"mode":"CLIENT_NLU"}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-cancel-alarm-value-token",
+            Text = """{"type":"CLIENT_NLU","transID":"trans-clock-cancel-alarm-value","data":{"entities":{},"intent":"cancel","rules":["clock/alarm_set_value"]}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("cancel", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("clock/alarm_set_value", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+    }
+
+    [Fact]
     public async Task ClientNlu_CancelFromAlarmQueryMenu_UsesLastClockDomainAndDeletesAlarm()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -934,6 +965,66 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("clock/alarm_timer_okay", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_AlarmValuePromptEmptyReply_MapsToLocalNoInputInsteadOfFallback()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-alarm-value-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-clock-alarm-value-noinput","data":{"rules":["clock/alarm_set_value","globals/gui_nav","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-clock-alarm-value-noinput-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-clock-alarm-value-noinput","data":{}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("clock/alarm_set_value", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_GalleryPreviewEmptyReply_MapsToLocalNoInputInsteadOfFallback()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-gallery-preview-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-gallery-preview-noinput","data":{"rules":["gallery/gallery_preview","globals/gui_nav","globals/mim_repeat","globals/mim_thanks","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-gallery-preview-noinput-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-gallery-preview-noinput","data":{}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("gallery/gallery_preview", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
     }
 
     [Fact]

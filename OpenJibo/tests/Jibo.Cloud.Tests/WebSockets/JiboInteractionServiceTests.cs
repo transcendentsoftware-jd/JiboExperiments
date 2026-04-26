@@ -634,6 +634,28 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_ClientNluCancelFromAlarmValuePrompt_MapsToClockCancelIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "cancel",
+            NormalizedTranscript = "cancel",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "cancel",
+                ["clientRules"] = new[] { "clock/alarm_set_value" }
+            }
+        });
+
+        Assert.Equal("alarm_cancel", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("cancel", decision.SkillPayload["clockIntent"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SetTimerWithoutDuration_AsksForClarification()
     {
         var service = CreateService();

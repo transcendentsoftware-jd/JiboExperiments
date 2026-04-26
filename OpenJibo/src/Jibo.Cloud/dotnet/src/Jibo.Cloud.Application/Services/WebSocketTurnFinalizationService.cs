@@ -511,6 +511,8 @@ public sealed class WebSocketTurnFinalizationService(
                                !string.Equals(plan.IntentName, "clock_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "timer_cancel", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "alarm_cancel", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_clarify", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_clarify", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_value", StringComparison.OrdinalIgnoreCase) &&
@@ -794,6 +796,8 @@ public sealed class WebSocketTurnFinalizationService(
     private static bool IsLocalNoInputRule(string rule)
     {
         return string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
+               IsClockValueRule(rule) ||
+               IsGalleryPreviewRule(rule) ||
                IsConstrainedYesNoRule(rule);
     }
 
@@ -801,6 +805,11 @@ public sealed class WebSocketTurnFinalizationService(
     {
         return string.Equals(rule, "clock/alarm_set_value", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "clock/timer_set_value", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsGalleryPreviewRule(string rule)
+    {
+        return string.Equals(rule, "gallery/gallery_preview", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsConstrainedYesNoRule(string rule)

@@ -57,6 +57,8 @@ public sealed class JiboInteractionService(
             "alarm_menu" => BuildClockLaunchDecision("alarm", "Opening the alarm."),
             "timer_delete" => BuildClockLaunchDecision("timer_delete", "timer", "delete", "Canceling the timer."),
             "alarm_delete" => BuildClockLaunchDecision("alarm_delete", "alarm", "delete", "Canceling the alarm."),
+            "timer_cancel" => BuildClockLaunchDecision("timer_cancel", "timer", "cancel", "Canceling the timer."),
+            "alarm_cancel" => BuildClockLaunchDecision("alarm_cancel", "alarm", "cancel", "Canceling the alarm."),
             "timer_value" => BuildTimerValueDecision(lowered, isTimerValueTurn, clientEntities),
             "alarm_value" => BuildAlarmValueDecision(lowered, isAlarmValueTurn, referenceLocalTime, clientEntities),
             "timer_clarify" => BuildClockClarifyDecision("timer_clarify", "timer", "How long should I set the timer for?"),
@@ -216,6 +218,19 @@ public sealed class JiboInteractionService(
         if (string.Equals(clientIntent, "alarmValue", StringComparison.OrdinalIgnoreCase))
         {
             return "alarm_value";
+        }
+
+        if (IsCancelRequest(clientIntent, loweredTranscript))
+        {
+            if (isAlarmValueTurn)
+            {
+                return "alarm_cancel";
+            }
+
+            if (isTimerValueTurn)
+            {
+                return "timer_cancel";
+            }
         }
 
         if ((string.Equals(clientIntent, "start", StringComparison.OrdinalIgnoreCase) ||
@@ -1096,6 +1111,13 @@ public sealed class JiboInteractionService(
             "set alarm",
             "wake me up",
             "alarm for");
+    }
+
+    private static bool IsCancelRequest(string? clientIntent, string loweredTranscript)
+    {
+        return string.Equals(clientIntent, "cancel", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(clientIntent, "stop", StringComparison.OrdinalIgnoreCase) ||
+               loweredTranscript is "cancel" or "stop" or "never mind" or "nevermind";
     }
 
     private static bool IsClockTimerValueTurn(
