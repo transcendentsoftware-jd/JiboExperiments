@@ -21,16 +21,15 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 
 ## Latest Live Evidence
 
-`jibo test 22` was captured against a robot that spoke `Open Jibo Cloud version 1 dot 0 dot 18.`
+`jibo test 23` was captured after the `jibo test 22` alarm/photo hardening pass.
 
-- Radio live validation passed.
-- News routing was observed in websocket telemetry from the phrase `So, play the news.`, but the user did not get enough live confidence to call news complete because a backup notification/slowness path was active during the session.
-- The backup notification came from stock `@be/surprises-ota` checking `jibo.scheduler.backupStatus`; no `Backup_*` HTTP operation appeared in the captured cloud traffic. The update-menu block therefore looks more like a robot-local scheduler/backup load issue than a cloud `Backup.List` response issue.
-- The robot log showed high load, a `jibo-server-service` broken pipe, a settings error path for `Q4-Server_connection_lost`, and the stock backup prompt: `hey i'm sorry if I seem a little slow, I can be that way while i'm doing a backup.`
-- Photo/gallery reached the local gallery/create path, but a missed short reply left repeated `create/is_it_a_keeper` listens and the visible blue-ring/listening state.
-- Alarm attempts were dominated by collapsed transcripts such as `set and alarm`, `Set and Alonzo`, and `Set an alarm for...`; one path reached local alarm clarification but did not get a complete value-setting pass.
-- The turn telemetry contained `ffmpeg` failures where local whisper tried to decode buffered Ogg/Opus turns that were not usable by `ffmpeg`.
-- The websocket capture still contained `OPENJIBO_TURN_PENDING`, `OPENJIBO_CONTEXT_ACK`, and proactive `OPENJIBO_ACK` output in the deployed run. The current source has no references to those synthetic OpenJibo events, so the next deployment needs an artifact/build verification pass.
+- Radio remained live-valid.
+- News live validation passed. The robot spoke the current synthetic quick brief: `technology companies are still racing on AI...`. This proves the Nimbus-shaped path, not provider-backed headline expansion.
+- Backup/update remains unresolved. The user observed backup-in-progress sluggishness and the update menu could not proceed while backups were active; the spoken "start backups" style command is not currently a wired OpenJibo voice path.
+- The first alarm path succeeded: `set an alarm for 743` scheduled a local `7:43 AM` alarm and the alarm fired. A later clarification answer was logged by the robot as `- Time. - 7, 14.` and local NLU interpreted it as `7:00 PM`, causing the confusing replacement prompt.
+- Current source now accepts short clock value answers during `clock/alarm_set_value` / `clock/timer_set_value`, parses comma-separated alarm digits such as `7, 44`, and maps stock alarm yes/no prompt rules `clock/alarm_timer_change` and `clock/alarm_timer_none_set`.
+- Photo/gallery still needs a clean live pass. The gallery path opened, but several `shared/yes_no` turns had empty ASR text, so there was no positive `yes` transcript for the cloud to map.
+- No `ffmpeg` / `whisper.cpp` error was evident in the `jibo test 23` turn timeline, unlike `jibo test 22`. Treat any future decode errors separately from the gallery yes/no payload path.
 
 ## Release Rhythm
 
@@ -94,14 +93,15 @@ The following behavior is present in source and covered by focused tests:
 - radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
 - news has a first Nimbus-shaped cloud path using `match.cloudSkill = news` and a `news` `SKILL_ACTION` with synthetic briefing content
 - stock-shaped clock handoffs cover time, date, day, clock open, timer/alarm menu, timer/alarm value, timer/alarm clarification, and timer/alarm delete
-- alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `10-25`, `10:25 pm`, and `10 25 p m`
+- alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `7, 44`, `10-25`, `10:25 pm`, and `10 25 p m`
 - ambiguous alarm times can prefer the next local occurrence when the robot context includes `runtime.location.iso`
+- short clock value follow-up transcripts are accepted under `clock/alarm_set_value` and `clock/timer_set_value` instead of being dropped before parsing
 - `CLIENT_NLU intent=set` with only `domain=alarm` stays on the local clock clarification path instead of defaulting to a fabricated time
 - `CLIENT_NLU intent=cancel` on `clock/alarm_timer_query_menu` can reuse the last active clock domain
 - photo flows route `open photo gallery` to `@be/gallery`, `snap a picture` to `@be/create/createOnePhoto`, and `open photobooth` to `@be/create/createSomePhotos`
 - passive gallery/create context does not reopen a stale cloud turn
 - media metadata persists across store recreation and `/media/{path}` can serve the current text-body placeholder payload
-- constrained yes/no handling covers `create/is_it_a_keeper`, `shared/yes_no`, `settings/download_now_later`, `surprises-date/offer_date_fact`, `surprises-ota/want_to_download_now`, and `$YESNO` hints
+- constrained yes/no handling covers `clock/alarm_timer_change`, `clock/alarm_timer_none_set`, `create/is_it_a_keeper`, `shared/yes_no`, `settings/download_now_later`, `surprises-date/offer_date_fact`, `surprises-ota/want_to_download_now`, and `$YESNO` hints
 - outbound constrained yes/no responses strip unrelated `globals/*` rules so stock OS stays local
 - no-input fallback for constrained yes/no prompts emits local `LISTEN`/`EOS` instead of relaunching generic Nimbus speech, including `shared/yes_no` after STT failure
 - repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss so the photo/create flow can settle instead of leaving a stale listening state
@@ -115,8 +115,9 @@ Use these sources as evidence, not as code to copy blindly:
 - OpenJibo Node oracle: [open-jibo-link.js](../src/Jibo.Cloud/node/open-jibo-link.js)
 - Current hosted `.NET` cloud: [src/Jibo.Cloud/dotnet](../src/Jibo.Cloud/dotnet)
 - Live captures and robot logs: `.\artifact-output`
-- Original Pegasus cloud source: `..\jibo\pegasus`
-- Original SDK and skill source snapshot: `..\jibo\sdk`
+- User-provided original source snapshot: `..\jibo` when extracted locally
+- Original Pegasus cloud source inside that snapshot: `pegasus`
+- Original SDK and skill source inside that snapshot: `sdk`
 - JiboOS reference tree: `..\JiboOS`
 - JiboOS skill snapshot: `..\JiboOS\opt\jibo\Jibo\Skills\@be`
 
@@ -132,14 +133,14 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 
 - Run the focused `.NET` cloud test suite after the last feature slice.
 - Confirm the running robot build reports cloud version `1.0.18`.
-- Regression test alarm flows again after the `jibo test 22` fixes: set with explicit time, set with compact/spoken time, clarify missing time, cancel alarm, and local cleanup prompts.
-- Regression test photo/gallery flows again after the `jibo test 22` fixes: open gallery, answer the stock `shared/yes_no` prompt, hand into create, take one photo, and avoid blue-ring stale turns.
+- Regression test alarm flows again after the `jibo test 23` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice, and verify the menu agrees.
+- Regression test photo/gallery flows again after the `jibo test 23` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, and avoid blue-ring stale turns.
 - Live-test radio launch: `open the radio` passed in `jibo test 22`; re-run `play country music` if that exact phrase was not captured.
-- Live-test first news path again: `jibo test 22` reached the news intent, but the live behavior still needs a clean non-backup session.
-- Recheck constrained yes/no prompts for update/backup/share/gallery without leaking global rules.
+- Treat basic news as live-proven by `jibo test 23`; defer provider-backed or category-expanded news unless it is chosen as an optional feature slice.
+- Recheck constrained yes/no prompts for update/backup/share/gallery/alarm replacement without leaking global rules.
 - Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
 - Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, and whether the deployed cloud is involved at all.
-- Treat remaining `ffmpeg` / `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
+- Treat remaining empty-ASR, `ffmpeg`, or `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
 
 ## Known Gaps
 
@@ -150,7 +151,8 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - state persistence is local JSON, not Azure SQL / Blob Storage
 - update, backup, and restore are not end-to-end proven, and the `jibo test 22` sluggishness appears tied to robot-local backup status/load
 - deployed-build verification needs to prove that synthetic OpenJibo websocket events are gone from the hosted artifact, not just from source
-- news content is synthetic
+- news content is synthetic; `jibo test 23` proved the path but not live provider-backed headlines
+- gallery `shared/yes_no` still needs a successful transcript-bearing live `yes` pass
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
 - volume, stop, robot age, and command-versus-question personality routing are not implemented yet
 

@@ -456,6 +456,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
     {
         return ReadRuleValues(turn)
             .FirstOrDefault(static rule =>
+                string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||

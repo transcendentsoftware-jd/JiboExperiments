@@ -691,6 +691,11 @@ public sealed class WebSocketTurnFinalizationService(
             return false;
         }
 
+        if (listenRules.Any(IsClockValueRule))
+        {
+            return true;
+        }
+
         if (transcript.Length >= 6)
         {
             return true;
@@ -733,12 +738,7 @@ public sealed class WebSocketTurnFinalizationService(
     {
         return ReadRules(turn, "listenRules")
             .Concat(ReadRules(turn, "clientRules"))
-            .FirstOrDefault(static rule =>
-                string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(IsLocalNoInputRule);
     }
 
     private static string? ReadPrimaryYesNoRule(TurnContext turn)
@@ -797,9 +797,17 @@ public sealed class WebSocketTurnFinalizationService(
                IsConstrainedYesNoRule(rule);
     }
 
+    private static bool IsClockValueRule(string rule)
+    {
+        return string.Equals(rule, "clock/alarm_set_value", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "clock/timer_set_value", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsConstrainedYesNoRule(string rule)
     {
-        return string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+        return string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||

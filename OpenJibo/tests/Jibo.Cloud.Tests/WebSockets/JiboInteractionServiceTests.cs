@@ -134,6 +134,46 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_AlarmTimerChangePrompt_MapsShortAffirmationToYesIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes",
+            NormalizedTranscript = "yes",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "clock/alarm_timer_change", "globals/gui_nav" },
+                ["listenAsrHints"] = new[] { "$YESNO" }
+            }
+        });
+
+        Assert.Equal("yes", decision.IntentName);
+        Assert.Equal("Yes.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AlarmTimerNoneSetPrompt_MapsShortDenialToNoIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "no",
+            NormalizedTranscript = "no",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "clock/alarm_timer_none_set", "globals/global_commands_launch" },
+                ["listenAsrHints"] = new[] { "$YESNO" }
+            }
+        });
+
+        Assert.Equal("no", decision.IntentName);
+        Assert.Equal("No.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SettingsDownloadPrompt_MapsShortDenialToNoIntent()
     {
         var service = CreateService();
@@ -483,6 +523,29 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("@be/clock", decision.SkillName);
         Assert.Equal("start", decision.SkillPayload!["clockIntent"]);
         Assert.Equal("10:25", decision.SkillPayload["time"]);
+        Assert.Equal("am", decision.SkillPayload["ampm"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AlarmValueFollowUp_ParsesCommaSeparatedSpokenDigits()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "7, 44",
+            NormalizedTranscript = "7, 44",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = new[] { "clock/alarm_set_value" },
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-26T07:43:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("alarm_value", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("start", decision.SkillPayload!["clockIntent"]);
+        Assert.Equal("7:44", decision.SkillPayload["time"]);
         Assert.Equal("am", decision.SkillPayload["ampm"]);
     }
 

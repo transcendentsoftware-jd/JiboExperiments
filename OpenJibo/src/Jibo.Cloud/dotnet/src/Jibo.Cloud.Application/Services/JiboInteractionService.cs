@@ -680,6 +680,8 @@ public sealed class JiboInteractionService(
             .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(static rule =>
                 string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
@@ -1204,7 +1206,7 @@ public sealed class JiboInteractionService(
     private sealed record ClockAlarmValue(string Time, string AmPm);
 
     private static readonly Regex SplitAlarmPattern = new(
-        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s-](?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
+        @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s,-]+(?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex CompactAlarmPattern = new(
