@@ -1125,6 +1125,117 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task BufferedAudio_SharedYesNoPromptWithSttFailure_AutoFinalizesAsLocalNoInput()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-shared-yesno-noinput","data":{"rules":["shared/yes_no","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-noinput-token",
+            Text = """{"type":"CONTEXT","transID":"trans-shared-yesno-noinput","data":{"topic":"conversation"}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var interimReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-shared-yesno-noinput-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(interimReplies);
+        }
+
+        var session = _store.FindSessionByToken("hub-shared-yesno-noinput-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+        session.TurnState.LastSttError = "ffmpeg decode failed";
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-noinput-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("shared/yes_no", rules[0].GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_CreateKeeperRepeatedNoInput_RedirectsToIdle()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-create-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-create-noinput-1","data":{"rules":["create/is_it_a_keeper","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
+        });
+
+        var firstReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-create-noinput-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-create-noinput-1","data":{}}"""
+        });
+
+        Assert.Equal(2, firstReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(firstReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(firstReplies[1]));
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-create-noinput-token",
+            Text = """{"type":"LISTEN","transID":"trans-create-noinput-2","data":{"rules":["create/is_it_a_keeper","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
+        });
+
+        var secondReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-create-noinput-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-create-noinput-2","data":{}}"""
+        });
+
+        Assert.Equal(3, secondReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(secondReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(secondReplies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(secondReplies[2]));
+
+        using var redirectPayload = JsonDocument.Parse(secondReplies[2].Text!);
+        Assert.Equal("@be/idle", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_SurprisesDateOfferPrompt_MapsYesWithoutGlobalRuleLeak()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

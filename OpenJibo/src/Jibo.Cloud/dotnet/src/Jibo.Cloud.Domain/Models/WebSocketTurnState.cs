@@ -18,6 +18,8 @@ public sealed class WebSocketTurnState
     public int BufferedAudioBytes { get; set; }
     public List<byte[]> BufferedAudioFrames { get; } = [];
     public int FinalizeAttemptCount { get; set; }
+    public string? LastLocalNoInputRule { get; set; }
+    public int LocalNoInputCount { get; set; }
     public bool AwaitingTurnCompletion { get; set; }
     public bool SawListen { get; set; }
     public bool SawContext { get; set; }

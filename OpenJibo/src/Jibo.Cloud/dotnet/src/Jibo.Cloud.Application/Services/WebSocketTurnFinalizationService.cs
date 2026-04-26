@@ -413,11 +413,7 @@ public sealed class WebSocketTurnFinalizationService(
             session.LastIntent = null;
             session.LastListenType = "no-input";
             var localRule = ReadPrimaryNoInputRule(finalizedTurn);
-            var noInputReplies = ResponsePlanToSocketMessagesMapper.MapNoInput(
-                    turnState.TransId ?? session.LastTransId ?? string.Empty,
-                    string.IsNullOrWhiteSpace(localRule) ? turnState.ListenRules : [localRule])
-                .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
-                .ToArray();
+            var noInputReplies = BuildLocalNoInputReplies(session, turnState, localRule);
             ResetBufferedAudio(session);
             turnState.SawListen = false;
             turnState.SawContext = false;
@@ -461,11 +457,7 @@ public sealed class WebSocketTurnFinalizationService(
                 session.LastIntent = null;
                 session.LastListenType = "no-input";
                 var localRule = ReadPrimaryYesNoRule(finalizedTurn);
-                var noInputReplies = ResponsePlanToSocketMessagesMapper.MapNoInput(
-                        turnState.TransId ?? session.LastTransId ?? string.Empty,
-                        string.IsNullOrWhiteSpace(localRule) ? turnState.ListenRules : [localRule])
-                    .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
-                    .ToArray();
+                var noInputReplies = BuildLocalNoInputReplies(session, turnState, localRule);
                 ResetBufferedAudio(session);
                 return noInputReplies;
             }
@@ -493,6 +485,8 @@ public sealed class WebSocketTurnFinalizationService(
         session.LastTranscript = finalizedTurn.NormalizedTranscript ?? finalizedTurn.RawTranscript;
         session.LastIntent = plan.IntentName;
         session.LastListenType = listenAction?.Mode;
+        turnState.LastLocalNoInputRule = null;
+        turnState.LocalNoInputCount = 0;
         if (plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault() is { SkillName: "@be/clock", Payload: not null } clockAction &&
             clockAction.Payload.TryGetValue("domain", out var lastClockDomainValue) &&
             lastClockDomainValue is not null)
@@ -720,12 +714,7 @@ public sealed class WebSocketTurnFinalizationService(
         return ReadRules(turn, "listenRules")
             .Concat(ReadRules(turn, "clientRules"))
             .Concat(ReadRules(turn, "listenAsrHints"))
-            .Any(static rule =>
-                string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
-                  string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
-                  string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+            .Any(IsYesNoRule);
     }
 
     private static bool ShouldHandleAsLocalNoInput(TurnContext turn)
@@ -737,8 +726,7 @@ public sealed class WebSocketTurnFinalizationService(
 
         return ReadRules(turn, "listenRules")
             .Concat(ReadRules(turn, "clientRules"))
-            .Any(static rule =>
-                string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase));
+            .Any(IsLocalNoInputRule);
     }
 
     private static string? ReadPrimaryNoInputRule(TurnContext turn)
@@ -757,12 +745,65 @@ public sealed class WebSocketTurnFinalizationService(
     {
         return ReadRules(turn, "listenRules")
             .Concat(ReadRules(turn, "clientRules"))
-            .FirstOrDefault(static rule =>
-                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(IsConstrainedYesNoRule);
+    }
+
+    private static IReadOnlyList<WebSocketReply> BuildLocalNoInputReplies(
+        CloudSession session,
+        WebSocketTurnState turnState,
+        string? localRule)
+    {
+        var transId = turnState.TransId ?? session.LastTransId ?? string.Empty;
+        var effectiveRule = string.IsNullOrWhiteSpace(localRule)
+            ? turnState.ListenRules.FirstOrDefault(IsLocalNoInputRule)
+            : localRule;
+        IReadOnlyList<string> rules = string.IsNullOrWhiteSpace(effectiveRule) ? turnState.ListenRules : [effectiveRule];
+        var maps = ShouldRedirectRepeatedNoInputToIdle(turnState, effectiveRule)
+            ? ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(transId, rules, "@be/idle")
+            : ResponsePlanToSocketMessagesMapper.MapNoInput(transId, rules);
+
+        return maps
+            .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
+            .ToArray();
+    }
+
+    private static bool ShouldRedirectRepeatedNoInputToIdle(WebSocketTurnState turnState, string? localRule)
+    {
+        if (string.IsNullOrWhiteSpace(localRule))
+        {
+            turnState.LastLocalNoInputRule = null;
+            turnState.LocalNoInputCount = 0;
+            return false;
+        }
+
+        turnState.LocalNoInputCount = string.Equals(turnState.LastLocalNoInputRule, localRule, StringComparison.OrdinalIgnoreCase)
+            ? turnState.LocalNoInputCount + 1
+            : 1;
+        turnState.LastLocalNoInputRule = localRule;
+
+        return turnState.LocalNoInputCount >= 2 &&
+               string.Equals(localRule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsYesNoRule(string rule)
+    {
+        return string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+               IsConstrainedYesNoRule(rule);
+    }
+
+    private static bool IsLocalNoInputRule(string rule)
+    {
+        return string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
+               IsConstrainedYesNoRule(rule);
+    }
+
+    private static bool IsConstrainedYesNoRule(string rule)
+    {
+        return string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
     }
 
     private static IEnumerable<string> ReadRules(TurnContext turn, string key)

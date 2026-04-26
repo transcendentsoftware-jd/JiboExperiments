@@ -37,6 +37,7 @@ Current release theme:
 - alarm and photo/gallery quirks have received the main bug-fix attention
 - Word of the Day cleanup, constrained yes/no routing, unknown websocket event suppression, and local state persistence are already in the current code
 - radio, ESML apostrophe cleanup, and first news are implemented in source/tests and need live confidence before the version is called complete
+- `jibo test 22` validated radio, exposed backup/load interference, exposed a shared yes/no no-input gap, exposed repeated create keeper prompts after photo handoff, and showed local whisper `ffmpeg` failures on unusable buffered audio
 
 ## Immediate `1.0.18` Queue
 
@@ -52,6 +53,7 @@ Current release theme:
 - Evidence:
   - JiboOS `@be/radio` treats `menu` as a play launch and reads `result.nlu.entities.station`
   - `Country` is a supported station key in the inspected genre metadata
+  - `jibo test 22` radio live validation passed
 - Exit criteria:
   - live `open the radio` resumes or opens radio without generic chat speech
   - live `play country music` opens a country station
@@ -70,6 +72,7 @@ Current release theme:
   - `SKILL_ACTION` uses skill id `news` and `mim_id = runtime-news`
 - Evidence:
   - JiboOS Nimbus checks `match.cloudSkill === "news"` and waits for a cloud response
+  - `jibo test 22` captured the phrase `So, play the news.` reaching the `news` intent, but live behavior was not cleanly confirmed
 - Exit criteria:
   - live `tell me the news` reaches a non-placeholder Nimbus path
   - the robot behavior feels like a cloud skill response, not generic chat playback
@@ -86,15 +89,22 @@ Current release theme:
   - covered prompt families include `settings/download_now_later`, `surprises-ota/want_to_download_now`, `surprises-date/offer_date_fact`, `shared/yes_no`, and `create/is_it_a_keeper`
   - outbound replies strip global rules and keep the local rule
   - no-input fallback for constrained prompts emits local `LISTEN`/`EOS`
+  - `shared/yes_no` now participates in the STT-failure no-input path instead of staying pending behind `$YESNO` hints
+  - repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss
+- Latest evidence:
+  - `jibo test 22` did not show `Backup_*` HTTP traffic during the backup complaint
+  - stock `@be/surprises-ota` drives the backup notification from robot-local `jibo.scheduler.backupStatus`
+  - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
 - Exit criteria:
   - spoken `yes` and `no` work on update, backup, share/offer, and gallery/create prompts
   - empty or missed short replies retry locally instead of relaunching Nimbus or generic chat
 - Next action:
-  - include these prompt families in the `1.0.18` live regression pass
+  - re-run these prompt families in the `1.0.18` live regression pass after the shared yes/no and create no-input fixes
+  - keep explicit backup creation as part of the update/backup/restore proof slice, not as an assumed yes/no prompt test
 
 ### 4. Alarm And Photo Gallery Release Regression
 
-- Status: `ready`
+- Status: `polish`
 - Tags: `protocol`, `stt`
 - Why now: this is the main bug-fix theme for `1.0.18`.
 - Current code:
@@ -103,12 +113,17 @@ Current release theme:
   - alarm cancel can reuse the last active clock domain
   - gallery opens as `@be/gallery`; snapshot and photobooth open through `@be/create`
   - passive gallery/create context no longer reopens stale cloud turns
+  - `shared/yes_no` no-input fallback and repeated create keeper cleanup were added after `jibo test 22`
+- Latest evidence:
+  - gallery opened and handed into create, but repeated `create/is_it_a_keeper` prompts could leave the blue ring/listening state
+  - alarm recognition collapsed several attempts before a complete alarm value could be set
+  - `ffmpeg` failures were present during the same test window, so alarm/gallery retest should separate transcript quality from payload shape
 - Exit criteria:
   - gallery opens, offers to take a picture if empty, accepts `yes`, and hands into create
   - alarm set, clarify, and cancel flows behave locally without blue-ring stale turns
   - failures caused by collapsed STT transcripts are logged as STT issues rather than misdiagnosed as payload bugs
 - Next action:
-  - run a stock OS `1.9` regression bundle before declaring `1.0.18` complete
+  - re-run a stock OS `1.9` regression bundle before declaring `1.0.18` complete
 
 ### 5. Optional Small Feature Before `1.0.18` Freeze
 
@@ -176,9 +191,21 @@ Current release theme:
   - gallery, snapshot, and photobooth voice paths route to the correct local skills
   - media metadata persists locally
   - `/media/{path}` serves the current text-body placeholder payload
+  - repeated empty `create/is_it_a_keeper` turns redirect to `@be/idle` after the second miss
 - Follow-up:
   - live regression remains in the immediate queue
   - binary-safe media storage remains future work
+
+### Constrained Yes-No Cleanup
+
+- Status: `implemented`
+- Tags: `protocol`, `stt`
+- Result:
+  - `shared/yes_no` is included in yes/no STT-failure detection
+  - local no-input replies strip global rules and keep the active constrained rule
+  - update, OTA, share/date-offer, gallery shared yes/no, and create keeper rules share the same no-input fallback machinery
+- Follow-up:
+  - live update/backup/share/gallery prompts still need another clean pass
 
 ### Word Of The Day Cleanup
 
@@ -202,7 +229,7 @@ Current release theme:
   - current websocket service drops unknown inbound message types silently
   - synthetic `OPENJIBO_TURN_PENDING`, `OPENJIBO_CONTEXT_ACK`, and fallback `OPENJIBO_ACK` should no longer be emitted by current source
 - Follow-up:
-  - if live logs show those event types, first verify the deployed process is actually the current build
+  - `jibo test 22` still captured those event types from the deployed run, so the next deployment must verify the artifact/build as well as source
 
 ### Update Phantom Manifest Fix
 
@@ -273,6 +300,7 @@ Current release theme:
   - feature paths are now often correct when a transcript exists, but short replies and low-quality audio still block otherwise-correct flows
 - Current evidence:
   - live captures still show `ffmpeg` and `whisper.cpp` failures
+  - current source now skips local whisper when buffered audio does not contain an Opus identification header
   - yes/no and alarm flows are especially sensitive to short or collapsed transcripts
 - Implementation notes:
   - add lightweight waveform or energy screening before transcription

@@ -54,6 +54,30 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategyTests
     }
 
     [Fact]
+    public void CanHandle_ReturnsFalse_WhenBufferedAudioHasNoOpusIdentificationHeader()
+    {
+        var strategy = new LocalWhisperCppBufferedAudioSttStrategy(
+            new BufferedAudioSttOptions
+            {
+                EnableLocalWhisperCpp = true,
+                FfmpegPath = "ffmpeg",
+                WhisperCliPath = "whisper-cli",
+                WhisperModelPath = "model.bin"
+            },
+            new FakeExternalProcessRunner());
+
+        var turn = new TurnContext
+        {
+            Attributes = new Dictionary<string, object?>
+            {
+                ["bufferedAudioFrames"] = new[] { BuildMinimalOggPageWithoutOpusHead() }
+            }
+        };
+
+        Assert.False(strategy.CanHandle(turn));
+    }
+
+    [Fact]
     public async Task TranscribeAsync_UsesFfmpegAndWhisperCpp_WhenConfigured()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"openjibo-stt-test-{Guid.NewGuid():N}");
@@ -117,6 +141,13 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategyTests
             0x13,
             0x4F, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64, 0x01, 0x01, 0x38, 0x01, 0x80, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x00
         ];
+    }
+
+    private static byte[] BuildMinimalOggPageWithoutOpusHead()
+    {
+        var page = BuildMinimalOggPage();
+        "NotAudio"u8.CopyTo(page.AsSpan(28, 8));
+        return page;
     }
 
     private sealed class FakeExternalProcessRunner : IExternalProcessRunner

@@ -15,7 +15,7 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
                IsConfiguredPathAvailable(options.FfmpegPath, checkFileExists: false) &&
                IsConfiguredPathAvailable(options.WhisperCliPath, checkFileExists: true) &&
                IsConfiguredPathAvailable(options.WhisperModelPath, checkFileExists: true) &&
-               ReadBufferedAudioFrames(turn).Count > 0;
+               ReadBufferedAudioFrames(turn).Any(ContainsOpusIdentificationHeader);
     }
 
     public async Task<SttResult> TranscribeAsync(TurnContext turn, CancellationToken cancellationToken = default)
@@ -24,6 +24,11 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
         if (frames.Count == 0)
         {
             throw new InvalidOperationException("Local whisper.cpp STT requires buffered websocket audio frames.");
+        }
+
+        if (!frames.Any(ContainsOpusIdentificationHeader))
+        {
+            throw new InvalidOperationException("Local whisper.cpp STT requires buffered Ogg/Opus audio with an Opus identification header.");
         }
 
         var tempDirectory = options.TempDirectory;
@@ -114,6 +119,11 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
                 _ => 0
             }
             : 0;
+    }
+
+    private static bool ContainsOpusIdentificationHeader(byte[] frame)
+    {
+        return frame.AsSpan().IndexOf("OpusHead"u8) >= 0;
     }
 
     private static string ExtractTranscript(string standardOutput)

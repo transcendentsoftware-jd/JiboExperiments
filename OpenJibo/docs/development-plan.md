@@ -19,6 +19,19 @@ Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md).
 
 Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm and photo/gallery behavior on stock OS `1.9`, with a few small feature slices added while the test loop is warm.
 
+## Latest Live Evidence
+
+`jibo test 22` was captured against a robot that spoke `Open Jibo Cloud version 1 dot 0 dot 18.`
+
+- Radio live validation passed.
+- News routing was observed in websocket telemetry from the phrase `So, play the news.`, but the user did not get enough live confidence to call news complete because a backup notification/slowness path was active during the session.
+- The backup notification came from stock `@be/surprises-ota` checking `jibo.scheduler.backupStatus`; no `Backup_*` HTTP operation appeared in the captured cloud traffic. The update-menu block therefore looks more like a robot-local scheduler/backup load issue than a cloud `Backup.List` response issue.
+- The robot log showed high load, a `jibo-server-service` broken pipe, a settings error path for `Q4-Server_connection_lost`, and the stock backup prompt: `hey i'm sorry if I seem a little slow, I can be that way while i'm doing a backup.`
+- Photo/gallery reached the local gallery/create path, but a missed short reply left repeated `create/is_it_a_keeper` listens and the visible blue-ring/listening state.
+- Alarm attempts were dominated by collapsed transcripts such as `set and alarm`, `Set and Alonzo`, and `Set an alarm for...`; one path reached local alarm clarification but did not get a complete value-setting pass.
+- The turn telemetry contained `ffmpeg` failures where local whisper tried to decode buffered Ogg/Opus turns that were not usable by `ffmpeg`.
+- The websocket capture still contained `OPENJIBO_TURN_PENDING`, `OPENJIBO_CONTEXT_ACK`, and proactive `OPENJIBO_ACK` output in the deployed run. The current source has no references to those synthetic OpenJibo events, so the next deployment needs an artifact/build verification pass.
+
 ## Release Rhythm
 
 This is the working pattern for each hosted-cloud release:
@@ -58,6 +71,7 @@ Current websocket scope:
 - buffered Ogg/Opus audio preservation per turn
 - synthetic transcript hint support for fixture-driven parity
 - opt-in local `ffmpeg` plus `whisper.cpp` STT path for discovery
+- local whisper only attempts external decoding when buffered audio contains an Opus identification header
 - auto-finalize thresholds for buffered audio after a real listen phase
 - late-audio ignore windows after completed turns
 - no-input local completion for constrained prompts
@@ -89,7 +103,9 @@ The following behavior is present in source and covered by focused tests:
 - media metadata persists across store recreation and `/media/{path}` can serve the current text-body placeholder payload
 - constrained yes/no handling covers `create/is_it_a_keeper`, `shared/yes_no`, `settings/download_now_later`, `surprises-date/offer_date_fact`, `surprises-ota/want_to_download_now`, and `$YESNO` hints
 - outbound constrained yes/no responses strip unrelated `globals/*` rules so stock OS stays local
-- no-input fallback for constrained yes/no prompts emits local `LISTEN`/`EOS` instead of relaunching generic Nimbus speech
+- no-input fallback for constrained yes/no prompts emits local `LISTEN`/`EOS` instead of relaunching generic Nimbus speech, including `shared/yes_no` after STT failure
+- repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss so the photo/create flow can settle instead of leaving a stale listening state
+- local whisper skips buffered audio turns that do not contain `OpusHead`, preventing a known `ffmpeg` failure path from becoming the noisy failure mode
 - Word of the Day launch, spoken guesses, structured `CLIENT_NLU` guesses, hint-order guesses, fuzzy hint matching, right-word cleanup, and late audio cleanup are covered in the websocket layer
 
 ## Reference Sources
@@ -116,12 +132,13 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 
 - Run the focused `.NET` cloud test suite after the last feature slice.
 - Confirm the running robot build reports cloud version `1.0.18`.
-- Regression test alarm flows: set with explicit time, set with compact/spoken time, clarify missing time, cancel alarm, and local cleanup prompts.
-- Regression test photo/gallery flows: open gallery, answer the stock `shared/yes_no` prompt, hand into create, take one photo, and avoid blue-ring stale turns.
-- Live-test radio launch: `open the radio` and `play country music`.
-- Live-test first news path: `tell me the news` should use the Nimbus cloud-skill lane instead of generic chat.
+- Regression test alarm flows again after the `jibo test 22` fixes: set with explicit time, set with compact/spoken time, clarify missing time, cancel alarm, and local cleanup prompts.
+- Regression test photo/gallery flows again after the `jibo test 22` fixes: open gallery, answer the stock `shared/yes_no` prompt, hand into create, take one photo, and avoid blue-ring stale turns.
+- Live-test radio launch: `open the radio` passed in `jibo test 22`; re-run `play country music` if that exact phrase was not captured.
+- Live-test first news path again: `jibo test 22` reached the news intent, but the live behavior still needs a clean non-backup session.
 - Recheck constrained yes/no prompts for update/backup/share/gallery without leaking global rules.
 - Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
+- Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, and whether the deployed cloud is involved at all.
 - Treat remaining `ffmpeg` / `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
 
 ## Known Gaps
@@ -131,7 +148,8 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - local `whisper.cpp` STT remains a discovery seam, not production ASR
 - media upload/body handling is not binary-safe enough for final gallery originals and thumbnails
 - state persistence is local JSON, not Azure SQL / Blob Storage
-- update, backup, and restore are not end-to-end proven
+- update, backup, and restore are not end-to-end proven, and the `jibo test 22` sluggishness appears tied to robot-local backup status/load
+- deployed-build verification needs to prove that synthetic OpenJibo websocket events are gone from the hosted artifact, not just from source
 - news content is synthetic
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
 - volume, stop, robot age, and command-versus-question personality routing are not implemented yet
