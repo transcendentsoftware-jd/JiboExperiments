@@ -168,6 +168,34 @@ Expected:
 - no `ffmpeg` failure should become the dominant failure mode for non-Opus buffered audio
 - short replies such as `yes`, `no`, `cancel`, and short alarm times should either map correctly or be classified as STT misses with evidence
 
+### Stop And Volume
+
+Goal: prove the added lightweight device-control slice before closing `1.0.18`.
+
+Test these phrases:
+
+- `stop`
+- `stop that`
+- `never mind`
+- `turn it up`
+- `turn it down`
+- `set volume to six`
+- `show volume controls`
+
+Expected:
+
+- stop commands settle the robot locally without generic chat speech
+- `turn it up` and `turn it down` adjust volume or at least produce the stock local volume event/log
+- `set volume to six` sets or attempts to set the local volume level to `6`
+- `show volume controls` opens the settings volume panel
+
+Capture check:
+
+- stop emits `nlu.intent = stop`, `nlu.domain = global_commands`, then redirects to `@be/idle`
+- relative volume emits `nlu.intent = volumeUp` or `volumeDown`, `nlu.domain = global_commands`, and `entities.volumeLevel = null`, with no `SKILL_ACTION` cloud speech
+- absolute volume emits `nlu.intent = volumeToValue` and `entities.volumeLevel` matching the requested value, with no `SKILL_ACTION` cloud speech
+- volume controls redirects to `@be/settings` with `nlu.intent = volumeQuery`
+
 ## Optional Feature Slice Checks
 
 When a new feature is added before a release closes:
@@ -178,8 +206,6 @@ When a new feature is added before a release closes:
 
 For the current candidate list, add cases here when implemented:
 
-- stop command: `stop`, `stop that`, `never mind`
-- volume: `turn it up`, `turn it down`, `increase the volume`, `decrease the volume`
 - robot age/persona: `how old are you`
 
 ## After The Run

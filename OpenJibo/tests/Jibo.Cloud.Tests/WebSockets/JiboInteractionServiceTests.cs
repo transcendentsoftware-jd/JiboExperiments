@@ -259,6 +259,73 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_StopThat_MapsToIdleStopCommand()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "stop that",
+            NormalizedTranscript = "stop that"
+        });
+
+        Assert.Equal("stop", decision.IntentName);
+        Assert.Equal("@be/idle", decision.SkillName);
+        Assert.Equal("stop", decision.SkillPayload!["globalIntent"]);
+        Assert.Equal("global_commands", decision.SkillPayload["nluDomain"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TurnItUp_MapsToGlobalVolumeUpCommand()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "turn it up",
+            NormalizedTranscript = "turn it up"
+        });
+
+        Assert.Equal("volume_up", decision.IntentName);
+        Assert.Equal("global_commands", decision.SkillName);
+        Assert.Equal("volumeUp", decision.SkillPayload!["globalIntent"]);
+        Assert.Equal("null", decision.SkillPayload["volumeLevel"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SetVolumeToSix_MapsToGlobalVolumeToValueCommand()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "set volume to six",
+            NormalizedTranscript = "set volume to six"
+        });
+
+        Assert.Equal("volume_to_value", decision.IntentName);
+        Assert.Equal("global_commands", decision.SkillName);
+        Assert.Equal("volumeToValue", decision.SkillPayload!["globalIntent"]);
+        Assert.Equal("6", decision.SkillPayload["volumeLevel"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ShowVolumeControls_MapsToSettingsVolumeQuery()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "show volume controls",
+            NormalizedTranscript = "show volume controls"
+        });
+
+        Assert.Equal("volume_query", decision.IntentName);
+        Assert.Equal("@be/settings", decision.SkillName);
+        Assert.Equal("volumeQuery", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_OpenTimer_MapsToLocalClockTimerMenu()
     {
         var service = CreateService();

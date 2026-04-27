@@ -1584,6 +1584,141 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_StopThat_EmitsGlobalStopAndIdleRedirect()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-stop-token",
+            Text = """{"type":"LISTEN","transID":"trans-stop","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-stop-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-stop","data":{"text":"stop that"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var nlu = listenPayload.RootElement.GetProperty("data").GetProperty("nlu");
+        Assert.Equal("stop", nlu.GetProperty("intent").GetString());
+        Assert.Equal("global_commands", nlu.GetProperty("domain").GetString());
+        Assert.Equal("globals/global_commands_launch", nlu.GetProperty("rules")[0].GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/idle", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("stop", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_TurnItDown_EmitsGlobalVolumeDownWithoutCloudSpeech()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-down-token",
+            Text = """{"type":"LISTEN","transID":"trans-volume-down","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-down-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-volume-down","data":{"text":"turn it down"}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var nlu = listenPayload.RootElement.GetProperty("data").GetProperty("nlu");
+        Assert.Equal("volumeDown", nlu.GetProperty("intent").GetString());
+        Assert.Equal("global_commands", nlu.GetProperty("domain").GetString());
+        Assert.Equal("null", nlu.GetProperty("entities").GetProperty("volumeLevel").GetString());
+        Assert.Equal("globals/global_commands_launch", nlu.GetProperty("rules")[0].GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SetVolumeToSix_EmitsGlobalVolumeToValue()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-value-token",
+            Text = """{"type":"LISTEN","transID":"trans-volume-value","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-value-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-volume-value","data":{"text":"set volume to six"}}"""
+        });
+
+        Assert.Equal(2, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var nlu = listenPayload.RootElement.GetProperty("data").GetProperty("nlu");
+        Assert.Equal("volumeToValue", nlu.GetProperty("intent").GetString());
+        Assert.Equal("6", nlu.GetProperty("entities").GetProperty("volumeLevel").GetString());
+        Assert.Equal("global_commands", nlu.GetProperty("domain").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_ShowVolumeControls_RedirectsIntoSettingsVolumeQuery()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-query-token",
+            Text = """{"type":"LISTEN","transID":"trans-volume-query","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-volume-query-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-volume-query","data":{"text":"show volume controls"}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("volumeQuery", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/settings", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("@be/settings", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("volumeQuery", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+    }
+
+    [Fact]
     public async Task ClientNlu_WordOfDayGuess_UsesGuessEntityAsAsrTextAndCompletesTurn()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

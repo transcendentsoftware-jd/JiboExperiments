@@ -51,6 +51,11 @@ public sealed class JiboInteractionService(
             "cloud_version" => new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion),
             "radio" => BuildRadioLaunchDecision(),
             "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
+            "stop" => BuildStopDecision(),
+            "volume_up" => BuildVolumeControlDecision("volume_up", "volumeUp", "null"),
+            "volume_down" => BuildVolumeControlDecision("volume_down", "volumeDown", "null"),
+            "volume_to_value" => BuildVolumeControlDecision("volume_to_value", "volumeToValue", ResolveVolumeLevel(lowered, clientEntities) ?? "7"),
+            "volume_query" => BuildSettingsVolumeDecision(),
             "clock_open" => BuildClockLaunchDecision("clock_open", "clock", "askForTime", "Opening the clock."),
             "clock_menu" => BuildClockLaunchDecision("clock_menu", "clock", "menu", "Opening the clock menu."),
             "timer_menu" => BuildClockLaunchDecision("timer", "Opening the timer."),
@@ -309,6 +314,27 @@ public sealed class JiboInteractionService(
             return "radio_genre";
         }
 
+        if (TryResolveVolumeLevel(loweredTranscript) is not null ||
+            clientEntities.ContainsKey("volumeLevel"))
+        {
+            return "volume_to_value";
+        }
+
+        if (IsVolumeQueryRequest(loweredTranscript))
+        {
+            return "volume_query";
+        }
+
+        if (IsVolumeUpRequest(loweredTranscript))
+        {
+            return "volume_up";
+        }
+
+        if (IsVolumeDownRequest(loweredTranscript))
+        {
+            return "volume_down";
+        }
+
         if (MatchesAny(loweredTranscript, "open the clock", "open clock", "show the clock", "show clock"))
         {
             return "clock_open";
@@ -344,6 +370,11 @@ public sealed class JiboInteractionService(
                 "turn off timer"))
         {
             return "timer_delete";
+        }
+
+        if (IsGlobalStopRequest(loweredTranscript, clientIntent, clientEntities))
+        {
+            return "stop";
         }
 
         if (TryParseAlarmValue(loweredTranscript, isAlarmValueTurn, referenceLocalTime) is not null)
@@ -532,6 +563,47 @@ public sealed class JiboInteractionService(
             {
                 ["skillId"] = "@be/create",
                 ["localIntent"] = localIntent
+            });
+    }
+
+    private static JiboInteractionDecision BuildStopDecision()
+    {
+        return new JiboInteractionDecision(
+            "stop",
+            "Stopping.",
+            "@be/idle",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/idle",
+                ["globalIntent"] = "stop",
+                ["nluDomain"] = "global_commands"
+            });
+    }
+
+    private static JiboInteractionDecision BuildVolumeControlDecision(string intentName, string globalIntent, string volumeLevel)
+    {
+        return new JiboInteractionDecision(
+            intentName,
+            "Adjusting volume.",
+            "global_commands",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["globalIntent"] = globalIntent,
+                ["nluDomain"] = "global_commands",
+                ["volumeLevel"] = volumeLevel
+            });
+    }
+
+    private static JiboInteractionDecision BuildSettingsVolumeDecision()
+    {
+        return new JiboInteractionDecision(
+            "volume_query",
+            "Opening volume controls.",
+            "@be/settings",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "@be/settings",
+                ["localIntent"] = "volumeQuery"
             });
     }
 
@@ -1120,6 +1192,144 @@ public sealed class JiboInteractionService(
                loweredTranscript is "cancel" or "stop" or "never mind" or "nevermind";
     }
 
+    private static bool IsGlobalStopRequest(
+        string loweredTranscript,
+        string? clientIntent,
+        IReadOnlyDictionary<string, string> clientEntities)
+    {
+        if (string.Equals(clientIntent, "stop", StringComparison.OrdinalIgnoreCase) &&
+            IsGlobalCommandsDomain(clientEntities))
+        {
+            return true;
+        }
+
+        return loweredTranscript is "stop" or "stop it" or "stop that" or "stop talking" or "be quiet" or "never mind" or "nevermind" or "forget it" ||
+               MatchesAny(loweredTranscript, "that s enough", "that's enough", "that will do", "that ll do", "that'll do", "cut it out", "cut that out");
+    }
+
+    private static bool IsVolumeQueryRequest(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "volume controls",
+            "volume control",
+            "volume menu",
+            "volume level",
+            "show volume",
+            "show the volume",
+            "open volume",
+            "open the volume",
+            "what is your volume",
+            "what's your volume",
+            "how is your volume",
+            "how s your volume");
+    }
+
+    private static bool IsVolumeUpRequest(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "turn it up",
+            "turn this up",
+            "turn that up",
+            "turn up the volume",
+            "turn the volume up",
+            "turn volume up",
+            "turn your volume up",
+            "increase the volume",
+            "increase your volume",
+            "raise the volume",
+            "raise your volume",
+            "make it louder",
+            "make that louder",
+            "speak louder",
+            "talk louder",
+            "be louder",
+            "louder");
+    }
+
+    private static bool IsVolumeDownRequest(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "turn it down",
+            "turn this down",
+            "turn that down",
+            "turn down the volume",
+            "turn the volume down",
+            "turn volume down",
+            "turn your volume down",
+            "decrease the volume",
+            "decrease your volume",
+            "lower the volume",
+            "lower your volume",
+            "make it quieter",
+            "make that quieter",
+            "make it softer",
+            "speak quieter",
+            "talk quieter",
+            "be quieter",
+            "quieter",
+            "softer");
+    }
+
+    private static string? ResolveVolumeLevel(string loweredTranscript, IReadOnlyDictionary<string, string> clientEntities)
+    {
+        if (clientEntities.TryGetValue("volumeLevel", out var entityValue) &&
+            TryNormalizeVolumeLevel(entityValue) is { } structuredLevel)
+        {
+            return structuredLevel;
+        }
+
+        return TryResolveVolumeLevel(loweredTranscript);
+    }
+
+    private static string? TryResolveVolumeLevel(string loweredTranscript)
+    {
+        if (!loweredTranscript.Contains("volume", StringComparison.Ordinal) &&
+            !loweredTranscript.Contains("loudness", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        if (MatchesAny(loweredTranscript, "max volume", "maximum volume", "volume max", "volume maximum"))
+        {
+            return "10";
+        }
+
+        if (MatchesAny(loweredTranscript, "min volume", "minimum volume", "volume min", "volume minimum"))
+        {
+            return "1";
+        }
+
+        var match = VolumeLevelPattern.Match(loweredTranscript);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        return TryNormalizeVolumeLevel(match.Groups["value"].Value);
+    }
+
+    private static string? TryNormalizeVolumeLevel(string token)
+    {
+        if (string.Equals(token, "null", StringComparison.OrdinalIgnoreCase))
+        {
+            return "null";
+        }
+
+        var parsed = ParseNumberToken(token);
+        return parsed is >= 1 and <= 10
+            ? parsed.Value.ToString()
+            : null;
+    }
+
+    private static bool IsGlobalCommandsDomain(IReadOnlyDictionary<string, string> clientEntities)
+    {
+        return clientEntities.TryGetValue("domain", out var domain) &&
+               string.Equals(domain, "global_commands", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsClockTimerValueTurn(
         IReadOnlyList<string> clientRules,
         IReadOnlyList<string> listenRules)
@@ -1233,6 +1443,10 @@ public sealed class JiboInteractionService(
 
     private static readonly Regex CompactAlarmPattern = new(
         @"\b(?<compact>\d{3,4})\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex VolumeLevelPattern = new(
+        @"\b(?:volume|loudness)\s*(?:to|at|level|is)?\s*(?<value>10|\d|one|two|three|four|five|six|seven|eight|nine|ten)\b|\b(?:set|change|make|turn)\s+(?:the\s+|your\s+)?(?:volume|loudness)\s*(?:to|at)?\s*(?<value>10|\d|one|two|three|four|five|six|seven|eight|nine|ten)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =

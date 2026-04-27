@@ -147,17 +147,26 @@ Current release theme:
 
 ### 5. Optional Small Feature Before `1.0.18` Freeze
 
-- Status: `ready`
+- Status: `implemented`
 - Tags: `protocol`
 - Why now: the user wants one or two features before `1.0.18` is called complete, but the release should not take on a risky subsystem.
-- Preferred candidates:
+- Selected slices:
   - Stop command
-  - Volume up / volume down voice control
-  - How old are you / robot age persona
-- Guidance:
-  - pick only one if the live regression pass finds bugs
-  - pick at most two if the current bug-fix paths stay stable
-  - keep the implementation source-backed and easy to revert or defer
+  - Volume up / volume down / set-to-value voice control
+- Current code:
+  - `stop`, `stop that`, and `never mind` map to stock `global_commands` `stop` NLU plus local `@be/idle` redirect/completion
+  - `turn it up` and `turn it down` emit stock `global_commands` `volumeUp` / `volumeDown` with `volumeLevel = null` and no cloud speech
+  - `set volume to six` emits stock `global_commands` `volumeToValue` with `volumeLevel = 6` and no cloud speech
+  - `show volume controls` redirects into `@be/settings` with `volumeQuery`
+- Evidence:
+  - Pegasus `globals/global_commands_launch.rule` defines `stop`, `volumeUp`, `volumeDown`, and `volumeToValue`
+  - stock Jibo `VolumePlugin` subscribes to global volume events and uses the same intent/entity names
+  - stock `@be/settings` exposes `volumeQuery` and opens the volume panel
+- Exit criteria:
+  - live stop settles the robot without a generic chat reply
+  - live volume up/down audibly changes volume or logs a local volume event
+  - live volume-to-value changes the setting to the requested value or logs the expected stock local handling
+  - live volume controls opens the settings volume panel
 
 ## Implemented In Current Source
 
@@ -248,6 +257,19 @@ Current release theme:
 - Follow-up:
   - keep this in regression coverage because it shares turn-state machinery with gallery and alarm flows
 
+### Stop And Volume First Pass
+
+- Status: `implemented`
+- Tags: `protocol`
+- Result:
+  - global stop commands emit stock `global_commands` `stop` and redirect to `@be/idle`
+  - relative volume commands emit stock `global_commands` `volumeUp` / `volumeDown`
+  - absolute volume commands emit `volumeToValue` with a `volumeLevel` entity
+  - volume controls launch redirects to `@be/settings` `volumeQuery`
+  - websocket responses avoid generic chat speech for these local/global command paths
+- Follow-up:
+  - live validation remains in the immediate queue because volume depends on stock robot local global-command handling
+
 ### Unknown OpenJibo Event Noise
 
 - Status: `implemented`
@@ -272,7 +294,7 @@ Current release theme:
 
 ### 6. Stop Command
 
-- Status: `ready`
+- Status: `polish`
 - Tags: `protocol`
 - User goals:
   - `stop`
@@ -280,15 +302,15 @@ Current release theme:
   - `never mind`
 - Evidence:
   - `@be/idle` exists and is already used as a cleanup redirect target
+  - current `1.0.18` source emits stock `global_commands` `stop` plus local `@be/idle` redirect
 - Questions:
-  - whether stock source has a dedicated stop/cancel intent beyond idle redirect
-  - whether stop should interrupt active local skills or only cloud speech paths in the first pass
+  - whether live stock OS treats the combined global stop plus idle redirect as cleanly as expected during active local skills
 - Exit criteria:
   - a spoken stop command settles the robot locally without a generic chat reply
 
 ### 7. Volume Up / Volume Down Voice Control
 
-- Status: `ready`
+- Status: `polish`
 - Tags: `protocol`
 - User goals:
   - `turn it up`
@@ -296,10 +318,11 @@ Current release theme:
   - `increase the volume`
   - `decrease the volume`
 - Evidence:
-  - stock Jibo exposes volume control through robot UX, so there should be a local control or settings path to mirror
+  - Pegasus global commands define `volumeUp`, `volumeDown`, and `volumeToValue`
+  - stock Jibo `VolumePlugin` listens for those global intents and `volumeLevel`
+  - current `1.0.18` source emits those stock NLU shapes and opens `@be/settings` `volumeQuery`
 - Questions:
-  - exact local payload shape for relative volume changes
-  - whether first pass should support absolute values such as `set volume to 5`
+  - whether live stock OS applies the global volume event from the hosted cloud response without any additional local event payload
 - Exit criteria:
   - relative voice volume commands adjust volume without generic cloud speech
 
@@ -505,13 +528,13 @@ Before closing `1.0.18`:
 2. Basic news regression, with provider-backed expansion deferred
 3. Backup / OTA / share yes-no regression
 4. Alarm and photo/gallery regression
-5. Optional small feature only if the regression pass stays calm
+5. Stop and volume first-pass validation
 
 Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist for this sequence.
 
 For `1.0.19`:
 
-1. Stop command or volume control
+1. Harden stop or volume if the `1.0.18` live pass exposes stock-OS quirks; otherwise pick robot age/persona or another lightweight slice
 2. Update, backup, and restore proof
 3. STT upgrade and noise screening
 4. Hosted capture/storage plan

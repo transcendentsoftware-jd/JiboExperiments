@@ -504,6 +504,11 @@ public sealed class WebSocketTurnFinalizationService(
         var emitSkillActions = !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "stop", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "volume_up", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "volume_down", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "volume_to_value", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "volume_query", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "time", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "date", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "day", StringComparison.OrdinalIgnoreCase) &&

@@ -25,6 +25,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
+        var isStopCommand = string.Equals(plan.IntentName, "stop", StringComparison.OrdinalIgnoreCase);
+        var isVolumeControl = string.Equals(plan.IntentName, "volume_up", StringComparison.OrdinalIgnoreCase) ||
+                              string.Equals(plan.IntentName, "volume_down", StringComparison.OrdinalIgnoreCase) ||
+                              string.Equals(plan.IntentName, "volume_to_value", StringComparison.OrdinalIgnoreCase);
+        var isSettingsLaunch = string.Equals(skill?.SkillName, "@be/settings", StringComparison.OrdinalIgnoreCase);
+        var isGlobalCommand = isStopCommand || isVolumeControl;
         var isPhotoGalleryLaunch = string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase);
         var isPhotoCreateLaunch = string.Equals(plan.IntentName, "snapshot", StringComparison.OrdinalIgnoreCase) ||
                                   string.Equals(plan.IntentName, "photobooth", StringComparison.OrdinalIgnoreCase);
@@ -39,12 +45,19 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var alarmAmPm = ReadSkillPayloadString(skill, "ampm");
         var radioStation = ReadSkillPayloadString(skill, "station");
         var cloudSkill = ReadSkillPayloadString(skill, "cloudSkill");
+        var globalIntent = ReadSkillPayloadString(skill, "globalIntent");
+        var nluDomain = ReadSkillPayloadString(skill, "nluDomain");
+        var volumeLevel = ReadSkillPayloadString(skill, "volumeLevel");
         var nluGuess = ReadClientEntity(turn, "guess");
         var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
-        var outboundIntent = isWordOfDayLaunch
+        var outboundIntent = isGlobalCommand && !string.IsNullOrWhiteSpace(globalIntent)
+            ? globalIntent
+            : isWordOfDayLaunch
             ? "menu"
             : isRadioLaunch
             ? "menu"
+            : isSettingsLaunch && !string.IsNullOrWhiteSpace(localIntent)
+            ? localIntent
             : (isPhotoGalleryLaunch || isPhotoCreateLaunch) && !string.IsNullOrWhiteSpace(localIntent)
             ? localIntent
             : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
@@ -58,7 +71,11 @@ public sealed class ResponsePlanToSocketMessagesMapper
             ? wordOfDayGuess
             : isWordOfDayLaunch
             ? string.Empty
+            : isGlobalCommand
+            ? transcript
             : isRadioLaunch
+            ? transcript
+            : isSettingsLaunch
             ? transcript
             : isPhotoGalleryLaunch || isPhotoCreateLaunch
             ? transcript
@@ -73,8 +90,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 : transcript;
         var outboundRules = isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
+            : isGlobalCommand
+            ? BuildGlobalCommandRules(rules)
             : isRadioLaunch
             ? Array.Empty<string>()
+            : isSettingsLaunch
+            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
             : isPhotoGalleryLaunch || isPhotoCreateLaunch
             ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
             : isClockSkillLaunch
@@ -88,6 +109,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             isYesNoTurn && isYesNoIntent,
             ShouldIncludeCreateDomain(yesNoRule),
             isWordOfDayLaunch,
+            isGlobalCommand,
+            volumeLevel,
             isRadioLaunch,
             isWordOfDayGuess,
             wordOfDayGuess,
@@ -118,10 +141,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     entities,
                     isWordOfDayLaunch ? "@be/word-of-the-day" :
                     isRadioLaunch ? "@be/radio" :
+                    isSettingsLaunch ? "@be/settings" :
                     isPhotoGalleryLaunch ? "@be/gallery" :
                     isPhotoCreateLaunch ? "@be/create" :
                     isClockSkillLaunch ? "@be/clock" :
-                    null),
+                    null,
+                    isGlobalCommand ? nluDomain ?? "global_commands" : null),
                 match = new
                 {
                     intent = outboundIntent,
@@ -174,6 +199,39 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 75));
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/radio")),
+                DelayMs: 125));
+        }
+
+        if (isStopCommand)
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "@be/idle",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/idle")),
+                DelayMs: 125));
+        }
+
+        if (isSettingsLaunch &&
+            !string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "@be/settings",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "@be/settings")),
                 DelayMs: 125));
         }
 
@@ -355,6 +413,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         bool yesNoTurn,
         bool includeCreateDomain,
         bool wordOfDayLaunch,
+        bool globalCommand,
+        string? volumeLevel,
         bool radioLaunch,
         bool wordOfDayGuess,
         string? guess,
@@ -387,6 +447,17 @@ public sealed class ResponsePlanToSocketMessagesMapper
             {
                 ["domain"] = "word-of-the-day"
             };
+        }
+
+        if (globalCommand)
+        {
+            var entities = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(volumeLevel))
+            {
+                entities["volumeLevel"] = volumeLevel;
+            }
+
+            return entities;
         }
 
         if (radioLaunch)
@@ -702,7 +773,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         string outboundIntent,
         IReadOnlyList<string> outboundRules,
         object entities,
-        string? skillId)
+        string? skillId,
+        string? domain = null)
     {
         var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
@@ -717,7 +789,19 @@ public sealed class ResponsePlanToSocketMessagesMapper
             payload["skill"] = skillId;
         }
 
+        if (!string.IsNullOrWhiteSpace(domain))
+        {
+            payload["domain"] = domain;
+        }
+
         return payload;
+    }
+
+    private static IReadOnlyList<string> BuildGlobalCommandRules(IReadOnlyList<string> rules)
+    {
+        return rules.Any(static rule => string.Equals(rule, "globals/global_commands_launch", StringComparison.OrdinalIgnoreCase))
+            ? ["globals/global_commands_launch"]
+            : Array.Empty<string>();
     }
 
     private static object BuildGenericFallbackSkillPayload(string transId)

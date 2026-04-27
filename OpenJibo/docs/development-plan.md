@@ -91,6 +91,8 @@ The following behavior is present in source and covered by focused tests:
 - apostrophes are no longer escaped to `&apos;` in spoken ESML, while `&`, `<`, `>`, and `"` remain escaped
 - radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
 - news has a first Nimbus-shaped cloud path using `match.cloudSkill = news` and a `news` `SKILL_ACTION` with synthetic briefing content
+- stop commands such as `stop that` and `never mind` emit stock `global_commands` `stop` NLU plus a local `@be/idle` redirect, without generic chat speech
+- volume commands emit stock `global_commands` volume intents: `volumeUp`, `volumeDown`, and `volumeToValue` with `volumeLevel`; `show volume controls` redirects to `@be/settings` `volumeQuery`
 - stock-shaped clock handoffs cover time, date, day, clock open, timer/alarm menu, timer/alarm value, timer/alarm clarification, and timer/alarm delete
 - alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `7, 44`, `10-25`, `10:25 pm`, and `10 25 p m`
 - ambiguous alarm times can prefer the next local occurrence when the robot context includes `runtime.location.iso`
@@ -147,6 +149,7 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 - Regression test photo/gallery flows again after the `jibo test 24` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring or `I heard you` stale turns.
 - Live-test radio launch: `open the radio` passed in `jibo test 22`; re-run `play country music` if that exact phrase was not captured.
 - Treat basic news as live-proven by `jibo test 23`; defer provider-backed or category-expanded news unless it is chosen as an optional feature slice.
+- Regression test the added stop and volume slices: `stop that`, `never mind`, `turn it up`, `turn it down`, `set volume to six`, and `show volume controls`.
 - Recheck constrained yes/no prompts for update/backup/share/gallery/alarm replacement without leaking global rules.
 - Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
 - Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, and whether the deployed cloud is involved at all.
@@ -164,13 +167,13 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - news content is synthetic; `jibo test 23` proved the path but not live provider-backed headlines
 - gallery `shared/yes_no` still needs a successful transcript-bearing live `yes` pass
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
-- volume, stop, robot age, and command-versus-question personality routing are not implemented yet
+- stop and volume are implemented but still need live stock-OS proof; robot age and command-versus-question personality routing are not implemented yet
 
 ## `1.0.19` Direction
 
 After `1.0.18` is tested and tagged, `1.0.19` should move back into feature work:
 
-- one lightweight device-control feature, most likely stop or volume
+- harden whichever stop/volume behavior is not fully proven by the `1.0.18` live pass, or pick the next lightweight device/persona slice
 - end-to-end update/backup/restore proof
 - STT reliability improvements, including noise screening and a managed STT comparison
 - provider-backed first content path, likely news or weather
