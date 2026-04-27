@@ -7,6 +7,7 @@
     <File Path="docs/live-jibo-test-runbook.md" />
     <File Path="docs/protocol-inventory.md" />
     <File Path="docs/public-site-plan.md" />
+    <File Path="docs/regression-test-plan.md" />
     <File Path="docs/support-tiers.md" />
   </Folder>
   <Folder Name="/docs/prompts/">

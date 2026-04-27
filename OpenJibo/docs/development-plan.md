@@ -6,7 +6,7 @@ This document is the current working plan for the OpenJibo hosted cloud.
 
 The production lane is the `.NET` cloud in `src/Jibo.Cloud/dotnet`. The Node server remains the protocol oracle, capture harness, and fast reverse-engineering lab, but it is no longer the long-term hosted architecture.
 
-Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md). This file tracks release shape, current code truth, evidence sources, and the boundary between `1.0.18` closeout work and `1.0.19` follow-up work.
+Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md). Live closeout checks live in [regression-test-plan.md](regression-test-plan.md). This file tracks release shape, current code truth, evidence sources, and the boundary between `1.0.18` closeout work and `1.0.19` follow-up work.
 
 ## Current Release Snapshot
 
@@ -141,6 +141,7 @@ When sources disagree, prefer the newest live stock-OS capture for runtime behav
 Before calling `1.0.18` complete, prove or explicitly defer these:
 
 - Run the focused `.NET` cloud test suite after the last feature slice.
+- Run the current-release live checklist in [regression-test-plan.md](regression-test-plan.md).
 - Confirm the running robot build reports cloud version `1.0.18`.
 - Regression test alarm flows again after the `jibo test 24` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice, cancel out of a value prompt, and verify the menu agrees.
 - Regression test photo/gallery flows again after the `jibo test 24` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring or `I heard you` stale turns.

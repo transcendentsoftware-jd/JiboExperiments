@@ -6,6 +6,8 @@ This backlog turns discovery into implementation slices for the hosted `.NET` cl
 
 Use it as the working queue when picking the next feature or bug-fix slice. The release pattern is: implement a narrow slice, test it on stock OS `1.9`, update this file with what happened, then either close the release or roll the next larger idea forward.
 
+The live regression checklist for release closeout is [regression-test-plan.md](regression-test-plan.md).
+
 Status key:
 
 - `implemented`: present in current source and covered by focused tests
@@ -504,6 +506,8 @@ Before closing `1.0.18`:
 3. Backup / OTA / share yes-no regression
 4. Alarm and photo/gallery regression
 5. Optional small feature only if the regression pass stays calm
+
+Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist for this sequence.
 
 For `1.0.19`:
 

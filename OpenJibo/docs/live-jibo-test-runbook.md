@@ -6,6 +6,8 @@ Run the first real `Jibo -> .NET OpenJibo cloud` test on the Ubuntu machine usin
 
 This runbook intentionally avoids introducing Azure, new hostnames, or new robot bootstrap changes during the first live test.
 
+For release closeout coverage after the robot is connected, use [regression-test-plan.md](regression-test-plan.md).
+
 ## Recommended Approach
 
 Use the existing Ubuntu networking path and certificate material first.
