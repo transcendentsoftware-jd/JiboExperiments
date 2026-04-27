@@ -158,14 +158,14 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategyTests
         {
             Calls.Add((fileName, arguments));
 
-            if (string.Equals(fileName, "ffmpeg", StringComparison.OrdinalIgnoreCase))
-            {
-                var outputPath = arguments[^1];
-                File.WriteAllBytes(outputPath, "RIFF"u8);
-                return Task.FromResult(new ExternalProcessResult(0, string.Empty, string.Empty));
-            }
+            if (!string.Equals(fileName, "ffmpeg", StringComparison.OrdinalIgnoreCase))
+                return Task.FromResult(new ExternalProcessResult(0, "[00:00:00.000 --> 00:00:01.000] tell me a joke",
+                    string.Empty));
 
-            return Task.FromResult(new ExternalProcessResult(0, "[00:00:00.000 --> 00:00:01.000] tell me a joke", string.Empty));
+            var outputPath = arguments[^1];
+            File.WriteAllBytes(outputPath, "RIFF"u8);
+            return Task.FromResult(new ExternalProcessResult(0, string.Empty, string.Empty));
+
         }
     }
 }

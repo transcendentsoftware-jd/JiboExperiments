@@ -194,27 +194,25 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             });
         }
 
-        if (operation is "Update" or "ResetKeys" or "Remove" or "ActivateByCode" or "ResendActivationCode" or
-            "ChangePassword" or "SendPasswordReset" or "PasswordResetByCode" or "UpdatePhoto" or "RemovePhoto" or
-            "VerifyPhoneByCode" or "AcceptTerms" or "FacebookConnect" or "FacebookMobileConnect")
+        switch (operation)
         {
-            return ProtocolDispatchResult.Ok(new
-            {
-                id = account.AccountId,
-                email = account.Email,
-                firstName = account.FirstName,
-                lastName = account.LastName,
-                accessKeyId = account.AccessKeyId,
-                secretAccessKey = account.SecretAccessKey
-            });
-        }
-
-        if (operation is "ChangeEmail" or "SendPhoneVerificationCode")
-        {
-            return ProtocolDispatchResult.Ok(new
-            {
-                id = account.AccountId
-            });
+            case "Update" or "ResetKeys" or "Remove" or "ActivateByCode" or "ResendActivationCode" or
+                "ChangePassword" or "SendPasswordReset" or "PasswordResetByCode" or "UpdatePhoto" or "RemovePhoto" or
+                "VerifyPhoneByCode" or "AcceptTerms" or "FacebookConnect" or "FacebookMobileConnect":
+                return ProtocolDispatchResult.Ok(new
+                {
+                    id = account.AccountId,
+                    email = account.Email,
+                    firstName = account.FirstName,
+                    lastName = account.LastName,
+                    accessKeyId = account.AccessKeyId,
+                    secretAccessKey = account.SecretAccessKey
+                });
+            case "ChangeEmail" or "SendPhoneVerificationCode":
+                return ProtocolDispatchResult.Ok(new
+                {
+                    id = account.AccountId
+                });
         }
 
         if (operation.Equals("GetAccountByAccessToken", StringComparison.OrdinalIgnoreCase))
@@ -236,8 +234,8 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             var haystack = $"{account.Email} {account.FirstName} {account.LastName} {account.AccountId}".ToLowerInvariant();
 
             return ProtocolDispatchResult.Ok(query.Length > 0 && haystack.Contains(query)
-                ? new[]
-                {
+                ?
+                [
                     new
                     {
                         id = account.AccountId,
@@ -245,7 +243,7 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
                         firstName = account.FirstName,
                         lastName = account.LastName
                     }
-                }
+                ]
                 : Array.Empty<object>());
         }
 
@@ -382,25 +380,24 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             return ProtocolDispatchResult.Ok(stateStore.RemoveMedia(ReadStringArray(body, "paths")).Select(MapMedia).ToArray());
         }
 
-        if (operation.Equals("Create", StringComparison.OrdinalIgnoreCase))
-        {
-            var loopId = ReadHeader(envelope, "x-loop-id") ?? ReadString(body, "loopId") ?? stateStore.GetLoops()[0].LoopId;
-            var path = ReadHeader(envelope, "x-path") ?? ReadString(body, "path") ?? $"/media/{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
-            var type = ReadHeader(envelope, "x-type") ?? ReadString(body, "type") ?? "unknown";
-            var reference = ReadHeader(envelope, "x-reference") ?? ReadString(body, "reference") ?? string.Empty;
-            var isEncrypted = ReadBooleanHeader(envelope, "x-encrypted") || ReadBool(body, "isEncrypted");
-            var meta = ReadObject(body, "meta") ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-            var contentType = ReadHeader(envelope, "Content-Type") ?? "application/octet-stream";
-            meta["contentType"] = contentType;
-            if (!string.IsNullOrWhiteSpace(envelope.BodyText))
-            {
-                meta["bodyText"] = envelope.BodyText;
-            }
+        if (!operation.Equals("Create", StringComparison.OrdinalIgnoreCase))
+            return ProtocolDispatchResult.Ok(Array.Empty<object>());
 
-            return ProtocolDispatchResult.Ok(MapMedia(stateStore.CreateMedia(loopId, path, type, reference, isEncrypted, meta)));
+        var loopId = ReadHeader(envelope, "x-loop-id") ?? ReadString(body, "loopId") ?? stateStore.GetLoops()[0].LoopId;
+        var path = ReadHeader(envelope, "x-path") ?? ReadString(body, "path") ?? $"/media/{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        var type = ReadHeader(envelope, "x-type") ?? ReadString(body, "type") ?? "unknown";
+        var reference = ReadHeader(envelope, "x-reference") ?? ReadString(body, "reference") ?? string.Empty;
+        var isEncrypted = ReadBooleanHeader(envelope, "x-encrypted") || ReadBool(body, "isEncrypted");
+        var meta = ReadObject(body, "meta") ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        var contentType = ReadHeader(envelope, "Content-Type") ?? "application/octet-stream";
+        meta["contentType"] = contentType;
+        if (!string.IsNullOrWhiteSpace(envelope.BodyText))
+        {
+            meta["bodyText"] = envelope.BodyText;
         }
 
-        return ProtocolDispatchResult.Ok(Array.Empty<object>());
+        return ProtocolDispatchResult.Ok(MapMedia(stateStore.CreateMedia(loopId, path, type, reference, isEncrypted, meta)));
+
     }
 
     private ProtocolDispatchResult HandlePerson(string operation)
@@ -430,9 +427,10 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             });
         }
 
+        string? symmetricKey;
         if (operation.Equals("CreateSymmetricKey", StringComparison.OrdinalIgnoreCase))
         {
-            var symmetricKey = stateStore.GetOrCreateSymmetricKey(loopId);
+            symmetricKey = stateStore.GetOrCreateSymmetricKey(loopId);
             return ProtocolDispatchResult.Ok(new
             {
                 loopId,
@@ -472,18 +470,17 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             return ProtocolDispatchResult.Ok(new { ok = true });
         }
 
-        if (operation.Equals("LoadSymmetricKey", StringComparison.OrdinalIgnoreCase))
-        {
-            var symmetricKey = stateStore.GetOrCreateSymmetricKey(loopId);
-            return ProtocolDispatchResult.Ok(new
-            {
-                loopId,
-                key = symmetricKey,
-                symmetricKey
-            });
-        }
+        if (!operation.Equals("LoadSymmetricKey", StringComparison.OrdinalIgnoreCase))
+            return ProtocolDispatchResult.Ok(new { ok = true, operation });
 
-        return ProtocolDispatchResult.Ok(new { ok = true, operation });
+        symmetricKey = stateStore.GetOrCreateSymmetricKey(loopId);
+        return ProtocolDispatchResult.Ok(new
+        {
+            loopId,
+            key = symmetricKey,
+            symmetricKey
+        });
+
     }
 
     private ProtocolDispatchResult HandleRobot(string operation, ProtocolEnvelope envelope)
@@ -509,23 +506,22 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             });
         }
 
-        if (operation.Equals("GetRobot", StringComparison.OrdinalIgnoreCase))
-        {
-            var profile = stateStore.GetRobotProfile();
+        if (!operation.Equals("GetRobot", StringComparison.OrdinalIgnoreCase))
             return ProtocolDispatchResult.Ok(new
             {
-                id = ReadString(envelope.TryParseBody(), "id") ?? profile.RobotId,
-                payload = profile.Payload,
-                calibrationPayload = profile.CalibrationPayload,
-                updated = profile.UpdatedUtc.ToUnixTimeMilliseconds(),
-                created = profile.CreatedUtc.ToUnixTimeMilliseconds()
+                result = "ok"
             });
-        }
 
+        var profile = stateStore.GetRobotProfile();
         return ProtocolDispatchResult.Ok(new
         {
-            result = "ok"
+            id = ReadString(envelope.TryParseBody(), "id") ?? profile.RobotId,
+            payload = profile.Payload,
+            calibrationPayload = profile.CalibrationPayload,
+            updated = profile.UpdatedUtc.ToUnixTimeMilliseconds(),
+            created = profile.CreatedUtc.ToUnixTimeMilliseconds()
         });
+
     }
 
     private ProtocolDispatchResult HandleUpdate(string operation, ProtocolEnvelope envelope)
@@ -674,10 +670,9 @@ public sealed class JiboCloudProtocolService(ICloudStateStore stateStore)
             return [];
         }
 
-        return property.EnumerateArray()
+        return [.. property.EnumerateArray()
             .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString())
-            .Where(item => !string.IsNullOrWhiteSpace(item))
-            .ToArray();
+            .Where(item => !string.IsNullOrWhiteSpace(item))];
     }
 
     private static IDictionary<string, object?>? ReadObject(JsonElement? element, string propertyName)

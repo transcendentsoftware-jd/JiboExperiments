@@ -18,7 +18,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     private readonly ConcurrentDictionary<string, string> _symmetricKeys = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, KeyRequestRecord> _keyRequests = new(StringComparer.OrdinalIgnoreCase);
     private readonly string? _persistencePath;
-    private readonly object _syncRoot = new();
+    private readonly Lock _syncRoot = new();
     private readonly List<UpdateManifest> _updates;
     private readonly List<MediaRecord> _media = [];
     private readonly List<BackupRecord> _backups = [];
@@ -186,21 +186,20 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     public UpdateManifest RemoveUpdate(string? updateId)
     {
         var existing = _updates.FirstOrDefault(update => update.UpdateId == updateId);
-        if (existing is not null)
-        {
-            _updates.Remove(existing);
-            PersistState();
-            return existing;
-        }
+        if (existing is null)
+            return new UpdateManifest
+            {
+                UpdateId = updateId ?? "unknown-update",
+                Changes = "Update not found",
+                Url = "https://api.jibo.com/update/missing",
+                ShaHash = "missing",
+                Subsystem = "unknown"
+            };
 
-        return new UpdateManifest
-        {
-            UpdateId = updateId ?? "unknown-update",
-            Changes = "Update not found",
-            Url = "https://api.jibo.com/update/missing",
-            ShaHash = "missing",
-            Subsystem = "unknown"
-        };
+        _updates.Remove(existing);
+        PersistState();
+        return existing;
+
     }
 
     public IReadOnlyList<MediaRecord> ListMedia(IReadOnlyList<string>? loopIds = null, long? after = null, long? before = null)

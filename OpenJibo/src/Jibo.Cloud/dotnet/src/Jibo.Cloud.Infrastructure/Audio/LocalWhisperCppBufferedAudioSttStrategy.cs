@@ -132,7 +132,7 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         var timecoded = lines
-            .Where(static line => line.StartsWith("[", StringComparison.Ordinal) && line.Contains("-->", StringComparison.Ordinal))
+            .Where(static line => line.StartsWith('[') && line.Contains("-->", StringComparison.Ordinal))
             .Select(static line =>
             {
                 var closingBracket = line.IndexOf(']');
@@ -171,6 +171,6 @@ public sealed class LocalWhisperCppBufferedAudioSttStrategy(
             return true;
         }
 
-        return checkFileExists ? File.Exists(path) : true;
+        return !checkFileExists || File.Exists(path);
     }
 }

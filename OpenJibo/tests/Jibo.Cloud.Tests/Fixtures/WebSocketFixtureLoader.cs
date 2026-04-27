@@ -17,10 +17,9 @@ internal static class WebSocketFixtureLoader
         var root = document.RootElement;
 
         var session = root.GetProperty("session");
-        var steps = new List<WebSocketFixtureStep>();
-        foreach (var stepElement in root.GetProperty("steps").EnumerateArray())
-        {
-            steps.Add(new WebSocketFixtureStep
+        var steps = root.GetProperty("steps")
+            .EnumerateArray()
+            .Select(stepElement => new WebSocketFixtureStep
             {
                 Message = new WebSocketMessageEnvelope
                 {
@@ -33,16 +32,15 @@ internal static class WebSocketFixtureLoader
                         ? binary.EnumerateArray().Select(item => (byte)item.GetInt32()).ToArray()
                         : null
                 },
-                ExpectedReplyTypes = stepElement.GetProperty("expectedReplyTypes")
+                ExpectedReplyTypes = [.. stepElement.GetProperty("expectedReplyTypes")
                     .EnumerateArray()
                     .Select(item => item.GetString() ?? string.Empty)
-                    .Where(item => !string.IsNullOrWhiteSpace(item))
-                    .ToArray(),
+                    .Where(item => !string.IsNullOrWhiteSpace(item))],
                 ExpectedReplies = stepElement.TryGetProperty("expectedReplies", out var expectedReplies) && expectedReplies.ValueKind == JsonValueKind.Array
                     ? JsonSerializer.Deserialize<List<ExpectedWebSocketReply>>(expectedReplies.GetRawText(), SerializerOptions) ?? []
                     : []
-            });
-        }
+            })
+            .ToList();
 
         return new WebSocketFixture
         {

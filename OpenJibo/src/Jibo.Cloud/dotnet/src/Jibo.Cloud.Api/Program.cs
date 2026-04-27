@@ -25,22 +25,15 @@ app.Use(async (context, next) =>
 
     var kind = ResolveSocketKind(context.Request.Host.Host, context.Request.Path);
     var token = ResolveToken(context.Request);
-    if (kind == "unknown")
+    switch (kind)
     {
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
-        return;
-    }
-
-    if (kind == "api-socket" && string.IsNullOrWhiteSpace(token))
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return;
-    }
-
-    if (kind is "neo-hub-listen" or "neo-hub-proactive" && string.IsNullOrWhiteSpace(token))
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        return;
+        case "unknown":
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        case "api-socket" when string.IsNullOrWhiteSpace(token):
+        case "neo-hub-listen" or "neo-hub-proactive" when string.IsNullOrWhiteSpace(token):
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
     }
 
     var webSocketService = context.RequestServices.GetRequiredService<JiboWebSocketService>();

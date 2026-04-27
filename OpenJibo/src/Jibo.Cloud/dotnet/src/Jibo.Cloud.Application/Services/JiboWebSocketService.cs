@@ -32,47 +32,48 @@ public sealed class JiboWebSocketService(
 
         var parsedType = ReadMessageType(envelope.Text);
         session.LastMessageType = parsedType;
-        turnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
+        WebSocketTurnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
 
-        if (parsedType == "CONTEXT")
+        switch (parsedType)
         {
-            var replies = await turnFinalizationService.HandleContextAsync(session, envelope, cancellationToken);
-            await telemetrySink.RecordTurnEventAsync(envelope, session, "context_received", new Dictionary<string, object?>
+            case "CONTEXT":
             {
-                ["transID"] = session.TurnState.TransId
-            }, cancellationToken);
-            return replies;
-        }
-
-        if (parsedType == "LISTEN")
-        {
-            var replies = ContainsInlineTurnPayload(envelope.Text)
-                ? await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken)
-                : turnFinalizationService.HandleListenSetup(session, envelope);
-            await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+                var replies = await turnFinalizationService.HandleContextAsync(session, envelope, cancellationToken);
+                await telemetrySink.RecordTurnEventAsync(envelope, session, "context_received", new Dictionary<string, object?>
+                {
+                    ["transID"] = session.TurnState.TransId
+                }, cancellationToken);
+                return replies;
+            }
+            case "LISTEN":
             {
-                ["messageType"] = parsedType,
-                ["replyCount"] = replies.Count,
-                ["transcript"] = session.LastTranscript,
-                ["intent"] = session.LastIntent
-            }, cancellationToken);
-            return replies;
-        }
-
-        if (parsedType is "CLIENT_NLU" or "CLIENT_ASR")
-        {
-            var replies = await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
-            await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+                var replies = ContainsInlineTurnPayload(envelope.Text)
+                    ? await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken)
+                    : WebSocketTurnFinalizationService.HandleListenSetup(session, envelope);
+                await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+                {
+                    ["messageType"] = parsedType,
+                    ["replyCount"] = replies.Count,
+                    ["transcript"] = session.LastTranscript,
+                    ["intent"] = session.LastIntent
+                }, cancellationToken);
+                return replies;
+            }
+            case "CLIENT_NLU" or "CLIENT_ASR":
             {
-                ["messageType"] = parsedType,
-                ["replyCount"] = replies.Count,
-                ["transcript"] = session.LastTranscript,
-                ["intent"] = session.LastIntent
-            }, cancellationToken);
-            return replies;
+                var replies = await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
+                await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>
+                {
+                    ["messageType"] = parsedType,
+                    ["replyCount"] = replies.Count,
+                    ["transcript"] = session.LastTranscript,
+                    ["intent"] = session.LastIntent
+                }, cancellationToken);
+                return replies;
+            }
+            default:
+                return [];
         }
-
-        return [];
     }
 
     private static string ReadMessageType(string? text)

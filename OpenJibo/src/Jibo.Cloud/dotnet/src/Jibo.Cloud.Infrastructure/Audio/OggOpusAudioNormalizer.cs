@@ -79,13 +79,7 @@ internal static class OggOpusAudioNormalizer
 
     private static uint ComputeCrc(byte[] buffer)
     {
-        uint crc = 0;
-        foreach (var value in buffer)
-        {
-            crc = (crc << 8) ^ CrcTable[((crc >> 24) ^ value) & 0xff];
-        }
-
-        return crc;
+        return buffer.Aggregate<byte, uint>(0, (current, value) => (current << 8) ^ CrcTable[((current >> 24) ^ value) & 0xff]);
     }
 
     private static uint[] BuildCrcTable()

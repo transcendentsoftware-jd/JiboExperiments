@@ -6,7 +6,8 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class ResponsePlanToSocketMessagesMapper
 {
-    public static IReadOnlyList<SocketReplyPlan> Map(ResponsePlan plan, TurnContext turn, CloudSession session, bool emitSkillActions)
+    public static IReadOnlyList<SocketReplyPlan> Map(ResponsePlan plan, TurnContext turn, CloudSession session,
+        bool emitSkillActions)
     {
         var speak = plan.Actions.OfType<SpeakAction>().FirstOrDefault();
         var skill = plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault();
@@ -22,7 +23,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isYesNoIntent = string.Equals(plan.IntentName, "yes", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
         var isWordOfDayLaunch = string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase);
-        var isWordOfDayGuess = string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
+        var isWordOfDayGuess =
+            string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase);
         var isRadioLaunch = string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "radio_genre", StringComparison.OrdinalIgnoreCase);
         var isStopCommand = string.Equals(plan.IntentName, "stop", StringComparison.OrdinalIgnoreCase);
@@ -53,56 +55,68 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var outboundIntent = isGlobalCommand && !string.IsNullOrWhiteSpace(globalIntent)
             ? globalIntent
             : isWordOfDayLaunch
-            ? "menu"
-            : isRadioLaunch
-            ? "menu"
-            : isSettingsLaunch && !string.IsNullOrWhiteSpace(localIntent)
-            ? localIntent
-            : (isPhotoGalleryLaunch || isPhotoCreateLaunch) && !string.IsNullOrWhiteSpace(localIntent)
-            ? localIntent
-            : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
-            ? clockIntent
-            : isWordOfDayGuess
-            ? "guess"
-            : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
-            ? clientIntent
-            : plan.IntentName ?? "unknown";
+                ? "menu"
+                : isRadioLaunch
+                    ? "menu"
+                    : isSettingsLaunch && !string.IsNullOrWhiteSpace(localIntent)
+                        ? localIntent
+                        : (isPhotoGalleryLaunch || isPhotoCreateLaunch) && !string.IsNullOrWhiteSpace(localIntent)
+                            ? localIntent
+                            : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
+                                ? clockIntent
+                                : isWordOfDayGuess
+                                    ? "guess"
+                                    : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) &&
+                                      !string.IsNullOrWhiteSpace(clientIntent)
+                                        ? clientIntent
+                                        : plan.IntentName ?? "unknown";
         var outboundAsrText = isWordOfDayGuess && !string.IsNullOrWhiteSpace(wordOfDayGuess)
             ? wordOfDayGuess
             : isWordOfDayLaunch
-            ? string.Empty
-            : isGlobalCommand
-            ? transcript
-            : isRadioLaunch
-            ? transcript
-            : isSettingsLaunch
-            ? transcript
-            : isPhotoGalleryLaunch || isPhotoCreateLaunch
-            ? transcript
-            : isClockSkillLaunch
-            ? transcript
-            : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(nluGuess)
-            ? nluGuess
-            : isYesNoTurn && isYesNoIntent
-            ? transcript
-            : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(clientIntent)
-                ? clientIntent
-                : transcript;
+                ? string.Empty
+                : isGlobalCommand
+                    ? transcript
+                    : isRadioLaunch
+                        ? transcript
+                        : isSettingsLaunch
+                            ? transcript
+                            : isPhotoGalleryLaunch || isPhotoCreateLaunch
+                                ? transcript
+                                : isClockSkillLaunch
+                                    ? transcript
+                                    : string.Equals(clientIntent, "guess", StringComparison.OrdinalIgnoreCase) &&
+                                      !string.IsNullOrWhiteSpace(nluGuess)
+                                        ? nluGuess
+                                        : isYesNoTurn && isYesNoIntent
+                                            ? transcript
+                                            : string.Equals(messageType, "CLIENT_NLU",
+                                                  StringComparison.OrdinalIgnoreCase) &&
+                                              !string.IsNullOrWhiteSpace(clientIntent)
+                                                ? clientIntent
+                                                : transcript;
         var outboundRules = isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
             : isGlobalCommand
-            ? BuildGlobalCommandRules(rules)
-            : isRadioLaunch
-            ? Array.Empty<string>()
-            : isSettingsLaunch
-            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
-            : isPhotoGalleryLaunch || isPhotoCreateLaunch
-            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
-            : isClockSkillLaunch
-            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ? rules : Array.Empty<string>()
-            : isWordOfDayGuess
-            ? ["word-of-the-day/puzzle"]
-            : isYesNoTurn && isYesNoIntent ? [yesNoRule!] : rules;
+                ? BuildGlobalCommandRules(rules)
+                : isRadioLaunch
+                    ? []
+                    : isSettingsLaunch
+                        ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
+                            ? rules
+                            : []
+                        : isPhotoGalleryLaunch || isPhotoCreateLaunch
+                            ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
+                                ? rules
+                                : []
+                            : isClockSkillLaunch
+                                ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
+                                    ? rules
+                                    : []
+                                : isWordOfDayGuess
+                                    ? ["word-of-the-day/puzzle"]
+                                    : isYesNoTurn && isYesNoIntent
+                                        ? [yesNoRule!]
+                                        : rules;
         var entities = ReadEntities(
             turn,
             messageType,
@@ -280,7 +294,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return messages;
     }
 
-    public static IReadOnlyList<SocketReplyPlan> MapFallback(CloudSession session, string transId, IReadOnlyList<string> rules)
+    public static IReadOnlyList<SocketReplyPlan> MapFallback(CloudSession session, string transId,
+        IReadOnlyList<string> rules)
     {
         return
         [
@@ -376,12 +391,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var messages = new List<SocketReplyPlan>(MapNoInput(transId, rules))
         {
             new(JsonSerializer.Serialize(BuildSkillRedirectPayload(
-                transId,
-                skillId,
-                string.Empty,
-                string.Empty,
-                [],
-                new Dictionary<string, object?>())),
+                    transId,
+                    skillId,
+                    string.Empty,
+                    string.Empty,
+                    [],
+                    new Dictionary<string, object?>())),
                 redirectDelayMs)
         };
 
@@ -402,7 +417,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return value switch
         {
             IReadOnlyList<string> typedRules => typedRules,
-            IEnumerable<string> rules => rules.Where(rule => !string.IsNullOrWhiteSpace(rule)).ToArray(),
+            IEnumerable<string> rules => [.. rules.Where(rule => !string.IsNullOrWhiteSpace(rule))],
             _ => []
         };
     }
@@ -487,12 +502,11 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 entities["seconds"] = timerSeconds ?? "null";
             }
 
-            if (string.Equals(clockDomain, "alarm", StringComparison.OrdinalIgnoreCase) &&
-                (!string.IsNullOrWhiteSpace(alarmTime) || !string.IsNullOrWhiteSpace(alarmAmPm)))
-            {
-                entities["time"] = alarmTime ?? string.Empty;
-                entities["ampm"] = alarmAmPm ?? string.Empty;
-            }
+            if (!string.Equals(clockDomain, "alarm", StringComparison.OrdinalIgnoreCase) ||
+                (string.IsNullOrWhiteSpace(alarmTime) && string.IsNullOrWhiteSpace(alarmAmPm))) return entities;
+
+            entities["time"] = alarmTime ?? string.Empty;
+            entities["ampm"] = alarmAmPm ?? string.Empty;
 
             return entities;
         }
@@ -505,12 +519,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
             };
         }
 
-        if (!string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
-        {
-            return new Dictionary<string, object?>();
-        }
-
-        if (!turn.Attributes.TryGetValue("clientEntities", out var value) || value is null)
+        if (!string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) ||
+            !turn.Attributes.TryGetValue("clientEntities", out var value) || value is null)
         {
             return new Dictionary<string, object?>();
         }
@@ -582,7 +592,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return value switch
         {
             JsonElement { ValueKind: JsonValueKind.Object } jsonElement
-                when jsonElement.TryGetProperty(entityName, out var property) && property.ValueKind == JsonValueKind.String
+                when jsonElement.TryGetProperty(entityName, out var property) &&
+                     property.ValueKind == JsonValueKind.String
                 => property.GetString(),
             IReadOnlyDictionary<string, string> typed when typed.TryGetValue(entityName, out var entityValue)
                 => entityValue,
@@ -602,7 +613,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return value?.ToString();
     }
 
-    private static string? ResolveWordOfDayGuess(TurnContext turn, string transcript, string? nluGuess)
+    private static string ResolveWordOfDayGuess(TurnContext turn, string transcript, string? nluGuess)
     {
         if (!string.IsNullOrWhiteSpace(nluGuess))
         {
@@ -662,11 +673,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
             }
 
             var distance = ComputeEditDistance(normalizedTranscript, normalizedHint);
-            if (distance < bestDistance)
-            {
-                bestDistance = distance;
-                bestHint = hint;
-            }
+            if (distance >= bestDistance) continue;
+
+            bestDistance = distance;
+            bestHint = hint;
         }
 
         return bestDistance <= 2 ? bestHint : null;
@@ -704,10 +714,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return previous[right.Length];
     }
 
-    private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak, InvokeNativeSkillAction? skill)
+    private static object BuildSkillPayload(ResponsePlan plan, TurnContext turn, string transId, SpeakAction speak,
+        InvokeNativeSkillAction? skill)
     {
         var skillPayload = skill?.Payload;
-        if (string.Equals(ReadPayloadString(skillPayload, "cloudResponseMode"), "completion_only", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ReadPayloadString(skillPayload, "cloudResponseMode"), "completion_only",
+                StringComparison.OrdinalIgnoreCase))
         {
             return BuildCompletionOnlySkillPayload(
                 transId,
@@ -718,12 +730,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
                      string.Equals(skill?.SkillName, "@be/joke", StringComparison.OrdinalIgnoreCase);
         var isDance = string.Equals(plan.IntentName, "dance", StringComparison.OrdinalIgnoreCase);
         var payloadSkill = ReadPayloadString(skillPayload, "skillId");
-        var skillId = string.IsNullOrWhiteSpace(payloadSkill) ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill" : payloadSkill;
+        var skillId = string.IsNullOrWhiteSpace(payloadSkill)
+            ? isJoke ? "@be/joke" : skill?.SkillName ?? "chitchat-skill"
+            : payloadSkill;
         var esml = ReadPayloadString(skillPayload, "esml") ?? (isDance
             ? "<speak>Okay.<break size='0.2'/> Watch this.<anim cat='dance' filter='music, rom-upbeat' /></speak>"
             : isJoke
-            ? $"<speak><es cat='happy' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>"
-            : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>");
+                ? $"<speak><es cat='happy' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>"
+                : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>");
         var mimId = ReadPayloadString(skillPayload, "mim_id") ?? (isJoke ? "runtime-joke" : "runtime-chat");
         var mimType = ReadPayloadString(skillPayload, "mim_type") ?? "announcement";
 
@@ -799,9 +813,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
     private static IReadOnlyList<string> BuildGlobalCommandRules(IReadOnlyList<string> rules)
     {
-        return rules.Any(static rule => string.Equals(rule, "globals/global_commands_launch", StringComparison.OrdinalIgnoreCase))
+        return rules.Any(static rule =>
+            string.Equals(rule, "globals/global_commands_launch", StringComparison.OrdinalIgnoreCase))
             ? ["globals/global_commands_launch"]
-            : Array.Empty<string>();
+            : [];
     }
 
     private static object BuildGenericFallbackSkillPayload(string transId)
@@ -829,7 +844,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                             {
                                 play = new
                                 {
-                                    esml = "<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>I heard you.</es></speak>",
+                                    esml =
+                                        "<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>I heard you.</es></speak>",
                                     meta = new
                                     {
                                         prompt_id = "RUNTIME_PROMPT",

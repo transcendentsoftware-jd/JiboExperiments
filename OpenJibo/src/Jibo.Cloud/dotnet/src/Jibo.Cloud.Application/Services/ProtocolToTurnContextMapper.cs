@@ -93,52 +93,46 @@ public sealed class ProtocolToTurnContextMapper
             using var document = JsonDocument.Parse(text);
             var root = document.RootElement;
 
-            if (root.TryGetProperty("data", out var data))
+            if (!root.TryGetProperty("data", out var data)) return null;
+
+            if (data.TryGetProperty("text", out var transcript) && transcript.ValueKind == JsonValueKind.String)
             {
-                if (data.TryGetProperty("text", out var transcript) && transcript.ValueKind == JsonValueKind.String)
-                {
-                    return transcript.GetString();
-                }
-
-                if (data.TryGetProperty("asr", out var asr) &&
-                    asr.ValueKind == JsonValueKind.Object &&
-                    asr.TryGetProperty("text", out var asrText) &&
-                    asrText.ValueKind == JsonValueKind.String)
-                {
-                    return asrText.GetString();
-                }
-
-                if (data.TryGetProperty("transcriptHint", out var transcriptHint) && transcriptHint.ValueKind == JsonValueKind.String)
-                {
-                    return transcriptHint.GetString();
-                }
-
-                if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
-                {
-                    attributes["clientIntent"] = intent.GetString();
-                }
-
-                if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
-                {
-                    attributes["clientRules"] = rules.EnumerateArray()
-                        .Where(item => item.ValueKind == JsonValueKind.String)
-                        .Select(item => item.GetString() ?? string.Empty)
-                        .Where(rule => !string.IsNullOrWhiteSpace(rule))
-                        .ToArray();
-                }
-
-                if (data.TryGetProperty("entities", out var entities) && entities.ValueKind == JsonValueKind.Object)
-                {
-                    attributes["clientEntities"] = entities.Clone();
-                }
-
-                if (intent.ValueKind == JsonValueKind.String)
-                {
-                    return intent.GetString();
-                }
+                return transcript.GetString();
             }
 
-            return null;
+            if (data.TryGetProperty("asr", out var asr) &&
+                asr.ValueKind == JsonValueKind.Object &&
+                asr.TryGetProperty("text", out var asrText) &&
+                asrText.ValueKind == JsonValueKind.String)
+            {
+                return asrText.GetString();
+            }
+
+            if (data.TryGetProperty("transcriptHint", out var transcriptHint) && transcriptHint.ValueKind == JsonValueKind.String)
+            {
+                return transcriptHint.GetString();
+            }
+
+            if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
+            {
+                attributes["clientIntent"] = intent.GetString();
+            }
+
+            if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
+            {
+                attributes["clientRules"] = rules.EnumerateArray()
+                    .Where(item => item.ValueKind == JsonValueKind.String)
+                    .Select(item => item.GetString() ?? string.Empty)
+                    .Where(rule => !string.IsNullOrWhiteSpace(rule))
+                    .ToArray();
+            }
+
+            if (data.TryGetProperty("entities", out var entities) && entities.ValueKind == JsonValueKind.Object)
+            {
+                attributes["clientEntities"] = entities.Clone();
+            }
+
+            return intent.ValueKind == JsonValueKind.String ? intent.GetString() : null;
         }
         catch
         {

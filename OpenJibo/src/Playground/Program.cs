@@ -2,7 +2,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using Playground;
 
 Console.Write("Enter Jibo IP: ");
 var jiboIp = (Console.ReadLine() ?? "").Trim();
@@ -67,7 +67,7 @@ while (!cts.IsCancellationRequested)
 
                 var json = Encoding.UTF8.GetString(ms.ToArray());
 
-                AsrEvent? evt = null;
+                AsrEvent? evt;
                 try
                 {
                     evt = JsonSerializer.Deserialize<AsrEvent>(json);
@@ -86,15 +86,11 @@ while (!cts.IsCancellationRequested)
 
                 Console.WriteLine($"[{evt.EventType}] {json}");
 
-                if (evt.EventType == "speech_to_text_final")
-                {
-                    var best = PickBestUtterance(evt.Utterances);
-                    if (!string.IsNullOrWhiteSpace(best))
-                    {
-                        utteranceTcs.TrySetResult(best);
-                        return;
-                    }
-                }
+                if (evt.EventType != "speech_to_text_final") continue;
+                var best = PickBestUtterance(evt.Utterances);
+                if (string.IsNullOrWhiteSpace(best)) continue;
+                utteranceTcs.TrySetResult(best);
+                return;
             }
         }, cts.Token);
 
@@ -219,28 +215,4 @@ static string BuildReply(string heard)
         return "Hello! I heard you loud and clear.";
 
     return text.Contains("your name") ? "I am Jibo, running with a local demo bridge." : $"You said: {heard}";
-}
-
-public sealed class AsrEvent
-{
-    [JsonPropertyName("event_type")]
-    public string? EventType { get; set; }
-
-    [JsonPropertyName("task_id")]
-    public string? TaskId { get; set; }
-
-    [JsonPropertyName("request_id")]
-    public string? RequestId { get; set; }
-
-    [JsonPropertyName("utterances")]
-    public List<AsrUtterance>? Utterances { get; set; }
-}
-
-public sealed class AsrUtterance
-{
-    [JsonPropertyName("utterance")]
-    public string? Utterance { get; set; }
-
-    [JsonPropertyName("score")]
-    public double Score { get; set; }
 }

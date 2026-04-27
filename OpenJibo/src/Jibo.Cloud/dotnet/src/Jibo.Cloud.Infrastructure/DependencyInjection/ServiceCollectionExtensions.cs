@@ -7,7 +7,6 @@ using Jibo.Cloud.Infrastructure.Telemetry;
 using Jibo.Runtime.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using System.IO;
 
 namespace Jibo.Cloud.Infrastructure.DependencyInjection;
 

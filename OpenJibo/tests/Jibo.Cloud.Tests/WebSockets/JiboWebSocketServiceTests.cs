@@ -16,11 +16,9 @@ public sealed class JiboWebSocketServiceTests
     public JiboWebSocketServiceTests()
     {
         _store = new InMemoryCloudStateStore();
-        var turnContextMapper = new ProtocolToTurnContextMapper();
         var contentRepository = new InMemoryJiboExperienceContentRepository();
         var contentCache = new JiboExperienceContentCache(contentRepository);
         var conversationBroker = new DemoConversationBroker(new JiboInteractionService(contentCache, new DefaultJiboRandomizer()));
-        var replyMapper = new ResponsePlanToSocketMessagesMapper();
         var sttSelector = new DefaultSttStrategySelector(
         [
             new SyntheticBufferedAudioSttStrategy()
@@ -30,10 +28,7 @@ public sealed class JiboWebSocketServiceTests
         _service = new JiboWebSocketService(
             _store,
             new NullWebSocketTelemetrySink(),
-            new WebSocketTurnFinalizationService(
-                turnContextMapper,
-                conversationBroker,
-                replyMapper,
+            new WebSocketTurnFinalizationService(conversationBroker,
                 sttSelector,
                 sink));
     }
@@ -2639,7 +2634,7 @@ public sealed class JiboWebSocketServiceTests
             Path = "/listen",
             Kind = "neo-hub-listen",
             Token = "hub-context-reset-token",
-            Binary = [9, 9, 9, 9]
+            Binary = "\t\t\t\t"u8.ToArray()
         });
 
         var session = _store.FindSessionByToken("hub-context-reset-token");
@@ -2681,26 +2676,24 @@ public sealed class JiboWebSocketServiceTests
             var actualTypes = replies.Select(ReadReplyType).ToArray();
             Assert.Equal(step.ExpectedReplyTypes, actualTypes);
 
-            if (step.ExpectedReplies.Count > 0)
+            if (step.ExpectedReplies.Count <= 0) continue;
+
+            Assert.Equal(replies.Count, step.ExpectedReplies.Count);
+
+            for (var index = 0; index < step.ExpectedReplies.Count; index += 1)
             {
-                Assert.Equal(replies.Count, step.ExpectedReplies.Count);
+                var expectedReply = step.ExpectedReplies[index];
+                Assert.Equal(expectedReply.Type, actualTypes[index]);
 
-                for (var index = 0; index < step.ExpectedReplies.Count; index += 1)
+                if (expectedReply.DelayMs.HasValue)
                 {
-                    var expectedReply = step.ExpectedReplies[index];
-                    Assert.Equal(expectedReply.Type, actualTypes[index]);
-
-                    if (expectedReply.DelayMs.HasValue)
-                    {
-                        Assert.Equal(expectedReply.DelayMs.Value, replies[index].DelayMs);
-                    }
-
-                    if (expectedReply.JsonSubset is { ValueKind: JsonValueKind.Object } jsonSubset)
-                    {
-                        using var actualPayload = JsonDocument.Parse(replies[index].Text!);
-                        AssertJsonContains(jsonSubset, actualPayload.RootElement);
-                    }
+                    Assert.Equal(expectedReply.DelayMs.Value, replies[index].DelayMs);
                 }
+
+                if (expectedReply.JsonSubset is not { ValueKind: JsonValueKind.Object } jsonSubset) continue;
+
+                using var actualPayload = JsonDocument.Parse(replies[index].Text!);
+                AssertJsonContains(jsonSubset, actualPayload.RootElement);
             }
         }
     }
@@ -2709,6 +2702,7 @@ public sealed class JiboWebSocketServiceTests
     {
         Assert.Equal(expected.ValueKind, actual.ValueKind);
 
+        // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
         switch (expected.ValueKind)
         {
             case JsonValueKind.Object:

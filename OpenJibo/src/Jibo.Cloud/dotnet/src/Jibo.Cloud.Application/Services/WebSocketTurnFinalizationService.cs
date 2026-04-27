@@ -6,10 +6,8 @@ using System.Text.RegularExpressions;
 
 namespace Jibo.Cloud.Application.Services;
 
-public sealed class WebSocketTurnFinalizationService(
-    ProtocolToTurnContextMapper turnContextMapper,
+public sealed partial class WebSocketTurnFinalizationService(
     IConversationBroker conversationBroker,
-    ResponsePlanToSocketMessagesMapper replyMapper,
     ISttStrategySelector sttStrategySelector,
     ITurnTelemetrySink sink
 )
@@ -18,7 +16,7 @@ public sealed class WebSocketTurnFinalizationService(
     private const int AutoFinalizeMinBufferedAudioChunks = 4;
     private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1400);
 
-    public void ObserveIncomingMessage(CloudSession session, string? text)
+    public static void ObserveIncomingMessage(CloudSession session, string? text)
     {
         if (!TryReadTransId(text, out var nextTransId) || string.IsNullOrWhiteSpace(nextTransId))
         {
@@ -39,12 +37,7 @@ public sealed class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken = default)
     {
         var turnState = session.TurnState;
-        if (ShouldIgnoreLateAudio(session))
-        {
-            return [];
-        }
-
-        if (!turnState.AwaitingTurnCompletion &&
+        if (ShouldIgnoreLateAudio(session) || !turnState.AwaitingTurnCompletion &&
             !session.FollowUpOpen &&
             !turnState.SawListen &&
             !string.IsNullOrWhiteSpace(turnState.TransId))
@@ -58,7 +51,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.BufferedAudioBytes += envelope.Binary?.Length ?? 0;
         if (envelope.Binary is { Length: > 0 })
         {
-            turnState.BufferedAudioFrames.Add(envelope.Binary.ToArray());
+            turnState.BufferedAudioFrames.Add([.. envelope.Binary]);
         }
         turnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow;
         turnState.AwaitingTurnCompletion = true;
@@ -116,7 +109,7 @@ public sealed class WebSocketTurnFinalizationService(
         return await FinalizeTurnAsync(session, envelope, messageType, allowFallbackOnMissingTranscript: false, cancellationToken);
     }
 
-    public IReadOnlyList<WebSocketReply> HandleListenSetup(CloudSession session, WebSocketMessageEnvelope envelope)
+    public static IReadOnlyList<WebSocketReply> HandleListenSetup(CloudSession session, WebSocketMessageEnvelope envelope)
     {
         PersistTurnHints(session, envelope.Text);
 
@@ -129,7 +122,7 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             session.TurnState.SawListen = false;
             session.TurnState.SawContext = false;
-            return ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
+            return [.. ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
                     session.TurnState.TransId ?? session.LastTransId ?? string.Empty,
                     session.TurnState.ListenRules,
                     "@be/idle")
@@ -137,8 +130,7 @@ public sealed class WebSocketTurnFinalizationService(
                 {
                     Text = map.Text,
                     DelayMs = map.DelayMs
-                })
-                .ToArray();
+                })];
         }
 
         session.TurnState.AwaitingTurnCompletion = true;
@@ -147,17 +139,12 @@ public sealed class WebSocketTurnFinalizationService(
 
     private async Task<TurnContext> ResolveTranscriptAsync(TurnContext turn, CloudSession session, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript))
+        if (!string.IsNullOrWhiteSpace(turn.NormalizedTranscript) || !string.IsNullOrWhiteSpace(turn.RawTranscript) || session.TurnState.BufferedAudioBytes <= 0)
         {
             return turn;
         }
 
-        if (session.TurnState.BufferedAudioBytes <= 0)
-        {
-            return turn;
-        }
-
-        ISttStrategy? strategy = null;
+        ISttStrategy? strategy;
         try
         {
             strategy = await sttStrategySelector.SelectAsync(turn, cancellationToken);
@@ -254,47 +241,44 @@ public sealed class WebSocketTurnFinalizationService(
                 }
             }
 
-            if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Object)
+            if (!root.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Object) return;
+
+            if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
             {
-                if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)
-            {
-                turnState.ListenRules = rules.EnumerateArray()
+                turnState.ListenRules = [.. rules.EnumerateArray()
                     .Select(item => item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString())
-                    .Where(rule => !string.IsNullOrWhiteSpace(rule))
-                        .ToArray();
-                    session.Metadata["listenRules"] = turnState.ListenRules;
-                }
-
-                if (data.TryGetProperty("asr", out var asr) &&
-                    asr.ValueKind == JsonValueKind.Object &&
-                    asr.TryGetProperty("hints", out var hints) &&
-                    hints.ValueKind == JsonValueKind.Array)
-                {
-                    turnState.ListenAsrHints = hints.EnumerateArray()
-                        .Where(static item => item.ValueKind == JsonValueKind.String)
-                        .Select(static item => item.GetString() ?? string.Empty)
-                        .Where(static hint => !string.IsNullOrWhiteSpace(hint))
-                        .ToArray();
-                }
-
-                if (data.TryGetProperty("hotphrase", out var hotphrase) &&
-                    (hotphrase.ValueKind == JsonValueKind.True || hotphrase.ValueKind == JsonValueKind.False))
-                {
-                    turnState.ListenHotphrase = hotphrase.GetBoolean();
-                    turnState.HotphraseEmptyTurnCount = 0;
-                }
-
-                if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
-                {
-                    session.LastIntent = intent.GetString();
-                }
-
-                if (data.TryGetProperty("transcriptHint", out var transcriptHint) && transcriptHint.ValueKind == JsonValueKind.String)
-                {
-                    turnState.AudioTranscriptHint = transcriptHint.GetString();
-                    session.Metadata["audioTranscriptHint"] = turnState.AudioTranscriptHint;
-                }
+                    .Where(rule => !string.IsNullOrWhiteSpace(rule))];
+                session.Metadata["listenRules"] = turnState.ListenRules;
             }
+
+            if (data.TryGetProperty("asr", out var asr) &&
+                asr.ValueKind == JsonValueKind.Object &&
+                asr.TryGetProperty("hints", out var hints) &&
+                hints.ValueKind == JsonValueKind.Array)
+            {
+                turnState.ListenAsrHints = [.. hints.EnumerateArray()
+                    .Where(static item => item.ValueKind == JsonValueKind.String)
+                    .Select(static item => item.GetString() ?? string.Empty)
+                    .Where(static hint => !string.IsNullOrWhiteSpace(hint))];
+            }
+
+            if (data.TryGetProperty("hotphrase", out var hotphrase) &&
+                hotphrase.ValueKind is JsonValueKind.True or JsonValueKind.False)
+            {
+                turnState.ListenHotphrase = hotphrase.GetBoolean();
+                turnState.HotphraseEmptyTurnCount = 0;
+            }
+
+            if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
+            {
+                session.LastIntent = intent.GetString();
+            }
+
+            if (!data.TryGetProperty("transcriptHint", out var transcriptHint) ||
+                transcriptHint.ValueKind != JsonValueKind.String) return;
+
+            turnState.AudioTranscriptHint = transcriptHint.GetString();
+            session.Metadata["audioTranscriptHint"] = turnState.AudioTranscriptHint;
         }
         catch
         {
@@ -394,7 +378,7 @@ public sealed class WebSocketTurnFinalizationService(
             ResetBufferedAudio(session);
             turnState.SawListen = false;
             turnState.SawContext = false;
-            return ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
+            return [.. ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
                     turnState.TransId ?? session.LastTransId ?? string.Empty,
                     turnState.ListenRules,
                     "@be/idle")
@@ -402,8 +386,7 @@ public sealed class WebSocketTurnFinalizationService(
                 {
                     Text = map.Text,
                     DelayMs = map.DelayMs
-                })
-                .ToArray();
+                })];
         }
 
         if (ShouldHandleAsLocalNoInput(finalizedTurn))
@@ -448,36 +431,38 @@ public sealed class WebSocketTurnFinalizationService(
                 turnState.FinalizeAttemptCount += 1;
             }
 
-            if (allowFallbackOnMissingTranscript &&
-                turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
-                IsYesNoTurn(finalizedTurn))
+            switch (allowFallbackOnMissingTranscript)
             {
-                turnState.AwaitingTurnCompletion = false;
-                session.LastTranscript = string.Empty;
-                session.LastIntent = null;
-                session.LastListenType = "no-input";
-                var localRule = ReadPrimaryYesNoRule(finalizedTurn);
-                var noInputReplies = BuildLocalNoInputReplies(session, turnState, localRule);
-                ResetBufferedAudio(session);
-                return noInputReplies;
+                case true when
+                    turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
+                    IsYesNoTurn(finalizedTurn):
+                {
+                    turnState.AwaitingTurnCompletion = false;
+                    session.LastTranscript = string.Empty;
+                    session.LastIntent = null;
+                    session.LastListenType = "no-input";
+                    var localRule = ReadPrimaryYesNoRule(finalizedTurn);
+                    var noInputReplies = BuildLocalNoInputReplies(session, turnState, localRule);
+                    ResetBufferedAudio(session);
+                    return noInputReplies;
+                }
+                case true when
+                    turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
+                    string.IsNullOrWhiteSpace(turnState.LastSttError):
+                {
+                    turnState.AwaitingTurnCompletion = false;
+                    session.LastTranscript = string.Empty;
+                    session.LastIntent = "heyJibo";
+                    session.LastListenType = "fallback";
+                    var fallbackReplies = ResponsePlanToSocketMessagesMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
+                        .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
+                        .ToArray();
+                    ResetBufferedAudio(session);
+                    return fallbackReplies;
+                }
+                default:
+                    return [];
             }
-
-            if (allowFallbackOnMissingTranscript &&
-                turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
-                string.IsNullOrWhiteSpace(turnState.LastSttError))
-            {
-                turnState.AwaitingTurnCompletion = false;
-                session.LastTranscript = string.Empty;
-                session.LastIntent = "heyJibo";
-                session.LastListenType = "fallback";
-                var fallbackReplies = ResponsePlanToSocketMessagesMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
-                    .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
-                    .ToArray();
-                ResetBufferedAudio(session);
-                return fallbackReplies;
-            }
-
-            return [];
         }
 
         var plan = await conversationBroker.HandleTurnAsync(finalizedTurn, cancellationToken);
@@ -487,7 +472,7 @@ public sealed class WebSocketTurnFinalizationService(
         session.LastListenType = listenAction?.Mode;
         turnState.LastLocalNoInputRule = null;
         turnState.LocalNoInputCount = 0;
-        if (plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault() is { SkillName: "@be/clock", Payload: not null } clockAction &&
+        if (plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault() is { SkillName: "@be/clock" } clockAction &&
             clockAction.Payload.TryGetValue("domain", out var lastClockDomainValue) &&
             lastClockDomainValue is not null)
         {
@@ -545,10 +530,7 @@ public sealed class WebSocketTurnFinalizationService(
         var turnAge = turnState.FirstAudioReceivedUtc.HasValue
             ? DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value
             : TimeSpan.Zero;
-        return turnState.AwaitingTurnCompletion &&
-               turnState.SawListen &&
-               turnState.BufferedAudioChunkCount >= AutoFinalizeMinBufferedAudioChunks &&
-               turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
+        return turnState is { AwaitingTurnCompletion: true, SawListen: true, BufferedAudioChunkCount: >= AutoFinalizeMinBufferedAudioChunks, BufferedAudioBytes: >= AutoFinalizeMinBufferedAudioBytes } &&
                turnAge >= AutoFinalizeMinTurnAge;
     }
 
@@ -755,7 +737,7 @@ public sealed class WebSocketTurnFinalizationService(
             .FirstOrDefault(IsConstrainedYesNoRule);
     }
 
-    private static IReadOnlyList<WebSocketReply> BuildLocalNoInputReplies(
+    private static WebSocketReply[] BuildLocalNoInputReplies(
         CloudSession session,
         WebSocketTurnState turnState,
         string? localRule)
@@ -764,14 +746,12 @@ public sealed class WebSocketTurnFinalizationService(
         var effectiveRule = string.IsNullOrWhiteSpace(localRule)
             ? turnState.ListenRules.FirstOrDefault(IsLocalNoInputRule)
             : localRule;
-        IReadOnlyList<string> rules = string.IsNullOrWhiteSpace(effectiveRule) ? turnState.ListenRules : [effectiveRule];
+        var rules = string.IsNullOrWhiteSpace(effectiveRule) ? turnState.ListenRules : [effectiveRule];
         var maps = ShouldRedirectRepeatedNoInputToIdle(turnState, effectiveRule)
             ? ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(transId, rules, "@be/idle")
             : ResponsePlanToSocketMessagesMapper.MapNoInput(transId, rules);
 
-        return maps
-            .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
-            .ToArray();
+        return [.. maps.Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })];
     }
 
     private static bool ShouldRedirectRepeatedNoInputToIdle(WebSocketTurnState turnState, string? localRule)
@@ -853,7 +833,7 @@ public sealed class WebSocketTurnFinalizationService(
             return string.Empty;
         }
 
-        return Regex.Replace(transcript.Trim().ToLowerInvariant(), @"[^\w\s]", " ")
+        return TranscriptNormalizationRegex().Replace(transcript.Trim().ToLowerInvariant(), " ")
             .Replace("  ", " ", StringComparison.Ordinal)
             .Trim();
     }
@@ -1036,4 +1016,7 @@ public sealed class WebSocketTurnFinalizationService(
             _ => false
         };
     }
+
+    [GeneratedRegex(@"[^\w\s]")]
+    private static partial Regex TranscriptNormalizationRegex();
 }

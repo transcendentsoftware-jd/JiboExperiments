@@ -484,14 +484,12 @@ public sealed class JiboInteractionService(
             return "hello";
         }
 
-        if (isYesNoTurn && MatchesAny(loweredTranscript, "yes", "yeah", "yup", "sure", "uh huh"))
+        switch (isYesNoTurn)
         {
-            return "yes";
-        }
-
-        if (isYesNoTurn && MatchesAny(loweredTranscript, "no", "nope", "nah"))
-        {
-            return "no";
+            case true when MatchesAny(loweredTranscript, "yes", "yeah", "yup", "sure", "uh huh"):
+                return "yes";
+            case true when MatchesAny(loweredTranscript, "no", "nope", "nah"):
+                return "no";
         }
 
         if (MatchesAny(loweredTranscript, "what time is it", "current time", "the time", "time is it") ||
@@ -752,12 +750,7 @@ public sealed class JiboInteractionService(
         }
 
         var fuzzyHintMatch = FindClosestHint(loweredTranscript, listenAsrHints);
-        if (!string.IsNullOrWhiteSpace(fuzzyHintMatch))
-        {
-            return fuzzyHintMatch;
-        }
-
-        return transcript;
+        return !string.IsNullOrWhiteSpace(fuzzyHintMatch) ? fuzzyHintMatch : transcript;
     }
 
     private static bool IsYesNoTurn(TurnContext turn)
@@ -805,11 +798,10 @@ public sealed class JiboInteractionService(
             }
 
             var distance = ComputeEditDistance(normalizedTranscript, normalizedHint);
-            if (distance < bestDistance)
-            {
-                bestDistance = distance;
-                bestHint = hint;
-            }
+            if (distance >= bestDistance) continue;
+
+            bestDistance = distance;
+            bestHint = hint;
         }
 
         return bestDistance <= 2 ? bestHint : null;
@@ -996,14 +988,12 @@ public sealed class JiboInteractionService(
             {
                 var compactHour = compact.Length switch
                 {
-                    3 => compactValue / 100,
-                    4 => compactValue / 100,
+                    3 or 4 => compactValue / 100,
                     _ => -1
                 };
                 var compactMinute = compact.Length switch
                 {
-                    3 => compactValue % 100,
-                    4 => compactValue % 100,
+                    3 or 4 => compactValue % 100,
                     _ => -1
                 };
                 if (compactHour is >= 1 and <= 12 && compactMinute is >= 0 and <= 59)
@@ -1023,13 +1013,13 @@ public sealed class JiboInteractionService(
         var hourToken = match.Groups["hour"].Value;
         var minuteToken = match.Groups["minute"].Success ? match.Groups["minute"].Value : "00";
         var hour = ParseNumberToken(hourToken);
-        if (hour is null || hour is < 1 or > 12)
+        if (hour is null or < 1 or > 12)
         {
             return null;
         }
 
         var minute = ParseNumberToken(minuteToken);
-        if (minute is null || minute is < 0 or > 59)
+        if (minute is null or < 0 or > 59)
         {
             return null;
         }
@@ -1146,7 +1136,7 @@ public sealed class JiboInteractionService(
             return lastClockDomain;
         }
 
-        var combinedRules = clientRules.Concat(listenRules);
+        var combinedRules = clientRules.Concat(listenRules).ToArray();
         if (combinedRules.Any(rule =>
                 rule.Contains("timer", StringComparison.OrdinalIgnoreCase) &&
                 !rule.Contains("alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)))
@@ -1154,14 +1144,9 @@ public sealed class JiboInteractionService(
             return "timer";
         }
 
-        if (combinedRules.Any(rule =>
-                rule.Contains("alarm", StringComparison.OrdinalIgnoreCase) &&
-                !rule.Contains("alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)))
-        {
-            return "alarm";
-        }
-
-        return null;
+        return combinedRules.Any(rule =>
+            rule.Contains("alarm", StringComparison.OrdinalIgnoreCase) &&
+            !rule.Contains("alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase)) ? "alarm" : null;
     }
 
     private static bool IsTimerRequest(string loweredTranscript)
@@ -1303,12 +1288,7 @@ public sealed class JiboInteractionService(
         }
 
         var match = VolumeLevelPattern.Match(loweredTranscript);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        return TryNormalizeVolumeLevel(match.Groups["value"].Value);
+        return !match.Success ? null : TryNormalizeVolumeLevel(match.Groups["value"].Value);
     }
 
     private static string? TryNormalizeVolumeLevel(string token)
@@ -1367,13 +1347,15 @@ public sealed class JiboInteractionService(
         }
 
         var parts = valueToken.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length >= 2)
+        if (parts.Length < 2)
+            return parts.Length > 0
+                ? ParseNumberToken(parts[^1])
+                : null;
+
+        parsed = ParseNumberToken(string.Join(' ', parts.TakeLast(2)));
+        if (parsed is not null)
         {
-            parsed = ParseNumberToken(string.Join(' ', parts.TakeLast(2)));
-            if (parsed is not null)
-            {
-                return parsed;
-            }
+            return parsed;
         }
 
         return parts.Length > 0
@@ -1389,18 +1371,76 @@ public sealed class JiboInteractionService(
             return numeric;
         }
 
-        if (normalized.Contains(' '))
+        if (!normalized.Contains(' '))
         {
-            var parts = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (parts.Length == 2)
+            return normalized switch
             {
-                var first = ParseNumberToken(parts[0]);
-                var second = ParseNumberToken(parts[1]);
-                if (first is >= 20 && second is >= 0 and < 10)
-                {
-                    return first + second;
-                }
-            }
+                "a" or "an" => 1,
+                "one" => 1,
+                "two" => 2,
+                "three" => 3,
+                "four" => 4,
+                "five" => 5,
+                "six" => 6,
+                "seven" => 7,
+                "eight" => 8,
+                "nine" => 9,
+                "ten" => 10,
+                "eleven" => 11,
+                "twelve" => 12,
+                "thirteen" => 13,
+                "fourteen" => 14,
+                "fifteen" => 15,
+                "sixteen" => 16,
+                "seventeen" => 17,
+                "eighteen" => 18,
+                "nineteen" => 19,
+                "twenty" => 20,
+                "thirty" => 30,
+                "forty" => 40,
+                "fifty" => 50,
+                _ => null
+            };
+        }
+
+        var parts = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+        {
+            return normalized switch
+            {
+                "a" or "an" => 1,
+                "one" => 1,
+                "two" => 2,
+                "three" => 3,
+                "four" => 4,
+                "five" => 5,
+                "six" => 6,
+                "seven" => 7,
+                "eight" => 8,
+                "nine" => 9,
+                "ten" => 10,
+                "eleven" => 11,
+                "twelve" => 12,
+                "thirteen" => 13,
+                "fourteen" => 14,
+                "fifteen" => 15,
+                "sixteen" => 16,
+                "seventeen" => 17,
+                "eighteen" => 18,
+                "nineteen" => 19,
+                "twenty" => 20,
+                "thirty" => 30,
+                "forty" => 40,
+                "fifty" => 50,
+                _ => null
+            };
+        }
+
+        var first = ParseNumberToken(parts[0]);
+        var second = ParseNumberToken(parts[1]);
+        if (first is >= 20 && second is >= 0 and < 10)
+        {
+            return first + second;
         }
 
         return normalized switch
