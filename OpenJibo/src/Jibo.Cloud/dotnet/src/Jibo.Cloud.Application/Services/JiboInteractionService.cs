@@ -425,6 +425,8 @@ public sealed class JiboInteractionService(
         if (MatchesAny(
                 loweredTranscript,
                 "photo gallery",
+                "photogal",
+                "photo gal",
                 "open the gallery",
                 "open photo gallery",
                 "show my photos",
@@ -1172,9 +1174,10 @@ public sealed class JiboInteractionService(
 
     private static bool IsCancelRequest(string? clientIntent, string loweredTranscript)
     {
+        var normalizedTranscript = NormalizeCommandPhrase(loweredTranscript);
         return string.Equals(clientIntent, "cancel", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(clientIntent, "stop", StringComparison.OrdinalIgnoreCase) ||
-               loweredTranscript is "cancel" or "stop" or "never mind" or "nevermind";
+               normalizedTranscript is "cancel" or "stop" or "never mind" or "nevermind";
     }
 
     private static bool IsGlobalStopRequest(
@@ -1188,8 +1191,9 @@ public sealed class JiboInteractionService(
             return true;
         }
 
-        return loweredTranscript is "stop" or "stop it" or "stop that" or "stop talking" or "be quiet" or "never mind" or "nevermind" or "forget it" ||
-               MatchesAny(loweredTranscript, "that s enough", "that's enough", "that will do", "that ll do", "that'll do", "cut it out", "cut that out");
+        var normalizedTranscript = NormalizeCommandPhrase(loweredTranscript);
+        return normalizedTranscript is "stop" or "stop it" or "stop that" or "stop talking" or "be quiet" or "never mind" or "nevermind" or "forget it" ||
+               MatchesAny(normalizedTranscript, "that s enough", "that will do", "that ll do", "cut it out", "cut that out");
     }
 
     private static bool IsVolumeQueryRequest(string loweredTranscript)
@@ -1287,8 +1291,24 @@ public sealed class JiboInteractionService(
             return "1";
         }
 
-        var match = VolumeLevelPattern.Match(loweredTranscript);
+        var normalizedTranscript = NormalizeCommandPhrase(loweredTranscript);
+        var homophoneMatch = VolumeToValueHomophonePattern.Match(normalizedTranscript);
+        if (homophoneMatch.Success &&
+            TryNormalizeVolumeLevel(homophoneMatch.Groups["value"].Value) is { } homophoneLevel)
+        {
+            return homophoneLevel;
+        }
+
+        var match = VolumeLevelPattern.Match(normalizedTranscript);
         return !match.Success ? null : TryNormalizeVolumeLevel(match.Groups["value"].Value);
+    }
+
+    private static string NormalizeCommandPhrase(string value)
+    {
+        return CommandWhitespacePattern.Replace(
+                CommandPhrasePattern.Replace(value.Trim().ToLowerInvariant(), " "),
+                " ")
+            .Trim();
     }
 
     private static string? TryNormalizeVolumeLevel(string token)
@@ -1488,6 +1508,18 @@ public sealed class JiboInteractionService(
     private static readonly Regex VolumeLevelPattern = new(
         @"\b(?:volume|loudness)\s*(?:to|at|level|is)?\s*(?<value>10|\d|one|two|three|four|five|six|seven|eight|nine|ten)\b|\b(?:set|change|make|turn)\s+(?:the\s+|your\s+)?(?:volume|loudness)\s*(?:to|at)?\s*(?<value>10|\d|one|two|three|four|five|six|seven|eight|nine|ten)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex VolumeToValueHomophonePattern = new(
+        @"\b(?:volume|loudness)\s+(?:2|two|to)\s+(?<value>10|\d|one|two|three|four|five|six|seven|eight|nine|ten)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex CommandPhrasePattern = new(
+        @"[^\w\s]",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex CommandWhitespacePattern = new(
+        @"\s+",
+        RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

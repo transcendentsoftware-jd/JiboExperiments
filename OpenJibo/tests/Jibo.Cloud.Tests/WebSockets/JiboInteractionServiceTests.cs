@@ -276,6 +276,21 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_NeverMindWithPunctuation_MapsToIdleStopCommand()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "Never mind.",
+            NormalizedTranscript = "Never mind."
+        });
+
+        Assert.Equal("stop", decision.IntentName);
+        Assert.Equal("@be/idle", decision.SkillName);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TurnItUp_MapsToGlobalVolumeUpCommand()
     {
         var service = CreateService();
@@ -310,6 +325,22 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SetVolumeTwoSix_UsesTrailingHomophoneLevel()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "Set Volume 2-6.",
+            NormalizedTranscript = "Set Volume 2-6."
+        });
+
+        Assert.Equal("volume_to_value", decision.IntentName);
+        Assert.Equal("volumeToValue", decision.SkillPayload!["globalIntent"]);
+        Assert.Equal("6", decision.SkillPayload["volumeLevel"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ShowVolumeControls_MapsToSettingsVolumeQuery()
     {
         var service = CreateService();
@@ -323,6 +354,21 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("volume_query", decision.IntentName);
         Assert.Equal("@be/settings", decision.SkillName);
         Assert.Equal("volumeQuery", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_OpenPhotogal_MapsToGalleryLaunch()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "open the photogal",
+            NormalizedTranscript = "open the photogal"
+        });
+
+        Assert.Equal("photo_gallery", decision.IntentName);
+        Assert.Equal("@be/gallery", decision.SkillName);
     }
 
     [Fact]

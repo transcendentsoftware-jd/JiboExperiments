@@ -15,6 +15,7 @@ Run this plan:
 - after the last code change before calling a release complete
 - after any fix that touches websocket turn finalization, local skill redirects, constrained yes/no, or STT
 - before moving from `1.0.18` bug-fix closeout into `1.0.19` feature work
+- after the Test 25 fixes, run at least the focused alarm/timer, photo/gallery, stop, and volume sections before deciding whether `1.0.18` is ready to freeze
 
 For small feature slices, run the automated `.NET` tests plus the smoke checks and only the live sections that share the same machinery. Before release closeout, run the full current-release suite.
 
@@ -91,6 +92,7 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Exercise any available share/date/offer yes-no prompt and answer both `yes` and `no` across runs when practical.
 - Observe backup-in-progress behavior separately from explicit voice commands.
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
+- If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
 - Capture check: active rule remains the constrained rule such as `surprises-ota/want_to_download_now`, `settings/download_now_later`, `shared/yes_no`, or another stock prompt rule.
 
@@ -109,6 +111,7 @@ Test these paths:
 - value-prompt cancel: `set an alarm`, then say `cancel`
 - voice delete: `delete my alarm` or `cancel alarm`
 - no-input cleanup: allow one value prompt to miss or time out when practical
+- timer sanity: `set a timer for 10 seconds`, let it fire or record the exact remaining state, then verify a second timer request does not report a stale already-running timer
 
 Expected:
 
@@ -116,6 +119,7 @@ Expected:
 - replacement prompt answer changes or preserves the alarm consistently with the robot's question
 - `cancel` inside the value prompt closes without scheduling
 - voice delete clears the robot menu state
+- timer state agrees with what just happened on the robot; a reset gesture should not leave a phantom active timer in the next prompt
 - empty value prompt turns complete locally instead of generic `I heard you` speech
 
 Capture check:
@@ -133,6 +137,7 @@ Test these paths:
 
 - `open photo gallery`
 - if gallery is empty, answer `yes` to the offer to take a picture
+- if the robot hears `open photogal` or another close gallery alias, verify it still launches gallery
 - take one photo and answer the keeper prompt with `yes`
 - repeat a gallery empty prompt or create keeper prompt with a missed/empty answer when practical
 - if using disposable test photos, test delete confirmation once with `no` and once with `yes`
@@ -142,6 +147,7 @@ Expected:
 - empty gallery `yes` redirects to `@be/create`
 - empty gallery `no` exits cleanly when tested
 - keeper `yes` completes and Jibo settles without a stale blue ring
+- transcript-bearing `yes` under gallery `shared/yes_no` is consumed even when the robot reports `@be/gallery` context
 - empty `shared/yes_no`, `create/is_it_a_keeper`, and `gallery/gallery_preview` turns no-input locally instead of generic `I heard you`
 - delete confirmation only deletes on a positive `yes`
 
@@ -150,6 +156,7 @@ Capture check:
 - gallery launch redirects to `@be/gallery`
 - create photo redirects to `@be/create/createOnePhoto`
 - local no-input replies keep the active constrained rule and strip unrelated global launch rules
+- active `shared/yes_no` is not suppressed merely because the current context is `@be/gallery`
 
 ### STT And Audio Quality
 
@@ -177,9 +184,11 @@ Test these phrases:
 - `stop`
 - `stop that`
 - `never mind`
+- `never mind.` or any punctuated transcript form observed in the capture
 - `turn it up`
 - `turn it down`
 - `set volume to six`
+- `set volume to 6`
 - `show volume controls`
 
 Expected:
@@ -188,13 +197,16 @@ Expected:
 - `turn it up` and `turn it down` adjust volume or at least produce the stock local volume event/log
 - `set volume to six` sets or attempts to set the local volume level to `6`
 - `show volume controls` opens the settings volume panel
+- after `show volume controls`, the robot settles without a trailing `I heard you`
 
 Capture check:
 
 - stop emits `nlu.intent = stop`, `nlu.domain = global_commands`, then redirects to `@be/idle`
+- punctuated `Never mind.` still maps to global stop, not generic chat
 - relative volume emits `nlu.intent = volumeUp` or `volumeDown`, `nlu.domain = global_commands`, and `entities.volumeLevel = null`, with no `SKILL_ACTION` cloud speech
-- absolute volume emits `nlu.intent = volumeToValue` and `entities.volumeLevel` matching the requested value, with no `SKILL_ACTION` cloud speech
+- absolute volume emits `nlu.intent = volumeToValue` and `entities.volumeLevel` matching the requested value, including the observed `Set Volume 2-6.` homophone shape, with no `SKILL_ACTION` cloud speech
 - volume controls redirects to `@be/settings` with `nlu.intent = volumeQuery`
+- passive `@be/settings` / `settings/volume_control` audio tails complete locally and do not reopen Nimbus fallback speech
 
 ## Optional Feature Slice Checks
 

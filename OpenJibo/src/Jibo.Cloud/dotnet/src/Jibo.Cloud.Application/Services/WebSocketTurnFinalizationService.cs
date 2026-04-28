@@ -87,6 +87,7 @@ public sealed partial class WebSocketTurnFinalizationService(
             turnState.AwaitingTurnCompletion = false;
             turnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
             ResetBufferedAudio(session);
+            turnState.SawListen = false;
             turnState.SawContext = false;
             return [];
         }
@@ -550,9 +551,24 @@ public sealed partial class WebSocketTurnFinalizationService(
             return false;
         }
 
+        if (HasCloudHandledLocalPromptOpen(session.TurnState))
+        {
+            return false;
+        }
+
         var skillId = TryReadContextSkillId(text);
         return string.Equals(skillId, "@be/gallery", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(skillId, "@be/create", StringComparison.OrdinalIgnoreCase);
+               string.Equals(skillId, "@be/create", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(skillId, "@be/settings", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasCloudHandledLocalPromptOpen(WebSocketTurnState turnState)
+    {
+        return turnState is { AwaitingTurnCompletion: true, SawListen: true } &&
+               turnState.ListenRules.Any(rule =>
+                   IsClockValueRule(rule) ||
+                   IsGalleryPreviewRule(rule) ||
+                   IsConstrainedYesNoRule(rule));
     }
 
     private static string? ExtractDataPayload(string? text)
@@ -781,6 +797,7 @@ public sealed partial class WebSocketTurnFinalizationService(
     private static bool IsLocalNoInputRule(string rule)
     {
         return string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "settings/volume_control", StringComparison.OrdinalIgnoreCase) ||
                IsClockValueRule(rule) ||
                IsGalleryPreviewRule(rule) ||
                IsConstrainedYesNoRule(rule);

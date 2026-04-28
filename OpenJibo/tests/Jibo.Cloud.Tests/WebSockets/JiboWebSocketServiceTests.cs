@@ -933,6 +933,111 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task Context_FromGalleryYesNoPrompt_DoesNotSuppressYesAnswer()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-gallery-yesno-context-token",
+            Text = """{"type":"LISTEN","transID":"trans-gallery-yesno-context","data":{"rules":["shared/yes_no","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-gallery-yesno-context-token",
+            Text = """{"type":"CONTEXT","transID":"trans-gallery-yesno-context","data":{"audioTranscriptHint":"yes","skill":{"id":"@be/gallery"}}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var interimReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-gallery-yesno-context-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(interimReplies);
+        }
+
+        var session = _store.FindSessionByToken("hub-gallery-yesno-context-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-gallery-yesno-context-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("shared/yes_no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        Assert.Equal("shared/yes_no", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task Context_FromSettingsVolumeControl_IgnoresPassiveLocalAudioTail()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-settings-volume-tail-token",
+            Text = """{"type":"LISTEN","transID":"trans-settings-volume-tail","data":{"rules":["settings/volume_control","globals/gui_nav","globals/global_commands_launch"]}}"""
+        });
+
+        var contextReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-settings-volume-tail-token",
+            Text = """{"type":"CONTEXT","transID":"trans-settings-volume-tail","data":{"skill":{"id":"@be/settings"}}}"""
+        });
+
+        Assert.Empty(contextReplies);
+
+        var session = _store.FindSessionByToken("hub-settings-volume-tail-token");
+        Assert.NotNull(session);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.False(session.TurnState.SawListen);
+        session.TurnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(1);
+
+        for (var index = 0; index < 5; index += 1)
+        {
+            var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-settings-volume-tail-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(replies);
+        }
+
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+    }
+
+    [Fact]
     public async Task ClientAsr_AlarmTimerOkayEmptyReply_MapsToLocalNoInputInsteadOfFallback()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

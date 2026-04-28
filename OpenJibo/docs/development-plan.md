@@ -21,14 +21,14 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 
 ## Latest Live Evidence
 
-`jibo test 24` was captured after the `jibo test 23` alarm/photo fixes.
+`jibo test 25` was captured as a broader `1.0.18` regression pass after the `jibo test 24` alarm/photo fixes and the stop/volume feature slice.
 
-- Basic news remained live-proven from `jibo test 23`; `jibo test 24` focused on alarm and photo/gallery regression.
-- Alarm replacement yes/no improved: `Yes.` on `clock/alarm_timer_change` was recognized locally. The persistent `7:00 PM` alarm from the previous session still caused repeated replacement prompts until menu cleanup.
-- Alarm still struggled around value-entry cleanup. Empty ASR under `clock/alarm_set_value` fell into generic Nimbus speech (`I heard you.`), and `CLIENT_NLU intent=cancel` under `clock/alarm_set_value` mapped back to alarm clarification instead of closing the clock value prompt. Current source now treats clock value empty turns as local no-input and maps value-prompt cancel to local clock `cancel`.
-- Photo/gallery cleanup improved: the blue-ring/listening state appeared to settle, create keeper yes/no could complete, and robot logs showed photo adoption/upload plus `it's a keeper`.
-- Photo/gallery still has spotty speech recognition. Empty ASR under `gallery/gallery_preview` caused the other observed `I heard you.` after gallery opened. Current source now treats gallery preview empty turns as local no-input instead of relaunching Nimbus fallback speech.
-- No `ffmpeg` / `whisper.cpp` error was evident in the `jibo test 24` websocket timeline. Remaining alarm/gallery failures are now mostly local no-input handling and STT/recognition quality, not decode failures.
+- Cloud version, good night, good morning, time, joke, radio, news, Word of the Day, and several expressive/personality paths were still reachable. `good day` routed to date, which is acceptable unless a distinct good-day behavior is chosen later.
+- Backup-in-progress still appears at the start of every live session and blocks the settings update menu. The Test 25 HTTP capture again did not show `Backup_*` calls; observed cloud traffic was mostly log upload, ASR binary upload, and one `Update_20160301.GetUpdateFrom`. Treat this as a robot-local backup scheduler/status or log/upload load issue until a capture proves a hosted backup API path is involved.
+- Timer and alarm remain the riskiest current-release paths. Test 25 showed a timer prompt accepting partial speech, a stale 10-second timer state after reset, a `9:02` alarm being interpreted as the next local PM occurrence, and voice delete reporting success while the robot menu still retained an alarm. Current source fixes some prompt-tail and context handling issues from this run, but alarm set/delete/menu agreement still needs another focused live pass.
+- Photo/gallery blue-ring cleanup improved compared with earlier tests, but gallery yes/no could still hang. Test 25 showed `open the photogal` as the observed transcript and active `shared/yes_no` prompts under `@be/gallery`; current source now recognizes the gallery alias and keeps active local prompts live instead of treating that gallery context as passive noise.
+- Stop and volume first-pass behavior mostly reached the stock local paths, but exposed cleanup bugs. `Never mind.` included punctuation and mapped to generic chat; current source normalizes punctuation before stop/cancel matching. `Set Volume 2-6.` could pick the wrong number; current source treats that homophone shape as level `6`. `show volume controls` opened settings, then a passive local audio tail caused generic `I heard you`; current source treats `@be/settings` and `settings/volume_control` as local cleanup paths.
+- No dominant `ffmpeg` / `whisper.cpp` decode failure emerged from Test 25. Remaining short-answer failures should be split between cloud turn-state bugs, robot-local backup/load interference, and true STT misses.
 
 ## Release Rhythm
 
@@ -72,7 +72,9 @@ Current websocket scope:
 - local whisper only attempts external decoding when buffered audio contains an Opus identification header
 - auto-finalize thresholds for buffered audio after a real listen phase
 - late-audio ignore windows after completed turns
-- no-input local completion for constrained prompts, clock value prompts, and gallery preview prompts
+- passive local context cleanup for gallery/create/settings contexts after stock local skills take ownership
+- no-input local completion for constrained prompts, clock value prompts, gallery preview prompts, and settings volume-control prompts
+- active local prompt preservation so `shared/yes_no`, clock, gallery, and settings prompts can still consume transcript-bearing short replies even when the stock skill reports a local context
 - unknown inbound websocket types dropped silently instead of echoing stock-OS-unknown OpenJibo events
 - file telemetry and fixture export for HTTP, websocket, and turn captures
 
@@ -92,7 +94,9 @@ The following behavior is present in source and covered by focused tests:
 - radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
 - news has a first Nimbus-shaped cloud path using `match.cloudSkill = news` and a `news` `SKILL_ACTION` with synthetic briefing content
 - stop commands such as `stop that` and `never mind` emit stock `global_commands` `stop` NLU plus a local `@be/idle` redirect, without generic chat speech
+- stop and cancel phrase matching tolerates stock ASR punctuation such as `Never mind.`
 - volume commands emit stock `global_commands` volume intents: `volumeUp`, `volumeDown`, and `volumeToValue` with `volumeLevel`; `show volume controls` redirects to `@be/settings` `volumeQuery`
+- volume-to-value parsing handles the observed stock ASR homophone shape `Set Volume 2-6.` as level `6`
 - stock-shaped clock handoffs cover time, date, day, clock open, timer/alarm menu, timer/alarm value, timer/alarm clarification, and timer/alarm delete
 - alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `7, 44`, `10-25`, `10:25 pm`, and `10 25 p m`
 - ambiguous alarm times can prefer the next local occurrence when the robot context includes `runtime.location.iso`
@@ -100,13 +104,14 @@ The following behavior is present in source and covered by focused tests:
 - `CLIENT_NLU intent=set` with only `domain=alarm` stays on the local clock clarification path instead of defaulting to a fabricated time
 - `CLIENT_NLU intent=cancel` on `clock/alarm_timer_query_menu` can reuse the last active clock domain
 - `CLIENT_NLU intent=cancel` on `clock/alarm_set_value` / `clock/timer_set_value` maps to local clock `cancel` instead of re-asking for a value
-- photo flows route `open photo gallery` to `@be/gallery`, `snap a picture` to `@be/create/createOnePhoto`, and `open photobooth` to `@be/create/createSomePhotos`
-- passive gallery/create context does not reopen a stale cloud turn
+- photo flows route `open photo gallery`, observed `open photogal`, `snap a picture`, and `open photobooth` to the matching gallery/create local skills
+- passive gallery/create/settings context does not reopen a stale cloud turn
+- active local prompts under gallery/settings context are preserved so short `yes`/`no` answers can finalize the prompt instead of being suppressed as passive context
 - media metadata persists across store recreation and `/media/{path}` can serve the current text-body placeholder payload
 - constrained yes/no handling covers `clock/alarm_timer_change`, `clock/alarm_timer_none_set`, `create/is_it_a_keeper`, `shared/yes_no`, `settings/download_now_later`, `surprises-date/offer_date_fact`, `surprises-ota/want_to_download_now`, and `$YESNO` hints
 - outbound constrained yes/no responses strip unrelated `globals/*` rules so stock OS stays local
 - no-input fallback for constrained yes/no prompts emits local `LISTEN`/`EOS` instead of relaunching generic Nimbus speech, including `shared/yes_no` after STT failure
-- no-input fallback for clock value prompts and `gallery/gallery_preview` emits local `LISTEN`/`EOS` instead of generic `I heard you` Nimbus speech
+- no-input fallback for clock value prompts, `gallery/gallery_preview`, and `settings/volume_control` emits local `LISTEN`/`EOS` instead of generic `I heard you` Nimbus speech
 - repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss so the photo/create flow can settle instead of leaving a stale listening state
 - local whisper skips buffered audio turns that do not contain `OpusHead`, preventing a known `ffmpeg` failure path from becoming the noisy failure mode
 - Word of the Day launch, spoken guesses, structured `CLIENT_NLU` guesses, hint-order guesses, fuzzy hint matching, right-word cleanup, and late audio cleanup are covered in the websocket layer
@@ -145,14 +150,15 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 - Run the focused `.NET` cloud test suite after the last feature slice.
 - Run the current-release live checklist in [regression-test-plan.md](regression-test-plan.md).
 - Confirm the running robot build reports cloud version `1.0.18`.
-- Regression test alarm flows again after the `jibo test 24` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice, cancel out of a value prompt, and verify the menu agrees.
-- Regression test photo/gallery flows again after the `jibo test 24` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring or `I heard you` stale turns.
+- Regression test alarm flows again after the `jibo test 25` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice, cancel out of a value prompt, and verify the menu agrees.
+- Regression test timer flows after the Test 25 stale-timer observation: set a 10-second timer, let it fire, reset by gesture only after recording state, and verify a new timer prompt does not see an already-expired timer as still active.
+- Regression test photo/gallery flows again after the `jibo test 25` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring or `I heard you` stale turns.
 - Live-test radio launch: `open the radio` passed in `jibo test 22`; re-run `play country music` if that exact phrase was not captured.
 - Treat basic news as live-proven by `jibo test 23`; defer provider-backed or category-expanded news unless it is chosen as an optional feature slice.
-- Regression test the added stop and volume slices: `stop that`, `never mind`, `turn it up`, `turn it down`, `set volume to six`, and `show volume controls`.
+- Regression test the added stop and volume slices after the Test 25 fixes: `stop that`, `never mind`, `turn it up`, `turn it down`, `set volume to six`, `set volume to 6`, and `show volume controls`.
 - Recheck constrained yes/no prompts for update/backup/share/gallery/alarm replacement without leaking global rules.
 - Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
-- Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, and whether the deployed cloud is involved at all.
+- Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, log/upload activity, and whether the deployed cloud is involved at all.
 - Treat remaining empty-ASR, `ffmpeg`, or `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
 
 ## Known Gaps
@@ -163,9 +169,10 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - media upload/body handling is not binary-safe enough for final gallery originals and thumbnails
 - state persistence is local JSON, not Azure SQL / Blob Storage
 - update, backup, and restore are not end-to-end proven, and the `jibo test 22` sluggishness appears tied to robot-local backup status/load
+- Test 25 still showed repeated backup-in-progress behavior and update-menu blockage without corresponding `Backup_*` HTTP traffic
 - deployed-build verification needs to prove that synthetic OpenJibo websocket events are gone from the hosted artifact, not just from source
 - news content is synthetic; `jibo test 23` proved the path but not live provider-backed headlines
-- gallery `shared/yes_no` still needs a successful transcript-bearing live `yes` pass
+- gallery `shared/yes_no`, settings volume-control cleanup, and punctuated `never mind` still need successful live proof after the Test 25 source fixes
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
 - stop and volume are implemented but still need live stock-OS proof; robot age and command-versus-question personality routing are not implemented yet
 

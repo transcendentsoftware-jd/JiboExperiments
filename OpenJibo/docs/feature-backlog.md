@@ -42,6 +42,7 @@ Current release theme:
 - `jibo test 22` validated radio, exposed backup/load interference, exposed a shared yes/no no-input gap, exposed repeated create keeper prompts after photo handoff, and showed local whisper `ffmpeg` failures on unusable buffered audio
 - `jibo test 23` validated basic news, proved one alarm set/fire path at `7:43 AM`, exposed comma-separated/short alarm follow-up parsing risk, showed stock alarm replacement yes/no rules that needed cloud handling, and showed photo gallery still failing when `shared/yes_no` ASR came back empty
 - `jibo test 24` showed alarm replacement yes/no working, but exposed empty `clock/alarm_set_value` and `gallery/gallery_preview` turns falling into generic `I heard you` fallback speech; it also showed `CLIENT_NLU cancel` inside `clock/alarm_set_value` re-asking for an alarm value instead of closing the prompt
+- `jibo test 25` proved a broader regression path but exposed repeated backup-in-progress/update-menu blockage, timer/alarm stale state and delete/menu disagreement, gallery `shared/yes_no` hangs under `@be/gallery`, punctuated `Never mind.` falling through to chat, volume homophone parsing (`Set Volume 2-6.`), and settings volume-control cleanup falling into `I heard you`
 
 ## Immediate `1.0.18` Queue
 
@@ -99,10 +100,11 @@ Current release theme:
   - repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss
 - Latest evidence:
   - `jibo test 22` did not show `Backup_*` HTTP traffic during the backup complaint
+  - `jibo test 25` again showed backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic; observed cloud traffic was log upload, ASR binary upload, and update check traffic
   - stock `@be/surprises-ota` drives the backup notification from robot-local `jibo.scheduler.backupStatus`
   - original `surprises-ota` tests make backup and OTA notifications contextual-priority prompts, with repeat suppression through last-notification timestamps
   - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
-  - `jibo test 23` again showed backup-in-progress sluggishness and update-menu blockage while backups were active; explicit backup voice launch remains unwired
+  - `jibo test 23` and `jibo test 25` showed backup-in-progress sluggishness and update-menu blockage while backups were active; explicit backup voice launch remains unwired
 - Exit criteria:
   - spoken `yes` and `no` work on update, backup, share/offer, and gallery/create prompts
   - empty or missed short replies retry locally instead of relaunching Nimbus or generic chat
@@ -125,7 +127,8 @@ Current release theme:
   - stock alarm replacement/no-alarm prompts use the constrained yes/no path
   - gallery opens as `@be/gallery`; snapshot and photobooth open through `@be/create`
   - empty `gallery/gallery_preview` turns complete locally as no-input instead of relaunching Nimbus fallback speech
-  - passive gallery/create context no longer reopens stale cloud turns
+  - passive gallery/create/settings context no longer reopens stale cloud turns
+  - active local prompts under gallery/settings contexts are preserved so real short replies are not suppressed as passive context
   - `shared/yes_no` no-input fallback and repeated create keeper cleanup were added after `jibo test 22`
 - Latest evidence:
   - gallery opened and handed into create, but repeated `create/is_it_a_keeper` prompts could leave the blue ring/listening state
@@ -135,6 +138,8 @@ Current release theme:
   - `jibo test 23` photo gallery got stuck on `shared/yes_no` turns with empty ASR, not on a transcript-bearing `yes` that the cloud mapped incorrectly
   - `jibo test 24` recognized `Yes.` for `clock/alarm_timer_change`, but empty `clock/alarm_set_value` produced `I heard you`; current source now keeps that as local no-input
   - `jibo test 24` showed photo/gallery blue-ring cleanup improved and create keeper completion working, but empty `gallery/gallery_preview` produced `I heard you`; current source now keeps that as local no-input
+  - `jibo test 25` showed gallery launching from the observed phrase `open the photogal`, but active `shared/yes_no` prompts under `@be/gallery` could hang; current source now recognizes the alias and preserves active gallery prompts even while ignoring passive gallery tails
+  - `jibo test 25` showed timer/alarm still needs live follow-up for stale timer state, alarm replacement/PM ambiguity, and voice delete versus robot menu agreement
   - original clock tests confirm cancel inside the alarm value prompt must close without scheduling, existing-alarm `keep` must preserve KB/scheduler state, and existing-alarm `delete` or `cancel` must clear it
   - original gallery tests confirm empty-gallery `yes` redirects to `@be/create`, empty-gallery `no` exits, media-load failure exits, and delete confirmation only deletes on a positive `yes`
 - Exit criteria:
@@ -158,6 +163,9 @@ Current release theme:
   - `turn it up` and `turn it down` emit stock `global_commands` `volumeUp` / `volumeDown` with `volumeLevel = null` and no cloud speech
   - `set volume to six` emits stock `global_commands` `volumeToValue` with `volumeLevel = 6` and no cloud speech
   - `show volume controls` redirects into `@be/settings` with `volumeQuery`
+  - stop/cancel matching now normalizes stock ASR punctuation, so `Never mind.` is still a stop command
+  - absolute volume parsing now treats the observed homophone shape `Set Volume 2-6.` as level `6`
+  - passive settings context and `settings/volume_control` no-input cleanup now avoid post-panel `I heard you` fallback speech
 - Evidence:
   - Pegasus `globals/global_commands_launch.rule` defines `stop`, `volumeUp`, `volumeDown`, and `volumeToValue`
   - stock Jibo `VolumePlugin` subscribes to global volume events and uses the same intent/entity names
@@ -167,6 +175,7 @@ Current release theme:
   - live volume up/down audibly changes volume or logs a local volume event
   - live volume-to-value changes the setting to the requested value or logs the expected stock local handling
   - live volume controls opens the settings volume panel
+  - live volume controls settles after the panel opens without a trailing `I heard you`
 
 ## Implemented In Current Source
 
@@ -216,6 +225,7 @@ Current release theme:
 - Follow-up:
   - live regression remains in the immediate queue
   - add fixture coverage for original clock-test branches that are not yet mirrored in `.NET`: no-alarm query `yes`/`no`, existing-alarm `keep` versus `delete`, and cross-domain `OtherSet` behavior
+  - Test 25 still requires a focused live check for timer stale state and alarm voice delete versus menu state
 
 ### Photo / Gallery / Create Family
 
@@ -223,9 +233,11 @@ Current release theme:
 - Tags: `protocol`, `storage`
 - Result:
   - gallery, snapshot, and photobooth voice paths route to the correct local skills
+  - the observed `open photogal` transcript routes to gallery
   - media metadata persists locally
   - `/media/{path}` serves the current text-body placeholder payload
   - empty `gallery/gallery_preview` turns produce local no-input instead of generic Nimbus fallback speech
+  - active `shared/yes_no` prompts under `@be/gallery` stay active instead of being suppressed as passive local context
   - repeated empty `create/is_it_a_keeper` turns redirect to `@be/idle` after the second miss
 - Follow-up:
   - live regression remains in the immediate queue
@@ -263,9 +275,11 @@ Current release theme:
 - Tags: `protocol`
 - Result:
   - global stop commands emit stock `global_commands` `stop` and redirect to `@be/idle`
+  - stop/cancel command matching tolerates punctuation from stock ASR
   - relative volume commands emit stock `global_commands` `volumeUp` / `volumeDown`
-  - absolute volume commands emit `volumeToValue` with a `volumeLevel` entity
+  - absolute volume commands emit `volumeToValue` with a `volumeLevel` entity, including the observed `Set Volume 2-6.` shape
   - volume controls launch redirects to `@be/settings` `volumeQuery`
+  - passive settings context and `settings/volume_control` no-input cleanup avoid stale generic speech after the settings panel opens
   - websocket responses avoid generic chat speech for these local/global command paths
 - Follow-up:
   - live validation remains in the immediate queue because volume depends on stock robot local global-command handling
@@ -337,6 +351,7 @@ Current release theme:
   - `@be/restore` waits for a UGC key, runs restore, and reboots
   - original OTA surprise tests treat backup/download status as robot-local scheduler state, not as a direct cloud backup command path
   - no-op update fabrication has been removed from `.NET`
+  - Test 25 still showed repeated backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic
 - Exit criteria:
   - no phantom "always has updates" behavior
   - one controlled update can be staged and delivered
@@ -353,6 +368,7 @@ Current release theme:
   - `jibo test 22` showed `ffmpeg` and `whisper.cpp` failures
   - `jibo test 23` did not show the same decode failure pattern, but gallery yes/no turns still produced empty ASR
   - `jibo test 24` still had collapsed or empty transcripts in alarm/gallery paths, including `Sudden alarm.`, `I'm setting alarm for seven.`, empty clock value input, and empty gallery preview input
+  - `jibo test 25` still had short-answer failures, but several were cloud turn-state issues now patched rather than pure STT failures
   - current source now skips local whisper when buffered audio does not contain an Opus identification header
   - yes/no and alarm flows are especially sensitive to short or collapsed transcripts
 - Implementation notes:
