@@ -15,7 +15,7 @@ Run this plan:
 - after the last code change before calling a release complete
 - after any fix that touches websocket turn finalization, local skill redirects, constrained yes/no, or STT
 - before moving from `1.0.18` bug-fix closeout into `1.0.19` feature work
-- after the Test 25 fixes, run at least the focused alarm/timer, photo/gallery, stop, and volume sections before deciding whether `1.0.18` is ready to freeze
+- after the Test 26 fixes, run at least the focused alarm/timer, photo/gallery, stop, volume, and blue-ring cleanup sections before deciding whether `1.0.18` is ready to freeze
 
 For small feature slices, run the automated `.NET` tests plus the smoke checks and only the live sections that share the same machinery. Before release closeout, run the full current-release suite.
 
@@ -93,6 +93,7 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Observe backup-in-progress behavior separately from explicit voice commands.
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
 - If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
+- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Test 26 showed `@be/surprises-ota`.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
 - Capture check: active rule remains the constrained rule such as `surprises-ota/want_to_download_now`, `settings/download_now_later`, `shared/yes_no`, or another stock prompt rule.
 
@@ -110,6 +111,7 @@ Test these paths:
 - replacement: with an alarm already set, set a different alarm and answer the replacement prompt; verify whether the answer kept or replaced the old alarm
 - value-prompt cancel: `set an alarm`, then say `cancel`
 - voice delete: `delete my alarm` or `cancel alarm`
+- voice delete variants from Test 26: `delete the alarm`, `delete alarm`, and, if ASR mishears it, record whether `delete along` maps to local clock delete
 - no-input cleanup: allow one value prompt to miss or time out when practical
 - timer sanity: `set a timer for 10 seconds`, let it fire or record the exact remaining state, then verify a second timer request does not report a stale already-running timer
 
@@ -119,6 +121,7 @@ Expected:
 - replacement prompt answer changes or preserves the alarm consistently with the robot's question
 - `cancel` inside the value prompt closes without scheduling
 - voice delete clears the robot menu state
+- local clock delete/cancel settles without generic chat speech or an open follow-up blue ring
 - timer state agrees with what just happened on the robot; a reset gesture should not leave a phantom active timer in the next prompt
 - empty value prompt turns complete locally instead of generic `I heard you` speech
 
@@ -147,6 +150,7 @@ Expected:
 - empty gallery `yes` redirects to `@be/create`
 - empty gallery `no` exits cleanly when tested
 - keeper `yes` completes and Jibo settles without a stale blue ring
+- after gallery settles, context-only tails do not produce delayed generic replies such as `that's` or `I didn't hear you`
 - transcript-bearing `yes` under gallery `shared/yes_no` is consumed even when the robot reports `@be/gallery` context
 - empty `shared/yes_no`, `create/is_it_a_keeper`, and `gallery/gallery_preview` turns no-input locally instead of generic `I heard you`
 - delete confirmation only deletes on a positive `yes`
@@ -157,6 +161,7 @@ Capture check:
 - create photo redirects to `@be/create/createOnePhoto`
 - local no-input replies keep the active constrained rule and strip unrelated global launch rules
 - active `shared/yes_no` is not suppressed merely because the current context is `@be/gallery`
+- post-gallery binary audio does not continue buffering unless a fresh `LISTEN` appears
 
 ### STT And Audio Quality
 
@@ -207,6 +212,15 @@ Capture check:
 - absolute volume emits `nlu.intent = volumeToValue` and `entities.volumeLevel` matching the requested value, including the observed `Set Volume 2-6.` homophone shape, with no `SKILL_ACTION` cloud speech
 - volume controls redirects to `@be/settings` with `nlu.intent = volumeQuery`
 - passive `@be/settings` / `settings/volume_control` audio tails complete locally and do not reopen Nimbus fallback speech
+
+### Blue-Ring Cleanup
+
+Goal: catch the Test 26 no-`LISTEN` buffering regression quickly.
+
+- After any local skill redirect or generic chat reply, wait five to ten seconds before issuing the next phrase.
+- If the blue ring remains open, record the active transID and whether the websocket capture shows a new `LISTEN`.
+- Expected: binary audio for an existing transID is ignored until a fresh `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely.
+- Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`.
 
 ## Optional Feature Slice Checks
 

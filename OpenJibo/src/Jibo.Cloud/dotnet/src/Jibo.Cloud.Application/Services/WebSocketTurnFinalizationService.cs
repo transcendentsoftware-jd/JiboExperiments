@@ -37,10 +37,7 @@ public sealed partial class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken = default)
     {
         var turnState = session.TurnState;
-        if (ShouldIgnoreLateAudio(session) || !turnState.AwaitingTurnCompletion &&
-            !session.FollowUpOpen &&
-            !turnState.SawListen &&
-            !string.IsNullOrWhiteSpace(turnState.TransId))
+        if (ShouldIgnoreLateAudio(session) || ShouldIgnoreAudioWithoutListen(turnState))
         {
             return [];
         }
@@ -334,7 +331,11 @@ public sealed partial class WebSocketTurnFinalizationService(
         if (ShouldIgnoreBlankAudioHotphraseTurn(turn))
         {
             session.TurnState.AwaitingTurnCompletion = false;
+            session.TurnState.IgnoreAdditionalAudioUntilUtc = DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
+            session.FollowUpExpiresUtc = null;
             ResetBufferedAudio(session);
+            session.TurnState.SawListen = false;
+            session.TurnState.SawContext = false;
             return [];
         }
 
@@ -502,6 +503,8 @@ public sealed partial class WebSocketTurnFinalizationService(
                                !string.Equals(plan.IntentName, "clock_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_menu", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_menu", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "timer_delete", StringComparison.OrdinalIgnoreCase) &&
+                               !string.Equals(plan.IntentName, "alarm_delete", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_cancel", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_cancel", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_clarify", StringComparison.OrdinalIgnoreCase) &&
@@ -542,6 +545,12 @@ public sealed partial class WebSocketTurnFinalizationService(
                !session.FollowUpOpen &&
                ignoreUntilUtc.HasValue &&
                ignoreUntilUtc.Value > DateTimeOffset.UtcNow;
+    }
+
+    private static bool ShouldIgnoreAudioWithoutListen(WebSocketTurnState turnState)
+    {
+        return !turnState.SawListen &&
+               !string.IsNullOrWhiteSpace(turnState.TransId);
     }
 
     private static bool ShouldIgnorePassiveLocalSkillContext(CloudSession session, string? text)

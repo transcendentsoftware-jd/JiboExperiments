@@ -730,7 +730,7 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-clock-cancel-alarm","data":{"text":"cancel alarm"}}"""
         });
 
-        Assert.Equal(5, replies.Count);
+        Assert.Equal(4, replies.Count);
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("delete", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -739,6 +739,10 @@ public sealed class JiboWebSocketServiceTests
         using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
         Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
         Assert.Equal("delete", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        var session = _store.FindSessionByToken("hub-clock-cancel-alarm-token");
+        Assert.NotNull(session);
+        Assert.False(session.FollowUpOpen);
     }
 
     [Fact]
@@ -2264,6 +2268,102 @@ public sealed class JiboWebSocketServiceTests
         });
 
         Assert.Empty(replies);
+
+        var session = _store.FindSessionByToken("hub-blank-audio-token");
+        Assert.NotNull(session);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.False(session.TurnState.SawListen);
+        Assert.True(session.TurnState.IgnoreAdditionalAudioUntilUtc.HasValue);
+
+        var binaryReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-blank-audio-token",
+            Binary = new byte[4096]
+        });
+
+        Assert.Empty(binaryReplies);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+    }
+
+    [Fact]
+    public async Task ContextWithoutListen_DuringFollowUp_DoesNotBufferAudio()
+    {
+        var helloReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-no-listen-token",
+            Text = """{"type":"LISTEN","transID":"trans-context-no-listen-hello","data":{"text":"hello","rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Equal(3, helloReplies.Count);
+
+        var session = _store.FindSessionByToken("hub-context-no-listen-token");
+        Assert.NotNull(session);
+        Assert.True(session.FollowUpOpen);
+
+        var contextReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-context-no-listen-token",
+            Text = """{"type":"CONTEXT","transID":"trans-context-no-listen-tail","data":{"skill":{"id":null}}}"""
+        });
+
+        Assert.Empty(contextReplies);
+        Assert.False(session.TurnState.SawListen);
+
+        for (var index = 0; index < 6; index += 1)
+        {
+            var binaryReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-context-no-listen-token",
+                Binary = new byte[4096]
+            });
+
+            Assert.Empty(binaryReplies);
+        }
+
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+    }
+
+    [Fact]
+    public async Task Listen_DeleteTheAlarm_UsesLocalClockWithoutKeepingFollowUpOpen()
+    {
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-delete-the-alarm-token",
+            Text = """{"type":"LISTEN","transID":"trans-delete-the-alarm","data":{"text":"So, delete the alarm.","rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("delete", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("@be/clock", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("alarm", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
+
+        var session = _store.FindSessionByToken("hub-delete-the-alarm-token");
+        Assert.NotNull(session);
+        Assert.False(session.FollowUpOpen);
     }
 
     [Fact]
@@ -2695,7 +2795,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task NewTransId_OnContext_ResetsStaleBufferedAudioBeforeFollowUpTurn()
+    public async Task NewTransId_OnContext_LeavesNoStaleBufferedAudioBeforeFollowUpTurn()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -2744,7 +2844,7 @@ public sealed class JiboWebSocketServiceTests
 
         var session = _store.FindSessionByToken("hub-context-reset-token");
         Assert.NotNull(session);
-        Assert.Equal(4, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
 
         var contextReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {

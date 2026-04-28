@@ -350,13 +350,7 @@ public sealed class JiboInteractionService(
             return "alarm_menu";
         }
 
-        if (MatchesAny(
-                loweredTranscript,
-                "cancel alarm",
-                "delete alarm",
-                "remove alarm",
-                "stop alarm",
-                "turn off alarm"))
+        if (IsAlarmDeleteRequest(loweredTranscript))
         {
             return "alarm_delete";
         }
@@ -1214,6 +1208,12 @@ public sealed class JiboInteractionService(
             "how s your volume");
     }
 
+    private static bool IsAlarmDeleteRequest(string loweredTranscript)
+    {
+        var normalizedTranscript = NormalizeCommandPhrase(loweredTranscript);
+        return AlarmDeletePattern.IsMatch(normalizedTranscript);
+    }
+
     private static bool IsVolumeUpRequest(string loweredTranscript)
     {
         return MatchesAny(
@@ -1520,6 +1520,10 @@ public sealed class JiboInteractionService(
     private static readonly Regex CommandWhitespacePattern = new(
         @"\s+",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex AlarmDeletePattern = new(
+        @"\b(?:cancel|delete|remove|stop|turn\s+off)\s+(?:the\s+)?(?:alarm|along|elo)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

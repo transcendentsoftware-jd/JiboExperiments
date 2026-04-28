@@ -697,6 +697,27 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("delete", decision.SkillPayload["clockIntent"]);
     }
 
+    [Theory]
+    [InlineData("delete the alarm")]
+    [InlineData("so, delete the alarm")]
+    [InlineData("delete along")]
+    [InlineData("so, delete the along")]
+    public async Task BuildDecisionAsync_DeleteAlarmVariants_MapsToClockDeleteIntent(string transcript)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal("alarm_delete", decision.IntentName);
+        Assert.Equal("@be/clock", decision.SkillName);
+        Assert.Equal("alarm", decision.SkillPayload!["domain"]);
+        Assert.Equal("delete", decision.SkillPayload["clockIntent"]);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_ClientNluSetAlarmWithoutTime_AsksForClarification()
     {
