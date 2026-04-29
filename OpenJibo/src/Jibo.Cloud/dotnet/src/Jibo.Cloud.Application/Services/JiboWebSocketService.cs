@@ -32,6 +32,19 @@ public sealed class JiboWebSocketService(
 
         var parsedType = ReadMessageType(envelope.Text);
         session.LastMessageType = parsedType;
+        var containsInlineTurnPayload = parsedType == "LISTEN" && ContainsInlineTurnPayload(envelope.Text);
+        if (parsedType == "LISTEN" &&
+            !containsInlineTurnPayload &&
+            WebSocketTurnFinalizationService.ShouldIgnoreLateListenSetup(session, envelope.Text))
+        {
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "late_listen_ignored", new Dictionary<string, object?>
+            {
+                ["messageType"] = parsedType,
+                ["activeTransID"] = session.TurnState.TransId
+            }, cancellationToken);
+            return [];
+        }
+
         WebSocketTurnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
 
         switch (parsedType)
@@ -47,7 +60,7 @@ public sealed class JiboWebSocketService(
             }
             case "LISTEN":
             {
-                var replies = ContainsInlineTurnPayload(envelope.Text)
+                var replies = containsInlineTurnPayload
                     ? await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken)
                     : WebSocketTurnFinalizationService.HandleListenSetup(session, envelope);
                 await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>

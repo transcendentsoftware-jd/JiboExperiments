@@ -486,7 +486,7 @@ public sealed partial class WebSocketTurnFinalizationService(
         turnState.AwaitingTurnCompletion = false;
         turnState.IgnoreAdditionalAudioUntilUtc = plan.FollowUp.KeepMicOpen
             ? null
-            : DateTimeOffset.UtcNow.Add(WebSocketTurnState.DefaultLateAudioIgnoreWindow);
+            : DateTimeOffset.UtcNow.Add(ResolveLateAudioIgnoreWindow(plan));
 
         var emitSkillActions = !string.Equals(plan.IntentName, "word_of_the_day", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "radio", StringComparison.OrdinalIgnoreCase) &&
@@ -547,10 +547,60 @@ public sealed partial class WebSocketTurnFinalizationService(
                ignoreUntilUtc.Value > DateTimeOffset.UtcNow;
     }
 
+    public static bool ShouldIgnoreLateListenSetup(CloudSession session, string? text)
+    {
+        return ShouldIgnoreLateAudio(session) && IsHotphraseLaunchListenSetup(text);
+    }
+
+    private static TimeSpan ResolveLateAudioIgnoreWindow(ResponsePlan plan)
+    {
+        return string.Equals(plan.IntentName, "cloud_version", StringComparison.OrdinalIgnoreCase)
+            ? WebSocketTurnState.DiagnosticSpeechLateAudioIgnoreWindow
+            : WebSocketTurnState.DefaultLateAudioIgnoreWindow;
+    }
+
     private static bool ShouldIgnoreAudioWithoutListen(WebSocketTurnState turnState)
     {
         return !turnState.SawListen &&
                !string.IsNullOrWhiteSpace(turnState.TransId);
+    }
+
+    private static bool IsHotphraseLaunchListenSetup(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            if (!document.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Object)
+            {
+                return false;
+            }
+
+            var isHotphrase = data.TryGetProperty("hotphrase", out var hotphrase) &&
+                              hotphrase.ValueKind is JsonValueKind.True or JsonValueKind.False &&
+                              hotphrase.GetBoolean();
+            if (!isHotphrase ||
+                !data.TryGetProperty("rules", out var rules) ||
+                rules.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            return rules.EnumerateArray()
+                .Where(static rule => rule.ValueKind == JsonValueKind.String)
+                .Select(static rule => rule.GetString())
+                .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase) ||
+                                    string.Equals(rule, "globals/global_commands_launch", StringComparison.OrdinalIgnoreCase));
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static bool ShouldIgnorePassiveLocalSkillContext(CloudSession session, string? text)

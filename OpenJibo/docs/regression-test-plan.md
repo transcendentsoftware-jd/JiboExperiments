@@ -15,7 +15,7 @@ Run this plan:
 - after the last code change before calling a release complete
 - after any fix that touches websocket turn finalization, local skill redirects, constrained yes/no, or STT
 - before moving from `1.0.18` bug-fix closeout into `1.0.19` feature work
-- after the Test 26 fixes, run at least the focused alarm/timer, photo/gallery, stop, volume, and blue-ring cleanup sections before deciding whether `1.0.18` is ready to freeze
+- after the Test 26 and Test 27 fixes, run at least the focused cloud-version, alarm/timer, photo/gallery, stop, volume, and blue-ring cleanup sections before deciding whether `1.0.18` is ready to freeze
 
 For small feature slices, run the automated `.NET` tests plus the smoke checks and only the live sections that share the same machinery. Before release closeout, run the full current-release suite.
 
@@ -37,6 +37,7 @@ A release is not ready until these are true or explicitly deferred in [developme
 
 - focused `.NET` cloud tests pass
 - running robot reports the expected cloud version by voice and `/health`
+- `cloud version` settles without a self-listened `Cloudford` / generic chat tail
 - no current-release path emits obsolete OpenJibo-only websocket events such as synthetic pending/context/ack packets
 - known working live paths still work: startup, simple chat, radio, basic news, constrained yes/no, alarm, and gallery/create
 - any remaining failure is classified as cloud payload, local robot state, STT/audio quality, environment/routing, or deferred feature gap
@@ -57,10 +58,11 @@ Run these first so obvious environment problems do not pollute feature results:
 
 1. Start the `.NET` cloud using the live runbook.
 2. Confirm `/health` reports the expected version.
-3. Ask `cloud version`; confirm Jibo speaks the same version.
-4. Run one simple chat turn.
-5. Run one joke turn.
-6. Confirm websocket capture is being written before continuing.
+3. Confirm the robot is not in a local connection-lost state; if logs show `Q4-Server_connection_lost` or a fresh `jibo-server-service` reconnect, wait for it to clear before scoring voice behavior.
+4. Ask `cloud version`; confirm Jibo speaks the same version and does not follow with `Cloudford`, `I heard...`, or another generic tail reply.
+5. Run one simple chat turn.
+6. Run one joke turn.
+7. Confirm websocket capture is being written before continuing.
 
 Stop and fix environment issues if startup, websocket connection, or capture output is not clean.
 
@@ -93,7 +95,8 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Observe backup-in-progress behavior separately from explicit voice commands.
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
 - If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
-- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Test 26 showed `@be/surprises-ota`.
+- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`.
+- If the warning appears soon after startup or update, check for local `jibo-server-service` restart, notification reconnect, or `Q4-Server_connection_lost` before scoring it as a hosted backup defect.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
 - Capture check: active rule remains the constrained rule such as `surprises-ota/want_to_download_now`, `settings/download_now_later`, `shared/yes_no`, or another stock prompt rule.
 
@@ -215,12 +218,13 @@ Capture check:
 
 ### Blue-Ring Cleanup
 
-Goal: catch the Test 26 no-`LISTEN` buffering regression quickly.
+Goal: catch the Test 26 no-`LISTEN` buffering regression and the Test 27 diagnostic speech-tail regression quickly.
 
 - After any local skill redirect or generic chat reply, wait five to ten seconds before issuing the next phrase.
 - If the blue ring remains open, record the active transID and whether the websocket capture shows a new `LISTEN`.
-- Expected: binary audio for an existing transID is ignored until a fresh `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely.
-- Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`.
+- After `cloud version`, wait five to ten seconds and confirm there is no fresh no-transcript hotphrase launch `LISTEN` that turns speech tail into generic chat.
+- Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens.
+- Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`; a late ignored diagnostic `LISTEN` may appear as cleanup telemetry but should not set `SawListen` or buffer audio.
 
 ## Optional Feature Slice Checks
 

@@ -21,14 +21,13 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 
 ## Latest Live Evidence
 
-`jibo test 26` was captured as the next focused regression pass after the Test 25 stop/gallery/settings fixes.
+`jibo test 27` was a small focused startup/cloud-version capture after the Test 26 regression pass.
 
-- Good morning worked, and the Test 25 stop fix was live-proven: `Never mind.` now mapped to stock stop instead of generic chat. The Test 25 volume homophone fix was also visible: `Set Volume 2-6.` mapped to `volume_to_value`.
-- Backup-in-progress still appeared during the test. Robot logs show the warning came from `@be/surprises-ota` (`hey since i'm doing a backup right now, I might be a little slow`), while the HTTP capture again had no `Backup_*` calls. Keep treating this as robot-local backup scheduler/status or log/upload load until a capture proves hosted backup involvement.
-- Photo/gallery mostly worked: `Open Photo Galerum.` launched gallery, empty-gallery `shared/yes_no` `Yes.` handed into create, the photo was taken, keeper `Yes.` saved it, and gallery reopened. The remaining gallery quirk was after cleanup: context-only or post-skill audio tails could keep buffering without a fresh `LISTEN`, producing a long blue ring and later generic fallback.
-- Alarm replacement/delete is still the main risky release path. Test 26 showed an existing `9:02 PM` alarm replacement prompt, but later `yes` turns arrived under `clock/alarm_set_value` rather than `clock/alarm_timer_change`, which pushed the robot toward the manual/value screen. The run eventually set a `7:35 PM` alarm, then repeated delete attempts such as `Delete along.`, `So, delete the alarm.`, and `So, delete the along.` fell to generic chat.
-- The blue-ring/listen-loop concern is real in the capture. Several transactions buffered binary audio for 15-50 seconds with no useful turn completion, especially when a context arrived without a new `LISTEN` or after a chat fallback kept follow-up open. Current source now blocks that no-`LISTEN` buffering path and clears blank-audio hotphrase state more aggressively.
-- No dominant `ffmpeg` / `whisper.cpp` decode failure emerged from Test 26. The remaining failures are mostly robot-local backup/load, short-answer STT quality, and alarm replacement/menu agreement.
+- Before the cloud-version test, the robot's local `jibo-server-service` restarted after a broken pipe, then `ssm` raised `Q4-Server_connection_lost` and local `@be/settings` opened the connection-lost error path. The notification connection recovered about 31 seconds later. Treat early-test confusion as suspect if this local-server recovery appears in the same window.
+- The cloud-version answer itself proved the running build was `1.0.18`, but the previous source treated `cloud_version` as a follow-up conversation. A fresh hotphrase `LISTEN` then captured speech tail as `Cloudford.`, and generic chat replied `thanks. I heard, Cloudford.`
+- Current source now makes `cloud_version` a one-shot diagnostic, uses a longer diagnostic speech-tail ignore window, and ignores no-transcript hotphrase launch `LISTEN` setup packets inside that window. The existing no-`LISTEN` binary guard already ignored same-transID binary tails after finalization, but Test 27 showed it could not stop a brand-new hotphrase listen by itself.
+- Backup-in-progress still appears robot-local. In Test 27 the message was selected by local `@be/surprises-ota` after Nimbus/chitchat settled, and the HTTP capture again had no `Backup_*` calls. Keep investigating robot-local scheduler/status, startup reconnect state, CPU/load, and log/upload work before assuming hosted backup API involvement.
+- Test 26 remains the broader regression evidence for gallery success, alarm replacement/delete risk, stop/volume live proof, and short-answer STT weakness. Alarm replacement/menu agreement is still the main release risk after the Test 27 cloud-version-tail hardening.
 
 ## Release Rhythm
 
@@ -72,6 +71,8 @@ Current websocket scope:
 - local whisper only attempts external decoding when buffered audio contains an Opus identification header
 - auto-finalize thresholds for buffered audio after a real listen phase
 - late-audio ignore windows after completed turns
+- cloud-version diagnostic turns do not keep follow-up open and receive a longer speech-tail ignore window
+- no-transcript hotphrase launch `LISTEN` setup packets are ignored while a completed diagnostic/local turn is still in its late-audio cleanup window
 - passive local context cleanup for gallery/create/settings contexts after stock local skills take ownership
 - no-input local completion for constrained prompts, clock value prompts, gallery preview prompts, and settings volume-control prompts
 - active local prompt preservation so `shared/yes_no`, clock, gallery, and settings prompts can still consume transcript-bearing short replies even when the stock skill reports a local context
@@ -92,6 +93,7 @@ Current state and persistence scope:
 The following behavior is present in source and covered by focused tests:
 
 - `cloud version` speech and `/health` version reporting share `OpenJiboCloudBuildInfo.Version`
+- `cloud version` is a one-shot diagnostic: it speaks the version without opening a follow-up turn, then shields the speech tail from self-listen artifacts such as the Test 27 `Cloudford.` capture
 - apostrophes are no longer escaped to `&apos;` in spoken ESML, while `&`, `<`, `>`, and `"` remain escaped
 - radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
 - news has a first Nimbus-shaped cloud path using `match.cloudSkill = news` and a `news` `SKILL_ACTION` with synthetic briefing content
@@ -153,7 +155,7 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 
 - Run the focused `.NET` cloud test suite after the last feature slice.
 - Run the current-release live checklist in [regression-test-plan.md](regression-test-plan.md).
-- Confirm the running robot build reports cloud version `1.0.18`.
+- Confirm the running robot build reports cloud version `1.0.18` without a follow-up `Cloudford` / generic chat tail.
 - Regression test alarm flows again after the `jibo test 26` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice including `delete the alarm`, cancel out of a value prompt, and verify the menu agrees.
 - Regression test timer flows after the Test 25 stale-timer observation: set a 10-second timer, let it fire, reset by gesture only after recording state, and verify a new timer prompt does not see an already-expired timer as still active.
 - Regression test photo/gallery flows again after the `jibo test 26` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring, `I heard you`, or `that's` stale turns after gallery cleanup.
@@ -172,11 +174,11 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - local `whisper.cpp` STT remains a discovery seam, not production ASR
 - media upload/body handling is not binary-safe enough for final gallery originals and thumbnails
 - state persistence is local JSON, not Azure SQL / Blob Storage
-- update, backup, and restore are not end-to-end proven, and the `jibo test 22` sluggishness appears tied to robot-local backup status/load
-- Test 26 still showed repeated backup-in-progress behavior without corresponding `Backup_*` HTTP traffic
+- update, backup, and restore are not end-to-end proven, and the `jibo test 22` / Test 26 / Test 27 sluggishness appears tied to robot-local backup status/load or startup reconnect state
+- Test 27 again showed backup-in-progress behavior without corresponding `Backup_*` HTTP traffic, immediately after a local `jibo-server-service` reconnect sequence
 - deployed-build verification needs to prove that synthetic OpenJibo websocket events are gone from the hosted artifact, not just from source
 - news content is synthetic; `jibo test 23` proved the path but not live provider-backed headlines
-- alarm replacement yes/no, alarm voice delete/menu agreement, and long blue-ring cleanup still need successful live proof after the Test 26 source fixes
+- alarm replacement yes/no, alarm voice delete/menu agreement, and long blue-ring cleanup still need successful live proof after the Test 26 and Test 27 source fixes
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
 - remaining stop/volume variants still need live stock-OS proof beyond Test 26's `Never mind.` and `Set Volume 2-6.` passes; robot age and command-versus-question personality routing are not implemented yet
 

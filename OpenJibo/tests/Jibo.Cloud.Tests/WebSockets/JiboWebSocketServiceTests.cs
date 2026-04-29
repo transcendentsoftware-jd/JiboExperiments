@@ -76,6 +76,62 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task Listen_CloudVersion_DoesNotOpenFollowUpAndIgnoresSpeechTailListen()
+    {
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-cloud-version-token",
+            Text = """{"type":"LISTEN","transID":"trans-cloud-version","data":{"text":"What's your cloud version?","hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("cloud_version", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        var session = _store.FindSessionByToken("hub-cloud-version-token");
+        Assert.NotNull(session);
+        Assert.Equal("cloud_version", session.LastIntent);
+        Assert.False(session.FollowUpOpen);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.False(session.TurnState.SawListen);
+        Assert.True(session.TurnState.IgnoreAdditionalAudioUntilUtc > DateTimeOffset.UtcNow.AddSeconds(6));
+
+        var tailListenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-cloud-version-token",
+            Text = """{"type":"LISTEN","transID":"trans-cloud-version-tail","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Empty(tailListenReplies);
+        Assert.Equal("trans-cloud-version", session.TurnState.TransId);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+        Assert.False(session.TurnState.SawListen);
+
+        var tailAudioReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-cloud-version-token",
+            Binary = new byte[4096]
+        });
+
+        Assert.Empty(tailAudioReplies);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+    }
+
+    [Fact]
     public async Task BinaryMessage_BuffersAudioWithoutEmittingSyntheticAck()
     {
         var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope

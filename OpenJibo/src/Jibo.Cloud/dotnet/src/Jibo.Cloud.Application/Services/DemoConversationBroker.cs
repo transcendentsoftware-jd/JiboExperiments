@@ -70,6 +70,7 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
     {
         return intentName switch
         {
+            "cloud_version" => false,
             "word_of_the_day" => false,
             "word_of_the_day_guess" => false,
             "radio" => false,

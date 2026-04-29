@@ -33,6 +33,7 @@ Runtime truth:
 - hosted `.NET` projects and cloud tests target `net10.0`
 - version source of truth is [OpenJiboCloudBuildInfo.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/OpenJiboCloudBuildInfo.cs)
 - `/health`, startup logging, and spoken `cloud version` are aligned with that constant
+- spoken `cloud version` is now a one-shot diagnostic with speech-tail protection instead of a follow-up chat turn
 
 Current release theme:
 
@@ -44,6 +45,7 @@ Current release theme:
 - `jibo test 24` showed alarm replacement yes/no working, but exposed empty `clock/alarm_set_value` and `gallery/gallery_preview` turns falling into generic `I heard you` fallback speech; it also showed `CLIENT_NLU cancel` inside `clock/alarm_set_value` re-asking for an alarm value instead of closing the prompt
 - `jibo test 25` proved a broader regression path but exposed repeated backup-in-progress/update-menu blockage, timer/alarm stale state and delete/menu disagreement, gallery `shared/yes_no` hangs under `@be/gallery`, punctuated `Never mind.` falling through to chat, volume homophone parsing (`Set Volume 2-6.`), and settings volume-control cleanup falling into `I heard you`
 - `jibo test 26` live-proved punctuated stop, volume homophone parsing, gallery launch/yes/create/save, and good morning; it still exposed robot-local backup warnings, long blue-ring buffering without a fresh `LISTEN`, alarm replacement drifting into the value/manual screen, and alarm delete phrases/mishears falling to chat
+- `jibo test 27` isolated early confusion: local `jibo-server-service` restarted and raised `Q4-Server_connection_lost` before testing; cloud version then self-listened into `Cloudford.` because the previous diagnostic path stayed follow-up eligible; the backup warning again came from local `@be/surprises-ota` with no `Backup_*` HTTP calls
 
 ## Immediate `1.0.18` Queue
 
@@ -103,6 +105,8 @@ Current release theme:
   - `jibo test 22` did not show `Backup_*` HTTP traffic during the backup complaint
   - `jibo test 25` again showed backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic; observed cloud traffic was log upload, ASR binary upload, and update check traffic
   - `jibo test 26` again had the robot announce backup-in-progress from `@be/surprises-ota`, with no `Backup_*` HTTP target in the capture
+  - `jibo test 27` repeated that pattern in a smaller capture: the only relevant hosted startup traffic was token/update/log style traffic, while the spoken backup warning was selected by local `@be/surprises-ota`
+  - Test 27 also showed local `jibo-server-service` reconnect and `Q4-Server_connection_lost` before the voice test, so startup health should be checked before blaming backup prompts on hosted cloud behavior
   - stock `@be/surprises-ota` drives the backup notification from robot-local `jibo.scheduler.backupStatus`
   - original `surprises-ota` tests make backup and OTA notifications contextual-priority prompts, with repeat suppression through last-notification timestamps
   - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
@@ -133,6 +137,7 @@ Current release theme:
   - passive gallery/create/settings context no longer reopens stale cloud turns
   - active local prompts under gallery/settings contexts are preserved so real short replies are not suppressed as passive context
   - context-only or post-skill binary audio tails are ignored until a fresh `LISTEN`, preventing no-`LISTEN` blue-ring buffering loops
+  - fresh no-transcript hotphrase launch `LISTEN` setup packets are ignored during diagnostic speech-tail cleanup, preventing the Test 27 `Cloudford.` self-listen path
   - blank-audio hotphrase turns clear pending listen state and install a short late-audio ignore window
   - `shared/yes_no` no-input fallback and repeated create keeper cleanup were added after `jibo test 22`
 - Latest evidence:
@@ -147,6 +152,7 @@ Current release theme:
   - `jibo test 25` showed timer/alarm still needs live follow-up for stale timer state, alarm replacement/PM ambiguity, and voice delete versus robot menu agreement
   - `jibo test 26` showed gallery success through empty-gallery yes, create, keep, save, and reopen, but also showed a post-gallery blue-ring/fallback tail now addressed by the no-`LISTEN` binary guard
   - `jibo test 26` showed alarm replacement still drifting into value/manual-screen behavior and alarm delete phrases/mishears falling to chat; current source now maps `delete the alarm`, `delete along`, and `delete the along` to local clock delete without keeping follow-up open
+  - `jibo test 27` showed the no-`LISTEN` guard worked for same-transID binary tails, but a new hotphrase launch `LISTEN` could still capture diagnostic speech tail; current source now blocks that diagnostic-tail shape
   - original clock tests confirm cancel inside the alarm value prompt must close without scheduling, existing-alarm `keep` must preserve KB/scheduler state, and existing-alarm `delete` or `cancel` must clear it
   - original gallery tests confirm empty-gallery `yes` redirects to `@be/create`, empty-gallery `no` exits, media-load failure exits, and delete confirmation only deletes on a positive `yes`
 - Exit criteria:
@@ -264,6 +270,18 @@ Current release theme:
 - Follow-up:
   - live update/backup/share/gallery/alarm replacement prompts still need another clean pass
 
+### Cloud Version Tail Cleanup
+
+- Status: `implemented`
+- Tags: `protocol`
+- Result:
+  - `cloud_version` no longer keeps the generic follow-up mic open
+  - diagnostic speech receives an eight-second late-audio ignore window
+  - no-transcript hotphrase launch `LISTEN` setup packets inside that cleanup window are ignored before they can reopen a stale turn
+  - focused websocket coverage reproduces the Test 27 `Cloudford.` shape: cloud-version speech, tail `LISTEN`, and binary speech tail
+- Follow-up:
+  - live smoke should confirm `cloud version` speaks `1.0.18` and settles without a generic `I heard...` reply
+
 ### Word Of The Day Cleanup
 
 - Status: `implemented`
@@ -362,6 +380,7 @@ Current release theme:
   - no-op update fabrication has been removed from `.NET`
   - Test 25 still showed repeated backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic
   - Test 26 repeated the backup-in-progress warning from robot-local `@be/surprises-ota` without `Backup_*` HTTP traffic
+  - Test 27 repeated the same no-`Backup_*` finding and added evidence of local startup reconnect / `Q4-Server_connection_lost` before the test
 - Exit criteria:
   - no phantom "always has updates" behavior
   - one controlled update can be staged and delivered
