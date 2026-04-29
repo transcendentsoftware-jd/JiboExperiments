@@ -46,6 +46,7 @@ Current release theme:
 - `jibo test 25` proved a broader regression path but exposed repeated backup-in-progress/update-menu blockage, timer/alarm stale state and delete/menu disagreement, gallery `shared/yes_no` hangs under `@be/gallery`, punctuated `Never mind.` falling through to chat, volume homophone parsing (`Set Volume 2-6.`), and settings volume-control cleanup falling into `I heard you`
 - `jibo test 26` live-proved punctuated stop, volume homophone parsing, gallery launch/yes/create/save, and good morning; it still exposed robot-local backup warnings, long blue-ring buffering without a fresh `LISTEN`, alarm replacement drifting into the value/manual screen, and alarm delete phrases/mishears falling to chat
 - `jibo test 27` isolated early confusion: local `jibo-server-service` restarted and raised `Q4-Server_connection_lost` before testing; cloud version then self-listened into `Cloudford.` because the previous diagnostic path stayed follow-up eligible; the backup warning again came from local `@be/surprises-ota` with no `Backup_*` HTTP calls
+- `jibo test 28` isolated the follow-on backup doorway: cloud-version/generic Nimbus matches had `skipSurprises` unset, then stock BE requested `@be/surprises` after Nimbus settled; VAD inhibited the offer in Test 28, while Test 27 selected `@be/surprises-ota` through the same local lifecycle path
 
 ## Immediate `1.0.18` Queue
 
@@ -101,12 +102,14 @@ Current release theme:
   - no-input fallback for constrained prompts emits local `LISTEN`/`EOS`
   - `shared/yes_no` now participates in the STT-failure no-input path instead of staying pending behind `$YESNO` hints
   - repeated empty `create/is_it_a_keeper` replies redirect to `@be/idle` after the second miss
+  - hosted turn results, fallback matches, and local skill redirects include `match.skipSurprises = true` so BE does not launch end-of-skill surprises after normal replies
 - Latest evidence:
   - `jibo test 22` did not show `Backup_*` HTTP traffic during the backup complaint
   - `jibo test 25` again showed backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic; observed cloud traffic was log upload, ASR binary upload, and update check traffic
   - `jibo test 26` again had the robot announce backup-in-progress from `@be/surprises-ota`, with no `Backup_*` HTTP target in the capture
   - `jibo test 27` repeated that pattern in a smaller capture: the only relevant hosted startup traffic was token/update/log style traffic, while the spoken backup warning was selected by local `@be/surprises-ota`
   - Test 27 also showed local `jibo-server-service` reconnect and `Q4-Server_connection_lost` before the voice test, so startup health should be checked before blaming backup prompts on hosted cloud behavior
+  - `jibo test 28` showed no hosted backup trigger in the focused cloud-version window, but did show BE opening `@be/surprises` after a Nimbus turn because the outgoing match did not carry `skipSurprises`
   - stock `@be/surprises-ota` drives the backup notification from robot-local `jibo.scheduler.backupStatus`
   - original `surprises-ota` tests make backup and OTA notifications contextual-priority prompts, with repeat suppression through last-notification timestamps
   - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
@@ -115,8 +118,10 @@ Current release theme:
 - Exit criteria:
   - spoken `yes` and `no` work on update, backup, share/offer, and gallery/create prompts
   - empty or missed short replies retry locally instead of relaunching Nimbus or generic chat
+  - ordinary Nimbus/chat/cloud-version turns settle without `@be/surprises` / `@be/surprises-ota` opening afterward
 - Next action:
   - re-run these prompt families in the `1.0.18` live regression pass after the shared yes/no, alarm yes/no, and create no-input fixes
+  - verify websocket `match.skipSurprises = true` on cloud-version, generic chat, fallback/no-input, and at least one local redirect
   - keep explicit backup creation as part of the update/backup/restore proof slice, not as an assumed yes/no prompt test
 
 ### 4. Alarm And Photo Gallery Release Regression
@@ -280,7 +285,18 @@ Current release theme:
   - no-transcript hotphrase launch `LISTEN` setup packets inside that cleanup window are ignored before they can reopen a stale turn
   - focused websocket coverage reproduces the Test 27 `Cloudford.` shape: cloud-version speech, tail `LISTEN`, and binary speech tail
 - Follow-up:
-  - live smoke should confirm `cloud version` speaks `1.0.18` and settles without a generic `I heard...` reply
+  - live smoke should confirm `cloud version` speaks `1.0.18`, carries `match.skipSurprises = true`, and settles without a generic `I heard...` reply or a local surprise handoff
+
+### End-Of-Skill Surprise Suppression
+
+- Status: `implemented`
+- Tags: `protocol`
+- Result:
+  - hosted `LISTEN` matches, fallback `LISTEN` matches, and local `SKILL_REDIRECT` matches emit `skipSurprises = true`
+  - focused websocket assertions cover generic chat, cloud version, no-transcript fallback, and a local clock redirect
+  - Test 28 evidence ties the repeated backup warning to the local `@be/surprises` lifecycle path after Nimbus, with no corresponding hosted `Backup_*` traffic
+- Follow-up:
+  - live regression should confirm normal Nimbus/cloud/local turns no longer open `@be/surprises` or `@be/surprises-ota` after completion
 
 ### Word Of The Day Cleanup
 
@@ -381,6 +397,7 @@ Current release theme:
   - Test 25 still showed repeated backup-in-progress/update-menu blockage without `Backup_*` HTTP traffic
   - Test 26 repeated the backup-in-progress warning from robot-local `@be/surprises-ota` without `Backup_*` HTTP traffic
   - Test 27 repeated the same no-`Backup_*` finding and added evidence of local startup reconnect / `Q4-Server_connection_lost` before the test
+  - Test 28 showed the same class of surprise handoff beginning at `@be/surprises` after Nimbus, before VAD inhibited the offer
 - Exit criteria:
   - no phantom "always has updates" behavior
   - one controlled update can be staged and delivered

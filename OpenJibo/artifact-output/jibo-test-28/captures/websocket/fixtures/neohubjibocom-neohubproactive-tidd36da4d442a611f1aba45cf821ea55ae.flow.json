@@ -1,0 +1,102 @@
+{
+  "name": "neohubjibocom-neohubproactive-tidd36da4d442a611f1aba45cf821ea55ae",
+  "session": {
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/proactive",
+    "kind": "neo-hub-proactive",
+    "token": "hub-usr_openjibo_owner-1777340189867"
+  },
+  "steps": [
+    {
+      "text": {
+        "type": "TRIGGER",
+        "ts": 1777341970615,
+        "msgID": "mid-d388c070-42a6-11f1-a414-5cf821ea55ae",
+        "transID": "tid-d36da4d4-42a6-11f1-aba4-5cf821ea55ae",
+        "data": {
+          "triggerSource": "SURPRISE",
+          "triggerData": {
+            "looperID": "5c0b221fdf9d450019c5e255"
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": []
+    },
+    {
+      "text": {
+        "type": "CONTEXT",
+        "ts": 1777341970702,
+        "msgID": "mid-d395f790-42a6-11f1-95f4-5cf821ea55ae",
+        "transID": "tid-d36da4d4-42a6-11f1-aba4-5cf821ea55ae",
+        "data": {
+          "runtime": {
+            "character": {
+              "emotion": {
+                "name": "NEUTRAL",
+                "valence": 0.45,
+                "confidence": 0.2
+              },
+              "motivation": {
+                "social": 1,
+                "playful": 0.5152989351851469
+              }
+            },
+            "perception": {
+              "speaker": "5c0b221fdf9d450019c5e255",
+              "peoplePresent": [
+                {
+                  "id": "NOT_TRAINED",
+                  "entityId": 16085,
+                  "type": "fused",
+                  "confidence": 1
+                }
+              ]
+            },
+            "location": {
+              "city": "Pleasant Hill",
+              "state": "Missouri",
+              "stateAbbr": "MO",
+              "country": "United States",
+              "countryCode": "US",
+              "lat": 38.8358494,
+              "lng": -94.1427229,
+              "iso": "2026-04-27T21:06:10.626-05:00"
+            },
+            "loop": {
+              "loopId": "5c0b221fdf9d450019c5e253",
+              "users": [
+                {
+                  "firstName": "Erin",
+                  "lastName": "Picone",
+                  "phoneticName": "Erin",
+                  "gender": "female",
+                  "birthdate": 649209600000,
+                  "id": "5c0b221fdf9d450019c5e255",
+                  "accountId": "5c0b20547c46170019235759"
+                }
+              ],
+              "jibo": {
+                "color": "WHITE",
+                "birthdate": 1544234645598,
+                "id": "5c0b221fdf9d450019c5e254"
+              },
+              "owner": "5c0b221fdf9d450019c5e255"
+            },
+            "dialog": {
+              "referent": null
+            }
+          },
+          "skill": {
+            "id": null
+          },
+          "general": {
+            "release": "1.9.2"
+          }
+        }
+      },
+      "binary": null,
+      "expectedReplyTypes": []
+    }
+  ]
+}

@@ -54,6 +54,7 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("hello jibo", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.Equal("hello", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.True(listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skipSurprises").GetBoolean());
 
         using var eosPayload = JsonDocument.Parse(replies[1].Text!);
         Assert.True(eosPayload.RootElement.TryGetProperty("ts", out _));
@@ -94,6 +95,7 @@ public sealed class JiboWebSocketServiceTests
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("cloud_version", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.True(listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skipSurprises").GetBoolean());
 
         var session = _store.FindSessionByToken("hub-cloud-version-token");
         Assert.NotNull(session);
@@ -268,6 +270,7 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("heyJibo", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal(string.Empty, listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.True(listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skipSurprises").GetBoolean());
     }
 
     [Fact]
@@ -424,6 +427,7 @@ public sealed class JiboWebSocketServiceTests
 
         using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
         Assert.Equal("@be/clock", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.True(redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skipSurprises").GetBoolean());
         Assert.Equal("start", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
     }
 

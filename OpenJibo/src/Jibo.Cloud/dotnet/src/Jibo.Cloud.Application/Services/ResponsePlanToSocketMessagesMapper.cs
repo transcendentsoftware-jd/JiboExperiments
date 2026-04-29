@@ -166,7 +166,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     intent = outboundIntent,
                     rule = outboundRules.FirstOrDefault() ?? string.Empty,
                     score = 0.95,
-                    cloudSkill
+                    cloudSkill,
+                    skipSurprises = true
                 }
             }
         };
@@ -322,7 +323,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     {
                         intent = "heyJibo",
                         rule = rules.FirstOrDefault() ?? string.Empty,
-                        score = 0.95
+                        score = 0.95,
+                        skipSurprises = true
                     }
                 }
             })),
@@ -928,7 +930,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     skillID = skillId,
                     onRobot = true,
-                    launch = true
+                    launch = true,
+                    skipSurprises = true
                 },
                 asr = new
                 {

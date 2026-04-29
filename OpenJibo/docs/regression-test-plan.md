@@ -59,7 +59,7 @@ Run these first so obvious environment problems do not pollute feature results:
 1. Start the `.NET` cloud using the live runbook.
 2. Confirm `/health` reports the expected version.
 3. Confirm the robot is not in a local connection-lost state; if logs show `Q4-Server_connection_lost` or a fresh `jibo-server-service` reconnect, wait for it to clear before scoring voice behavior.
-4. Ask `cloud version`; confirm Jibo speaks the same version and does not follow with `Cloudford`, `I heard...`, or another generic tail reply.
+4. Ask `cloud version`; confirm Jibo speaks the same version and does not follow with `Cloudford`, `I heard...`, a local `@be/surprises` handoff, or another generic tail reply.
 5. Run one simple chat turn.
 6. Run one joke turn.
 7. Confirm websocket capture is being written before continuing.
@@ -95,10 +95,11 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Observe backup-in-progress behavior separately from explicit voice commands.
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
 - If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
-- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`.
+- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`, and Test 28 showed the preceding `@be/surprises` router opening after Nimbus.
 - If the warning appears soon after startup or update, check for local `jibo-server-service` restart, notification reconnect, or `Q4-Server_connection_lost` before scoring it as a hosted backup defect.
+- After cloud-version and generic Nimbus/chat turns, verify the outgoing `LISTEN` match includes `skipSurprises = true`.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
-- Capture check: active rule remains the constrained rule such as `surprises-ota/want_to_download_now`, `settings/download_now_later`, `shared/yes_no`, or another stock prompt rule.
+- Capture check: active rule remains the constrained rule such as `surprises-ota/want_to_download_now`, `settings/download_now_later`, `shared/yes_no`, or another stock prompt rule; ordinary Nimbus/cloud/local turns should not transition into `@be/surprises` after completion.
 
 ### Alarm
 
@@ -218,13 +219,14 @@ Capture check:
 
 ### Blue-Ring Cleanup
 
-Goal: catch the Test 26 no-`LISTEN` buffering regression and the Test 27 diagnostic speech-tail regression quickly.
+Goal: catch the Test 26 no-`LISTEN` buffering regression, the Test 27 diagnostic speech-tail regression, and the Test 28 unsuppressed end-of-skill surprise handoff quickly.
 
 - After any local skill redirect or generic chat reply, wait five to ten seconds before issuing the next phrase.
 - If the blue ring remains open, record the active transID and whether the websocket capture shows a new `LISTEN`.
 - After `cloud version`, wait five to ten seconds and confirm there is no fresh no-transcript hotphrase launch `LISTEN` that turns speech tail into generic chat.
-- Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens.
-- Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`; a late ignored diagnostic `LISTEN` may appear as cleanup telemetry but should not set `SawListen` or buffer audio.
+- Confirm ordinary hosted replies and local redirects carry `match.skipSurprises = true`.
+- Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens; settled turns do not open `@be/surprises` / `@be/surprises-ota`.
+- Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`; a late ignored diagnostic `LISTEN` may appear as cleanup telemetry but should not set `SawListen` or buffer audio; normal cloud/local completions should not be followed by a BE surprise router request.
 
 ## Optional Feature Slice Checks
 
