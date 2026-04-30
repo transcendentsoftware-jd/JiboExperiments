@@ -466,6 +466,8 @@ public sealed class JiboWebSocketServiceTests
         });
 
         Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
         Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
@@ -499,6 +501,8 @@ public sealed class JiboWebSocketServiceTests
         });
 
         Assert.Equal(4, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("askForTime", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -678,7 +682,9 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-clock-timer-followup","data":{"text":"twenty five minutes"}}"""
         });
 
-        Assert.Equal(4, replies.Count);
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("start", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -707,7 +713,9 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-clock-alarm-followup","data":{"text":"ten twenty five"}}"""
         });
 
-        Assert.Equal(4, replies.Count);
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("start", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
@@ -737,7 +745,9 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-clock-alarm-comma-followup","data":{"text":"7, 44"}}"""
         });
 
-        Assert.Equal(4, replies.Count);
+        Assert.Equal(2, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("start", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());

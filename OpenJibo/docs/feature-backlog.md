@@ -48,6 +48,7 @@ Current release theme:
 - `jibo test 27` isolated early confusion: local `jibo-server-service` restarted and raised `Q4-Server_connection_lost` before testing; cloud version then self-listened into `Cloudford.` because the previous diagnostic path stayed follow-up eligible; the backup warning again came from local `@be/surprises-ota` with no `Backup_*` HTTP calls
 - `jibo test 28` isolated the follow-on backup doorway: cloud-version/generic Nimbus matches had `skipSurprises` unset, then stock BE requested `@be/surprises` after Nimbus settled; VAD inhibited the offer in Test 28, while Test 27 selected `@be/surprises-ota` through the same local lifecycle path
 - `jibo test 29` confirmed `skipSurprises = true` was reaching stock BE and no backup announcement repeated in the focused run, but the cloud-version answer still interrupted because the spoken diagnostic included `Jibo` and triggered local hotphrase barge-in during Nimbus TTS
+- `jibo test 30` confirmed cloud-version now speaks cleanly; it still exposed a local gallery-to-`@be/surprises-ota` backup announcement, missing visible empty-gallery voice listen, and a duplicate alarm clock relaunch after `638` was parsed locally as `6:38 PM`
 
 ## Immediate `1.0.18` Queue
 
@@ -116,6 +117,7 @@ Current release theme:
   - a spoken `take a backup` command currently routes as generic chat and is not the same as proving the local backup scheduler path
   - `jibo test 23`, `jibo test 25`, and `jibo test 26` showed backup-in-progress sluggishness or warnings while backups were active; explicit backup voice launch remains unwired
   - Test 26 suggests this should be investigated beside robot-local scheduler status and log/upload load rather than only hosted backup APIs
+  - `jibo test 30` showed the backup announcement after gallery came from local `@be/surprises` -> `@be/surprises-ota`, not from a hosted `Backup_*` HTTP call; the local `@be/idle` nighttime OTA helper can also initiate backup through `jibo.scheduler.backupRobot`
 - Exit criteria:
   - spoken `yes` and `no` work on update, backup, share/offer, and gallery/create prompts
   - empty or missed short replies retry locally instead of relaunching Nimbus or generic chat
@@ -133,6 +135,7 @@ Current release theme:
 - Current code:
   - alarm values parse explicit, compact, spaced, comma-separated, hyphenated, and local-context ambiguous times
   - short alarm/timer value replies are accepted during clock value follow-up rules instead of being filtered out before parsing
+  - local clock value follow-up rules now return only `LISTEN`/`EOS`, avoiding the Test 30 duplicate delayed `@be/clock` relaunch after stock clock already consumed a short time reply
   - empty alarm/timer value turns complete locally as no-input instead of falling through to generic Nimbus speech
   - missing alarm times stay in local `@be/clock` clarification
   - alarm cancel can reuse the last active clock domain
@@ -159,12 +162,15 @@ Current release theme:
   - `jibo test 26` showed gallery success through empty-gallery yes, create, keep, save, and reopen, but also showed a post-gallery blue-ring/fallback tail now addressed by the no-`LISTEN` binary guard
   - `jibo test 26` showed alarm replacement still drifting into value/manual-screen behavior and alarm delete phrases/mishears falling to chat; current source now maps `delete the alarm`, `delete along`, and `delete the along` to local clock delete without keeping follow-up open
   - `jibo test 27` showed the no-`LISTEN` guard worked for same-transID binary tails, but a new hotphrase launch `LISTEN` could still capture diagnostic speech tail; current source now blocks that diagnostic-tail shape
+  - `jibo test 30` showed cloud-version fixed, but the empty-gallery prompt did not visibly light the blue ring for a voice `yes`; treat the next gallery pass as a proof of local `shared/yes_no` listen ownership, not just cloud payload shape
+  - `jibo test 30` showed `638` was processed at 6:38:13 AM and stock clock resolved it to `6:38 PM`; the duplicate replacement prompt matched our extra delayed clock relaunch, now suppressed for local clock follow-up rules
   - original clock tests confirm cancel inside the alarm value prompt must close without scheduling, existing-alarm `keep` must preserve KB/scheduler state, and existing-alarm `delete` or `cancel` must clear it
   - original gallery tests confirm empty-gallery `yes` redirects to `@be/create`, empty-gallery `no` exits, media-load failure exits, and delete confirmation only deletes on a positive `yes`
 - Exit criteria:
   - gallery opens, offers to take a picture if empty, accepts `yes`, and hands into create
   - alarm set, clarify, replacement yes/no, cancel from value prompt, and cancel/delete flows behave locally and agree with the menu state
   - alarm replacement and deletion regression checks verify both websocket payload shape and persistent robot menu state where possible
+  - short alarm/timer follow-up values do not produce a second `@be/clock` relaunch after the local skill consumes the answer
   - failures caused by collapsed STT transcripts are logged as STT issues rather than misdiagnosed as payload bugs
 - Next action:
   - re-run a stock OS `1.9` regression bundle before declaring `1.0.18` complete

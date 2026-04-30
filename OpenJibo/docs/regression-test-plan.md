@@ -95,7 +95,7 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Observe backup-in-progress behavior separately from explicit voice commands.
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
 - If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
-- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`, and Test 28 showed the preceding `@be/surprises` router opening after Nimbus.
+- If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`, Test 28 showed the preceding `@be/surprises` router opening after Nimbus, and Test 30 showed gallery settling into `@be/surprises` -> `@be/surprises-ota`.
 - If the warning appears soon after startup or update, check for local `jibo-server-service` restart, notification reconnect, or `Q4-Server_connection_lost` before scoring it as a hosted backup defect.
 - After cloud-version and generic Nimbus/chat turns, verify the outgoing `LISTEN` match includes `skipSurprises = true`.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
@@ -135,6 +135,7 @@ Capture check:
 - missing values stay in local clock clarification
 - `CLIENT_NLU cancel` under `clock/alarm_set_value` or `clock/timer_set_value` maps to local clock `cancel`
 - no-input under `clock/alarm_set_value` or `clock/timer_set_value` returns local `LISTEN`/`EOS` only
+- value replies under `clock/alarm_set_value` or `clock/timer_set_value` also return local `LISTEN`/`EOS` only; a delayed `@be/clock` relaunch after the local clock skill consumes the reply is a regression
 
 ### Photo Gallery And Create
 
@@ -166,6 +167,7 @@ Capture check:
 - local no-input replies keep the active constrained rule and strip unrelated global launch rules
 - active `shared/yes_no` is not suppressed merely because the current context is `@be/gallery`
 - post-gallery binary audio does not continue buffering unless a fresh `LISTEN` appears
+- when gallery is empty and asks whether to take a picture, verify whether a local `shared/yes_no` or equivalent `LISTEN` appears and whether the blue ring visually opens for voice input
 
 ### STT And Audio Quality
 

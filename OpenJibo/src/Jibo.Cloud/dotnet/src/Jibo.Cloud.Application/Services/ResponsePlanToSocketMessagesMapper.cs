@@ -251,7 +251,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         }
 
         if (isClockSkillLaunch &&
-            !string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase))
+            !string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) &&
+            !IsLocalClockFollowUpTurn(rules))
         {
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildSkillRedirectPayload(
@@ -819,6 +820,17 @@ public sealed class ResponsePlanToSocketMessagesMapper
             string.Equals(rule, "globals/global_commands_launch", StringComparison.OrdinalIgnoreCase))
             ? ["globals/global_commands_launch"]
             : [];
+    }
+
+    private static bool IsLocalClockFollowUpTurn(IReadOnlyList<string> rules)
+    {
+        return rules.Any(static rule =>
+            string.Equals(rule, "clock/alarm_set_value", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "clock/timer_set_value", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "clock/alarm_timer_okay", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rule, "clock/alarm_timer_query_menu", StringComparison.OrdinalIgnoreCase));
     }
 
     private static object BuildGenericFallbackSkillPayload(string transId)

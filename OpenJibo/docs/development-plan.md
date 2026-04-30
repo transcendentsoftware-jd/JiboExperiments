@@ -21,7 +21,7 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 
 ## Latest Live Evidence
 
-`jibo test 29` confirmed the Test 28 backup/surprise fix and exposed a separate cloud-version self-hotphrase problem.
+`jibo test 30` confirmed the cloud-version self-hotphrase fix and exposed two remaining stock-skill wrinkles: local gallery/backup proactivity after an empty-gallery prompt, and a duplicate clock relaunch after an alarm value follow-up.
 
 - Before the cloud-version test, the robot's local `jibo-server-service` restarted after a broken pipe, then `ssm` raised `Q4-Server_connection_lost` and local `@be/settings` opened the connection-lost error path. The notification connection recovered about 31 seconds later. Treat early-test confusion as suspect if this local-server recovery appears in the same window.
 - The cloud-version answer itself proved the running build was `1.0.18`, but the previous source treated `cloud_version` as a follow-up conversation. A fresh hotphrase `LISTEN` then captured speech tail as `Cloudford.`, and generic chat replied `thanks. I heard, Cloudford.`
@@ -30,8 +30,10 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 - Current source now emits `match.skipSurprises = true` for hosted turn results, fallback matches, and local skill redirects. Stock BE maps that to `skipSurprisesExternal`, preventing normal cloud replies from falling into end-of-skill surprises such as OTA/backup prompts.
 - Test 29 showed the deployed `skipSurprises` payload in the robot logs and did not produce another backup announcement in the focused run. It still interrupted cloud-version speech because the spoken phrase `Open Jibo Cloud version...` included `Jibo`; stock Nimbus runs the response as a runtime MIM, and the local hotphrase detector stopped TTS before our cloud-side late-listen ignore could help.
 - Current source now speaks the diagnostic as `Cloud version ...` without saying `Jibo`, while keeping the one-shot and late-listen cleanup guards.
-- Backup-in-progress still appears robot-local. Tests 27, 28, and 29 had no matching `Backup_*` HTTP calls. Keep investigating robot-local scheduler/status, startup reconnect state, CPU/load, and log/upload work if backup status itself remains sluggish after surprise suppression.
-- Test 26 remains the broader regression evidence for gallery success, alarm replacement/delete risk, stop/volume live proof, and short-answer STT weakness. Alarm replacement/menu agreement is still the main release risk after the Test 27 cloud-version-tail hardening.
+- Test 30 showed `cloud version` speaking cleanly with no interruption. The backup warning later appeared after opening gallery from the menu: gallery asked the empty-gallery photo question, then stock BE opened `@be/surprises`, selected `@be/surprises-ota`, and spoke the local backup announcement. The captured HTTP traffic still did not show hosted `Backup_*` calls.
+- Test 30 showed the alarm value reply `638` arrived at 6:38:13 AM local. Stock clock parsed that as `6:38 PM`, and our cloud response then added a delayed `@be/clock` relaunch on top of the active local clock value flow, causing the duplicate existing-alarm replacement prompt. Current source now suppresses the extra clock relaunch for local clock follow-up rules.
+- Backup-in-progress still appears robot-local. Tests 27, 28, 29, and 30 had no matching `Backup_*` HTTP calls. Keep investigating robot-local scheduler/status, startup reconnect state, CPU/load, and log/upload work if backup status itself remains sluggish after surprise suppression.
+- Test 26 remains the broader regression evidence for gallery success, alarm replacement/delete risk, stop/volume live proof, and short-answer STT weakness. Alarm replacement/menu agreement is still a live release risk, but Test 30 identified and patched one duplicate-handoff cause.
 
 ## Release Rhythm
 
@@ -113,6 +115,7 @@ The following behavior is present in source and covered by focused tests:
 - alarm parsing covers forms such as `7:30 am`, `830`, `8 30`, `7, 44`, `10-25`, `10:25 pm`, and `10 25 p m`
 - ambiguous alarm times can prefer the next local occurrence when the robot context includes `runtime.location.iso`
 - short clock value follow-up transcripts are accepted under `clock/alarm_set_value` and `clock/timer_set_value` instead of being dropped before parsing
+- local clock follow-up rules return normalized `LISTEN`/`EOS` without adding a second delayed `@be/clock` relaunch after the active stock clock skill has already consumed the reply
 - `CLIENT_NLU intent=set` with only `domain=alarm` stays on the local clock clarification path instead of defaulting to a fabricated time
 - `CLIENT_NLU intent=cancel` on `clock/alarm_timer_query_menu` can reuse the last active clock domain
 - `CLIENT_NLU intent=cancel` on `clock/alarm_set_value` / `clock/timer_set_value` maps to local clock `cancel` instead of re-asking for a value
@@ -163,7 +166,7 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 - Run the current-release live checklist in [regression-test-plan.md](regression-test-plan.md).
 - Confirm the running robot build reports cloud version `1.0.18` using the shorter `Cloud version ...` wording, without stopping itself on a hotphrase, reopening a late `LISTEN`, or producing a follow-up `Cloudford` / generic chat tail.
 - Confirm cloud-version and one generic Nimbus/chat turn include `match.skipSurprises = true` and do not transition into `@be/surprises` / `@be/surprises-ota` after speech completes.
-- Regression test alarm flows again after the `jibo test 26` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice including `delete the alarm`, cancel out of a value prompt, and verify the menu agrees.
+- Regression test alarm flows again after the `jibo test 30` duplicate-clock-handoff fix: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice including `delete the alarm`, cancel out of a value prompt, and verify the menu agrees.
 - Regression test timer flows after the Test 25 stale-timer observation: set a 10-second timer, let it fire, reset by gesture only after recording state, and verify a new timer prompt does not see an already-expired timer as still active.
 - Regression test photo/gallery flows again after the `jibo test 26` fixes: open gallery, answer the stock `shared/yes_no` prompt with a transcript-bearing `yes`, hand into create, take one photo, keep it, and avoid blue-ring, `I heard you`, or `that's` stale turns after gallery cleanup.
 - Live-test radio launch: `open the radio` passed in `jibo test 22`; re-run `play country music` if that exact phrase was not captured.
@@ -171,7 +174,7 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 - Regression test the added stop and volume slices after the Test 26 fixes: `stop that`, `never mind`, `turn it up`, `turn it down`, `set volume to six`, `set volume to 6`, and `show volume controls`.
 - Recheck constrained yes/no prompts for update/backup/share/gallery/alarm replacement without leaking global rules.
 - Recheck that stock OS no longer logs OpenJibo-only websocket events such as synthetic pending/context/ack packets from the current build.
-- Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, CPU/load, log/upload activity, and whether the deployed cloud is involved at all.
+- Recheck backup/update behavior with explicit attention to robot-local `jibo.scheduler.backupStatus`, the local `@be/idle` nighttime OTA helper, CPU/load, log/upload activity, and whether the deployed cloud is involved at all.
 - Treat remaining empty-ASR, `ffmpeg`, or `whisper.cpp` transcript failures as STT work unless the capture proves a separate turn-routing regression.
 
 ## Known Gaps
@@ -185,7 +188,7 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 - Tests 27 and 28 showed backup/surprise behavior without corresponding `Backup_*` HTTP traffic; Test 28 isolated the unsuppressed `@be/surprises` lifecycle handoff after Nimbus
 - deployed-build verification needs to prove that synthetic OpenJibo websocket events are gone from the hosted artifact, not just from source
 - news content is synthetic; `jibo test 23` proved the path but not live provider-backed headlines
-- alarm replacement yes/no, alarm voice delete/menu agreement, and long blue-ring cleanup still need successful live proof after the Test 26 and Test 27 source fixes
+- alarm replacement yes/no, alarm voice delete/menu agreement, empty-gallery voice `yes`, and long blue-ring cleanup still need successful live proof after the Test 30 source fixes
 - weather, calendar, commute, personal report, identity, memory, and proactivity are still mostly discovery or placeholder content paths
 - remaining stop/volume variants still need live stock-OS proof beyond Test 26's `Never mind.` and `Set Volume 2-6.` passes; robot age and command-versus-question personality routing are not implemented yet
 
