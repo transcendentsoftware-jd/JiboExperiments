@@ -37,7 +37,7 @@ A release is not ready until these are true or explicitly deferred in [developme
 
 - focused `.NET` cloud tests pass
 - running robot reports the expected cloud version by voice and `/health`
-- `cloud version` settles without a self-listened `Cloudford` / generic chat tail
+- `cloud version` uses `Cloud version ...` wording and settles without self-hotphrase interruption, a self-listened `Cloudford`, or a generic chat tail
 - no current-release path emits obsolete OpenJibo-only websocket events such as synthetic pending/context/ack packets
 - known working live paths still work: startup, simple chat, radio, basic news, constrained yes/no, alarm, and gallery/create
 - any remaining failure is classified as cloud payload, local robot state, STT/audio quality, environment/routing, or deferred feature gap
@@ -59,7 +59,7 @@ Run these first so obvious environment problems do not pollute feature results:
 1. Start the `.NET` cloud using the live runbook.
 2. Confirm `/health` reports the expected version.
 3. Confirm the robot is not in a local connection-lost state; if logs show `Q4-Server_connection_lost` or a fresh `jibo-server-service` reconnect, wait for it to clear before scoring voice behavior.
-4. Ask `cloud version`; confirm Jibo speaks the same version and does not follow with `Cloudford`, `I heard...`, a local `@be/surprises` handoff, or another generic tail reply.
+4. Ask `cloud version`; confirm Jibo speaks the same version using `Cloud version ...` wording and does not stop itself, follow with `Cloudford`, `I heard...`, a local `@be/surprises` handoff, or another generic tail reply.
 5. Run one simple chat turn.
 6. Run one joke turn.
 7. Confirm websocket capture is being written before continuing.

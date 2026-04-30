@@ -887,6 +887,7 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("cloud_version", decision.IntentName);
         Assert.Equal(OpenJiboCloudBuildInfo.SpokenVersion, decision.ReplyText);
+        Assert.DoesNotContain("Jibo", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

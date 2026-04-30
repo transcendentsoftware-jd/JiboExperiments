@@ -6,5 +6,5 @@ public static class OpenJiboCloudBuildInfo
 
     public static string VersionWords => Version.Replace(".", " dot ");
 
-    public static string SpokenVersion => $"Open Jibo Cloud version {VersionWords}.";
+    public static string SpokenVersion => $"Cloud version {VersionWords}.";
 }

@@ -21,14 +21,16 @@ Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm an
 
 ## Latest Live Evidence
 
-`jibo test 28` narrowed the backup/blue-ring startup path after the Test 27 cloud-version capture.
+`jibo test 29` confirmed the Test 28 backup/surprise fix and exposed a separate cloud-version self-hotphrase problem.
 
 - Before the cloud-version test, the robot's local `jibo-server-service` restarted after a broken pipe, then `ssm` raised `Q4-Server_connection_lost` and local `@be/settings` opened the connection-lost error path. The notification connection recovered about 31 seconds later. Treat early-test confusion as suspect if this local-server recovery appears in the same window.
 - The cloud-version answer itself proved the running build was `1.0.18`, but the previous source treated `cloud_version` as a follow-up conversation. A fresh hotphrase `LISTEN` then captured speech tail as `Cloudford.`, and generic chat replied `thanks. I heard, Cloudford.`
 - Current source now makes `cloud_version` a one-shot diagnostic, uses a longer diagnostic speech-tail ignore window, and ignores no-transcript hotphrase launch `LISTEN` setup packets inside that window. The existing no-`LISTEN` binary guard already ignored same-transID binary tails after finalization, but Test 27 showed it could not stop a brand-new hotphrase listen by itself.
 - Test 28 showed our cloud-version/generic Nimbus `LISTEN` match entering stock BE with `skipSurprises` unset. After Nimbus settled, BE requested local `@be/surprises`; Test 28 inhibited the offer because VAD heard people talking, while Test 27 used the same doorway to select `@be/surprises-ota` and speak the backup-in-progress warning.
 - Current source now emits `match.skipSurprises = true` for hosted turn results, fallback matches, and local skill redirects. Stock BE maps that to `skipSurprisesExternal`, preventing normal cloud replies from falling into end-of-skill surprises such as OTA/backup prompts.
-- Backup-in-progress still appears robot-local. Tests 27 and 28 had no matching `Backup_*` HTTP calls. Keep investigating robot-local scheduler/status, startup reconnect state, CPU/load, and log/upload work if backup status itself remains sluggish after surprise suppression.
+- Test 29 showed the deployed `skipSurprises` payload in the robot logs and did not produce another backup announcement in the focused run. It still interrupted cloud-version speech because the spoken phrase `Open Jibo Cloud version...` included `Jibo`; stock Nimbus runs the response as a runtime MIM, and the local hotphrase detector stopped TTS before our cloud-side late-listen ignore could help.
+- Current source now speaks the diagnostic as `Cloud version ...` without saying `Jibo`, while keeping the one-shot and late-listen cleanup guards.
+- Backup-in-progress still appears robot-local. Tests 27, 28, and 29 had no matching `Backup_*` HTTP calls. Keep investigating robot-local scheduler/status, startup reconnect state, CPU/load, and log/upload work if backup status itself remains sluggish after surprise suppression.
 - Test 26 remains the broader regression evidence for gallery success, alarm replacement/delete risk, stop/volume live proof, and short-answer STT weakness. Alarm replacement/menu agreement is still the main release risk after the Test 27 cloud-version-tail hardening.
 
 ## Release Rhythm
@@ -96,6 +98,7 @@ The following behavior is present in source and covered by focused tests:
 
 - `cloud version` speech and `/health` version reporting share `OpenJiboCloudBuildInfo.Version`
 - `cloud version` is a one-shot diagnostic: it speaks the version without opening a follow-up turn, then shields the speech tail from self-listen artifacts such as the Test 27 `Cloudford.` capture
+- the spoken cloud-version diagnostic avoids saying `Jibo`, because Test 29 showed the prior `Open Jibo Cloud version...` wording could trigger local hotphrase barge-in during Nimbus TTS
 - hosted turn results, fallback matches, and local skill redirects now emit `match.skipSurprises = true` so stock BE does not route settled cloud/local responses into `@be/surprises`
 - apostrophes are no longer escaped to `&apos;` in spoken ESML, while `&`, `<`, `>`, and `"` remain escaped
 - radio voice launch supports `open the radio` and genre launch such as `play country music`, using local `@be/radio` `menu` payloads, `SKILL_REDIRECT`, and silent completion
@@ -158,7 +161,7 @@ Before calling `1.0.18` complete, prove or explicitly defer these:
 
 - Run the focused `.NET` cloud test suite after the last feature slice.
 - Run the current-release live checklist in [regression-test-plan.md](regression-test-plan.md).
-- Confirm the running robot build reports cloud version `1.0.18` without a follow-up `Cloudford` / generic chat tail.
+- Confirm the running robot build reports cloud version `1.0.18` using the shorter `Cloud version ...` wording, without stopping itself on a hotphrase, reopening a late `LISTEN`, or producing a follow-up `Cloudford` / generic chat tail.
 - Confirm cloud-version and one generic Nimbus/chat turn include `match.skipSurprises = true` and do not transition into `@be/surprises` / `@be/surprises-ota` after speech completes.
 - Regression test alarm flows again after the `jibo test 26` fixes: set with explicit time, set with compact/spoken/comma-separated time, clarify missing time, replace an existing alarm, cancel/delete by voice including `delete the alarm`, cancel out of a value prompt, and verify the menu agrees.
 - Regression test timer flows after the Test 25 stale-timer observation: set a 10-second timer, let it fire, reset by gesture only after recording state, and verify a new timer prompt does not see an already-expired timer as still active.

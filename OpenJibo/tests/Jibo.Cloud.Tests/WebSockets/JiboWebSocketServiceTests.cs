@@ -97,6 +97,19 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("cloud_version", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.True(listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skipSurprises").GetBoolean());
 
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        var esml = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+        Assert.Contains("Cloud version", esml, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Jibo", esml, StringComparison.OrdinalIgnoreCase);
+
         var session = _store.FindSessionByToken("hub-cloud-version-token");
         Assert.NotNull(session);
         Assert.Equal("cloud_version", session.LastIntent);

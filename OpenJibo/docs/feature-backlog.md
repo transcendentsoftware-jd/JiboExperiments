@@ -47,6 +47,7 @@ Current release theme:
 - `jibo test 26` live-proved punctuated stop, volume homophone parsing, gallery launch/yes/create/save, and good morning; it still exposed robot-local backup warnings, long blue-ring buffering without a fresh `LISTEN`, alarm replacement drifting into the value/manual screen, and alarm delete phrases/mishears falling to chat
 - `jibo test 27` isolated early confusion: local `jibo-server-service` restarted and raised `Q4-Server_connection_lost` before testing; cloud version then self-listened into `Cloudford.` because the previous diagnostic path stayed follow-up eligible; the backup warning again came from local `@be/surprises-ota` with no `Backup_*` HTTP calls
 - `jibo test 28` isolated the follow-on backup doorway: cloud-version/generic Nimbus matches had `skipSurprises` unset, then stock BE requested `@be/surprises` after Nimbus settled; VAD inhibited the offer in Test 28, while Test 27 selected `@be/surprises-ota` through the same local lifecycle path
+- `jibo test 29` confirmed `skipSurprises = true` was reaching stock BE and no backup announcement repeated in the focused run, but the cloud-version answer still interrupted because the spoken diagnostic included `Jibo` and triggered local hotphrase barge-in during Nimbus TTS
 
 ## Immediate `1.0.18` Queue
 
@@ -283,9 +284,10 @@ Current release theme:
   - `cloud_version` no longer keeps the generic follow-up mic open
   - diagnostic speech receives an eight-second late-audio ignore window
   - no-transcript hotphrase launch `LISTEN` setup packets inside that cleanup window are ignored before they can reopen a stale turn
+  - spoken diagnostic wording is now `Cloud version ...` rather than `Open Jibo Cloud version ...`, avoiding the self-hotphrase phrase found in Test 29
   - focused websocket coverage reproduces the Test 27 `Cloudford.` shape: cloud-version speech, tail `LISTEN`, and binary speech tail
 - Follow-up:
-  - live smoke should confirm `cloud version` speaks `1.0.18`, carries `match.skipSurprises = true`, and settles without a generic `I heard...` reply or a local surprise handoff
+  - live smoke should confirm `cloud version` speaks `1.0.18`, carries `match.skipSurprises = true`, does not stop itself on the word `Jibo`, and settles without a generic `I heard...` reply or a local surprise handoff
 
 ### End-Of-Skill Surprise Suppression
 
@@ -295,6 +297,7 @@ Current release theme:
   - hosted `LISTEN` matches, fallback `LISTEN` matches, and local `SKILL_REDIRECT` matches emit `skipSurprises = true`
   - focused websocket assertions cover generic chat, cloud version, no-transcript fallback, and a local clock redirect
   - Test 28 evidence ties the repeated backup warning to the local `@be/surprises` lifecycle path after Nimbus, with no corresponding hosted `Backup_*` traffic
+  - Test 29 showed the deployed payload reached stock BE and did not repeat the backup announcement in the focused run
 - Follow-up:
   - live regression should confirm normal Nimbus/cloud/local turns no longer open `@be/surprises` or `@be/surprises-ota` after completion
 
