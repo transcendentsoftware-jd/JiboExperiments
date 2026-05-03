@@ -48,7 +48,7 @@ public sealed class JiboInteractionService(
             "time" => BuildClockLaunchDecision("time", "clock", "askForTime", "Showing the time."),
             "date" => BuildClockLaunchDecision("date", "clock", "askForDate", "Showing the date."),
             "day" => BuildClockLaunchDecision("day", "clock", "askForDay", "Showing the day."),
-            "cloud_version" => new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion),
+            "cloud_version" => BuildCloudVersionDecision(),
             "radio" => BuildRadioLaunchDecision(),
             "radio_genre" => BuildRadioGenreLaunchDecision(lowered),
             "stop" => BuildStopDecision(),
@@ -85,6 +85,12 @@ public sealed class JiboInteractionService(
             "news" => BuildNewsDecision(catalog),
             _ => new JiboInteractionDecision("chat", BuildGenericReply(catalog, transcript, lowered))
         };
+    }
+
+    private static JiboInteractionDecision BuildCloudVersionDecision()
+    {
+        return new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion,
+            SkillPayload: new Dictionary<string, object?> { ["esml"] = OpenJiboCloudBuildInfo.EsmlVersion });
     }
 
     private JiboInteractionDecision BuildJokeDecision(JiboExperienceCatalog catalog)
