@@ -50,6 +50,7 @@ Current release theme:
 - `jibo test 29` confirmed `skipSurprises = true` was reaching stock BE and no backup announcement repeated in the focused run, but the cloud-version answer still interrupted because the spoken diagnostic included `Jibo` and triggered local hotphrase barge-in during Nimbus TTS
 - `jibo test 30` confirmed cloud-version now speaks cleanly; it still exposed a local gallery-to-`@be/surprises-ota` backup announcement, missing visible empty-gallery voice listen, and a duplicate alarm clock relaunch after `638` was parsed locally as `6:38 PM`
 - `jibo test 31` showed the remaining alarm/backup wrinkle in full: startup logged a legacy `Backup_20170222.List` request before the first voice turn, `7:11 AM` collapsed into `7:00 PM` / `setting alarm for seven`, and the later clock `No` replied `that's fine` before the robot opened `@be/surprises` and ended in a blue-ring listen loop until reset
+- `jibo test 32` suggests the alarm set path is improving, but the remaining regression surface is now sharper: an alarm can still leave the listen open at the end, the proactive Word of the Day `Yes` branch can miss its yes/no slot and echo back, and delete-alarm retry still falls into a second `set one?` question with a broken follow-up reply
 
 ## Immediate `1.0.18` Queue
 

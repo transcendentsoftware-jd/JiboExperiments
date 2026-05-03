@@ -117,6 +117,7 @@ Test these paths:
 - value-prompt cancel: `set an alarm`, then say `cancel`
 - voice delete: `delete my alarm` or `cancel alarm`
 - voice delete variants from Test 26: `delete the alarm`, `delete alarm`, and, if ASR mishears it, record whether `delete along` maps to local clock delete
+- repeat delete: after clearing an alarm, issue `delete alarm` again and verify the prompt/answer path if the robot asks whether to set one
 - no-input cleanup: allow one value prompt to miss or time out when practical
 - timer sanity: `set a timer for 10 seconds`, let it fire or record the exact remaining state, then verify a second timer request does not report a stale already-running timer
 - STT sanity: if a short alarm time collapses to a shorter transcript such as `seven`, capture that as STT loss; Test 31's `7:11 AM` attempt collapsed to `7:00 PM`
@@ -171,6 +172,24 @@ Capture check:
 - active `shared/yes_no` is not suppressed merely because the current context is `@be/gallery`
 - post-gallery binary audio does not continue buffering unless a fresh `LISTEN` appears
 - when gallery is empty and asks whether to take a picture, verify whether a local `shared/yes_no` or equivalent `LISTEN` appears and whether the blue ring visually opens for voice input
+
+### Word Of The Day
+
+Goal: prove proactive prompts consume short yes/no answers cleanly instead of echoing them back as generic dialog.
+
+- Let the robot proactively launch Word of the Day when it chooses to do so.
+- Answer the proactive prompt with a short `yes` and, if available, a short `no`.
+- If the robot echoes or mocks the answer instead of consuming it, record the exact transcript and the active rule.
+
+Expected:
+
+- proactive Word of the Day uses the constrained yes/no path and consumes short confirmation answers
+- the robot does not stay in a stray listen state after the proactive prompt resolves
+
+Capture check:
+
+- proactive yes/no should present a constrained rule rather than a generic chat rule
+- the answer should finalize cleanly without falling back to an unrelated surprise or mock response
 
 ### STT And Audio Quality
 
@@ -232,6 +251,7 @@ Goal: catch the Test 26 no-`LISTEN` buffering regression, the Test 27 diagnostic
 - Confirm ordinary hosted replies and local redirects carry `match.skipSurprises = true`.
 - Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens; settled turns do not open `@be/surprises` / `@be/surprises-ota`.
 - Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens; settled turns do not open `@be/surprises` / `@be/surprises-ota`; a delete/replacement `No` should not strand the robot in a blue-ring listen loop.
+- Expected: a proactive yes/no prompt such as Word of the Day should consume `yes`/`no` without echoing the answer back or leaving the robot listening.
 - Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`; a late ignored diagnostic `LISTEN` may appear as cleanup telemetry but should not set `SawListen` or buffer audio; normal cloud/local completions should not be followed by a BE surprise router request.
 
 ## Optional Feature Slice Checks
