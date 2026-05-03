@@ -96,6 +96,7 @@ Goal: prove constrained yes/no prompts stay local and do not leak global launch 
 - Do not treat a spoken `take a backup` failure as proof of the backup scheduler path; that command is not currently wired as a hosted-cloud voice feature.
 - If the update menu reports backup-in-progress, record whether HTTP captures include any `Backup_*` targets; current evidence points to robot-local scheduler/status or log/upload load unless those calls appear.
 - If Jibo announces backup-in-progress without update-menu interaction, note the local skill in robot logs; Tests 26 and 27 showed `@be/surprises-ota`, Test 28 showed the preceding `@be/surprises` router opening after Nimbus, and Test 30 showed gallery settling into `@be/surprises` -> `@be/surprises-ota`.
+- Test 31 added a startup `Backup_20170222.List` request before the first voice turn, so if the warning returns, capture that startup backup-status traffic alongside the later surprise handoff.
 - If the warning appears soon after startup or update, check for local `jibo-server-service` restart, notification reconnect, or `Q4-Server_connection_lost` before scoring it as a hosted backup defect.
 - After cloud-version and generic Nimbus/chat turns, verify the outgoing `LISTEN` match includes `skipSurprises = true`.
 - Expected: short `yes`/`no` replies map locally, empty replies no-input locally, and backup/download notifications are not repeatedly re-announced once acknowledged.
@@ -118,6 +119,7 @@ Test these paths:
 - voice delete variants from Test 26: `delete the alarm`, `delete alarm`, and, if ASR mishears it, record whether `delete along` maps to local clock delete
 - no-input cleanup: allow one value prompt to miss or time out when practical
 - timer sanity: `set a timer for 10 seconds`, let it fire or record the exact remaining state, then verify a second timer request does not report a stale already-running timer
+- STT sanity: if a short alarm time collapses to a shorter transcript such as `seven`, capture that as STT loss; Test 31's `7:11 AM` attempt collapsed to `7:00 PM`
 
 Expected:
 
@@ -125,7 +127,7 @@ Expected:
 - replacement prompt answer changes or preserves the alarm consistently with the robot's question
 - `cancel` inside the value prompt closes without scheduling
 - voice delete clears the robot menu state
-- local clock delete/cancel settles without generic chat speech or an open follow-up blue ring
+- local clock delete/cancel settles without generic chat speech, an open follow-up blue ring, or an unexpected `@be/surprises` handoff
 - timer state agrees with what just happened on the robot; a reset gesture should not leave a phantom active timer in the next prompt
 - empty value prompt turns complete locally instead of generic `I heard you` speech
 
@@ -136,6 +138,7 @@ Capture check:
 - `CLIENT_NLU cancel` under `clock/alarm_set_value` or `clock/timer_set_value` maps to local clock `cancel`
 - no-input under `clock/alarm_set_value` or `clock/timer_set_value` returns local `LISTEN`/`EOS` only
 - value replies under `clock/alarm_set_value` or `clock/timer_set_value` also return local `LISTEN`/`EOS` only; a delayed `@be/clock` relaunch after the local clock skill consumes the reply is a regression
+- after a delete/replacement `No`, the robot should not remain in a continuous listen loop or open `@be/surprises` unless the stock OS explicitly takes that route
 
 ### Photo Gallery And Create
 
@@ -228,6 +231,7 @@ Goal: catch the Test 26 no-`LISTEN` buffering regression, the Test 27 diagnostic
 - After `cloud version`, wait five to ten seconds and confirm there is no fresh no-transcript hotphrase launch `LISTEN` that turns speech tail into generic chat.
 - Confirm ordinary hosted replies and local redirects carry `match.skipSurprises = true`.
 - Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens; settled turns do not open `@be/surprises` / `@be/surprises-ota`.
+- Expected: binary audio for an existing transID is ignored until a fresh valid `LISTEN` appears; blank hotphrase turns clear instead of buffering indefinitely; diagnostic speech tails do not reopen launch listens; settled turns do not open `@be/surprises` / `@be/surprises-ota`; a delete/replacement `No` should not strand the robot in a blue-ring listen loop.
 - Capture check: long-running context-only transactions should not accumulate buffered audio chunks or stay `AwaitingTurnCompletion = true`; a late ignored diagnostic `LISTEN` may appear as cleanup telemetry but should not set `SawListen` or buffer audio; normal cloud/local completions should not be followed by a BE surprise router request.
 
 ## Optional Feature Slice Checks

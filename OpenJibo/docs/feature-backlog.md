@@ -49,6 +49,7 @@ Current release theme:
 - `jibo test 28` isolated the follow-on backup doorway: cloud-version/generic Nimbus matches had `skipSurprises` unset, then stock BE requested `@be/surprises` after Nimbus settled; VAD inhibited the offer in Test 28, while Test 27 selected `@be/surprises-ota` through the same local lifecycle path
 - `jibo test 29` confirmed `skipSurprises = true` was reaching stock BE and no backup announcement repeated in the focused run, but the cloud-version answer still interrupted because the spoken diagnostic included `Jibo` and triggered local hotphrase barge-in during Nimbus TTS
 - `jibo test 30` confirmed cloud-version now speaks cleanly; it still exposed a local gallery-to-`@be/surprises-ota` backup announcement, missing visible empty-gallery voice listen, and a duplicate alarm clock relaunch after `638` was parsed locally as `6:38 PM`
+- `jibo test 31` showed the remaining alarm/backup wrinkle in full: startup logged a legacy `Backup_20170222.List` request before the first voice turn, `7:11 AM` collapsed into `7:00 PM` / `setting alarm for seven`, and the later clock `No` replied `that's fine` before the robot opened `@be/surprises` and ended in a blue-ring listen loop until reset
 
 ## Immediate `1.0.18` Queue
 
@@ -118,6 +119,7 @@ Current release theme:
   - `jibo test 23`, `jibo test 25`, and `jibo test 26` showed backup-in-progress sluggishness or warnings while backups were active; explicit backup voice launch remains unwired
   - Test 26 suggests this should be investigated beside robot-local scheduler status and log/upload load rather than only hosted backup APIs
   - `jibo test 30` showed the backup announcement after gallery came from local `@be/surprises` -> `@be/surprises-ota`, not from a hosted `Backup_*` HTTP call; the local `@be/idle` nighttime OTA helper can also initiate backup through `jibo.scheduler.backupRobot`
+  - `jibo test 31` added a startup `Backup_20170222.List` capture before the voice session, which is useful evidence that the legacy backup-status path is active even when the user did not ask for backup
 - Exit criteria:
   - spoken `yes` and `no` work on update, backup, share/offer, and gallery/create prompts
   - empty or missed short replies retry locally instead of relaunching Nimbus or generic chat
@@ -164,6 +166,7 @@ Current release theme:
   - `jibo test 27` showed the no-`LISTEN` guard worked for same-transID binary tails, but a new hotphrase launch `LISTEN` could still capture diagnostic speech tail; current source now blocks that diagnostic-tail shape
   - `jibo test 30` showed cloud-version fixed, but the empty-gallery prompt did not visibly light the blue ring for a voice `yes`; treat the next gallery pass as a proof of local `shared/yes_no` listen ownership, not just cloud payload shape
   - `jibo test 30` showed `638` was processed at 6:38:13 AM and stock clock resolved it to `6:38 PM`; the duplicate replacement prompt matched our extra delayed clock relaunch, now suppressed for local clock follow-up rules
+  - `jibo test 31` showed `7:11 AM` collapsing to `7:00 PM` / `setting alarm for seven`, then a clock `No` producing `that's fine` before the robot opened `@be/surprises`; the later retry sat in a continuous blue-ring/listen loop until reset
   - original clock tests confirm cancel inside the alarm value prompt must close without scheduling, existing-alarm `keep` must preserve KB/scheduler state, and existing-alarm `delete` or `cancel` must clear it
   - original gallery tests confirm empty-gallery `yes` redirects to `@be/create`, empty-gallery `no` exits, media-load failure exits, and delete confirmation only deletes on a positive `yes`
 - Exit criteria:
