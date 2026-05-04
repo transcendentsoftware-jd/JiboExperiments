@@ -207,6 +207,7 @@ Expected:
 
 - no `ffmpeg` failure should become the dominant failure mode for non-Opus buffered audio
 - short replies such as `yes`, `no`, `cancel`, and short alarm times should either map correctly or be classified as STT misses with evidence
+- when chasing a flaky `$YESNO` reply, look for the new turn telemetry categories `binary_audio_received`, `binary_audio_ignored`, `yes_no_turn_received`, `yes_no_turn_resolved`, and `yes_no_no_input`; the useful question is whether the short reply still had `AwaitingTurnCompletion = true`, active listen rules, and buffered audio when it hit the finalizer
 
 ### Stop And Volume
 

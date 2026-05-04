@@ -15,6 +15,20 @@ public sealed class FileTurnTelemetrySink(ILogger<FileTurnTelemetrySink> logger,
 
     private readonly SemaphoreSlim _writeLock = new(1, 1);
 
+    public async Task RecordTurnDiagnosticAsync(string category, IReadOnlyDictionary<string, object?> details, CancellationToken cancellationToken = default)
+    {
+        if (!options.Value.Enabled)
+        {
+            return;
+        }
+
+        await WriteEventAsync(new
+        {
+            Type = category,
+            Details = details
+        }, "Turn telemetry diagnostic", LogLevel.Information, cancellationToken);
+    }
+
     public async Task RecordTranscriptError(Exception ex, string message, CancellationToken cancellationToken = default)
     {
         if (!options.Value.Enabled)
@@ -22,15 +36,20 @@ public sealed class FileTurnTelemetrySink(ILogger<FileTurnTelemetrySink> logger,
             return;
         }
 
-        await WriteErrorAsync(ex, message, cancellationToken);
+        await WriteEventAsync(new
+        {
+            Exception = ex.ToString(),
+            Message = message,
+            Type = "transcript_error"
+        }, "Turn telemetry error", LogLevel.Error, cancellationToken);
     }
-    
-    private async Task WriteErrorAsync(Exception ex, string message, CancellationToken cancellationToken)
+
+    private async Task WriteEventAsync(object payload, string logMessage, LogLevel level, CancellationToken cancellationToken)
     {
         var directory = GetBaseDirectory();
         Directory.CreateDirectory(directory);
         var filePath = Path.Combine(directory, $"{DateTimeOffset.UtcNow:yyyyMMdd}.events.ndjson");
-        var line = JsonSerializer.Serialize(new { Exception = ex.ToString(), Message = message }, JsonOptions) + Environment.NewLine;
+        var line = JsonSerializer.Serialize(payload, JsonOptions) + Environment.NewLine;
 
         await _writeLock.WaitAsync(cancellationToken);
         try
@@ -42,7 +61,7 @@ public sealed class FileTurnTelemetrySink(ILogger<FileTurnTelemetrySink> logger,
             _writeLock.Release();
         }
 
-        logger.LogError("Turn telemetry Message={Message} Exception={Exception}", message, ex);
+        logger.Log(level, "{LogMessage} {Payload}", logMessage, payload);
     }
 
     private string GetBaseDirectory()

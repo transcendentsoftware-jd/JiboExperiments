@@ -85,7 +85,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "yeah",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "create/is_it_a_keeper" }
+                ["listenRules"] = (string[])["create/is_it_a_keeper"]
             }
         });
 
@@ -104,8 +104,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "no",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "surprises-ota/want_to_download_now" },
-                ["listenAsrHints"] = new[] { "$YESNO" }
+                ["listenRules"] = (string[])["surprises-ota/want_to_download_now"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
             }
         });
 
@@ -124,8 +124,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "yes",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "shared/yes_no", "globals/gui_nav" },
-                ["listenAsrHints"] = new[] { "$YESNO" }
+                ["listenRules"] = (string[])["shared/yes_no", "globals/gui_nav"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
             }
         });
 
@@ -144,8 +144,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "yes",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "clock/alarm_timer_change", "globals/gui_nav" },
-                ["listenAsrHints"] = new[] { "$YESNO" }
+                ["listenRules"] = (string[])["clock/alarm_timer_change", "globals/gui_nav"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
             }
         });
 
@@ -164,8 +164,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "no",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "clock/alarm_timer_none_set", "globals/global_commands_launch" },
-                ["listenAsrHints"] = new[] { "$YESNO" }
+                ["listenRules"] = (string[])["clock/alarm_timer_none_set", "globals/global_commands_launch"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
             }
         });
 
@@ -184,7 +184,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "No.",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "settings/download_now_later", "globals/global_commands_launch" }
+                ["listenRules"] = (string[])["settings/download_now_later", "globals/global_commands_launch"]
             }
         });
 
@@ -203,8 +203,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "Yes!",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "surprises-date/offer_date_fact", "globals/global_commands_launch" },
-                ["listenAsrHints"] = new[] { "$YESNO" }
+                ["listenRules"] = (string[])["surprises-date/offer_date_fact", "globals/global_commands_launch"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
             }
         });
 
@@ -607,7 +607,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "twenty five minutes",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "clock/timer_set_value" }
+                ["listenRules"] = (string[])["clock/timer_set_value"]
             }
         });
 
@@ -628,7 +628,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "ten twenty five",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "clock/alarm_set_value" }
+                ["listenRules"] = (string[])["clock/alarm_set_value"]
             }
         });
 
@@ -650,7 +650,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "7, 44",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "clock/alarm_set_value" },
+                ["listenRules"] = (string[])["clock/alarm_set_value"],
                 ["context"] = """{"runtime":{"location":{"iso":"2026-04-26T07:43:00-05:00"}}}"""
             }
         });
@@ -734,7 +734,7 @@ public sealed class JiboInteractionServiceTests
                 {
                     ["domain"] = "alarm"
                 },
-                ["clientRules"] = new[] { "clock/clock_menu" }
+                ["clientRules"] = (string[])["clock/clock_menu"]
             }
         });
 
@@ -756,7 +756,7 @@ public sealed class JiboInteractionServiceTests
             Attributes = new Dictionary<string, object?>
             {
                 ["clientIntent"] = "cancel",
-                ["clientRules"] = new[] { "clock/alarm_timer_query_menu" },
+                ["clientRules"] = (string[])["clock/alarm_timer_query_menu"],
                 ["lastClockDomain"] = "alarm"
             }
         });
@@ -779,7 +779,7 @@ public sealed class JiboInteractionServiceTests
             Attributes = new Dictionary<string, object?>
             {
                 ["clientIntent"] = "cancel",
-                ["clientRules"] = new[] { "clock/alarm_set_value" }
+                ["clientRules"] = (string[])["clock/alarm_set_value"]
             }
         });
 
@@ -902,7 +902,7 @@ public sealed class JiboInteractionServiceTests
             Attributes = new Dictionary<string, object?>
             {
                 ["clientIntent"] = "guess",
-                ["clientRules"] = new[] { "word-of-the-day/puzzle" },
+                ["clientRules"] = (string[])["word-of-the-day/puzzle"],
                 ["clientEntities"] = JsonDocument.Parse("""{"guess":"pastoral"}""").RootElement.Clone()
             }
         });
@@ -922,7 +922,7 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "pastoral",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "word-of-the-day/puzzle" }
+                ["listenRules"] = (string[])["word-of-the-day/puzzle"]
             }
         });
 
@@ -959,8 +959,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "Two.",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "word-of-the-day/puzzle" },
-                ["listenAsrHints"] = new[] { "doodad", "pastoral", "escarpment" }
+                ["listenRules"] = (string[])["word-of-the-day/puzzle"],
+                ["listenAsrHints"] = (string[])["doodad", "pastoral", "escarpment"]
             }
         });
 
@@ -983,8 +983,8 @@ public sealed class JiboInteractionServiceTests
             NormalizedTranscript = "Haglet.",
             Attributes = new Dictionary<string, object?>
             {
-                ["listenRules"] = new[] { "word-of-the-day/puzzle" },
-                ["listenAsrHints"] = new[] { "aglet", "hovel", "wisenheimer" }
+                ["listenRules"] = (string[])["word-of-the-day/puzzle"],
+                ["listenAsrHints"] = (string[])["aglet", "hovel", "wisenheimer"]
             }
         });
 

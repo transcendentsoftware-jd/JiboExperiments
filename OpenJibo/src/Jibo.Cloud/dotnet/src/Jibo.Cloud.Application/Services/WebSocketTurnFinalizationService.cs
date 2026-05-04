@@ -37,8 +37,21 @@ public sealed partial class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken = default)
     {
         var turnState = session.TurnState;
-        if (ShouldIgnoreLateAudio(session) || ShouldIgnoreAudioWithoutListen(turnState))
+        var ignoreLateAudio = ShouldIgnoreLateAudio(session);
+        var ignoreAudioWithoutListen = ShouldIgnoreAudioWithoutListen(turnState);
+        if (ignoreLateAudio || ignoreAudioWithoutListen)
         {
+            await sink.RecordTurnDiagnosticAsync("binary_audio_ignored", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["ignored"] = true,
+                ["ignoreLateAudio"] = ignoreLateAudio,
+                ["ignoreAudioWithoutListen"] = ignoreAudioWithoutListen,
+                ["awaitingTurnCompletion"] = turnState.AwaitingTurnCompletion,
+                ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+                ["sawListen"] = turnState.SawListen,
+                ["sawContext"] = turnState.SawContext
+            }), cancellationToken);
             return [];
         }
 
@@ -53,6 +66,17 @@ public sealed partial class WebSocketTurnFinalizationService(
         turnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow;
         turnState.AwaitingTurnCompletion = true;
         session.Metadata["lastAudioBytes"] = envelope.Binary?.Length ?? 0;
+        await sink.RecordTurnDiagnosticAsync("binary_audio_received", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+        {
+            ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+            ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+            ["awaitingTurnCompletion"] = turnState.AwaitingTurnCompletion,
+            ["sawListen"] = turnState.SawListen,
+            ["sawContext"] = turnState.SawContext,
+            ["listenRules"] = turnState.ListenRules,
+            ["listenAsrHints"] = turnState.ListenAsrHints,
+            ["yesNoRule"] = turnState.ListenRules.FirstOrDefault(IsConstrainedYesNoRule)
+        }), cancellationToken);
 
         if (ShouldAutoFinalize(session))
         {
@@ -328,6 +352,25 @@ public sealed partial class WebSocketTurnFinalizationService(
         CancellationToken cancellationToken)
     {
         var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, messageType);
+        var turnState = session.TurnState;
+        if (IsYesNoTurn(turn) || ReadPrimaryYesNoRule(turn) is not null)
+        {
+            await sink.RecordTurnDiagnosticAsync("yes_no_turn_received", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["messageType"] = messageType,
+                ["listenRules"] = ReadRules(turn, "listenRules").ToArray(),
+                ["clientRules"] = ReadRules(turn, "clientRules").ToArray(),
+                ["listenAsrHints"] = ReadRules(turn, "listenAsrHints").ToArray(),
+                ["yesNoRule"] = ReadPrimaryYesNoRule(turn),
+                ["awaitingTurnCompletion"] = turnState.AwaitingTurnCompletion,
+                ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+                ["sawListen"] = turnState.SawListen,
+                ["sawContext"] = turnState.SawContext,
+                ["followUpOpen"] = session.FollowUpOpen,
+                ["followUpExpiresUtc"] = session.FollowUpExpiresUtc
+            }), cancellationToken);
+        }
         if (ShouldIgnoreBlankAudioHotphraseTurn(turn))
         {
             session.TurnState.AwaitingTurnCompletion = false;
@@ -366,7 +409,6 @@ public sealed partial class WebSocketTurnFinalizationService(
             };
         }
 
-        var turnState = session.TurnState;
         if (ShouldTreatBufferedHotphraseAsGreeting(finalizedTurn, turnState, allowFallbackOnMissingTranscript))
         {
             finalizedTurn = WithSyntheticTranscript(finalizedTurn, "hello");
@@ -393,6 +435,22 @@ public sealed partial class WebSocketTurnFinalizationService(
 
         if (ShouldHandleAsLocalNoInput(finalizedTurn))
         {
+            if (IsYesNoTurn(finalizedTurn))
+            {
+                await sink.RecordTurnDiagnosticAsync("yes_no_no_input", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                {
+                    ["messageType"] = messageType,
+                    ["listenRules"] = ReadRules(finalizedTurn, "listenRules").ToArray(),
+                    ["clientRules"] = ReadRules(finalizedTurn, "clientRules").ToArray(),
+                    ["listenAsrHints"] = ReadRules(finalizedTurn, "listenAsrHints").ToArray(),
+                    ["awaitingTurnCompletion"] = turnState.AwaitingTurnCompletion,
+                    ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                    ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+                    ["sawListen"] = turnState.SawListen,
+                    ["sawContext"] = turnState.SawContext,
+                    ["followUpOpen"] = session.FollowUpOpen
+                }), cancellationToken);
+            }
             turnState.AwaitingTurnCompletion = false;
             session.LastTranscript = string.Empty;
             session.LastIntent = null;
@@ -521,6 +579,24 @@ public sealed partial class WebSocketTurnFinalizationService(
             Text = map.Text,
             DelayMs = map.DelayMs
         }).ToArray();
+
+        if (IsYesNoTurn(finalizedTurn))
+        {
+            await sink.RecordTurnDiagnosticAsync("yes_no_turn_resolved", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["messageType"] = messageType,
+                ["transcript"] = finalizedTurn.NormalizedTranscript ?? finalizedTurn.RawTranscript,
+                ["intent"] = plan.IntentName,
+                ["listenRules"] = ReadRules(finalizedTurn, "listenRules").ToArray(),
+                ["clientRules"] = ReadRules(finalizedTurn, "clientRules").ToArray(),
+                ["listenAsrHints"] = ReadRules(finalizedTurn, "listenAsrHints").ToArray(),
+                ["awaitingTurnCompletion"] = turnState.AwaitingTurnCompletion,
+                ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+                ["followUpOpen"] = session.FollowUpOpen,
+                ["followUpExpiresUtc"] = session.FollowUpExpiresUtc
+            }), cancellationToken);
+        }
 
         ResetBufferedAudio(session);
         turnState.SawListen = false;
@@ -1043,6 +1119,25 @@ public sealed partial class WebSocketTurnFinalizationService(
 
         return ReadRules(turn, "listenRules")
             .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static Dictionary<string, object?> BuildTurnDiagnosticSnapshot(
+        CloudSession session,
+        WebSocketMessageEnvelope envelope,
+        Dictionary<string, object?> details)
+    {
+        details["sessionToken"] = session.Token;
+        details["hostName"] = envelope.HostName;
+        details["path"] = envelope.Path;
+        details["kind"] = envelope.Kind;
+        details["transID"] = session.TurnState.TransId ?? session.LastTransId;
+        details["lastMessageType"] = session.LastMessageType;
+        details["awaitingTurnCompletion"] = session.TurnState.AwaitingTurnCompletion;
+        details["bufferedAudioBytes"] = session.TurnState.BufferedAudioBytes;
+        details["bufferedAudioChunks"] = session.TurnState.BufferedAudioChunkCount;
+        details["sawListen"] = session.TurnState.SawListen;
+        details["sawContext"] = session.TurnState.SawContext;
+        return details;
     }
 
     private static TurnContext WithSyntheticTranscript(TurnContext turn, string transcript)
