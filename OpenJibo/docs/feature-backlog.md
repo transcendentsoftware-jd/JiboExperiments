@@ -610,10 +610,22 @@ Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist
 
 For `1.0.19`:
 
-1. Harden stop or volume if the `1.0.18` live pass exposes stock-OS quirks; otherwise pick robot age/persona or another lightweight slice
-2. Update, backup, and restore proof
-3. STT upgrade and noise screening
-4. Hosted capture/storage plan
-5. Binary-safe media storage
-6. Provider-backed news or weather
-7. Proactivity, memory/history, Lasso, identity, and onboarding as larger discovery-driven tracks
+1. Harden stop or volume if the `1.0.18` live pass exposes stock-OS quirks / harden $YESNO interaction
+2. Make a pizza. How old are you?  When's your birthday?  Do you have a personality?  (This is a fun one that can be implemented quickly and adds a lot of character, so it should be early in the queue to start showing off the new content capabilities.)
+3. Update, backup, and restore proof
+4. STT upgrade and noise screening
+5. Hosted capture/storage plan / indexing for group testing
+6. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
+7. Provider-backed news and weather
+8. Proactivity, dialog parsing/NLP, memory/history, Lasso, identity, and onboarding as larger discovery-driven tracks
+
+For `1.0.20` and beyond:
+
+1. Setup scripts to convert Jibo to Open Jibo by adding a mode for `open-jibo` pointing at our openjibo.com and `open-jibo-ai` pointing at openjibo.ai as a foundation for new cloud features and a clean separation from any remaining stock OS dependencies while preserving his original config
+2. Setup scripts to put Jibo in `open-jibo` mode by default for new users, but allow existing users to keep the stock OS experience if they prefer by injecting a new skill that runs on startup to ask them if they want to convert to Open Jibo and switch modes, with a fallback timeout to switch modes automatically after a few weeks of inactivity (ensure new skill is accessible from menu so it can be opted into later on demand / likewise, if they have opted into Open Jibo, the skill will allow them to revert Jibo back to stock)
+3. Setup openjibo.com and openjibo.ai domains with landing pages, support docs, and account management for future features that require hosted services or user accounts
+4. Test Open Jibo with the new setup scripts and domains, and iterate on any issues that arise during the conversion process
+5. Loop advancement (family and friends) / multiple user recognition / multiple Jibo support so Jibo's can interact and communicate
+6. Advanced Jibo features such as pizza delivery, Uber/Lyft integration, calendar management, smart home control (Home Assistant), etc. can be added after the conversion process is smooth and stable, with a focus on features that leverage the new cloud capabilities and content personalization enabled by Open Jibo
+7. LLM integration for more natural dialog, question answering, and content generation can be explored as a longer-term goal after the core platform is stable and has a growing user base to provide feedback and use cases for LLM-powered features
+8. Tiered Jibo brain/orchestration plan from README.md can be implemented in parallel with the above, starting with the simplest cloud features and gradually adding more complex capabilities as the platform matures and user feedback is collected, always preserving his unique charm and original features.
