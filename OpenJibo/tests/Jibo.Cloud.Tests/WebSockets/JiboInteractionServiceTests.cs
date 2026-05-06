@@ -176,6 +176,21 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_BirthdaySetAttemptWithoutValue_RoutesToBirthdayPrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my birthday is",
+            NormalizedTranscript = "my birthday is"
+        });
+
+        Assert.Equal("memory_set_birthday", decision.IntentName);
+        Assert.Equal("I can remember it if you say, my birthday is March 14.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_PreferenceMemory_SetThenRecallWithinTenant()
     {
         var memoryStore = new InMemoryPersonalMemoryStore();
@@ -210,6 +225,51 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("memory_get_preference", recallDecision.IntentName);
         Assert.Equal("You told me your favorite music is jazz.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceSetAttemptWithoutValue_RoutesToPreferencePrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my favorite music is",
+            NormalizedTranscript = "my favorite music is"
+        });
+
+        Assert.Equal("memory_set_preference", decision.IntentName);
+        Assert.Equal("I can remember it if you say, my favorite music is jazz.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceSetAttemptSportWithoutValue_RoutesToPreferencePrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my favorite sport.",
+            NormalizedTranscript = "my favorite sport."
+        });
+
+        Assert.Equal("memory_set_preference", decision.IntentName);
+        Assert.Equal("I can remember it if you say, my favorite music is jazz.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceRecallAttemptWithoutCategory_RoutesToRecallPrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's my favorite",
+            NormalizedTranscript = "what's my favorite"
+        });
+
+        Assert.Equal("memory_get_preference", decision.IntentName);
+        Assert.Equal("Ask me like this: what is my favorite music?", decision.ReplyText);
     }
 
     [Fact]
@@ -546,6 +606,22 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_CanYouOrderAPizzaWithPunctuation_UsesLegacyOrderPizzaMimPayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "Can you order a pizza?",
+            NormalizedTranscript = "Can you order a pizza?"
+        });
+
+        Assert.Equal("order_pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ClientNluRequestOrderPizza_UsesLegacyOrderPizzaMimPayload()
     {
         var service = CreateService();
@@ -579,7 +655,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("report-skill", decision.SkillName);
         Assert.Equal("requestWeatherPR", decision.SkillPayload!["localIntent"]);
-        Assert.Equal("weather", decision.SkillPayload["cloudSkill"]);
+        Assert.False(decision.SkillPayload!.ContainsKey("cloudSkill"));
     }
 
     [Fact]
@@ -703,6 +779,25 @@ public sealed class JiboInteractionServiceTests
         {
             RawTranscript = "what's your birthday",
             NormalizedTranscript = "what's your birthday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "askForDate"
+            }
+        });
+
+        Assert.Equal("robot_birthday", decision.IntentName);
+        Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluAskForDate_WithPrefixBirthdayTranscript_PrefersRobotBirthdayIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "so what's your birthday",
+            NormalizedTranscript = "so what's your birthday",
             Attributes = new Dictionary<string, object?>
             {
                 ["clientIntent"] = "askForDate"

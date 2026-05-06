@@ -385,8 +385,7 @@ public sealed class JiboInteractionService(
         var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
             ["skillId"] = "report-skill",
-            ["localIntent"] = "requestWeatherPR",
-            ["cloudSkill"] = "weather"
+            ["localIntent"] = "requestWeatherPR"
         };
         var dateEntity = TryResolveWeatherDateEntity(transcript);
         if (dateEntity is not null)
@@ -747,12 +746,12 @@ public sealed class JiboInteractionService(
             return "memory_get_name";
         }
 
-        if (IsUserBirthdaySetStatement(loweredTranscript))
+        if (IsUserBirthdaySetStatement(loweredTranscript) || IsUserBirthdaySetAttempt(loweredTranscript))
         {
             return "memory_set_birthday";
         }
 
-        if (IsUserBirthdayRecallQuestion(loweredTranscript))
+        if (IsUserBirthdayRecallQuestion(loweredTranscript) || IsUserBirthdayRecallAttempt(loweredTranscript))
         {
             return "memory_get_birthday";
         }
@@ -887,12 +886,12 @@ public sealed class JiboInteractionService(
             return "cloud_version";
         }
 
-        if (IsPreferenceSetStatement(loweredTranscript))
+        if (IsPreferenceSetStatement(loweredTranscript) || IsPreferenceSetAttempt(loweredTranscript))
         {
             return "memory_set_preference";
         }
 
-        if (IsPreferenceRecallQuestion(loweredTranscript))
+        if (IsPreferenceRecallQuestion(loweredTranscript) || IsPreferenceRecallAttempt(loweredTranscript))
         {
             return "memory_get_preference";
         }
@@ -1081,20 +1080,6 @@ public sealed class JiboInteractionService(
 
         if (MatchesAny(
                 loweredTranscript,
-                "can you cook us a pizza",
-                "flip a pizza",
-                "make a pizza",
-                "make pizza",
-                "show pizza",
-                "can you make pizza",
-                "let's make pizza",
-                "lets make pizza"))
-        {
-            return "pizza";
-        }
-
-        if (MatchesAny(
-                loweredTranscript,
                 "can you order pizza",
                 "can you order a pizza",
                 "could you order a pizza",
@@ -1102,9 +1087,29 @@ public sealed class JiboInteractionService(
                 "order a pizza",
                 "order us a pizza",
                 "order me a pizza",
-                "please order pizza"))
+                "please order pizza") ||
+            (loweredTranscript.Contains("order", StringComparison.Ordinal) &&
+             loweredTranscript.Contains("pizza", StringComparison.Ordinal)))
         {
             return "order_pizza";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "can you cook us a pizza",
+                "flip a pizza",
+                "make a pizza",
+                "make pizza",
+                "show pizza",
+                "can you make pizza",
+                "let's make pizza",
+                "lets make pizza") ||
+            (loweredTranscript.Contains("pizza", StringComparison.Ordinal) &&
+             (loweredTranscript.Contains("make", StringComparison.Ordinal) ||
+              loweredTranscript.Contains("cook", StringComparison.Ordinal) ||
+              loweredTranscript.Contains("flip", StringComparison.Ordinal))))
+        {
+            return "pizza";
         }
 
         if (MatchesAny(loweredTranscript, "personal report", "my report", "daily report", "my update"))
@@ -1822,15 +1827,22 @@ public sealed class JiboInteractionService(
 
     private static bool IsRobotBirthdayQuestion(string loweredTranscript)
     {
-        return MatchesAny(
-            loweredTranscript,
-            "when is your birthday",
-            "when's your birthday",
-            "what's your birthday",
-            "what s your birthday",
-            "what is your birthday",
-            "when were you born",
-            "what day is your birthday");
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        if (MatchesAny(
+                normalized,
+                "when is your birthday",
+                "when s your birthday",
+                "what s your birthday",
+                "what is your birthday",
+                "when were you born",
+                "what day is your birthday"))
+        {
+            return true;
+        }
+
+        return (normalized.Contains("your birthday", StringComparison.Ordinal) ||
+                normalized.Contains("your birth date", StringComparison.Ordinal))
+               && !normalized.Contains("my birthday", StringComparison.Ordinal);
     }
 
     private static bool IsNameSetStatement(string loweredTranscript)
@@ -1889,6 +1901,22 @@ public sealed class JiboInteractionService(
         return TryExtractBirthdayFact(loweredTranscript) is not null;
     }
 
+    private static bool IsUserBirthdaySetAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return normalized.Contains("my birthday is", StringComparison.Ordinal);
+    }
+
+    private static bool IsUserBirthdayRecallAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return normalized.Contains("my birthday", StringComparison.Ordinal) &&
+               (normalized.StartsWith("when", StringComparison.Ordinal) ||
+                normalized.StartsWith("what", StringComparison.Ordinal) ||
+                normalized.StartsWith("tell me", StringComparison.Ordinal) ||
+                normalized.StartsWith("do you remember", StringComparison.Ordinal));
+    }
+
     private static string? TryExtractBirthdayFact(string transcript)
     {
         var normalized = NormalizeCommandPhrase(transcript);
@@ -1911,6 +1939,30 @@ public sealed class JiboInteractionService(
     private static bool IsPreferenceSetStatement(string loweredTranscript)
     {
         return TryExtractPreferenceSet(loweredTranscript) is not null;
+    }
+
+    private static bool IsPreferenceSetAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        if (IsPreferenceRecallAttempt(normalized))
+        {
+            return false;
+        }
+
+        return normalized.Contains("my favorite", StringComparison.Ordinal) ||
+               normalized.Contains("my favourite", StringComparison.Ordinal) ||
+               PreferenceReverseMarkers.Any(marker => normalized.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static bool IsPreferenceRecallAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return normalized.StartsWith("what is my favorite", StringComparison.Ordinal) ||
+               normalized.StartsWith("what s my favorite", StringComparison.Ordinal) ||
+               normalized.StartsWith("what is my favourite", StringComparison.Ordinal) ||
+               normalized.StartsWith("what s my favourite", StringComparison.Ordinal) ||
+               normalized.StartsWith("do you remember my favorite", StringComparison.Ordinal) ||
+               normalized.StartsWith("do you remember my favourite", StringComparison.Ordinal);
     }
 
     private static string? TryExtractPreferenceLookupCategory(string transcript)
@@ -2830,6 +2882,8 @@ public sealed class JiboInteractionService(
         ("country music", "Country"),
         ("country radio", "Country"),
         ("country", "Country"),
+        ("football", "Sports"),
+        ("sports", "Sports"),
         ("classic rock", "ClassicRock"),
         ("soft rock", "SoftRock"),
         ("hip hop", "HipHop"),

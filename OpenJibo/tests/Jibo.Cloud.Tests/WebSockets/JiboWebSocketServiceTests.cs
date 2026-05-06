@@ -1727,7 +1727,7 @@ public sealed class JiboWebSocketServiceTests
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("requestWeatherPR", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         Assert.Equal("report-skill", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
-        Assert.Equal("weather", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").GetString());
+        Assert.Equal(JsonValueKind.Null, listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").ValueKind);
 
         using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
         Assert.Equal("report-skill", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
