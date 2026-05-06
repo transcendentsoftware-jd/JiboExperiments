@@ -12,9 +12,12 @@ public sealed partial class WebSocketTurnFinalizationService(
     ITurnTelemetrySink sink
 )
 {
-    private const int AutoFinalizeMinBufferedAudioBytes = 12000;
-    private const int AutoFinalizeMinBufferedAudioChunks = 4;
-    private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1400);
+    private const int AutoFinalizeMinBufferedAudioBytes = 15000;
+    private const int AutoFinalizeMinBufferedAudioChunks = 5;
+    private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(1800);
+    private static readonly TimeSpan AutoFinalizeMissingTranscriptFallbackAge = TimeSpan.FromMilliseconds(4200);
+    private static readonly TimeSpan AutoFinalizeContinuationDeferralMaxAge = TimeSpan.FromMilliseconds(3600);
+    private const int AutoFinalizeContinuationDeferralMaxAttempts = 2;
 
     public static void ObserveIncomingMessage(CloudSession session, string? text)
     {
@@ -491,8 +494,37 @@ public sealed partial class WebSocketTurnFinalizationService(
                 turnState.FinalizeAttemptCount += 1;
             }
 
+            var turnAge = turnState.FirstAudioReceivedUtc.HasValue
+                ? DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value
+                : TimeSpan.Zero;
+
             switch (allowFallbackOnMissingTranscript)
             {
+                case true when
+                    turnState.FinalizeAttemptCount >= 2 &&
+                    turnAge >= AutoFinalizeMissingTranscriptFallbackAge:
+                {
+                    turnState.AwaitingTurnCompletion = false;
+                    session.LastTranscript = string.Empty;
+                    session.LastIntent = "heyJibo";
+                    session.LastListenType = "fallback";
+                    await sink.RecordTurnDiagnosticAsync("auto_finalize_forced_fallback", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                    {
+                        ["messageType"] = messageType,
+                        ["finalizeAttemptCount"] = turnState.FinalizeAttemptCount,
+                        ["turnAgeMs"] = (int)turnAge.TotalMilliseconds,
+                        ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                        ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount,
+                        ["lastSttError"] = turnState.LastSttError
+                    }), cancellationToken);
+                    var fallbackReplies = ResponsePlanToSocketMessagesMapper.MapFallback(session, turnState.TransId ?? session.LastTransId ?? string.Empty, turnState.ListenRules)
+                        .Select(map => new WebSocketReply { Text = map.Text, DelayMs = map.DelayMs })
+                        .ToArray();
+                    ResetBufferedAudio(session);
+                    turnState.SawListen = false;
+                    turnState.SawContext = false;
+                    return fallbackReplies;
+                }
                 case true when
                     turnState.BufferedAudioBytes >= AutoFinalizeMinBufferedAudioBytes &&
                     IsYesNoTurn(finalizedTurn):
@@ -523,6 +555,26 @@ public sealed partial class WebSocketTurnFinalizationService(
                 default:
                     return [];
             }
+        }
+
+        if (ShouldDeferForLikelyContinuation(finalizedTurn, turnState, messageType, allowFallbackOnMissingTranscript, out var deferralReason))
+        {
+            turnState.AwaitingTurnCompletion = true;
+            turnState.FinalizeAttemptCount += 1;
+            var turnAge = turnState.FirstAudioReceivedUtc.HasValue
+                ? DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value
+                : TimeSpan.Zero;
+            await sink.RecordTurnDiagnosticAsync("auto_finalize_deferred_for_continuation", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["messageType"] = messageType,
+                ["transcript"] = finalizedTurn.NormalizedTranscript ?? finalizedTurn.RawTranscript,
+                ["reason"] = deferralReason,
+                ["finalizeAttemptCount"] = turnState.FinalizeAttemptCount,
+                ["turnAgeMs"] = (int)turnAge.TotalMilliseconds,
+                ["bufferedAudioBytes"] = turnState.BufferedAudioBytes,
+                ["bufferedAudioChunks"] = turnState.BufferedAudioChunkCount
+            }), cancellationToken);
+            return [];
         }
 
         var plan = await conversationBroker.HandleTurnAsync(finalizedTurn, cancellationToken);
@@ -1140,6 +1192,66 @@ public sealed partial class WebSocketTurnFinalizationService(
 
         return ReadRules(turn, "listenRules")
             .Any(static rule => string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ShouldDeferForLikelyContinuation(
+        TurnContext turn,
+        WebSocketTurnState turnState,
+        string messageType,
+        bool allowFallbackOnMissingTranscript,
+        out string reason)
+    {
+        reason = string.Empty;
+        if (!allowFallbackOnMissingTranscript ||
+            !string.Equals(messageType, "AUTO_FINALIZE", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!turnState.FirstAudioReceivedUtc.HasValue ||
+            DateTimeOffset.UtcNow - turnState.FirstAudioReceivedUtc.Value >= AutoFinalizeContinuationDeferralMaxAge ||
+            turnState.FinalizeAttemptCount >= AutoFinalizeContinuationDeferralMaxAttempts)
+        {
+            return false;
+        }
+
+        var normalized = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        if (normalized is "my birthday" or "my birthday is")
+        {
+            reason = "birthday_set_incomplete";
+            return true;
+        }
+
+        if (normalized.StartsWith("my favorite ", StringComparison.Ordinal) ||
+            normalized.StartsWith("my favourite ", StringComparison.Ordinal))
+        {
+            if (normalized.EndsWith(" is", StringComparison.Ordinal) ||
+                normalized.EndsWith(" are", StringComparison.Ordinal) ||
+                !normalized.Contains(" is ", StringComparison.Ordinal))
+            {
+                reason = "preference_set_incomplete";
+                return true;
+            }
+        }
+
+        if (normalized.StartsWith("what s my favorite", StringComparison.Ordinal) ||
+            normalized.StartsWith("what is my favorite", StringComparison.Ordinal) ||
+            normalized.StartsWith("what s my favourite", StringComparison.Ordinal) ||
+            normalized.StartsWith("what is my favourite", StringComparison.Ordinal))
+        {
+            if (normalized is "what s my favorite" or "what is my favorite" or "what s my favourite" or "what is my favourite")
+            {
+                reason = "preference_recall_incomplete";
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static Dictionary<string, object?> BuildTurnDiagnosticSnapshot(

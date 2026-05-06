@@ -642,7 +642,7 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_WeatherQuery_LaunchesReportSkillWithPegasusIntent()
+    public async Task BuildDecisionAsync_WeatherQuery_WithoutProvider_UsesSpokenFallback()
     {
         var service = CreateService();
 
@@ -653,13 +653,13 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("report-skill", decision.SkillName);
-        Assert.Equal("requestWeatherPR", decision.SkillPayload!["localIntent"]);
-        Assert.False(decision.SkillPayload!.ContainsKey("cloudSkill"));
+        Assert.Null(decision.SkillName);
+        Assert.Null(decision.SkillPayload);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_WeatherTomorrowQuery_SetsTomorrowEntity()
+    public async Task BuildDecisionAsync_WeatherTomorrowQuery_WithoutProvider_StillReturnsFallback()
     {
         var service = CreateService();
 
@@ -670,11 +670,11 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("tomorrow", decision.SkillPayload!["date"]);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_WeatherConditionQuery_SetsWeatherConditionEntity()
+    public async Task BuildDecisionAsync_WeatherConditionQuery_WithoutProvider_StillReturnsFallback()
     {
         var service = CreateService();
 
@@ -685,12 +685,11 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("rain", decision.SkillPayload!["weatherCondition"]);
-        Assert.Equal("tomorrow", decision.SkillPayload["date"]);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_ClientNluRequestWeatherPR_LaunchesReportSkill()
+    public async Task BuildDecisionAsync_ClientNluRequestWeatherPR_WithoutProvider_StillReturnsFallback()
     {
         var service = CreateService();
 
@@ -705,8 +704,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("report-skill", decision.SkillName);
-        Assert.Equal("requestWeatherPR", decision.SkillPayload!["localIntent"]);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
     }
 
     [Fact]
@@ -725,10 +723,11 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
+        Assert.Null(decision.SkillName);
+        Assert.Null(decision.SkillPayload);
         Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
-        Assert.Equal("openweather", decision.SkillPayload!["provider"]);
-        Assert.Equal(61, decision.SkillPayload["temperature"]);
-        Assert.Equal("rain", decision.SkillPayload["weatherCondition"]);
+        Assert.NotNull(provider.LastRequest);
+        Assert.False(provider.LastRequest!.IsTomorrow);
     }
 
     [Fact]

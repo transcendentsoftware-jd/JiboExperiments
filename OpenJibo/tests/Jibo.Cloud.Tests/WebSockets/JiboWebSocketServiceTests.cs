@@ -287,6 +287,75 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task BufferedAudio_WithIncompletePreferenceHint_DefersThenFinalizesWhenContinuationArrives()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-continuation-token",
+            Text = """{"type":"LISTEN","transID":"trans-preference-continuation","data":{"rules":["launch"]}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-continuation-token",
+            Text = """{"type":"CONTEXT","transID":"trans-preference-continuation","data":{"audioTranscriptHint":"my favorite sport"}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var chunkReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-preference-continuation-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(chunkReplies);
+        }
+
+        var session = _store.FindSessionByToken("hub-preference-continuation-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+
+        var deferredReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-continuation-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Empty(deferredReplies);
+
+        var finalizedReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-continuation-token",
+            Text = """{"type":"CONTEXT","transID":"trans-preference-continuation","data":{"audioTranscriptHint":"my favorite sport is football"}}"""
+        });
+
+        Assert.Equal(3, finalizedReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(finalizedReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(finalizedReplies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(finalizedReplies[2]));
+
+        using var listenPayload = JsonDocument.Parse(finalizedReplies[0].Text!);
+        Assert.Equal("memory_set_preference", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("my favorite sport is football", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+    }
+
+    [Fact]
     public async Task MultiChunkAudio_AccumulatesBufferedStateAcrossMessages()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -1697,7 +1766,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task ClientAsr_HowIsTheWeather_EmitsReportSkillRedirectAndCompletion()
+    public async Task ClientAsr_HowIsTheWeather_EmitsSpokenWeatherFallbackWithoutRedirect()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -1717,26 +1786,17 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-weather","data":{"text":"how is the weather"}}"""
         });
 
-        Assert.Equal(5, replies.Count);
+        Assert.Equal(3, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
-        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[4]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
-        Assert.Equal("requestWeatherPR", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
-        Assert.Equal("report-skill", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("weather", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.False(listenPayload.RootElement.GetProperty("data").GetProperty("nlu").TryGetProperty("skill", out _));
         Assert.Equal(JsonValueKind.Null, listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").ValueKind);
 
-        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
-        Assert.Equal("report-skill", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
-        Assert.Equal("requestWeatherPR", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
-
-        using var completionPayload = JsonDocument.Parse(replies[3].Text!);
-        Assert.Equal("report-skill", completionPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
-
-        using var speakPayload = JsonDocument.Parse(replies[4].Text!);
+        using var speakPayload = JsonDocument.Parse(replies[2].Text!);
         var esml = speakPayload.RootElement
             .GetProperty("data")
             .GetProperty("action")
@@ -1746,11 +1806,11 @@ public sealed class JiboWebSocketServiceTests
             .GetProperty("play")
             .GetProperty("esml")
             .GetString();
-        Assert.Contains("Checking your weather report", esml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("weather service is connected", esml, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ClientAsr_WillItRainTomorrow_EmitsReportSkillWeatherEntities()
+    public async Task ClientAsr_WillItRainTomorrow_EmitsSpokenWeatherFallbackWithoutRedirect()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -1770,16 +1830,25 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-weather-entities","data":{"text":"will it rain tomorrow"}}"""
         });
 
-        Assert.Equal(5, replies.Count);
-        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
-        var entities = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities");
-        Assert.Equal("tomorrow", entities.GetProperty("date").GetString());
-        Assert.Equal("rain", entities.GetProperty("Weather").GetString());
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
 
-        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
-        var redirectEntities = redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities");
-        Assert.Equal("tomorrow", redirectEntities.GetProperty("date").GetString());
-        Assert.Equal("rain", redirectEntities.GetProperty("Weather").GetString());
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("weather", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        using var speakPayload = JsonDocument.Parse(replies[2].Text!);
+        var esml = speakPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+        Assert.Contains("weather service is connected", esml, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

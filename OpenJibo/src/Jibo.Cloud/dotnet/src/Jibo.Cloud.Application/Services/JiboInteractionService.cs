@@ -382,83 +382,44 @@ public sealed class JiboInteractionService(
         string transcript,
         CancellationToken cancellationToken)
     {
-        var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["skillId"] = "report-skill",
-            ["localIntent"] = "requestWeatherPR"
-        };
         var dateEntity = TryResolveWeatherDateEntity(transcript);
-        if (dateEntity is not null)
-        {
-            payload["date"] = dateEntity;
-        }
-
-        var weatherConditionEntity = TryResolveWeatherConditionEntity(transcript);
-        if (weatherConditionEntity is not null)
-        {
-            payload["weatherCondition"] = weatherConditionEntity;
-        }
-
-        var replyText = "Checking your weather report.";
         if (weatherReportProvider is null)
         {
             return new JiboInteractionDecision(
                 "weather",
-                replyText,
-                "report-skill",
-                payload);
+                "I can check weather once my weather service is connected.");
         }
 
         var locationQuery = TryResolveWeatherLocationQuery(transcript);
-        if (!string.IsNullOrWhiteSpace(locationQuery))
-        {
-            payload["locationQuery"] = locationQuery;
-        }
-
         var weatherCoordinates = TryResolveWeatherCoordinates(turn);
-        if (weatherCoordinates is not null)
+        var useCelsius = ShouldUseCelsius(turn, transcript);
+        WeatherReportSnapshot? snapshot;
+        try
         {
-            payload["latitude"] = weatherCoordinates.Value.Latitude;
-            payload["longitude"] = weatherCoordinates.Value.Longitude;
+            snapshot = await weatherReportProvider.GetReportAsync(
+                new WeatherReportRequest(
+                    locationQuery,
+                    weatherCoordinates?.Latitude,
+                    weatherCoordinates?.Longitude,
+                    string.Equals(dateEntity, "tomorrow", StringComparison.OrdinalIgnoreCase),
+                    useCelsius),
+                cancellationToken);
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            snapshot = null;
         }
 
-        var useCelsius = ShouldUseCelsius(turn, transcript);
-        var snapshot = await weatherReportProvider.GetReportAsync(
-            new WeatherReportRequest(
-                locationQuery,
-                weatherCoordinates?.Latitude,
-                weatherCoordinates?.Longitude,
-                string.Equals(dateEntity, "tomorrow", StringComparison.OrdinalIgnoreCase),
-                useCelsius),
-            cancellationToken);
-
-        if (snapshot is not null)
+        if (snapshot is null)
         {
-            payload["provider"] = "openweather";
-            payload["temperature"] = snapshot.Temperature;
-            if (snapshot.HighTemperature is not null)
-            {
-                payload["highTemperature"] = snapshot.HighTemperature.Value;
-            }
-
-            if (snapshot.LowTemperature is not null)
-            {
-                payload["lowTemperature"] = snapshot.LowTemperature.Value;
-            }
-
-            if (!string.IsNullOrWhiteSpace(snapshot.Condition))
-            {
-                payload["weatherCondition"] = snapshot.Condition;
-            }
-
-            replyText = BuildWeatherSpokenReply(snapshot, dateEntity);
+            return new JiboInteractionDecision(
+                "weather",
+                "I couldn't fetch the weather right now. Please try again.");
         }
 
         return new JiboInteractionDecision(
             "weather",
-            replyText,
-            "report-skill",
-            payload);
+            BuildWeatherSpokenReply(snapshot, dateEntity));
     }
 
     private static string BuildWeatherSpokenReply(

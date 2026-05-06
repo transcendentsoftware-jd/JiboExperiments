@@ -81,7 +81,7 @@ public sealed class FileTurnTelemetrySinkTests
                 AwaitingTurnCompletion = true,
                 SawListen = true,
                 SawContext = true,
-                BufferedAudioBytes = 12000,
+                BufferedAudioBytes = 15000,
                 BufferedAudioChunkCount = 5,
                 FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2)
             }
@@ -94,7 +94,7 @@ public sealed class FileTurnTelemetrySinkTests
 
         Assert.Empty(replies);
         Assert.True(session.TurnState.AwaitingTurnCompletion);
-        Assert.Equal(12000, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(15000, session.TurnState.BufferedAudioBytes);
         Assert.Equal("ffmpeg failed", session.TurnState.LastSttError);
 
         sink.Verify(
