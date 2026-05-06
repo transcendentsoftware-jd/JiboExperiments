@@ -600,6 +600,20 @@ Current release theme:
   - expand command-vs-question splits to more expressive intents (pizza, surprise, photo prompts)
   - add Pegasus phrase and MIM-backed variants for richer style coverage
 
+### 23. First Memory-Backed Personal Facts
+
+- Status: `implemented`
+- Tags: `storage`, `content`
+- Result:
+  - tenant-scoped memory store abstraction is in place for personal facts
+  - birthday set/recall works (`my birthday is ...` / `when is my birthday`)
+  - preference set/recall works (`my favorite X is Y` / `what is my favorite X`)
+  - account/loop/device scoped lookup prevents cross-tenant leakage
+- Follow-up:
+  - extend phrase parsing beyond first rule-based patterns
+  - add durable persistence path for personal facts
+  - broaden fact categories (names, important dates, household preferences)
+
 ## Suggested Order
 
 Before closing `1.0.18`:
@@ -615,7 +629,7 @@ Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist
 For `1.0.19`:
 
 1. Command-vs-question personality split (`dance` command vs `do you like to dance` question style; expand this pattern)
-2. First memory-backed personal facts with tenant-scoped storage (birthday/preferences foundation)
+2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation)
 3. Proactivity selector baseline with source-backed first offers
 4. Dialog parsing expansion and ambiguity guardrails
 5. Holidays and seasonal personality behavior built on the new memory/proactivity foundation

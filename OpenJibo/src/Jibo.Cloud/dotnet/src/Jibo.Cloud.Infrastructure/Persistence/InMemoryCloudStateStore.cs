@@ -102,7 +102,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             Kind = "hub",
             AccountId = _account.AccountId,
             Token = token,
-            DeviceId = _robot.DeviceId
+            DeviceId = _robot.DeviceId,
+            Metadata = BuildSessionMetadata(_account.AccountId, _robot.DeviceId, ResolveDefaultLoopId())
         };
 
         return token;
@@ -116,7 +117,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             Kind = "robot",
             AccountId = _account.AccountId,
             Token = token,
-            DeviceId = deviceId
+            DeviceId = deviceId,
+            Metadata = BuildSessionMetadata(_account.AccountId, deviceId, ResolveDefaultLoopId())
         };
 
         return token;
@@ -124,14 +126,17 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
 
     public CloudSession OpenSession(string kind, string? deviceId, string? token, string? hostName, string? path)
     {
+        var resolvedDeviceId = deviceId ?? _robot.DeviceId;
+        var resolvedLoopId = ResolveDefaultLoopId();
         var session = new CloudSession
         {
             Kind = kind,
             AccountId = _account.AccountId,
-            DeviceId = deviceId ?? _robot.DeviceId,
+            DeviceId = resolvedDeviceId,
             Token = token,
             HostName = hostName,
-            Path = path
+            Path = path,
+            Metadata = BuildSessionMetadata(_account.AccountId, resolvedDeviceId, resolvedLoopId)
         };
 
         if (!string.IsNullOrWhiteSpace(token))
@@ -423,5 +428,22 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         public UpdateManifest[]? Updates { get; init; }
         public MediaRecord[]? Media { get; init; }
         public BackupRecord[]? Backups { get; init; }
+    }
+
+    private string ResolveDefaultLoopId()
+    {
+        return _loops.FirstOrDefault(loop => string.Equals(loop.OwnerAccountId, _account.AccountId, StringComparison.OrdinalIgnoreCase))?.LoopId
+               ?? _loops.FirstOrDefault()?.LoopId
+               ?? "openjibo-default-loop";
+    }
+
+    private static IDictionary<string, object?> BuildSessionMetadata(string accountId, string? deviceId, string loopId)
+    {
+        return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["accountId"] = accountId,
+            ["loopId"] = loopId,
+            ["deviceId"] = deviceId
+        };
     }
 }

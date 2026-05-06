@@ -57,10 +57,21 @@ The first delivered slice in this release is persona expansion:
 
 This slice is intentionally small and user-visible. It creates immediate personality gains while we keep deeper platform work in parallel.
 
+## Second Implemented Slice In `1.0.19`
+
+The second delivered slice is first tenant-scoped personal memory:
+
+- store birthday from phrases like `my birthday is April 12`
+- recall birthday from phrases like `when is my birthday`
+- store preferences from phrases like `my favorite music is jazz`
+- recall preferences from phrases like `what is my favorite music`
+
+Memory keys are scoped by account/loop/device tenant context so one tenant does not leak into another.
+
 ## Next Slices
 
 1. Command-vs-question personality split (start with dance/twerk-style prompts, keep commands action-oriented and questions conversational)
-2. First memory-backed personal facts (tenant-scoped birthday/preferences storage contracts + initial implementation)
+2. Expand memory-backed personal facts (tenant-scoped birthday/preferences coverage, persistence depth, and parsing breadth)
 3. Proactivity selector baseline (source-backed first proactive offers with safe throttling and stock-compatible payloads)
 4. Dialog parsing expansion (more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
 5. Holidays and seasonal personality slice (time-scoped content backed by the new memory/proactivity path)

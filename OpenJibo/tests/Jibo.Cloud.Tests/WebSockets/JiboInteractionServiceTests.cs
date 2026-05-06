@@ -1,5 +1,7 @@
+using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Infrastructure.Content;
+using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Runtime.Abstractions;
 using System.Text.Json;
 
@@ -134,6 +136,114 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("robot_personality", decision.IntentName);
         Assert.Equal("I do. I am curious, playful, and always up for a new experiment.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_BirthdayMemory_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my birthday is April 12",
+            NormalizedTranscript = "my birthday is April 12",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_birthday", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your birthday is april 12.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "when is my birthday",
+            NormalizedTranscript = "when is my birthday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_birthday", recallDecision.IntentName);
+        Assert.Equal("You told me your birthday is april 12.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceMemory_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my favorite music is jazz",
+            NormalizedTranscript = "my favorite music is jazz",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_preference", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your favorite music is jazz.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what is my favorite music",
+            NormalizedTranscript = "what is my favorite music",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_preference", recallDecision.IntentName);
+        Assert.Equal("You told me your favorite music is jazz.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalMemory_IsTenantScoped()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my birthday is April 12",
+            NormalizedTranscript = "my birthday is April 12",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        var otherTenantRecall = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what is my birthday",
+            NormalizedTranscript = "what is my birthday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-b",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-b"
+        });
+
+        Assert.Equal("memory_get_birthday", otherTenantRecall.IntentName);
+        Assert.Equal("I do not know your birthday yet. You can say, my birthday is March 14.", otherTenantRecall.ReplyText);
     }
 
     [Fact]
@@ -1185,11 +1295,12 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("aglet", decision.SkillPayload!["guess"]);
     }
 
-    private static JiboInteractionService CreateService()
+    private static JiboInteractionService CreateService(IPersonalMemoryStore? personalMemoryStore = null)
     {
         return new JiboInteractionService(
             new JiboExperienceContentCache(new InMemoryJiboExperienceContentRepository()),
-            new FirstItemRandomizer());
+            new FirstItemRandomizer(),
+            personalMemoryStore ?? new InMemoryPersonalMemoryStore());
     }
 
     private sealed class FirstItemRandomizer : IJiboRandomizer

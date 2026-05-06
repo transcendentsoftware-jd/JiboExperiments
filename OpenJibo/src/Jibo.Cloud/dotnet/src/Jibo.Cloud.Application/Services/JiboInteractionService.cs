@@ -7,7 +7,8 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class JiboInteractionService(
     JiboExperienceContentCache contentCache,
-    IJiboRandomizer randomizer)
+    IJiboRandomizer randomizer,
+    IPersonalMemoryStore personalMemoryStore)
 {
     public async Task<JiboInteractionDecision> BuildDecisionAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
@@ -77,6 +78,10 @@ public sealed class JiboInteractionService(
             "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
             "robot_birthday" => BuildRobotBirthdayDecision(),
             "robot_personality" => new JiboInteractionDecision("robot_personality", randomizer.Choose(catalog.PersonalityReplies)),
+            "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),
+            "memory_get_birthday" => BuildRecallBirthdayDecision(turn),
+            "memory_set_preference" => BuildRememberPreferenceDecision(turn, transcript),
+            "memory_get_preference" => BuildRecallPreferenceDecision(turn, transcript),
             "pizza" => BuildPizzaDecision(),
             "order_pizza" => BuildOrderPizzaDecision(),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
@@ -113,6 +118,70 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "robot_birthday",
             $"My birthday is {OpenJiboCloudBuildInfo.PersonaBirthdayWords}.");
+    }
+
+    private JiboInteractionDecision BuildRememberBirthdayDecision(TurnContext turn, string transcript)
+    {
+        var birthday = TryExtractBirthdayFact(transcript);
+        if (string.IsNullOrWhiteSpace(birthday))
+        {
+            return new JiboInteractionDecision(
+                "memory_set_birthday",
+                "I can remember it if you say, my birthday is March 14.");
+        }
+
+        personalMemoryStore.SetBirthday(ResolveTenantScope(turn), birthday);
+        return new JiboInteractionDecision(
+            "memory_set_birthday",
+            $"Got it. I will remember your birthday is {birthday}.");
+    }
+
+    private JiboInteractionDecision BuildRecallBirthdayDecision(TurnContext turn)
+    {
+        var birthday = personalMemoryStore.GetBirthday(ResolveTenantScope(turn));
+        return string.IsNullOrWhiteSpace(birthday)
+            ? new JiboInteractionDecision(
+                "memory_get_birthday",
+                "I do not know your birthday yet. You can say, my birthday is March 14.")
+            : new JiboInteractionDecision(
+                "memory_get_birthday",
+                $"You told me your birthday is {birthday}.");
+    }
+
+    private JiboInteractionDecision BuildRememberPreferenceDecision(TurnContext turn, string transcript)
+    {
+        var preference = TryExtractPreferenceSet(transcript);
+        if (preference is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_set_preference",
+                "I can remember it if you say, my favorite music is jazz.");
+        }
+
+        personalMemoryStore.SetPreference(ResolveTenantScope(turn), preference.Value.Category, preference.Value.Value);
+        return new JiboInteractionDecision(
+            "memory_set_preference",
+            $"Got it. I will remember your favorite {preference.Value.Category} is {preference.Value.Value}.");
+    }
+
+    private JiboInteractionDecision BuildRecallPreferenceDecision(TurnContext turn, string transcript)
+    {
+        var category = TryExtractPreferenceLookupCategory(transcript);
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            return new JiboInteractionDecision(
+                "memory_get_preference",
+                "Ask me like this: what is my favorite music?");
+        }
+
+        var preference = personalMemoryStore.GetPreference(ResolveTenantScope(turn), category);
+        return string.IsNullOrWhiteSpace(preference)
+            ? new JiboInteractionDecision(
+                "memory_get_preference",
+                $"I do not know your favorite {category} yet.")
+            : new JiboInteractionDecision(
+                "memory_get_preference",
+                $"You told me your favorite {category} is {preference}.");
     }
 
     private JiboInteractionDecision BuildPizzaDecision()
@@ -266,6 +335,16 @@ public sealed class JiboInteractionService(
             };
         }
 
+        if (IsUserBirthdaySetStatement(loweredTranscript))
+        {
+            return "memory_set_birthday";
+        }
+
+        if (IsUserBirthdayRecallQuestion(loweredTranscript))
+        {
+            return "memory_get_birthday";
+        }
+
         if (IsRobotBirthdayQuestion(loweredTranscript))
         {
             return "robot_birthday";
@@ -388,6 +467,16 @@ public sealed class JiboInteractionService(
                 "what's the cloud version"))
         {
             return "cloud_version";
+        }
+
+        if (IsPreferenceSetStatement(loweredTranscript))
+        {
+            return "memory_set_preference";
+        }
+
+        if (IsPreferenceRecallQuestion(loweredTranscript))
+        {
+            return "memory_get_preference";
         }
 
         if (TryResolveRadioGenre(loweredTranscript) is not null)
@@ -1102,15 +1191,123 @@ public sealed class JiboInteractionService(
     private static bool IsRobotBirthdayQuestion(string loweredTranscript)
     {
         return MatchesAny(
-                   loweredTranscript,
-                   "when is your birthday",
-                   "when's your birthday",
-                   "what's your birthday",
-                   "what s your birthday",
-                   "what is your birthday",
-                   "when were you born",
-                   "what day is your birthday") ||
-               loweredTranscript.Contains("birthday", StringComparison.Ordinal);
+            loweredTranscript,
+            "when is your birthday",
+            "when's your birthday",
+            "what's your birthday",
+            "what s your birthday",
+            "what is your birthday",
+            "when were you born",
+            "what day is your birthday");
+    }
+
+    private static bool IsUserBirthdayRecallQuestion(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "when is my birthday",
+            "when's my birthday",
+            "what is my birthday",
+            "what s my birthday",
+            "what's my birthday",
+            "do you remember my birthday");
+    }
+
+    private static bool IsUserBirthdaySetStatement(string loweredTranscript)
+    {
+        return TryExtractBirthdayFact(loweredTranscript) is not null;
+    }
+
+    private static string? TryExtractBirthdayFact(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var marker = "my birthday is ";
+        var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIndex < 0)
+        {
+            return null;
+        }
+
+        var value = normalized[(markerIndex + marker.Length)..].Trim();
+        return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static bool IsPreferenceRecallQuestion(string loweredTranscript)
+    {
+        return TryExtractPreferenceLookupCategory(loweredTranscript) is not null;
+    }
+
+    private static bool IsPreferenceSetStatement(string loweredTranscript)
+    {
+        return TryExtractPreferenceSet(loweredTranscript) is not null;
+    }
+
+    private static string? TryExtractPreferenceLookupCategory(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var prefixes = new[]
+        {
+            "what is my favorite ",
+            "what s my favorite ",
+            "what's my favorite ",
+            "do you remember my favorite "
+        };
+
+        foreach (var prefix in prefixes)
+        {
+            if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var category = normalized[prefix.Length..].Trim();
+            return string.IsNullOrWhiteSpace(category) ? null : category;
+        }
+
+        return null;
+    }
+
+    private static (string Category, string Value)? TryExtractPreferenceSet(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var marker = "my favorite ";
+        var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIndex < 0)
+        {
+            return null;
+        }
+
+        var preferencePhrase = normalized[(markerIndex + marker.Length)..];
+        var splitMarker = " is ";
+        var splitIndex = preferencePhrase.IndexOf(splitMarker, StringComparison.Ordinal);
+        if (splitIndex <= 0 || splitIndex >= preferencePhrase.Length - splitMarker.Length)
+        {
+            return null;
+        }
+
+        var category = preferencePhrase[..splitIndex].Trim();
+        var value = preferencePhrase[(splitIndex + splitMarker.Length)..].Trim();
+        if (string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return (category, value);
+    }
+
+    private static PersonalMemoryTenantScope ResolveTenantScope(TurnContext turn)
+    {
+        var accountId = ReadTenantAttribute(turn, "accountId") ?? "usr_openjibo_owner";
+        var loopId = ReadTenantAttribute(turn, "loopId") ?? "openjibo-default-loop";
+        var deviceId = turn.DeviceId ?? ReadTenantAttribute(turn, "deviceId") ?? "unknown-device";
+        return new PersonalMemoryTenantScope(accountId, loopId, deviceId);
+    }
+
+    private static string? ReadTenantAttribute(TurnContext turn, string key)
+    {
+        return turn.Attributes.TryGetValue(key, out var value)
+            ? value?.ToString()
+            : null;
     }
 
     private static string? TryResolveRadioGenre(string loweredTranscript)

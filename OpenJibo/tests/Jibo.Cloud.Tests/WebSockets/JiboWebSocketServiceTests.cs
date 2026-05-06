@@ -18,7 +18,7 @@ public sealed class JiboWebSocketServiceTests
         _store = new InMemoryCloudStateStore();
         var contentRepository = new InMemoryJiboExperienceContentRepository();
         var contentCache = new JiboExperienceContentCache(contentRepository);
-        var conversationBroker = new DemoConversationBroker(new JiboInteractionService(contentCache, new DefaultJiboRandomizer()));
+        var conversationBroker = new DemoConversationBroker(new JiboInteractionService(contentCache, new DefaultJiboRandomizer(), new InMemoryPersonalMemoryStore()));
         var sttSelector = new DefaultSttStrategySelector(
         [
             new SyntheticBufferedAudioSttStrategy()
@@ -2904,6 +2904,74 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
         Assert.Equal("RA_JBO_OrderPizza_AN_01", meta.GetProperty("prompt_id").GetString());
         Assert.Equal("AN", meta.GetProperty("prompt_sub_category").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsrPersonalMemory_BirthdayIsScopedPerDeviceTenant()
+    {
+        var tokenA = _store.IssueRobotToken("tenant-device-a");
+        var tokenB = _store.IssueRobotToken("tenant-device-b");
+
+        var setReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = tokenA,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-memory-set","data":{"text":"my birthday is april 12"}}"""
+        });
+
+        Assert.Equal(3, setReplies.Count);
+        using (var setListenPayload = JsonDocument.Parse(setReplies[0].Text!))
+        {
+            Assert.Equal("memory_set_birthday", setListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        var sameTenantRecallReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = tokenA,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-memory-recall-a","data":{"text":"what is my birthday"}}"""
+        });
+
+        Assert.Equal(3, sameTenantRecallReplies.Count);
+        using (var skillPayload = JsonDocument.Parse(sameTenantRecallReplies[2].Text!))
+        {
+            var esml = skillPayload.RootElement
+                .GetProperty("data")
+                .GetProperty("action")
+                .GetProperty("config")
+                .GetProperty("jcp")
+                .GetProperty("config")
+                .GetProperty("play")
+                .GetProperty("esml")
+                .GetString();
+            Assert.Contains("You told me your birthday is april 12", esml, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var otherTenantRecallReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = tokenB,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-memory-recall-b","data":{"text":"what is my birthday"}}"""
+        });
+
+        Assert.Equal(3, otherTenantRecallReplies.Count);
+        using var otherSkillPayload = JsonDocument.Parse(otherTenantRecallReplies[2].Text!);
+        var otherEsml = otherSkillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+        Assert.Contains("I do not know your birthday yet", otherEsml, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

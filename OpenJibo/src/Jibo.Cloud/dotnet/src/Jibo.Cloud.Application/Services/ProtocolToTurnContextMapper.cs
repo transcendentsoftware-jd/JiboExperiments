@@ -21,6 +21,23 @@ public sealed class ProtocolToTurnContextMapper
             attributes["transID"] = turnState.TransId;
         }
 
+        if (!string.IsNullOrWhiteSpace(session.AccountId))
+        {
+            attributes["accountId"] = session.AccountId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(session.DeviceId))
+        {
+            attributes["deviceId"] = session.DeviceId;
+        }
+
+        if (session.Metadata.TryGetValue("loopId", out var loopId) &&
+            loopId is string loopIdText &&
+            !string.IsNullOrWhiteSpace(loopIdText))
+        {
+            attributes["loopId"] = loopIdText;
+        }
+
         if (!string.IsNullOrWhiteSpace(turnState.ContextPayload))
         {
             attributes["context"] = turnState.ContextPayload;

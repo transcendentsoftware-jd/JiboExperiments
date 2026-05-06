@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         var statePersistencePath = configuration?["OpenJibo:State:PersistencePath"]
             ?? Path.Combine(AppContext.BaseDirectory, "App_Data", "cloud-state.json");
         services.AddSingleton<ICloudStateStore>(_ => new InMemoryCloudStateStore(statePersistencePath));
+        services.AddSingleton<IPersonalMemoryStore, InMemoryPersonalMemoryStore>();
         services.AddSingleton<IJiboExperienceContentRepository, InMemoryJiboExperienceContentRepository>();
         services.AddSingleton<JiboExperienceContentCache>();
         services.AddSingleton<IJiboRandomizer, DefaultJiboRandomizer>();
