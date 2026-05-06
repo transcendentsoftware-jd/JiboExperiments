@@ -59,12 +59,17 @@ This slice is intentionally small and user-visible. It creates immediate persona
 
 ## Next Slices
 
-1. Update/backup/restore end-to-end proof (operator-run and documented)
-2. Holidays and seasonal personality slice (first scoped calendar + response set)
-3. Multi-tenant memory storage foundation (tenant model + persistence contracts + initial implementation)
-4. STT noise-screening and short-utterance reliability pass
-5. Provider-backed news/weather expansion using Pegasus-backed contracts
-6. Capture indexing and retention boundary for group testing
+1. Command-vs-question personality split (start with dance/twerk-style prompts, keep commands action-oriented and questions conversational)
+2. First memory-backed personal facts (tenant-scoped birthday/preferences storage contracts + initial implementation)
+3. Proactivity selector baseline (source-backed first proactive offers with safe throttling and stock-compatible payloads)
+4. Dialog parsing expansion (more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
+5. Holidays and seasonal personality slice (time-scoped content backed by the new memory/proactivity path)
+6. Update/backup/restore end-to-end proof (operator-run and documented)
+7. STT noise-screening and short-utterance reliability pass
+8. Provider-backed news/weather expansion using Pegasus-backed contracts
+9. Capture indexing and retention boundary for group testing
+
+For slices 1-5, use Pegasus phrase lists, MIM IDs, and behavior patterns as the source anchor before broadening into OpenJibo-native improvements.
 
 ## Definition Of Done
 

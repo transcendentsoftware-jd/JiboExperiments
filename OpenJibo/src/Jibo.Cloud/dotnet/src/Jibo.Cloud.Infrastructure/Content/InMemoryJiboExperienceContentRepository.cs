@@ -29,6 +29,12 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
             "Watch me dance.",
             "Here's my favorite dance move."
         ],
+        DanceQuestionReplies =
+        [
+            "I love to dance. Tell me to dance and I will show you a move.",
+            "Absolutely. Dancing is one of my favorite things to do.",
+            "Dancing is my kind of fun. Say dance and I am in."
+        ],
         GreetingReplies =
         [
             "Hi there. It is really good to talk with you.",

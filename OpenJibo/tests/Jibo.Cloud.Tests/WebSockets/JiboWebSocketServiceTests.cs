@@ -2863,7 +2863,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task ClientAsrOrderPizzaFlow_UsesLegacyOrderPizzaMim()
+    public async Task ClientAsrOrderAPizzaFlow_UsesLegacyOrderPizzaMim()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -2880,7 +2880,7 @@ public sealed class JiboWebSocketServiceTests
             Path = "/listen",
             Kind = "neo-hub-listen",
             Token = "hub-client-asr-order-pizza-token",
-            Text = """{"type":"CLIENT_ASR","transID":"trans-order-pizza-shape","data":{"text":"can you order pizza"}}"""
+            Text = """{"type":"CLIENT_ASR","transID":"trans-order-pizza-shape","data":{"text":"order a pizza"}}"""
         });
 
         Assert.Equal(3, replies.Count);

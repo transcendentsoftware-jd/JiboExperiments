@@ -22,4 +22,5 @@ public sealed class JiboExperienceCatalog
     public IReadOnlyList<string> NewsBriefings { get; init; } = [];
     public IReadOnlyList<string> GenericFallbackReplies { get; init; } = [];
     public IReadOnlyList<string> DanceReplies { get; init; } = [];
+    public IReadOnlyList<string> DanceQuestionReplies { get; init; } = [];
 }

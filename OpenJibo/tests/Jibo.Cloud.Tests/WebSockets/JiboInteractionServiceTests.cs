@@ -42,6 +42,22 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_DoYouLikeToDance_UsesQuestionReplyStyleInsteadOfTriggeringDanceAnimation()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do you like to dance",
+            NormalizedTranscript = "do you like to dance"
+        });
+
+        Assert.Equal("dance_question", decision.IntentName);
+        Assert.Null(decision.SkillName);
+        Assert.Equal("I love to dance. Tell me to dance and I will show you a move.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TwerkQuestion_PrefersSpecificTwerkIntent()
     {
         var service = CreateService();
@@ -84,6 +100,21 @@ public sealed class JiboInteractionServiceTests
         {
             RawTranscript = "when's your birthday",
             NormalizedTranscript = "when's your birthday"
+        });
+
+        Assert.Equal("robot_birthday", decision.IntentName);
+        Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WhatsYourBirthday_DoesNotFallThroughToDateIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's your birthday",
+            NormalizedTranscript = "what's your birthday"
         });
 
         Assert.Equal("robot_birthday", decision.IntentName);
@@ -163,6 +194,22 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_OrderAPizza_UsesLegacyOrderPizzaMimPayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "order a pizza",
+            NormalizedTranscript = "order a pizza"
+        });
+
+        Assert.Equal("order_pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ClientNluRequestOrderPizza_UsesLegacyOrderPizzaMimPayload()
     {
         var service = CreateService();
@@ -198,6 +245,25 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("date", decision.IntentName);
         Assert.Equal("@be/clock", decision.SkillName);
         Assert.Equal("askForDate", decision.SkillPayload!["clockIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluAskForDate_WithBirthdayTranscript_PrefersRobotBirthdayIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's your birthday",
+            NormalizedTranscript = "what's your birthday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "askForDate"
+            }
+        });
+
+        Assert.Equal("robot_birthday", decision.IntentName);
+        Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
     }
 
     [Fact]

@@ -590,15 +590,15 @@ Current release theme:
 
 ### 22. Command Vs Question Reply Style
 
-- Status: `ready`
+- Status: `implemented`
 - Tags: `content`, `polish`
-- User goals:
-  - `dance` should behave like a willing action
-  - `do you like to dance` should answer the question before or instead of treating it like the same command
-- Implementation notes:
-  - evolve reply collections into command/question variants
-  - start with dance or another expressive skill
-  - keep the first version rule-based
+- Result:
+  - `dance` still launches the dance animation path
+  - `do you like to dance` now responds conversationally as a personality question instead of launching the action
+  - birthday phrasing now takes precedence over an `askForDate` client-intent misclassification
+- Follow-up:
+  - expand command-vs-question splits to more expressive intents (pizza, surprise, photo prompts)
+  - add Pegasus phrase and MIM-backed variants for richer style coverage
 
 ## Suggested Order
 
@@ -614,16 +614,17 @@ Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist
 
 For `1.0.19`:
 
-1. Harden stop or volume if the `1.0.18` live pass exposes stock-OS quirks / harden $YESNO interaction
-2. Make a pizza. How old are you?  When's your birthday?  Do you have a personality?  (`implemented` in the first `1.0.19` slice; continue refining with persistent identity metadata and richer persona variants.)
-3. Holidays and seasonal personality slice so persona evolution remains visible and testable
-4. Multi-tenant internal storage foundation for memory/personality data (account/loop/device scoped) with cloud-ready persistence boundaries
-5. Update, backup, and restore proof
-6. STT upgrade and noise screening
-7. Hosted capture/storage plan / indexing for group testing
-8. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
-9. Provider-backed news and weather
-10. Proactivity, dialog parsing/NLP, memory/history, Lasso, identity, and onboarding as larger discovery-driven tracks
+1. Command-vs-question personality split (`dance` command vs `do you like to dance` question style; expand this pattern)
+2. First memory-backed personal facts with tenant-scoped storage (birthday/preferences foundation)
+3. Proactivity selector baseline with source-backed first offers
+4. Dialog parsing expansion and ambiguity guardrails
+5. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
+6. Update, backup, and restore proof
+7. STT upgrade and noise screening
+8. Hosted capture/storage plan / indexing for group testing
+9. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
+10. Provider-backed news and weather
+11. Lasso, identity, and onboarding as larger discovery-driven tracks
 
 For `1.0.20` and beyond:
 

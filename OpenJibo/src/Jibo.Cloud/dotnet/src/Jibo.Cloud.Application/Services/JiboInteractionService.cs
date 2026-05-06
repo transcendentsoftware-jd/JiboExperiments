@@ -43,6 +43,7 @@ public sealed class JiboInteractionService(
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
+            "dance_question" => BuildDanceQuestionDecision(catalog),
             "dance" => BuildRandomDanceDecision(catalog),
             "twerk" => BuildDanceDecision("twerk", "rom-twerk", "Watch me twerk."),
             "time" => BuildClockLaunchDecision("time", "clock", "askForTime", "Showing the time."),
@@ -167,6 +168,11 @@ public sealed class JiboInteractionService(
         return BuildDanceDecision("dance", dance, replyText);
     }
 
+    private JiboInteractionDecision BuildDanceQuestionDecision(JiboExperienceCatalog catalog)
+    {
+        return new JiboInteractionDecision("dance_question", randomizer.Choose(catalog.DanceQuestionReplies));
+    }
+
     private static JiboInteractionDecision BuildDanceDecision(string intentName, string dance, string replyText)
     {
         return new JiboInteractionDecision(
@@ -258,6 +264,11 @@ public sealed class JiboInteractionService(
                 "gallery" or "photo-gallery" or "photos" => "photo_gallery",
                 _ => "chat"
             };
+        }
+
+        if (IsRobotBirthdayQuestion(loweredTranscript))
+        {
+            return "robot_birthday";
         }
 
         if (string.Equals(clientIntent, "askForTime", StringComparison.OrdinalIgnoreCase))
@@ -500,6 +511,11 @@ public sealed class JiboInteractionService(
             return "photo_gallery";
         }
 
+        if (IsDanceQuestion(loweredTranscript))
+        {
+            return "dance_question";
+        }
+
         if (MatchesAny(loweredTranscript, "twerk"))
         {
             return "twerk";
@@ -523,17 +539,6 @@ public sealed class JiboInteractionService(
                 "how old r you"))
         {
             return "robot_age";
-        }
-
-        if (MatchesAny(
-                loweredTranscript,
-                "when is your birthday",
-                "when's your birthday",
-                "what is your birthday",
-                "when were you born",
-                "what day is your birthday"))
-        {
-            return "robot_birthday";
         }
 
         if (MatchesAny(
@@ -564,7 +569,12 @@ public sealed class JiboInteractionService(
         if (MatchesAny(
                 loweredTranscript,
                 "can you order pizza",
+                "can you order a pizza",
+                "could you order a pizza",
                 "order pizza",
+                "order a pizza",
+                "order us a pizza",
+                "order me a pizza",
                 "please order pizza"))
         {
             return "order_pizza";
@@ -1076,6 +1086,31 @@ public sealed class JiboInteractionService(
     private static bool MatchesAny(string loweredTranscript, params string[] candidates)
     {
         return candidates.Any(candidate => loweredTranscript.Contains(candidate, StringComparison.Ordinal));
+    }
+
+    private static bool IsDanceQuestion(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "do you like to dance",
+            "do you like dancing",
+            "what kind of dance do you like",
+            "what kind of dancing do you like",
+            "do you enjoy dancing");
+    }
+
+    private static bool IsRobotBirthdayQuestion(string loweredTranscript)
+    {
+        return MatchesAny(
+                   loweredTranscript,
+                   "when is your birthday",
+                   "when's your birthday",
+                   "what's your birthday",
+                   "what s your birthday",
+                   "what is your birthday",
+                   "when were you born",
+                   "what day is your birthday") ||
+               loweredTranscript.Contains("birthday", StringComparison.Ordinal);
     }
 
     private static string? TryResolveRadioGenre(string loweredTranscript)
