@@ -11,6 +11,8 @@ public sealed class JiboExperienceCatalog
     public IReadOnlyList<string> DanceAnimations { get; init; } = [];
     public IReadOnlyList<string> GreetingReplies { get; init; } = [];
     public IReadOnlyList<string> HowAreYouReplies { get; init; } = [];
+    public IReadOnlyList<string> PersonalityReplies { get; init; } = [];
+    public IReadOnlyList<string> PizzaReplies { get; init; } = [];
     public IReadOnlyList<string> SurpriseReplies { get; init; } = [];
     public IReadOnlyList<string> PersonalReportReplies { get; init; } = [];
     public IReadOnlyList<string> WeatherReplies { get; init; } = [];

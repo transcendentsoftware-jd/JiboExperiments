@@ -73,6 +73,11 @@ public sealed class JiboInteractionService(
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
             "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
             "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
+            "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
+            "robot_birthday" => BuildRobotBirthdayDecision(),
+            "robot_personality" => new JiboInteractionDecision("robot_personality", randomizer.Choose(catalog.PersonalityReplies)),
+            "pizza" => BuildPizzaDecision(),
+            "order_pizza" => BuildOrderPizzaDecision(),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
             "no" => new JiboInteractionDecision("no", "No."),
             "word_of_the_day" => BuildWordOfTheDayLaunchDecision(),
@@ -91,6 +96,55 @@ public sealed class JiboInteractionService(
     {
         return new JiboInteractionDecision("cloud_version", OpenJiboCloudBuildInfo.SpokenVersion,
             SkillPayload: new Dictionary<string, object?> { ["esml"] = OpenJiboCloudBuildInfo.EsmlVersion });
+    }
+
+    private static JiboInteractionDecision BuildRobotAgeDecision(DateTimeOffset? referenceLocalTime)
+    {
+        var referenceDate = DateOnly.FromDateTime((referenceLocalTime ?? DateTimeOffset.UtcNow).Date);
+        var ageDescription = DescribePersonaAge(referenceDate, OpenJiboCloudBuildInfo.PersonaBirthday);
+        return new JiboInteractionDecision(
+            "robot_age",
+            $"I count {OpenJiboCloudBuildInfo.PersonaBirthdayWords} as my birthday, so I am {ageDescription}.");
+    }
+
+    private static JiboInteractionDecision BuildRobotBirthdayDecision()
+    {
+        return new JiboInteractionDecision(
+            "robot_birthday",
+            $"My birthday is {OpenJiboCloudBuildInfo.PersonaBirthdayWords}.");
+    }
+
+    private JiboInteractionDecision BuildPizzaDecision()
+    {
+        var prompt = randomizer.Choose(PizzaMimPrompts);
+        return new JiboInteractionDecision(
+            "pizza",
+            "One pizza, coming right up.",
+            "chitchat-skill",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["esml"] = prompt.Esml,
+                ["mim_id"] = "RA_JBO_MakePizza",
+                ["mim_type"] = "announcement",
+                ["prompt_id"] = prompt.PromptId,
+                ["prompt_sub_category"] = "AN"
+            });
+    }
+
+    private static JiboInteractionDecision BuildOrderPizzaDecision()
+    {
+        return new JiboInteractionDecision(
+            "order_pizza",
+            "I can't do that yet, but I bet I'll be able to do that sometime in the near future.",
+            "chitchat-skill",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["esml"] = "<speak>I can't do that yet, but I bet I'll be able to do that sometime in the near future.</speak>",
+                ["mim_id"] = "RA_JBO_OrderPizza",
+                ["mim_type"] = "announcement",
+                ["prompt_id"] = "RA_JBO_OrderPizza_AN_01",
+                ["prompt_sub_category"] = "AN"
+            });
     }
 
     private JiboInteractionDecision BuildJokeDecision(JiboExperienceCatalog catalog)
@@ -229,6 +283,16 @@ public sealed class JiboInteractionService(
         if (string.Equals(clientIntent, "alarmValue", StringComparison.OrdinalIgnoreCase))
         {
             return "alarm_value";
+        }
+
+        if (string.Equals(clientIntent, "requestMakePizza", StringComparison.OrdinalIgnoreCase))
+        {
+            return "pizza";
+        }
+
+        if (string.Equals(clientIntent, "requestOrderPizza", StringComparison.OrdinalIgnoreCase))
+        {
+            return "order_pizza";
         }
 
         if (IsCancelRequest(clientIntent, loweredTranscript))
@@ -449,6 +513,61 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "surprise", "surprise me", "show me something fun"))
         {
             return "surprise";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "how old are you",
+                "what is your age",
+                "what s your age",
+                "how old r you"))
+        {
+            return "robot_age";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "when is your birthday",
+                "when's your birthday",
+                "what is your birthday",
+                "when were you born",
+                "what day is your birthday"))
+        {
+            return "robot_birthday";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you have a personality",
+                "what is your personality",
+                "what's your personality",
+                "what s your personality",
+                "describe your personality"))
+        {
+            return "robot_personality";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "can you cook us a pizza",
+                "flip a pizza",
+                "make a pizza",
+                "make pizza",
+                "show pizza",
+                "can you make pizza",
+                "let's make pizza",
+                "lets make pizza"))
+        {
+            return "pizza";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "can you order pizza",
+                "order pizza",
+                "please order pizza"))
+        {
+            return "order_pizza";
         }
 
         if (MatchesAny(loweredTranscript, "personal report", "my report", "daily report", "my update"))
@@ -839,6 +958,44 @@ public sealed class JiboInteractionService(
         }
 
         return previous[right.Length];
+    }
+
+    private static string DescribePersonaAge(DateOnly referenceDate, DateOnly birthday)
+    {
+        if (referenceDate < birthday)
+        {
+            return "just getting started";
+        }
+
+        var totalDays = referenceDate.DayNumber - birthday.DayNumber;
+        if (totalDays <= 31)
+        {
+            return $"{FormatAgeUnit(totalDays, "day")} old";
+        }
+
+        var totalMonths = (referenceDate.Year - birthday.Year) * 12 + referenceDate.Month - birthday.Month;
+        if (referenceDate.Day < birthday.Day)
+        {
+            totalMonths -= 1;
+        }
+
+        totalMonths = Math.Max(totalMonths, 0);
+        if (totalMonths < 12)
+        {
+            return $"{FormatAgeUnit(totalMonths, "month")} old";
+        }
+
+        var years = totalMonths / 12;
+        var months = totalMonths % 12;
+        return months == 0
+            ? $"{FormatAgeUnit(years, "year")} old"
+            : $"{FormatAgeUnit(years, "year")} and {FormatAgeUnit(months, "month")} old";
+    }
+
+    private static string FormatAgeUnit(int value, string singular)
+    {
+        var plural = value == 1 ? singular : $"{singular}s";
+        return $"{value} {plural}";
     }
 
     private static IEnumerable<string> ReadRules(TurnContext turn, string key)
@@ -1503,6 +1660,8 @@ public sealed class JiboInteractionService(
 
     private sealed record ClockAlarmValue(string Time, string AmPm);
 
+    private sealed record PizzaMimPrompt(string PromptId, string Esml);
+
     private static readonly Regex SplitAlarmPattern = new(
         @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s,-]+(?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
@@ -1530,6 +1689,13 @@ public sealed class JiboInteractionService(
     private static readonly Regex AlarmDeletePattern = new(
         @"\b(?:cancel|delete|remove|stop|turn\s+off)\s+(?:the\s+)?(?:alarm|along|elo)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly PizzaMimPrompt[] PizzaMimPrompts =
+    [
+        new("RA_JBO_ShowPizzaMaking_AN_01", "<speak><anim cat='jiboji' filter='pizza-making'/></speak>"),
+        new("RA_JBO_ShowPizzaMaking_AN_02", "<speak><anim cat='jiboji' filter='pizza-making' nonBlocking='true'/><pitch mult='1.2'>One </pitch> pizza, coming right up.</speak>"),
+        new("RA_JBO_ShowPizzaMaking_AN_03", "<speak><anim cat='jiboji' filter='pizza-making' nonBlocking='true'/>My <pitch mult='1.2'>specialty </pitch>.</speak>")
+    ];
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

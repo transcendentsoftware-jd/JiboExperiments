@@ -743,6 +743,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 : $"<speak><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(speak.Text)}</es></speak>");
         var mimId = ReadPayloadString(skillPayload, "mim_id") ?? (isJoke ? "runtime-joke" : "runtime-chat");
         var mimType = ReadPayloadString(skillPayload, "mim_type") ?? "announcement";
+        var promptId = ReadPayloadString(skillPayload, "prompt_id") ?? "RUNTIME_PROMPT";
+        var promptSubCategory = ReadPayloadString(skillPayload, "prompt_sub_category") ?? "AN";
 
         return new
         {
@@ -770,8 +772,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                     esml,
                                     meta = new
                                     {
-                                        prompt_id = "RUNTIME_PROMPT",
-                                        prompt_sub_category = "AN",
+                                        prompt_id = promptId,
+                                        prompt_sub_category = promptSubCategory,
                                         mim_id = mimId,
                                         mim_type = mimType
                                     }

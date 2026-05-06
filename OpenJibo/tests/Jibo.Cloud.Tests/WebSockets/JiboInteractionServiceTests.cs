@@ -57,6 +57,132 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_HowOldAreYou_UsesPersonaBirthdayForAgeReply()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "how old are you",
+            NormalizedTranscript = "how old are you",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-05-05T19:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("robot_age", decision.IntentName);
+        Assert.Equal("I count March 22, 2026 as my birthday, so I am 1 month old.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WhenIsYourBirthday_UsesPersonaBirthdayReply()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "when's your birthday",
+            NormalizedTranscript = "when's your birthday"
+        });
+
+        Assert.Equal("robot_birthday", decision.IntentName);
+        Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_DoYouHaveAPersonality_UsesCatalogBackedPersonalityReply()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do you have a personality",
+            NormalizedTranscript = "do you have a personality"
+        });
+
+        Assert.Equal("robot_personality", decision.IntentName);
+        Assert.Equal("I do. I am curious, playful, and always up for a new experiment.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_MakePizza_UsesOriginalMimStylePayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "make a pizza",
+            NormalizedTranscript = "make a pizza"
+        });
+
+        Assert.Equal("pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("One pizza, coming right up.", decision.ReplyText);
+        Assert.Equal("RA_JBO_MakePizza", decision.SkillPayload!["mim_id"]);
+        Assert.Equal("RA_JBO_ShowPizzaMaking_AN_01", decision.SkillPayload["prompt_id"]);
+        Assert.Contains("pizza-making", decision.SkillPayload["esml"]?.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluRequestMakePizza_UsesOriginalMimStylePayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "requestMakePizza",
+            NormalizedTranscript = "requestMakePizza",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "requestMakePizza"
+            }
+        });
+
+        Assert.Equal("pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_MakePizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_CanYouOrderPizza_UsesLegacyOrderPizzaMimPayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "can you order pizza",
+            NormalizedTranscript = "can you order pizza"
+        });
+
+        Assert.Equal("order_pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+        Assert.Equal("RA_JBO_OrderPizza_AN_01", decision.SkillPayload["prompt_id"]);
+        Assert.Contains("I can't do that yet", decision.SkillPayload["esml"]?.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluRequestOrderPizza_UsesLegacyOrderPizzaMimPayload()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "requestOrderPizza",
+            NormalizedTranscript = "requestOrderPizza",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "requestOrderPizza"
+            }
+        });
+
+        Assert.Equal("order_pizza", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ClientNluAskForDate_MapsToDateIntent()
     {
         var service = CreateService();

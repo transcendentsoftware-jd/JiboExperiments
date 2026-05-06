@@ -8,6 +8,8 @@ Use it as the working queue when picking the next feature or bug-fix slice. The 
 
 The live regression checklist for release closeout is [regression-test-plan.md](regression-test-plan.md).
 
+The active `1.0.19` execution shape is tracked in [release-1.0.19-plan.md](release-1.0.19-plan.md). This file keeps the full `1.0.18` evidence trail for parity reference.
+
 Status key:
 
 - `implemented`: present in current source and covered by focused tests
@@ -24,9 +26,9 @@ Tags:
 - `stt`: transcript reliability
 - `storage`: persistence, media, backups, or hosted export
 
-## Current `1.0.18` Snapshot
+## Historical `1.0.18` Snapshot
 
-Current cloud version: `1.0.18`
+Historical cloud version at closeout boundary: `1.0.18`
 
 Runtime truth:
 
@@ -573,16 +575,18 @@ Current release theme:
 
 ### 21. How Old Are You / Robot Age Persona
 
-- Status: `discovery`
+- Status: `implemented`
 - Tags: `protocol`, `content`
-- User goals:
+- Result:
   - `how old are you`
-  - answer from stored first-powered-up or first-cloud-seen metadata
-  - optional zodiac/personality flavor when available
-- Questions:
-  - where stock Jibo stores first-power-up or birthdate metadata
-  - whether a stock persona path exists
-  - whether first OpenJibo pass should use first-cloud-seen metadata if stock data is unavailable
+  - `when's your birthday`
+  - `do you have a personality`
+  - `make a pizza` now ports the original scripted-response path through `chitchat-skill` with `mim_id = RA_JBO_MakePizza` and pizza-making animation ESML
+  - `can you order pizza` now ports the original scripted-response path through `chitchat-skill` with `mim_id = RA_JBO_OrderPizza`
+  - current source answers these with a `1.0.19` rule-based persona baseline, backed by `OpenJiboCloudBuildInfo.PersonaBirthday`
+- Follow-up:
+  - wire persona age to first-powered-up or durable first-cloud-seen metadata when available
+  - add command-vs-question variants so expressive prompts can answer conversationally before launching actions
 
 ### 22. Command Vs Question Reply Style
 
@@ -611,13 +615,15 @@ Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist
 For `1.0.19`:
 
 1. Harden stop or volume if the `1.0.18` live pass exposes stock-OS quirks / harden $YESNO interaction
-2. Make a pizza. How old are you?  When's your birthday?  Do you have a personality?  (This is a fun one that can be implemented quickly and adds a lot of character, so it should be early in the queue to start showing off the new content capabilities.)
-3. Update, backup, and restore proof
-4. STT upgrade and noise screening
-5. Hosted capture/storage plan / indexing for group testing
-6. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
-7. Provider-backed news and weather
-8. Proactivity, dialog parsing/NLP, memory/history, Lasso, identity, and onboarding as larger discovery-driven tracks
+2. Make a pizza. How old are you?  When's your birthday?  Do you have a personality?  (`implemented` in the first `1.0.19` slice; continue refining with persistent identity metadata and richer persona variants.)
+3. Holidays and seasonal personality slice so persona evolution remains visible and testable
+4. Multi-tenant internal storage foundation for memory/personality data (account/loop/device scoped) with cloud-ready persistence boundaries
+5. Update, backup, and restore proof
+6. STT upgrade and noise screening
+7. Hosted capture/storage plan / indexing for group testing
+8. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
+9. Provider-backed news and weather
+10. Proactivity, dialog parsing/NLP, memory/history, Lasso, identity, and onboarding as larger discovery-driven tracks
 
 For `1.0.20` and beyond:
 

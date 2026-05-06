@@ -6,18 +6,19 @@ This document is the current working plan for the OpenJibo hosted cloud.
 
 The production lane is the `.NET` cloud in `src/Jibo.Cloud/dotnet`. The Node server remains the protocol oracle, capture harness, and fast reverse-engineering lab, but it is no longer the long-term hosted architecture.
 
-Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md). Live closeout checks live in [regression-test-plan.md](regression-test-plan.md). This file tracks release shape, current code truth, evidence sources, and the boundary between `1.0.18` closeout work and `1.0.19` follow-up work.
+Day-to-day feature sequencing lives in [feature-backlog.md](feature-backlog.md). Live closeout checks live in [regression-test-plan.md](regression-test-plan.md). The `1.0.19` release shape is detailed in [release-1.0.19-plan.md](release-1.0.19-plan.md), while this file keeps the broader evidence and architecture context.
 
 ## Current Release Snapshot
 
-- Current OpenJibo Cloud release constant: `1.0.18`
+- Current OpenJibo Cloud release constant: `1.0.19`
 - Source of truth: [OpenJiboCloudBuildInfo.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/OpenJiboCloudBuildInfo.cs)
-- Spoken diagnostic: `Open Jibo Cloud version 1 dot 0 dot 18.`
+- Spoken diagnostic: `Cloud version 1 dot 0 dot 19.`
 - HTTP diagnostic: `/health` returns the same version
 - Startup diagnostic: the API logs the same version on boot
 - .NET target framework: `net10.0` across the cloud projects and cloud test project
+- First `1.0.19` shipped slice: persona prompts (`how old are you`, `when's your birthday`, `do you have a personality`, `make a pizza`)
 
-Release `1.0.18` is now in feature-hardening. Its main bug-fix theme is alarm and photo/gallery behavior on stock OS `1.9`, with a few small feature slices added while the test loop is warm.
+Release `1.0.19` is now in feature kickoff. The `1.0.18` alarm/photo/gallery closeout evidence remains below as historical context while we execute the next feature slices.
 
 ## Latest Live Evidence
 
@@ -200,6 +201,8 @@ These are not blockers for calling `1.0.18` complete unless the live test shows 
 After `1.0.18` is tested and tagged, `1.0.19` should move back into feature work:
 
 - harden whichever stop/volume behavior is not fully proven by the `1.0.18` live pass, or pick the next lightweight device/persona slice
+- extend persona with holidays and seasonal content as a first-class character track
+- build multi-tenant internal memory storage (account/loop/device/user scoped) so new personality and history features persist safely
 - end-to-end update/backup/restore proof
 - STT reliability improvements, including noise screening and a managed STT comparison
 - provider-backed first content path, likely news or weather

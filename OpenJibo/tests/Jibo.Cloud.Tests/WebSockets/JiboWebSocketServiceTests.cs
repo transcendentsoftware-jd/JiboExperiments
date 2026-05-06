@@ -2818,6 +2818,95 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsrMakePizzaFlow_UsesLegacyPizzaMimAndAnimation()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-pizza-token",
+            Text = """{"type":"LISTEN","transID":"trans-pizza-shape","data":{"rules":["wake-word"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-pizza-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-pizza-shape","data":{"text":"make a pizza"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("chitchat-skill", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+
+        var play = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play");
+
+        var esml = play.GetProperty("esml").GetString();
+        Assert.Contains("pizza-making", esml, StringComparison.Ordinal);
+
+        var meta = play.GetProperty("meta");
+        Assert.Equal("RA_JBO_MakePizza", meta.GetProperty("mim_id").GetString());
+        Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
+        Assert.StartsWith("RA_JBO_ShowPizzaMaking_AN_", meta.GetProperty("prompt_id").GetString(), StringComparison.Ordinal);
+        Assert.Equal("AN", meta.GetProperty("prompt_sub_category").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsrOrderPizzaFlow_UsesLegacyOrderPizzaMim()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-order-pizza-token",
+            Text = """{"type":"LISTEN","transID":"trans-order-pizza-shape","data":{"rules":["wake-word"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-client-asr-order-pizza-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-order-pizza-shape","data":{"text":"can you order pizza"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("chitchat-skill", skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+
+        var play = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play");
+
+        Assert.Contains("I can't do that yet", play.GetProperty("esml").GetString(), StringComparison.Ordinal);
+
+        var meta = play.GetProperty("meta");
+        Assert.Equal("RA_JBO_OrderPizza", meta.GetProperty("mim_id").GetString());
+        Assert.Equal("announcement", meta.GetProperty("mim_type").GetString());
+        Assert.Equal("RA_JBO_OrderPizza_AN_01", meta.GetProperty("prompt_id").GetString());
+        Assert.Equal("AN", meta.GetProperty("prompt_sub_category").GetString());
+    }
+
+    [Fact]
     public async Task FollowUpTurn_UsesNewTurnStateWithoutLeakingBufferedAudio()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

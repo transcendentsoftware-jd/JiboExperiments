@@ -41,6 +41,18 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
             "I am doing great. Thanks for asking.",
             "I am feeling bright-eyed and ready to help."
         ],
+        PersonalityReplies =
+        [
+            "I do. I am curious, playful, and always up for a new experiment.",
+            "Absolutely. I am friendly, curious, and a little goofy on purpose.",
+            "Yes. My personality is part helper, part curious robot sidekick."
+        ],
+        PizzaReplies =
+        [
+            "I cannot bake yet, but I can help design the perfect pizza plan.",
+            "I am still cloud-side for now, so no oven control yet. But I can help pick toppings.",
+            "Pizza mission accepted in spirit. I can help with the recipe while you handle the baking."
+        ],
         SurpriseReplies =
         [
             "I can definitely surprise you. We are still mapping that path, but I am ready for the next experiment.",

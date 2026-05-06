@@ -1,10 +1,14 @@
+using System.Globalization;
+
 namespace Jibo.Cloud.Application.Services;
 
 public static class OpenJiboCloudBuildInfo
 {
-    public const string Version = "1.0.18";
+    public const string Version = "1.0.19";
+    public static readonly DateOnly PersonaBirthday = new(2026, 3, 22);
 
     public static string VersionWords => Version.Replace(".", " dot ");
+    public static string PersonaBirthdayWords => PersonaBirthday.ToString("MMMM d, yyyy", CultureInfo.InvariantCulture);
 
     public static string SpokenVersion => $"Cloud version {VersionWords}.";
 
