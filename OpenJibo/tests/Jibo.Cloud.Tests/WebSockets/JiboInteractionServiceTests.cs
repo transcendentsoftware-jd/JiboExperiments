@@ -566,6 +566,43 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_AffinityMemory_PegasusEnjoyPhrase_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "I enjoy country music",
+            NormalizedTranscript = "I enjoy country music",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_affinity", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember you like country music.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do i enjoy country music",
+            NormalizedTranscript = "do i enjoy country music",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_affinity", recallDecision.IntentName);
+        Assert.Equal("Yes. You told me you like country music.", recallDecision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_PreferenceReversePhrase_ParsesFavoriteVariant()
     {
         var memoryStore = new InMemoryPersonalMemoryStore();
@@ -585,6 +622,28 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("memory_set_preference", setDecision.IntentName);
         Assert.Equal("Got it. I will remember your favorite food is pizza.", setDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceReversePluralPhrase_ParsesFavoriteVariant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "dogs are my favorite animals",
+            NormalizedTranscript = "dogs are my favorite animals",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_preference", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your favorite animals is dogs.", setDecision.ReplyText);
     }
 
     [Fact]

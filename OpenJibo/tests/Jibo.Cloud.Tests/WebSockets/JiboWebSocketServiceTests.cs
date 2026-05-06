@@ -356,6 +356,75 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task BufferedAudio_WithIncompleteAffinityHint_DefersThenFinalizesWhenContinuationArrives()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-affinity-continuation-token",
+            Text = """{"type":"LISTEN","transID":"trans-affinity-continuation","data":{"rules":["launch"]}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-affinity-continuation-token",
+            Text = """{"type":"CONTEXT","transID":"trans-affinity-continuation","data":{"audioTranscriptHint":"i do like"}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var chunkReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-affinity-continuation-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(chunkReplies);
+        }
+
+        var session = _store.FindSessionByToken("hub-affinity-continuation-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+
+        var deferredReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-affinity-continuation-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Empty(deferredReplies);
+
+        var finalizedReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-affinity-continuation-token",
+            Text = """{"type":"CONTEXT","transID":"trans-affinity-continuation","data":{"audioTranscriptHint":"i do like pizza"}}"""
+        });
+
+        Assert.Equal(3, finalizedReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(finalizedReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(finalizedReplies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(finalizedReplies[2]));
+
+        using var listenPayload = JsonDocument.Parse(finalizedReplies[0].Text!);
+        Assert.Equal("memory_set_affinity", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("i do like pizza", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+    }
+
+    [Fact]
     public async Task MultiChunkAudio_AccumulatesBufferedStateAcrossMessages()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -3147,6 +3216,9 @@ public sealed class JiboWebSocketServiceTests
         using (var offerListenPayload = JsonDocument.Parse(offerReplies[0].Text!))
         {
             Assert.Equal("proactive_offer_pizza_fact", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+            Assert.Equal("shared/yes_no", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+            Assert.Equal("$YESNO", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[1].GetString());
+            Assert.Equal("shared/yes_no", offerListenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
         }
 
         var session = _store.FindSessionByToken(token);

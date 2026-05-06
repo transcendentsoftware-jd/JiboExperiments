@@ -105,9 +105,34 @@ The fifth delivered slice adds provider-backed weather content while preserving 
 - simple location extraction is supported for phrasing like `what's the weather in Chicago tomorrow`
 - provider config supports appsettings and `OPENWEATHER_API_KEY` environment fallback for deployment
 
+## System Diagram Alignment Snapshot (`2026-05-06`)
+
+Legacy architecture (`system_diagram.png`) has been mapped to current OpenJibo cloud services so release execution stays anchored to:
+
+- where we were (Pegasus/Jibo cloud design intent)
+- where we are (current hosted `.NET` modular monolith)
+- where we are headed (durable memory, proactivity catalogs, parser depth, provider aggregation)
+
+Reference:
+
+- [system-diagram-alignment.md](system-diagram-alignment.md)
+
+## Next Queued Task (`2026-05-06`)
+
+Queued next `1.0.19` implementation task:
+
+- dialog parsing expansion and ambiguity guardrails
+
+Execution focus:
+
+- import additional Pegasus parser phrases/entities into intent handling where safe
+- reduce trigger-only captures that drop the rest of the utterance
+- preserve command-vs-question personality split and local skill payload compatibility
+- add focused tests for new phrase families and ambiguity boundaries
+
 ## Next Slices
 
-1. Dialog parsing expansion (more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
+1. Dialog parsing expansion (queued next as of `2026-05-06`; more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
 2. Holidays and seasonal personality slice beyond pizza day (time-scoped content backed by memory/proactivity path)
 3. Durable memory persistence path (swap in provider-backed multi-tenant storage while preserving behavior contracts)
 4. Update/backup/restore end-to-end proof (operator-run and documented)

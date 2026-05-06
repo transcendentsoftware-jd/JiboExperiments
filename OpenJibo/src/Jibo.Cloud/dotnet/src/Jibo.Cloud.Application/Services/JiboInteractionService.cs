@@ -2102,18 +2102,7 @@ public sealed class JiboInteractionService(
     {
         var normalized = NormalizeCommandPhrase(transcript);
 
-        var directMappings = new (string Prefix, PersonalAffinity Affinity)[]
-        {
-            ("i love ", PersonalAffinity.Love),
-            ("i like ", PersonalAffinity.Like),
-            ("i dislike ", PersonalAffinity.Dislike),
-            ("i hate ", PersonalAffinity.Dislike),
-            ("i don t like ", PersonalAffinity.Dislike),
-            ("i dont like ", PersonalAffinity.Dislike),
-            ("i do not like ", PersonalAffinity.Dislike)
-        };
-
-        foreach (var (prefix, affinity) in directMappings)
+        foreach (var (prefix, affinity) in PegasusUserAffinitySetPrefixes)
         {
             if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
             {
@@ -2133,17 +2122,8 @@ public sealed class JiboInteractionService(
     private static (string Item, PersonalAffinity? ExpectedAffinity)? TryExtractAffinityLookup(string transcript)
     {
         var normalized = NormalizeCommandPhrase(transcript);
-        var expectationPrefixes = new (string Prefix, PersonalAffinity? ExpectedAffinity)[]
-        {
-            ("do i love ", PersonalAffinity.Love),
-            ("do i like ", PersonalAffinity.Like),
-            ("do i dislike ", PersonalAffinity.Dislike),
-            ("do i hate ", PersonalAffinity.Dislike),
-            ("how do i feel about ", null),
-            ("what do i think about ", null)
-        };
 
-        foreach (var (prefix, expectedAffinity) in expectationPrefixes)
+        foreach (var (prefix, expectedAffinity) in PegasusUserAffinityLookupPrefixes)
         {
             if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
             {
@@ -2826,7 +2806,47 @@ public sealed class JiboInteractionService(
     private static readonly string[] PreferenceReverseMarkers =
     [
         " is my favorite ",
-        " is my favourite "
+        " is my favourite ",
+        " are my favorite ",
+        " are my favourite "
+    ];
+
+    // Directly imported from Pegasus parser intent phrase families:
+    // userLikesThing / userDislikesThing / doesUserLikeThing / doesUserDislikeThing.
+    private static readonly (string Prefix, PersonalAffinity Affinity)[] PegasusUserAffinitySetPrefixes =
+    [
+        ("i love ", PersonalAffinity.Love),
+        ("i like ", PersonalAffinity.Like),
+        ("i enjoy ", PersonalAffinity.Like),
+        ("i do like ", PersonalAffinity.Like),
+        ("i dislike ", PersonalAffinity.Dislike),
+        ("i hate ", PersonalAffinity.Dislike),
+        ("i don t like ", PersonalAffinity.Dislike),
+        ("i dont like ", PersonalAffinity.Dislike),
+        ("i do not like ", PersonalAffinity.Dislike),
+        ("i don t enjoy ", PersonalAffinity.Dislike),
+        ("i dont enjoy ", PersonalAffinity.Dislike),
+        ("i do not enjoy ", PersonalAffinity.Dislike),
+        ("i don t love ", PersonalAffinity.Dislike),
+        ("i dont love ", PersonalAffinity.Dislike),
+        ("i do not love ", PersonalAffinity.Dislike),
+        ("i can t stand ", PersonalAffinity.Dislike),
+        ("i cant stand ", PersonalAffinity.Dislike),
+        ("i despise ", PersonalAffinity.Dislike),
+        ("i detest ", PersonalAffinity.Dislike)
+    ];
+
+    private static readonly (string Prefix, PersonalAffinity? ExpectedAffinity)[] PegasusUserAffinityLookupPrefixes =
+    [
+        ("do i love ", PersonalAffinity.Love),
+        ("do i like ", PersonalAffinity.Like),
+        ("do i enjoy ", PersonalAffinity.Like),
+        ("do i dislike ", PersonalAffinity.Dislike),
+        ("do i hate ", PersonalAffinity.Dislike),
+        ("do i despise ", PersonalAffinity.Dislike),
+        ("do i detest ", PersonalAffinity.Dislike),
+        ("how do i feel about ", null),
+        ("what do i think about ", null)
     ];
 
     private static readonly string[] PizzaPreferenceCategories =

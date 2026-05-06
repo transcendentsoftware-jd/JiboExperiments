@@ -18,6 +18,28 @@ public sealed partial class WebSocketTurnFinalizationService(
     private static readonly TimeSpan AutoFinalizeMissingTranscriptFallbackAge = TimeSpan.FromMilliseconds(4200);
     private static readonly TimeSpan AutoFinalizeContinuationDeferralMaxAge = TimeSpan.FromMilliseconds(3600);
     private const int AutoFinalizeContinuationDeferralMaxAttempts = 2;
+    private static readonly HashSet<string> PegasusAffinityContinuationStems = new(StringComparer.Ordinal)
+    {
+        "i love",
+        "i like",
+        "i enjoy",
+        "i do like",
+        "i dislike",
+        "i hate",
+        "i dont like",
+        "i don t like",
+        "i do not like",
+        "i dont enjoy",
+        "i don t enjoy",
+        "i do not enjoy",
+        "i dont love",
+        "i don t love",
+        "i do not love",
+        "i cant stand",
+        "i can t stand",
+        "i despise",
+        "i detest"
+    };
 
     public static void ObserveIncomingMessage(CloudSession session, string? text)
     {
@@ -1482,7 +1504,18 @@ public sealed partial class WebSocketTurnFinalizationService(
             }
         }
 
+        if (LooksLikeIncompleteAffinitySet(normalized))
+        {
+            reason = "affinity_set_incomplete";
+            return true;
+        }
+
         return false;
+    }
+
+    private static bool LooksLikeIncompleteAffinitySet(string normalized)
+    {
+        return PegasusAffinityContinuationStems.Contains(normalized);
     }
 
     private static Dictionary<string, object?> BuildTurnDiagnosticSnapshot(

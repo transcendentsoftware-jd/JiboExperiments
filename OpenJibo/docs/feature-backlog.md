@@ -460,6 +460,27 @@ Current release theme:
   - what upload metadata must survive for gallery refresh
   - how to map this cleanly to Blob Storage
 
+### Next Up (`2026-05-06`): Dialog Parsing Expansion And Ambiguity Guardrails
+
+- Status: `ready`
+- Tags: `protocol`, `content`, `stt`, `docs`
+- Why now:
+  - this is the next queued `1.0.19` implementation slice after weather provider bring-up
+  - recent live runs showed phrases where trigger detection can interrupt full-utterance understanding
+  - phrase import work from Pegasus has already started for chitchat and should now expand to broader parsing boundaries
+- Scope:
+  - expand Pegasus-backed phrase coverage for question/command/assertion patterns
+  - add ambiguity guardrails for overlapping intents (date vs birthday, generic chat vs memory set/lookup, weather variants)
+  - preserve command-vs-question personality behavior and stock skill launch compatibility
+  - add focused tests for new phrase families and negative boundary cases
+- Exit criteria:
+  - ambiguous phrase handling is improved without regressions in existing `1.0.19` features
+  - phrase imports are documented and traceable to Pegasus parser sources
+  - test suite stays green and includes targeted parser-guardrail coverage
+- Tracking:
+  - [release-1.0.19-plan.md](release-1.0.19-plan.md)
+  - [system-diagram-alignment.md](system-diagram-alignment.md)
+
 ## Discovery Queue
 
 ### 12. Weather As Cloud Report Plus Local Presentation
@@ -661,7 +682,7 @@ For `1.0.19`:
 2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation) - implemented
 3. Proactivity selector baseline with source-backed first offers - implemented
 4. Weather report-skill launch compatibility - implemented
-5. Dialog parsing expansion and ambiguity guardrails
+5. Dialog parsing expansion and ambiguity guardrails - queued next as of `2026-05-06`
 6. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
 7. Durable memory persistence path (multi-tenant backing store)
 8. Update, backup, and restore proof

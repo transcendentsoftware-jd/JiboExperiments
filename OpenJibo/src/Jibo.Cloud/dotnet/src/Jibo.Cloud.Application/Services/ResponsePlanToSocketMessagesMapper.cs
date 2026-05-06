@@ -31,6 +31,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isVolumeControl = string.Equals(plan.IntentName, "volume_up", StringComparison.OrdinalIgnoreCase) ||
                               string.Equals(plan.IntentName, "volume_down", StringComparison.OrdinalIgnoreCase) ||
                               string.Equals(plan.IntentName, "volume_to_value", StringComparison.OrdinalIgnoreCase);
+        var isProactivePizzaFactOffer = string.Equals(plan.IntentName, "proactive_offer_pizza_fact", StringComparison.OrdinalIgnoreCase);
         var isSettingsLaunch = string.Equals(skill?.SkillName, "@be/settings", StringComparison.OrdinalIgnoreCase);
         var isGlobalCommand = isStopCommand || isVolumeControl;
         var isPhotoGalleryLaunch = string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase);
@@ -99,7 +100,9 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                               !string.IsNullOrWhiteSpace(clientIntent)
                                                 ? clientIntent
                                                 : transcript;
-        var outboundRules = isWordOfDayLaunch
+        var outboundRules = isProactivePizzaFactOffer
+            ? ["shared/yes_no", "$YESNO"]
+            : isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
             : isGlobalCommand
                 ? BuildGlobalCommandRules(rules)
