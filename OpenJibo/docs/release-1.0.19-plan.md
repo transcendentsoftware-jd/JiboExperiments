@@ -68,17 +68,52 @@ The second delivered slice is first tenant-scoped personal memory:
 
 Memory keys are scoped by account/loop/device tenant context so one tenant does not leak into another.
 
+## Third Implemented Slice In `1.0.19`
+
+The third delivered slice starts memory-triggered proactivity and broadens memory parsing:
+
+- `surprise me` now runs a weighted proactivity selector
+- selectors use tenant-scoped memory signals (favorites and likes/dislikes) plus date triggers
+- February 9 (`National Pizza Day`) can proactively launch the pizza animation path
+- proactive pizza fact offer flow now stores pending offer state and resolves direct `yes` / `no` follow-up answers
+- memory parsing now covers:
+  - names (`my name is ...`, `what is my name`)
+  - important dates (`our anniversary is ...`, `when is our anniversary`)
+  - likes/dislikes (`i like ...`, `i love ...`, `i dislike ...`, `i don't like ...`)
+  - favorite phrase variants including reverse form (`pizza is my favorite food`)
+
+## Fourth Implemented Slice In `1.0.19`
+
+The fourth delivered slice starts weather compatibility using Pegasus-style report-skill routing:
+
+- weather phrases now route to `report-skill` instead of generic placeholder chat
+- outbound NLU launch uses legacy reactive intent `requestWeatherPR` (source-aligned with Pegasus manifests/tests)
+- weather entity hints are added for:
+  - `date = tomorrow` on tomorrow phrasing
+  - `Weather = rain|snow|...` on condition questions (for example `will it rain tomorrow`)
+- websocket output now emits local skill redirect + silent completion for weather launch, matching existing local-skill launch patterns
+
+## Fifth Implemented Slice In `1.0.19`
+
+The fifth delivered slice adds provider-backed weather content while preserving Pegasus launch compatibility:
+
+- OpenWeather provider abstraction and infrastructure wiring are added to the hosted cloud
+- weather requests still launch `report-skill` with `requestWeatherPR` and legacy weather/date entities
+- weather replies now include cloud-generated spoken summaries from provider data:
+  - current conditions (`Right now in ...`)
+  - tomorrow forecast shape (`Tomorrow in ...`) with high/low temperatures when available
+- simple location extraction is supported for phrasing like `what's the weather in Chicago tomorrow`
+- provider config supports appsettings and `OPENWEATHER_API_KEY` environment fallback for deployment
+
 ## Next Slices
 
-1. Command-vs-question personality split (start with dance/twerk-style prompts, keep commands action-oriented and questions conversational)
-2. Expand memory-backed personal facts (tenant-scoped birthday/preferences coverage, persistence depth, and parsing breadth)
-3. Proactivity selector baseline (source-backed first proactive offers with safe throttling and stock-compatible payloads)
-4. Dialog parsing expansion (more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
-5. Holidays and seasonal personality slice (time-scoped content backed by the new memory/proactivity path)
-6. Update/backup/restore end-to-end proof (operator-run and documented)
-7. STT noise-screening and short-utterance reliability pass
-8. Provider-backed news/weather expansion using Pegasus-backed contracts
-9. Capture indexing and retention boundary for group testing
+1. Dialog parsing expansion (more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
+2. Holidays and seasonal personality slice beyond pizza day (time-scoped content backed by memory/proactivity path)
+3. Durable memory persistence path (swap in provider-backed multi-tenant storage while preserving behavior contracts)
+4. Update/backup/restore end-to-end proof (operator-run and documented)
+5. STT noise-screening and short-utterance reliability pass
+6. Provider-backed news expansion and deeper weather parity using Pegasus-backed contracts
+7. Capture indexing and retention boundary for group testing
 
 For slices 1-5, use Pegasus phrase lists, MIM IDs, and behavior patterns as the source anchor before broadening into OpenJibo-native improvements.
 

@@ -247,6 +247,232 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_NameMemory_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my name is Alex",
+            NormalizedTranscript = "my name is Alex",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_name", setDecision.IntentName);
+        Assert.Equal("Nice to meet you, alex. I will remember your name.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what is my name",
+            NormalizedTranscript = "what is my name",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_name", recallDecision.IntentName);
+        Assert.Equal("You told me your name is alex.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ImportantDateMemory_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "our anniversary is June 10",
+            NormalizedTranscript = "our anniversary is June 10",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_important_date", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your anniversary is june 10.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "when is our anniversary",
+            NormalizedTranscript = "when is our anniversary",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_important_date", recallDecision.IntentName);
+        Assert.Equal("You told me your anniversary is june 10.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinityMemory_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "I dislike mushrooms",
+            NormalizedTranscript = "I dislike mushrooms",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_affinity", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember you dislike mushrooms.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do i dislike mushrooms",
+            NormalizedTranscript = "do i dislike mushrooms",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_affinity", recallDecision.IntentName);
+        Assert.Equal("Yes. You told me you dislike mushrooms.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceReversePhrase_ParsesFavoriteVariant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "pizza is my favorite food",
+            NormalizedTranscript = "pizza is my favorite food",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_preference", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your favorite food is pizza.", setDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_Surprise_WithPizzaPreference_UsesPizzaProactivity()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my favorite food is pizza",
+            NormalizedTranscript = "my favorite food is pizza",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "surprise me",
+            NormalizedTranscript = "surprise me",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("proactive_pizza_preference", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("RA_JBO_MakePizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_Surprise_OnNationalPizzaDay_UsesHolidayProactivity()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "surprise me",
+            NormalizedTranscript = "surprise me",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-02-09T10:45:00-06:00"}}}"""
+            }
+        });
+
+        Assert.Equal("proactive_pizza_day", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Contains("National Pizza Day", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PendingPizzaFactOffer_YesMapsToFact()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes",
+            NormalizedTranscript = "yes",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["pendingProactivityOffer"] = "pizza_fact"
+            }
+        });
+
+        Assert.Equal("proactive_pizza_fact", decision.IntentName);
+        Assert.Contains("350 slices per second", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PendingPizzaFactOffer_NoMapsToDecline()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "no",
+            NormalizedTranscript = "no",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["pendingProactivityOffer"] = "pizza_fact"
+            }
+        });
+
+        Assert.Equal("proactive_offer_declined", decision.IntentName);
+        Assert.Equal("No problem. We can save the pizza fact for another time.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_MakePizza_UsesOriginalMimStylePayload()
     {
         var service = CreateService();
@@ -337,6 +563,117 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("order_pizza", decision.IntentName);
         Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherQuery_LaunchesReportSkillWithPegasusIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "how is the weather",
+            NormalizedTranscript = "how is the weather"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("report-skill", decision.SkillName);
+        Assert.Equal("requestWeatherPR", decision.SkillPayload!["localIntent"]);
+        Assert.Equal("weather", decision.SkillPayload["cloudSkill"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherTomorrowQuery_SetsTomorrowEntity()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather tomorrow",
+            NormalizedTranscript = "what's the weather tomorrow"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("tomorrow", decision.SkillPayload!["date"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherConditionQuery_SetsWeatherConditionEntity()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "will it rain tomorrow",
+            NormalizedTranscript = "will it rain tomorrow"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("rain", decision.SkillPayload!["weatherCondition"]);
+        Assert.Equal("tomorrow", decision.SkillPayload["date"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ClientNluRequestWeatherPR_LaunchesReportSkill()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "requestWeatherPR",
+            NormalizedTranscript = "requestWeatherPR",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientIntent"] = "requestWeatherPR"
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("report-skill", decision.SkillName);
+        Assert.Equal("requestWeatherPR", decision.SkillPayload!["localIntent"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherQuery_WithProvider_UsesProviderSummary()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Boston, US", "light rain", 61, 65, 54, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "how is the weather",
+            NormalizedTranscript = "how is the weather"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("openweather", decision.SkillPayload!["provider"]);
+        Assert.Equal(61, decision.SkillPayload["temperature"]);
+        Assert.Equal("rain", decision.SkillPayload["weatherCondition"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherLocationTomorrow_WithProvider_PassesLocationAndTomorrowRequest()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Chicago, US", "mostly cloudy", 72, 74, 60, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather in chicago tomorrow",
+            NormalizedTranscript = "what's the weather in chicago tomorrow"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
+        Assert.True(provider.LastRequest?.IsTomorrow);
+        Assert.Equal("Tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1295,12 +1632,15 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("aglet", decision.SkillPayload!["guess"]);
     }
 
-    private static JiboInteractionService CreateService(IPersonalMemoryStore? personalMemoryStore = null)
+    private static JiboInteractionService CreateService(
+        IPersonalMemoryStore? personalMemoryStore = null,
+        IWeatherReportProvider? weatherReportProvider = null)
     {
         return new JiboInteractionService(
             new JiboExperienceContentCache(new InMemoryJiboExperienceContentRepository()),
             new FirstItemRandomizer(),
-            personalMemoryStore ?? new InMemoryPersonalMemoryStore());
+            personalMemoryStore ?? new InMemoryPersonalMemoryStore(),
+            weatherReportProvider);
     }
 
     private sealed class FirstItemRandomizer : IJiboRandomizer
@@ -1308,6 +1648,21 @@ public sealed class JiboInteractionServiceTests
         public T Choose<T>(IReadOnlyList<T> items)
         {
             return items[0];
+        }
+    }
+
+    private sealed class CapturingWeatherReportProvider : IWeatherReportProvider
+    {
+        public WeatherReportRequest? LastRequest { get; private set; }
+
+        public WeatherReportSnapshot? Snapshot { get; init; }
+
+        public Task<WeatherReportSnapshot?> GetReportAsync(
+            WeatherReportRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return Task.FromResult(Snapshot);
         }
     }
 }

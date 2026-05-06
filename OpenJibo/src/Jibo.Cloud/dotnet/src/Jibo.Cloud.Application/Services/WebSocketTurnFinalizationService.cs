@@ -538,6 +538,9 @@ public sealed partial class WebSocketTurnFinalizationService(
         {
             session.Metadata["lastClockDomain"] = lastClockDomainValue.ToString();
         }
+
+        UpdatePendingProactivityOffer(session, plan.IntentName);
+
         session.FollowUpExpiresUtc = plan.FollowUp.KeepMicOpen
             ? DateTimeOffset.UtcNow.Add(plan.FollowUp.Timeout)
             : null;
@@ -567,13 +570,13 @@ public sealed partial class WebSocketTurnFinalizationService(
                                !string.Equals(plan.IntentName, "alarm_cancel", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "timer_clarify", StringComparison.OrdinalIgnoreCase) &&
                                !string.Equals(plan.IntentName, "alarm_clarify", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "timer_value", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "alarm_value", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "snapshot", StringComparison.OrdinalIgnoreCase) &&
-                               !string.Equals(plan.IntentName, "photobooth", StringComparison.OrdinalIgnoreCase) &&
-                               (messageType != "CLIENT_NLU" ||
-                                string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase));
+                                !string.Equals(plan.IntentName, "timer_value", StringComparison.OrdinalIgnoreCase) &&
+                                !string.Equals(plan.IntentName, "alarm_value", StringComparison.OrdinalIgnoreCase) &&
+                                !string.Equals(plan.IntentName, "photo_gallery", StringComparison.OrdinalIgnoreCase) &&
+                                !string.Equals(plan.IntentName, "snapshot", StringComparison.OrdinalIgnoreCase) &&
+                                !string.Equals(plan.IntentName, "photobooth", StringComparison.OrdinalIgnoreCase) &&
+                                (messageType != "CLIENT_NLU" ||
+                                 string.Equals(plan.IntentName, "word_of_the_day_guess", StringComparison.OrdinalIgnoreCase));
         var replies = ResponsePlanToSocketMessagesMapper.Map(plan, finalizedTurn, session, emitSkillActions).Select(map => new WebSocketReply
         {
             Text = map.Text,
@@ -812,6 +815,7 @@ public sealed partial class WebSocketTurnFinalizationService(
     {
         var messageType = ReadMessageType(turn);
         var clientIntent = ReadAttribute(turn, "clientIntent");
+        var pendingProactivityOffer = ReadAttribute(turn, "pendingProactivityOffer");
         var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
         var listenRules = ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules")).ToArray();
 
@@ -842,6 +846,12 @@ public sealed partial class WebSocketTurnFinalizationService(
         }
 
         if (IsYesNoTurn(turn) && transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(pendingProactivityOffer) &&
+            transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
         {
             return true;
         }
@@ -958,6 +968,17 @@ public sealed partial class WebSocketTurnFinalizationService(
                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void UpdatePendingProactivityOffer(CloudSession session, string? intentName)
+    {
+        if (string.Equals(intentName, "proactive_offer_pizza_fact", StringComparison.OrdinalIgnoreCase))
+        {
+            session.Metadata["pendingProactivityOffer"] = "pizza_fact";
+            return;
+        }
+
+        session.Metadata.Remove("pendingProactivityOffer");
     }
 
     private static IEnumerable<string> ReadRules(TurnContext turn, string key)

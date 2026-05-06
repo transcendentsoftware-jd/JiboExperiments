@@ -4,6 +4,7 @@ using Jibo.Cloud.Infrastructure.Audio;
 using Jibo.Cloud.Infrastructure.Content;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Infrastructure.Telemetry;
+using Jibo.Cloud.Infrastructure.Weather;
 using Jibo.Runtime.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,20 @@ public static class ServiceCollectionExtensions
             configuration.GetSection("OpenJibo:Stt").Bind(sttOptions);
         }
 
+        var openWeatherOptions = new OpenWeatherOptions();
+        if (configuration is not null)
+        {
+            configuration.GetSection("OpenJibo:Weather:OpenWeather").Bind(openWeatherOptions);
+        }
+
+        if (string.IsNullOrWhiteSpace(openWeatherOptions.ApiKey))
+        {
+            openWeatherOptions.ApiKey = Environment.GetEnvironmentVariable("OPENWEATHER_API_KEY");
+        }
+
         services.AddSingleton(sttOptions);
+        services.AddSingleton(openWeatherOptions);
+        services.AddHttpClient<IWeatherReportProvider, OpenWeatherReportProvider>();
         var statePersistencePath = configuration?["OpenJibo:State:PersistencePath"]
             ?? Path.Combine(AppContext.BaseDirectory, "App_Data", "cloud-state.json");
         services.AddSingleton<ICloudStateStore>(_ => new InMemoryCloudStateStore(statePersistencePath));

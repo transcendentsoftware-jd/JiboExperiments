@@ -50,6 +50,13 @@ public sealed class ProtocolToTurnContextMapper
             attributes["lastClockDomain"] = lastClockDomainText;
         }
 
+        if (session.Metadata.TryGetValue("pendingProactivityOffer", out var pendingProactivityOffer) &&
+            pendingProactivityOffer is string pendingProactivityOfferText &&
+            !string.IsNullOrWhiteSpace(pendingProactivityOfferText))
+        {
+            attributes["pendingProactivityOffer"] = pendingProactivityOfferText;
+        }
+
         attributes["listenHotphrase"] = turnState.ListenHotphrase;
 
         if (turnState.ListenRules.Count > 0)

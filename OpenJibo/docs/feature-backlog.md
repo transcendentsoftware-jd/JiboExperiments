@@ -610,9 +610,38 @@ Current release theme:
   - preference set/recall works (`my favorite X is Y` / `what is my favorite X`)
   - account/loop/device scoped lookup prevents cross-tenant leakage
 - Follow-up:
-  - extend phrase parsing beyond first rule-based patterns
   - add durable persistence path for personal facts
-  - broaden fact categories (names, important dates, household preferences)
+  - broaden fact categories further (multi-person household memory, relationship cues, and corrective updates)
+
+### 24. Memory-Triggered Proactivity Baseline
+
+- Status: `implemented`
+- Tags: `content`, `storage`, `protocol`
+- Result:
+  - `surprise me` now uses weighted candidate selection instead of only generic fallback text
+  - candidate weighting uses tenant-scoped memory signals and date triggers
+  - February 9 (`National Pizza Day`) can proactively launch the legacy pizza animation path
+  - proactive pizza fact offer flow stores pending offer state in session metadata and resolves direct short `yes/no` turns
+  - memory parsing now includes names, anniversary-style important dates, likes/dislikes variants, and reverse favorite phrasing (`pizza is my favorite food`)
+- Follow-up:
+  - expand proactivity beyond pizza to additional Pegasus-backed categories
+  - add cooldown/throttle policy and observability around proactive offer frequency
+  - connect memory store to durable multi-tenant persistence
+
+### 25. Weather Report-Skill Launch Compatibility
+
+- Status: `implemented`
+- Tags: `protocol`, `content`
+- Result:
+  - weather requests now launch `report-skill` using Pegasus-aligned intent `requestWeatherPR`
+  - weather phrase coverage includes baseline forecast and condition-style questions (`will it rain`, `is it snowing`, tomorrow variants)
+  - weather launches emit `SKILL_REDIRECT` + completion and now also include cloud weather speech so weather turns remain useful even when local report providers are incomplete
+  - weather entity hints are carried in outbound NLU (`date = tomorrow`, `Weather = rain/snow/...`) for report-skill consumption
+  - OpenWeather provider integration is in place with configurable API key, default location, unit preference, and environment-variable fallback (`OPENWEATHER_API_KEY`)
+  - cloud weather speech now uses live provider summaries for current conditions and tomorrow high/low forecast when available
+- Follow-up:
+  - connect weather units and location directly to user/report-skill settings parity instead of config defaults
+  - add richer condition-change commentary and view parity with original report-skill weather behaviors
 
 ## Suggested Order
 
@@ -628,17 +657,19 @@ Use [regression-test-plan.md](regression-test-plan.md) as the detailed checklist
 
 For `1.0.19`:
 
-1. Command-vs-question personality split (`dance` command vs `do you like to dance` question style; expand this pattern)
-2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation)
-3. Proactivity selector baseline with source-backed first offers
-4. Dialog parsing expansion and ambiguity guardrails
-5. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
-6. Update, backup, and restore proof
-7. STT upgrade and noise screening
-8. Hosted capture/storage plan / indexing for group testing
-9. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
-10. Provider-backed news and weather
-11. Lasso, identity, and onboarding as larger discovery-driven tracks
+1. Command-vs-question personality split (`dance` command vs `do you like to dance` question style; expand this pattern) - implemented
+2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation) - implemented
+3. Proactivity selector baseline with source-backed first offers - implemented
+4. Weather report-skill launch compatibility - implemented
+5. Dialog parsing expansion and ambiguity guardrails
+6. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
+7. Durable memory persistence path (multi-tenant backing store)
+8. Update, backup, and restore proof
+9. STT upgrade and noise screening
+10. Hosted capture/storage plan / indexing for group testing
+11. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
+12. Provider-backed news and weather parity polish
+13. Lasso, identity, and onboarding as larger discovery-driven tracks
 
 For `1.0.20` and beyond:
 

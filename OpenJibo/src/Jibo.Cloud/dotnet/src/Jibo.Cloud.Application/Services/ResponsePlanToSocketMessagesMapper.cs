@@ -37,6 +37,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isPhotoCreateLaunch = string.Equals(plan.IntentName, "snapshot", StringComparison.OrdinalIgnoreCase) ||
                                   string.Equals(plan.IntentName, "photobooth", StringComparison.OrdinalIgnoreCase);
         var isClockSkillLaunch = string.Equals(skill?.SkillName, "@be/clock", StringComparison.OrdinalIgnoreCase);
+        var isReportSkillLaunch = string.Equals(skill?.SkillName, "report-skill", StringComparison.OrdinalIgnoreCase);
         var localIntent = ReadSkillPayloadString(skill, "localIntent");
         var clockIntent = ReadSkillPayloadString(skill, "clockIntent");
         var clockDomain = ReadSkillPayloadString(skill, "domain");
@@ -50,6 +51,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var globalIntent = ReadSkillPayloadString(skill, "globalIntent");
         var nluDomain = ReadSkillPayloadString(skill, "nluDomain");
         var volumeLevel = ReadSkillPayloadString(skill, "volumeLevel");
+        var reportDate = ReadSkillPayloadString(skill, "date");
+        var reportWeatherCondition = ReadSkillPayloadString(skill, "weatherCondition");
         var nluGuess = ReadClientEntity(turn, "guess");
         var wordOfDayGuess = ResolveWordOfDayGuess(turn, transcript, nluGuess);
         var outboundIntent = isGlobalCommand && !string.IsNullOrWhiteSpace(globalIntent)
@@ -64,6 +67,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                             ? localIntent
                             : isClockSkillLaunch && !string.IsNullOrWhiteSpace(clockIntent)
                                 ? clockIntent
+                                : isReportSkillLaunch && !string.IsNullOrWhiteSpace(localIntent)
+                                    ? localIntent
                                 : isWordOfDayGuess
                                     ? "guess"
                                     : string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase) &&
@@ -112,6 +117,8 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                 ? string.Equals(messageType, "CLIENT_NLU", StringComparison.OrdinalIgnoreCase)
                                     ? rules
                                     : []
+                                : isReportSkillLaunch
+                                    ? []
                                 : isWordOfDayGuess
                                     ? ["word-of-the-day/puzzle"]
                                     : isYesNoTurn && isYesNoIntent
@@ -136,7 +143,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
             timerMinutes,
             timerSeconds,
             alarmTime,
-            alarmAmPm);
+            alarmAmPm,
+            isReportSkillLaunch,
+            reportDate,
+            reportWeatherCondition);
         var listenMessage = new
         {
             type = "LISTEN",
@@ -159,6 +169,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                     isPhotoGalleryLaunch ? "@be/gallery" :
                     isPhotoCreateLaunch ? "@be/create" :
                     isClockSkillLaunch ? "@be/clock" :
+                    isReportSkillLaunch ? "report-skill" :
                     null,
                     isGlobalCommand ? nluDomain ?? "global_commands" : null),
                 match = new
@@ -283,6 +294,22 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 75));
             messages.Add(new SocketReplyPlan(
                 JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, skillId)),
+                DelayMs: 125));
+        }
+
+        if (isReportSkillLaunch)
+        {
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildSkillRedirectPayload(
+                    transId,
+                    "report-skill",
+                    outboundIntent,
+                    outboundAsrText,
+                    outboundRules,
+                    entities)),
+                DelayMs: 75));
+            messages.Add(new SocketReplyPlan(
+                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "report-skill")),
                 DelayMs: 125));
         }
 
@@ -444,7 +471,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
         string? timerMinutes,
         string? timerSeconds,
         string? alarmTime,
-        string? alarmAmPm)
+        string? alarmAmPm,
+        bool reportSkillLaunch,
+        string? reportDate,
+        string? reportWeatherCondition)
     {
         if (yesNoTurn)
         {
@@ -510,6 +540,22 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
             entities["time"] = alarmTime ?? string.Empty;
             entities["ampm"] = alarmAmPm ?? string.Empty;
+
+            return entities;
+        }
+
+        if (reportSkillLaunch)
+        {
+            var entities = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(reportDate))
+            {
+                entities["date"] = reportDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(reportWeatherCondition))
+            {
+                entities["Weather"] = reportWeatherCondition;
+            }
 
             return entities;
         }

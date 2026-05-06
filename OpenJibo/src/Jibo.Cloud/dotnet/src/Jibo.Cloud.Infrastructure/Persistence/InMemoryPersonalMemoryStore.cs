@@ -36,6 +36,62 @@ public sealed class InMemoryPersonalMemoryStore : IPersonalMemoryStore
             : null;
     }
 
+    public void SetName(PersonalMemoryTenantScope tenantScope, string name)
+    {
+        var key = BuildTenantKey(tenantScope);
+        var record = _tenantMemory.GetOrAdd(key, static _ => new TenantMemoryRecord());
+        record.Name = name;
+    }
+
+    public string? GetName(PersonalMemoryTenantScope tenantScope)
+    {
+        var key = BuildTenantKey(tenantScope);
+        return _tenantMemory.TryGetValue(key, out var record) ? record.Name : null;
+    }
+
+    public void SetImportantDate(PersonalMemoryTenantScope tenantScope, string label, string value)
+    {
+        var key = BuildTenantKey(tenantScope);
+        var record = _tenantMemory.GetOrAdd(key, static _ => new TenantMemoryRecord());
+        record.ImportantDates[NormalizeCategory(label)] = value;
+    }
+
+    public string? GetImportantDate(PersonalMemoryTenantScope tenantScope, string label)
+    {
+        var key = BuildTenantKey(tenantScope);
+        return _tenantMemory.TryGetValue(key, out var record) &&
+               record.ImportantDates.TryGetValue(NormalizeCategory(label), out var value)
+            ? value
+            : null;
+    }
+
+    public void SetAffinity(PersonalMemoryTenantScope tenantScope, string item, PersonalAffinity affinity)
+    {
+        var key = BuildTenantKey(tenantScope);
+        var record = _tenantMemory.GetOrAdd(key, static _ => new TenantMemoryRecord());
+        record.Affinities[NormalizeCategory(item)] = affinity;
+    }
+
+    public PersonalAffinity? GetAffinity(PersonalMemoryTenantScope tenantScope, string item)
+    {
+        var key = BuildTenantKey(tenantScope);
+        return _tenantMemory.TryGetValue(key, out var record) &&
+               record.Affinities.TryGetValue(NormalizeCategory(item), out var affinity)
+            ? affinity
+            : null;
+    }
+
+    public IReadOnlyDictionary<string, PersonalAffinity> GetAffinities(PersonalMemoryTenantScope tenantScope)
+    {
+        var key = BuildTenantKey(tenantScope);
+        if (!_tenantMemory.TryGetValue(key, out var record))
+        {
+            return new Dictionary<string, PersonalAffinity>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        return new Dictionary<string, PersonalAffinity>(record.Affinities, StringComparer.OrdinalIgnoreCase);
+    }
+
     private static string BuildTenantKey(PersonalMemoryTenantScope tenantScope)
     {
         return $"{tenantScope.AccountId}|{tenantScope.LoopId}|{tenantScope.DeviceId}";
@@ -49,6 +105,9 @@ public sealed class InMemoryPersonalMemoryStore : IPersonalMemoryStore
     private sealed class TenantMemoryRecord
     {
         public string? Birthday { get; set; }
+        public string? Name { get; set; }
         public ConcurrentDictionary<string, string> Preferences { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public ConcurrentDictionary<string, string> ImportantDates { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public ConcurrentDictionary<string, PersonalAffinity> Affinities { get; } = new(StringComparer.OrdinalIgnoreCase);
     }
 }

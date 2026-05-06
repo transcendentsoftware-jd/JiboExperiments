@@ -1,5 +1,6 @@
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Runtime.Abstractions;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -8,7 +9,8 @@ namespace Jibo.Cloud.Application.Services;
 public sealed class JiboInteractionService(
     JiboExperienceContentCache contentCache,
     IJiboRandomizer randomizer,
-    IPersonalMemoryStore personalMemoryStore)
+    IPersonalMemoryStore personalMemoryStore,
+    IWeatherReportProvider? weatherReportProvider = null)
 {
     public async Task<JiboInteractionDecision> BuildDecisionAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
@@ -26,6 +28,9 @@ public sealed class JiboInteractionService(
         var lastClockDomain = turn.Attributes.TryGetValue("lastClockDomain", out var rawLastClockDomain)
             ? rawLastClockDomain?.ToString()
             : null;
+        var pendingProactivityOffer = turn.Attributes.TryGetValue("pendingProactivityOffer", out var rawPendingProactivityOffer)
+            ? rawPendingProactivityOffer?.ToString()
+            : null;
         var isYesNoTurn = IsYesNoTurn(turn);
 
         var isTimerValueTurn = IsClockTimerValueTurn(clientRules, listenRules);
@@ -38,6 +43,7 @@ public sealed class JiboInteractionService(
             listenRules,
             clientEntities,
             lastClockDomain,
+            pendingProactivityOffer,
             isYesNoTurn,
             isTimerValueTurn,
             isAlarmValueTurn);
@@ -78,19 +84,30 @@ public sealed class JiboInteractionService(
             "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
             "robot_birthday" => BuildRobotBirthdayDecision(),
             "robot_personality" => new JiboInteractionDecision("robot_personality", randomizer.Choose(catalog.PersonalityReplies)),
+            "memory_set_name" => BuildRememberNameDecision(turn, transcript),
+            "memory_get_name" => BuildRecallNameDecision(turn),
             "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),
             "memory_get_birthday" => BuildRecallBirthdayDecision(turn),
+            "memory_set_important_date" => BuildRememberImportantDateDecision(turn, transcript),
+            "memory_get_important_date" => BuildRecallImportantDateDecision(turn, transcript),
             "memory_set_preference" => BuildRememberPreferenceDecision(turn, transcript),
             "memory_get_preference" => BuildRecallPreferenceDecision(turn, transcript),
+            "memory_set_affinity" => BuildRememberAffinityDecision(turn, transcript),
+            "memory_get_affinity" => BuildRecallAffinityDecision(turn, transcript),
             "pizza" => BuildPizzaDecision(),
             "order_pizza" => BuildOrderPizzaDecision(),
+            "proactive_pizza_day" => BuildProactivePizzaDayDecision(referenceLocalTime),
+            "proactive_pizza_preference" => BuildProactivePizzaPreferenceDecision(),
+            "proactive_offer_pizza_fact" => BuildProactivePizzaFactOfferDecision(),
+            "proactive_pizza_fact" => BuildProactivePizzaFactDecision(),
+            "proactive_offer_declined" => BuildProactiveOfferDeclinedDecision(),
+            "weather" => await BuildWeatherReportDecisionAsync(turn, transcript, cancellationToken),
             "yes" => new JiboInteractionDecision("yes", "Yes."),
             "no" => new JiboInteractionDecision("no", "No."),
             "word_of_the_day" => BuildWordOfTheDayLaunchDecision(),
             "word_of_the_day_guess" => BuildWordOfTheDayGuessDecision(clientEntities, transcript, listenAsrHints),
-            "surprise" => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies)),
+            "surprise" => BuildSurpriseDecision(catalog, turn, referenceLocalTime),
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
-            "weather" => new JiboInteractionDecision("weather", randomizer.Choose(catalog.WeatherReplies)),
             "calendar" => new JiboInteractionDecision("calendar", randomizer.Choose(catalog.CalendarReplies)),
             "commute" => new JiboInteractionDecision("commute", randomizer.Choose(catalog.CommuteReplies)),
             "news" => BuildNewsDecision(catalog),
@@ -120,6 +137,34 @@ public sealed class JiboInteractionService(
             $"My birthday is {OpenJiboCloudBuildInfo.PersonaBirthdayWords}.");
     }
 
+    private JiboInteractionDecision BuildRememberNameDecision(TurnContext turn, string transcript)
+    {
+        var name = TryExtractNameFact(transcript);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return new JiboInteractionDecision(
+                "memory_set_name",
+                "I can remember it if you say, my name is Alex.");
+        }
+
+        personalMemoryStore.SetName(ResolveTenantScope(turn), name);
+        return new JiboInteractionDecision(
+            "memory_set_name",
+            $"Nice to meet you, {name}. I will remember your name.");
+    }
+
+    private JiboInteractionDecision BuildRecallNameDecision(TurnContext turn)
+    {
+        var name = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        return string.IsNullOrWhiteSpace(name)
+            ? new JiboInteractionDecision(
+                "memory_get_name",
+                "I do not know your name yet. You can say, my name is Alex.")
+            : new JiboInteractionDecision(
+                "memory_get_name",
+                $"You told me your name is {name}.");
+    }
+
     private JiboInteractionDecision BuildRememberBirthdayDecision(TurnContext turn, string transcript)
     {
         var birthday = TryExtractBirthdayFact(transcript);
@@ -146,6 +191,42 @@ public sealed class JiboInteractionService(
             : new JiboInteractionDecision(
                 "memory_get_birthday",
                 $"You told me your birthday is {birthday}.");
+    }
+
+    private JiboInteractionDecision BuildRememberImportantDateDecision(TurnContext turn, string transcript)
+    {
+        var importantDate = TryExtractImportantDateSet(transcript);
+        if (importantDate is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_set_important_date",
+                "I can remember it if you say, our anniversary is June 10.");
+        }
+
+        personalMemoryStore.SetImportantDate(ResolveTenantScope(turn), importantDate.Value.Label, importantDate.Value.Value);
+        return new JiboInteractionDecision(
+            "memory_set_important_date",
+            $"Got it. I will remember your {importantDate.Value.Label} is {importantDate.Value.Value}.");
+    }
+
+    private JiboInteractionDecision BuildRecallImportantDateDecision(TurnContext turn, string transcript)
+    {
+        var label = TryExtractImportantDateLookupLabel(transcript);
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            return new JiboInteractionDecision(
+                "memory_get_important_date",
+                "Ask me like this: when is our anniversary?");
+        }
+
+        var storedDate = personalMemoryStore.GetImportantDate(ResolveTenantScope(turn), label);
+        return string.IsNullOrWhiteSpace(storedDate)
+            ? new JiboInteractionDecision(
+                "memory_get_important_date",
+                $"I do not know your {label} yet.")
+            : new JiboInteractionDecision(
+                "memory_get_important_date",
+                $"You told me your {label} is {storedDate}.");
     }
 
     private JiboInteractionDecision BuildRememberPreferenceDecision(TurnContext turn, string transcript)
@@ -184,12 +265,71 @@ public sealed class JiboInteractionService(
                 $"You told me your favorite {category} is {preference}.");
     }
 
+    private JiboInteractionDecision BuildRememberAffinityDecision(TurnContext turn, string transcript)
+    {
+        var affinitySet = TryExtractAffinitySet(transcript);
+        if (affinitySet is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_set_affinity",
+                "I can remember it if you say, I like pizza or I dislike mushrooms.");
+        }
+
+        personalMemoryStore.SetAffinity(ResolveTenantScope(turn), affinitySet.Value.Item, affinitySet.Value.Affinity);
+        return new JiboInteractionDecision(
+            "memory_set_affinity",
+            $"Got it. I will remember you {DescribeAffinityAsVerb(affinitySet.Value.Affinity)} {affinitySet.Value.Item}.");
+    }
+
+    private JiboInteractionDecision BuildRecallAffinityDecision(TurnContext turn, string transcript)
+    {
+        var lookup = TryExtractAffinityLookup(transcript);
+        if (lookup is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_get_affinity",
+                "Ask me like this: do I like pizza?");
+        }
+
+        var affinity = personalMemoryStore.GetAffinity(ResolveTenantScope(turn), lookup.Value.Item);
+        if (affinity is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_get_affinity",
+                $"I do not remember how you feel about {lookup.Value.Item} yet.");
+        }
+
+        if (lookup.Value.ExpectedAffinity is null)
+        {
+            return new JiboInteractionDecision(
+                "memory_get_affinity",
+                $"You told me you {DescribeAffinityAsVerb(affinity.Value)} {lookup.Value.Item}.");
+        }
+
+        var matches = lookup.Value.ExpectedAffinity == PersonalAffinity.Dislike
+            ? affinity == PersonalAffinity.Dislike
+            : affinity is PersonalAffinity.Like or PersonalAffinity.Love;
+
+        return matches
+            ? new JiboInteractionDecision(
+                "memory_get_affinity",
+                $"Yes. You told me you {DescribeAffinityAsVerb(affinity.Value)} {lookup.Value.Item}.")
+            : new JiboInteractionDecision(
+                "memory_get_affinity",
+                $"Not exactly. You told me you {DescribeAffinityAsVerb(affinity.Value)} {lookup.Value.Item}.");
+    }
+
     private JiboInteractionDecision BuildPizzaDecision()
+    {
+        return BuildPizzaAnimationDecision("pizza", "One pizza, coming right up.");
+    }
+
+    private JiboInteractionDecision BuildPizzaAnimationDecision(string intentName, string replyText)
     {
         var prompt = randomizer.Choose(PizzaMimPrompts);
         return new JiboInteractionDecision(
-            "pizza",
-            "One pizza, coming right up.",
+            intentName,
+            replyText,
             "chitchat-skill",
             new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
@@ -199,6 +339,158 @@ public sealed class JiboInteractionService(
                 ["prompt_id"] = prompt.PromptId,
                 ["prompt_sub_category"] = "AN"
             });
+    }
+
+    private JiboInteractionDecision BuildProactivePizzaDayDecision(DateTimeOffset? referenceLocalTime)
+    {
+        var referenceDate = (referenceLocalTime ?? DateTimeOffset.UtcNow).Date;
+        return BuildPizzaAnimationDecision(
+            "proactive_pizza_day",
+            $"Happy National Pizza Day for {referenceDate.ToString("MMMM d", CultureInfo.InvariantCulture)}. One pizza, coming right up.");
+    }
+
+    private JiboInteractionDecision BuildProactivePizzaPreferenceDecision()
+    {
+        return BuildPizzaAnimationDecision(
+            "proactive_pizza_preference",
+            "You mentioned pizza is a favorite, so I thought we should make one.");
+    }
+
+    private static JiboInteractionDecision BuildProactivePizzaFactOfferDecision()
+    {
+        return new JiboInteractionDecision(
+            "proactive_offer_pizza_fact",
+            "Do you want to hear a fun pizza fact?");
+    }
+
+    private static JiboInteractionDecision BuildProactivePizzaFactDecision()
+    {
+        return new JiboInteractionDecision(
+            "proactive_pizza_fact",
+            "Americans consume about 100 acres of pizza every day, roughly 350 slices per second. That's a lot of pizza.");
+    }
+
+    private static JiboInteractionDecision BuildProactiveOfferDeclinedDecision()
+    {
+        return new JiboInteractionDecision(
+            "proactive_offer_declined",
+            "No problem. We can save the pizza fact for another time.");
+    }
+
+    private async Task<JiboInteractionDecision> BuildWeatherReportDecisionAsync(
+        TurnContext turn,
+        string transcript,
+        CancellationToken cancellationToken)
+    {
+        var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["skillId"] = "report-skill",
+            ["localIntent"] = "requestWeatherPR",
+            ["cloudSkill"] = "weather"
+        };
+        var dateEntity = TryResolveWeatherDateEntity(transcript);
+        if (dateEntity is not null)
+        {
+            payload["date"] = dateEntity;
+        }
+
+        var weatherConditionEntity = TryResolveWeatherConditionEntity(transcript);
+        if (weatherConditionEntity is not null)
+        {
+            payload["weatherCondition"] = weatherConditionEntity;
+        }
+
+        var replyText = "Checking your weather report.";
+        if (weatherReportProvider is null)
+        {
+            return new JiboInteractionDecision(
+                "weather",
+                replyText,
+                "report-skill",
+                payload);
+        }
+
+        var locationQuery = TryResolveWeatherLocationQuery(transcript);
+        if (!string.IsNullOrWhiteSpace(locationQuery))
+        {
+            payload["locationQuery"] = locationQuery;
+        }
+
+        var weatherCoordinates = TryResolveWeatherCoordinates(turn);
+        if (weatherCoordinates is not null)
+        {
+            payload["latitude"] = weatherCoordinates.Value.Latitude;
+            payload["longitude"] = weatherCoordinates.Value.Longitude;
+        }
+
+        var useCelsius = ShouldUseCelsius(turn, transcript);
+        var snapshot = await weatherReportProvider.GetReportAsync(
+            new WeatherReportRequest(
+                locationQuery,
+                weatherCoordinates?.Latitude,
+                weatherCoordinates?.Longitude,
+                string.Equals(dateEntity, "tomorrow", StringComparison.OrdinalIgnoreCase),
+                useCelsius),
+            cancellationToken);
+
+        if (snapshot is not null)
+        {
+            payload["provider"] = "openweather";
+            payload["temperature"] = snapshot.Temperature;
+            if (snapshot.HighTemperature is not null)
+            {
+                payload["highTemperature"] = snapshot.HighTemperature.Value;
+            }
+
+            if (snapshot.LowTemperature is not null)
+            {
+                payload["lowTemperature"] = snapshot.LowTemperature.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(snapshot.Condition))
+            {
+                payload["weatherCondition"] = snapshot.Condition;
+            }
+
+            replyText = BuildWeatherSpokenReply(snapshot, dateEntity);
+        }
+
+        return new JiboInteractionDecision(
+            "weather",
+            replyText,
+            "report-skill",
+            payload);
+    }
+
+    private static string BuildWeatherSpokenReply(
+        WeatherReportSnapshot snapshot,
+        string? dateEntity)
+    {
+        var unit = snapshot.UseCelsius ? "Celsius" : "Fahrenheit";
+        var summary = string.IsNullOrWhiteSpace(snapshot.Summary)
+            ? "partly cloudy"
+            : snapshot.Summary.Trim().TrimEnd('.');
+        var location = string.IsNullOrWhiteSpace(snapshot.LocationName)
+            ? "your area"
+            : snapshot.LocationName;
+
+        if (string.Equals(dateEntity, "tomorrow", StringComparison.OrdinalIgnoreCase))
+        {
+            var highText = snapshot.HighTemperature is null
+                ? null
+                : $"a high near {snapshot.HighTemperature.Value} degrees {unit}";
+            var lowText = snapshot.LowTemperature is null
+                ? null
+                : $"a low around {snapshot.LowTemperature.Value} degrees {unit}";
+            var tempRange = highText is null && lowText is null
+                ? string.Empty
+                : highText is not null && lowText is not null
+                    ? $" with {highText} and {lowText}"
+                    : $" with {highText ?? lowText}";
+            return $"Tomorrow in {location}, expect {summary}{tempRange}.";
+        }
+
+        return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
     }
 
     private static JiboInteractionDecision BuildOrderPizzaDecision()
@@ -272,6 +564,101 @@ public sealed class JiboInteractionService(
             });
     }
 
+    private JiboInteractionDecision BuildSurpriseDecision(
+        JiboExperienceCatalog catalog,
+        TurnContext turn,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var tenantScope = ResolveTenantScope(turn);
+        var candidates = BuildProactivityCandidates(tenantScope, referenceLocalTime);
+        if (candidates.Count == 0)
+        {
+            return new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies));
+        }
+
+        var highestWeight = candidates.Max(static candidate => candidate.Weight);
+        var topCandidates = candidates
+            .Where(candidate => candidate.Weight == highestWeight)
+            .ToArray();
+        var selected = topCandidates.Length == 1
+            ? topCandidates[0]
+            : randomizer.Choose(topCandidates);
+
+        return selected.IntentName switch
+        {
+            "proactive_pizza_day" => BuildProactivePizzaDayDecision(referenceLocalTime),
+            "proactive_pizza_preference" => BuildProactivePizzaPreferenceDecision(),
+            "proactive_offer_pizza_fact" => BuildProactivePizzaFactOfferDecision(),
+            _ => new JiboInteractionDecision("surprise", randomizer.Choose(catalog.SurpriseReplies))
+        };
+    }
+
+    private List<ProactivityCandidate> BuildProactivityCandidates(
+        PersonalMemoryTenantScope tenantScope,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var candidates = new List<ProactivityCandidate>();
+        var referenceDate = (referenceLocalTime ?? DateTimeOffset.UtcNow).Date;
+
+        var pizzaSignal = ResolvePizzaSignal(tenantScope);
+        if (pizzaSignal.Affinity == PersonalAffinity.Dislike)
+        {
+            return candidates;
+        }
+
+        if (referenceDate.Month == 2 && referenceDate.Day == 9)
+        {
+            var holidayWeight = pizzaSignal.Affinity switch
+            {
+                PersonalAffinity.Love => 170,
+                PersonalAffinity.Like => 160,
+                _ => 150
+            };
+            candidates.Add(new ProactivityCandidate("proactive_pizza_day", holidayWeight));
+        }
+
+        if (pizzaSignal.Affinity is PersonalAffinity.Love or PersonalAffinity.Like)
+        {
+            var preferenceWeight = pizzaSignal.Affinity == PersonalAffinity.Love ? 140 : 120;
+            candidates.Add(new ProactivityCandidate("proactive_pizza_preference", preferenceWeight));
+            candidates.Add(new ProactivityCandidate("proactive_offer_pizza_fact", preferenceWeight - 5));
+            return candidates;
+        }
+
+        candidates.Add(new ProactivityCandidate("proactive_offer_pizza_fact", 90));
+        return candidates;
+    }
+
+    private PizzaSignal ResolvePizzaSignal(PersonalMemoryTenantScope tenantScope)
+    {
+        var pizzaAffinity = personalMemoryStore.GetAffinity(tenantScope, "pizza");
+        if (pizzaAffinity is not null)
+        {
+            return new PizzaSignal(pizzaAffinity);
+        }
+
+        var affinityMatch = personalMemoryStore.GetAffinities(tenantScope)
+            .Where(pair => pair.Key.Contains("pizza", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(static pair => pair.Value == PersonalAffinity.Love ? 2 : pair.Value == PersonalAffinity.Like ? 1 : 0)
+            .FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(affinityMatch.Key))
+        {
+            return new PizzaSignal(affinityMatch.Value);
+        }
+
+        foreach (var category in PizzaPreferenceCategories)
+        {
+            var preference = personalMemoryStore.GetPreference(tenantScope, category);
+            if (!string.IsNullOrWhiteSpace(preference) &&
+                preference.Contains("pizza", StringComparison.OrdinalIgnoreCase))
+            {
+                return new PizzaSignal(PersonalAffinity.Like);
+            }
+        }
+
+        return new PizzaSignal(null);
+    }
+
     private string BuildGenericReply(JiboExperienceCatalog catalog, string transcript, string lowered)
     {
         if (string.IsNullOrWhiteSpace(transcript))
@@ -303,6 +690,7 @@ public sealed class JiboInteractionService(
         IReadOnlyList<string> listenRules,
         IReadOnlyDictionary<string, string> clientEntities,
         string? lastClockDomain,
+        string? pendingProactivityOffer,
         bool isYesNoTurn,
         bool isTimerValueTurn,
         bool isAlarmValueTurn)
@@ -333,6 +721,30 @@ public sealed class JiboInteractionService(
                 "gallery" or "photo-gallery" or "photos" => "photo_gallery",
                 _ => "chat"
             };
+        }
+
+        if (!string.IsNullOrWhiteSpace(pendingProactivityOffer) &&
+            string.Equals(pendingProactivityOffer, "pizza_fact", StringComparison.OrdinalIgnoreCase))
+        {
+            if (IsAffirmativeReply(loweredTranscript))
+            {
+                return "proactive_pizza_fact";
+            }
+
+            if (IsNegativeReply(loweredTranscript))
+            {
+                return "proactive_offer_declined";
+            }
+        }
+
+        if (IsNameSetStatement(loweredTranscript))
+        {
+            return "memory_set_name";
+        }
+
+        if (IsNameRecallQuestion(loweredTranscript))
+        {
+            return "memory_get_name";
         }
 
         if (IsUserBirthdaySetStatement(loweredTranscript))
@@ -383,6 +795,12 @@ public sealed class JiboInteractionService(
         if (string.Equals(clientIntent, "requestOrderPizza", StringComparison.OrdinalIgnoreCase))
         {
             return "order_pizza";
+        }
+
+        if (string.Equals(clientIntent, "requestWeatherPR", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(clientIntent, "requestWeather", StringComparison.OrdinalIgnoreCase))
+        {
+            return "weather";
         }
 
         if (IsCancelRequest(clientIntent, loweredTranscript))
@@ -477,6 +895,26 @@ public sealed class JiboInteractionService(
         if (IsPreferenceRecallQuestion(loweredTranscript))
         {
             return "memory_get_preference";
+        }
+
+        if (IsImportantDateSetStatement(loweredTranscript))
+        {
+            return "memory_set_important_date";
+        }
+
+        if (IsImportantDateRecallQuestion(loweredTranscript))
+        {
+            return "memory_get_important_date";
+        }
+
+        if (IsAffinitySetStatement(loweredTranscript))
+        {
+            return "memory_set_affinity";
+        }
+
+        if (IsAffinityRecallQuestion(loweredTranscript))
+        {
+            return "memory_get_affinity";
         }
 
         if (TryResolveRadioGenre(loweredTranscript) is not null)
@@ -674,7 +1112,7 @@ public sealed class JiboInteractionService(
             return "personal_report";
         }
 
-        if (MatchesAny(loweredTranscript, "weather", "forecast", "weather report", "is it raining"))
+        if (IsWeatherRequest(loweredTranscript))
         {
             return "weather";
         }
@@ -706,9 +1144,9 @@ public sealed class JiboInteractionService(
 
         switch (isYesNoTurn)
         {
-            case true when MatchesAny(loweredTranscript, "yes", "yeah", "yup", "sure", "uh huh"):
+            case true when IsAffirmativeReply(loweredTranscript):
                 return "yes";
-            case true when MatchesAny(loweredTranscript, "no", "nope", "nah"):
+            case true when IsNegativeReply(loweredTranscript):
                 return "no";
         }
 
@@ -1177,6 +1615,200 @@ public sealed class JiboInteractionService(
         return candidates.Any(candidate => loweredTranscript.Contains(candidate, StringComparison.Ordinal));
     }
 
+    private static bool IsAffirmativeReply(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return normalized is "yes" or "yeah" or "yep" or "yup" or "sure" or "ok" or "okay" or "absolutely" or "please do" or "why not" ||
+               MatchesAny(normalized, "uh huh", "sounds good");
+    }
+
+    private static bool IsNegativeReply(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return normalized is "no" or "nope" or "nah" or "not now" or "no thanks" or "not today" ||
+               MatchesAny(normalized, "no thank you", "maybe later");
+    }
+
+    private static bool IsWeatherRequest(string loweredTranscript)
+    {
+        if (MatchesAny(
+                loweredTranscript,
+                "weather",
+                "forecast",
+                "how is the weather",
+                "how s the weather",
+                "how's the weather",
+                "check the weather",
+                "weather report",
+                "what's today s weather",
+                "what's today's weather",
+                "what is the weather",
+                "what will the weather",
+                "what will tomorrow s weather",
+                "what will tomorrow's weather",
+                "look up the forecast",
+                "launch the weather skill",
+                "what is today s humidity",
+                "what is today's humidity",
+                "what's the humidity",
+                "what is the humidity"))
+        {
+            return true;
+        }
+
+        return MatchesAny(
+            loweredTranscript,
+            "will it rain",
+            "will it snow",
+            "is it raining",
+            "is it snowing",
+            "is there going to be hail",
+            "does it look like rain",
+            "does it seem like snow",
+            "is it going to rain",
+            "is it going to snow",
+            "do you think it will rain",
+            "do you think it will snow");
+    }
+
+    private static string? TryResolveWeatherLocationQuery(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var match = WeatherLocationPattern.Match(normalized);
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        var candidate = match.Groups["location"].Value.Trim();
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return null;
+        }
+
+        candidate = WeatherLocationSuffixPattern.Replace(candidate, string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(candidate) ||
+            GenericWeatherLocationTerms.Contains(candidate))
+        {
+            return null;
+        }
+
+        return string.IsNullOrWhiteSpace(candidate)
+            ? null
+            : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(candidate);
+    }
+
+    private static (double Latitude, double Longitude)? TryResolveWeatherCoordinates(TurnContext turn)
+    {
+        if (!turn.Attributes.TryGetValue("context", out var contextValue) ||
+            contextValue is null ||
+            string.IsNullOrWhiteSpace(contextValue.ToString()))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(contextValue.ToString()!);
+            if (!document.RootElement.TryGetProperty("runtime", out var runtime) ||
+                runtime.ValueKind != JsonValueKind.Object ||
+                !runtime.TryGetProperty("location", out var location) ||
+                location.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var latitude = TryReadDoubleProperty(location, "lat", "latitude");
+            var longitude = TryReadDoubleProperty(location, "lng", "lon", "longitude");
+            return latitude is not null && longitude is not null
+                ? (latitude.Value, longitude.Value)
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static double? TryReadDoubleProperty(JsonElement source, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (source.TryGetProperty(propertyName, out var value) &&
+                value.ValueKind == JsonValueKind.Number &&
+                value.TryGetDouble(out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool? ShouldUseCelsius(TurnContext turn, string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        if (normalized.Contains("celsius", StringComparison.Ordinal) ||
+            normalized.Contains("centigrade", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (normalized.Contains("fahrenheit", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var entities = ReadEntities(turn);
+        if (entities.TryGetValue("temperatureUnit", out var entityUnit))
+        {
+            if (entityUnit.Contains("celsius", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (entityUnit.Contains("fahrenheit", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        var locale = turn.Locale ?? string.Empty;
+        if (locale.EndsWith("-US", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return null;
+    }
+
+    private static string? TryResolveWeatherDateEntity(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        if (MatchesAny(normalized, "tomorrow", "tomorrow s", "tomorrow's"))
+        {
+            return "tomorrow";
+        }
+
+        return null;
+    }
+
+    private static string? TryResolveWeatherConditionEntity(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        return normalized switch
+        {
+            _ when normalized.Contains("rain", StringComparison.Ordinal) => "rain",
+            _ when normalized.Contains("snow", StringComparison.Ordinal) => "snow",
+            _ when normalized.Contains("hail", StringComparison.Ordinal) => "hail",
+            _ when normalized.Contains("sunny", StringComparison.Ordinal) || normalized.Contains("clear", StringComparison.Ordinal) => "sunny",
+            _ when normalized.Contains("cloud", StringComparison.Ordinal) => "cloudy",
+            _ when normalized.Contains("wind", StringComparison.Ordinal) => "windy",
+            _ when normalized.Contains("fog", StringComparison.Ordinal) => "fog",
+            _ => null
+        };
+    }
+
     private static bool IsDanceQuestion(string loweredTranscript)
     {
         return MatchesAny(
@@ -1199,6 +1831,45 @@ public sealed class JiboInteractionService(
             "what is your birthday",
             "when were you born",
             "what day is your birthday");
+    }
+
+    private static bool IsNameSetStatement(string loweredTranscript)
+    {
+        return TryExtractNameFact(loweredTranscript) is not null;
+    }
+
+    private static bool IsNameRecallQuestion(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "what is my name",
+            "what s my name",
+            "what's my name",
+            "who am i",
+            "do you remember my name");
+    }
+
+    private static string? TryExtractNameFact(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var prefixes = new[]
+        {
+            "my name is ",
+            "call me "
+        };
+
+        foreach (var prefix in prefixes)
+        {
+            if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var name = normalized[prefix.Length..].Trim();
+            return string.IsNullOrWhiteSpace(name) ? null : name;
+        }
+
+        return null;
     }
 
     private static bool IsUserBirthdayRecallQuestion(string loweredTranscript)
@@ -1250,7 +1921,11 @@ public sealed class JiboInteractionService(
             "what is my favorite ",
             "what s my favorite ",
             "what's my favorite ",
-            "do you remember my favorite "
+            "do you remember my favorite ",
+            "what is my favourite ",
+            "what s my favourite ",
+            "what's my favourite ",
+            "do you remember my favourite "
         };
 
         foreach (var prefix in prefixes)
@@ -1270,29 +1945,191 @@ public sealed class JiboInteractionService(
     private static (string Category, string Value)? TryExtractPreferenceSet(string transcript)
     {
         var normalized = NormalizeCommandPhrase(transcript);
-        var marker = "my favorite ";
-        var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
-        if (markerIndex < 0)
+        foreach (var marker in PreferenceSetMarkers)
+        {
+            var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex < 0)
+            {
+                continue;
+            }
+
+            var preferencePhrase = normalized[(markerIndex + marker.Length)..];
+            var splitMarker = " is ";
+            var splitIndex = preferencePhrase.IndexOf(splitMarker, StringComparison.Ordinal);
+            if (splitIndex <= 0 || splitIndex >= preferencePhrase.Length - splitMarker.Length)
+            {
+                continue;
+            }
+
+            var category = preferencePhrase[..splitIndex].Trim();
+            var value = preferencePhrase[(splitIndex + splitMarker.Length)..].Trim();
+            if (!string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(value))
+            {
+                return (category, value);
+            }
+        }
+
+        if (normalized.StartsWith("what ", StringComparison.Ordinal) ||
+            normalized.StartsWith("do you remember ", StringComparison.Ordinal))
         {
             return null;
         }
 
-        var preferencePhrase = normalized[(markerIndex + marker.Length)..];
-        var splitMarker = " is ";
-        var splitIndex = preferencePhrase.IndexOf(splitMarker, StringComparison.Ordinal);
-        if (splitIndex <= 0 || splitIndex >= preferencePhrase.Length - splitMarker.Length)
+        foreach (var marker in PreferenceReverseMarkers)
         {
-            return null;
+            var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex <= 0 || markerIndex >= normalized.Length - marker.Length)
+            {
+                continue;
+            }
+
+            var value = normalized[..markerIndex].Trim();
+            var category = normalized[(markerIndex + marker.Length)..].Trim();
+            if (!string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(value))
+            {
+                return (category, value);
+            }
         }
 
-        var category = preferencePhrase[..splitIndex].Trim();
-        var value = preferencePhrase[(splitIndex + splitMarker.Length)..].Trim();
-        if (string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(value))
+        return null;
+    }
+
+    private static bool IsImportantDateSetStatement(string loweredTranscript)
+    {
+        return TryExtractImportantDateSet(loweredTranscript) is not null;
+    }
+
+    private static bool IsImportantDateRecallQuestion(string loweredTranscript)
+    {
+        return TryExtractImportantDateLookupLabel(loweredTranscript) is not null;
+    }
+
+    private static (string Label, string Value)? TryExtractImportantDateSet(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var mapping = new (string Prefix, string Label)[]
         {
-            return null;
+            ("our anniversary is ", "anniversary"),
+            ("my anniversary is ", "anniversary"),
+            ("our wedding anniversary is ", "anniversary")
+        };
+
+        foreach (var (prefix, label) in mapping)
+        {
+            if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var value = normalized[prefix.Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return (label, value);
+            }
         }
 
-        return (category, value);
+        return null;
+    }
+
+    private static string? TryExtractImportantDateLookupLabel(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var candidates = new[]
+        {
+            "when is our anniversary",
+            "when s our anniversary",
+            "when's our anniversary",
+            "when is my anniversary",
+            "what is our anniversary",
+            "do you remember our anniversary"
+        };
+
+        return candidates.Any(candidate => string.Equals(normalized, candidate, StringComparison.Ordinal))
+            ? "anniversary"
+            : null;
+    }
+
+    private static bool IsAffinitySetStatement(string loweredTranscript)
+    {
+        return TryExtractAffinitySet(loweredTranscript) is not null;
+    }
+
+    private static bool IsAffinityRecallQuestion(string loweredTranscript)
+    {
+        return TryExtractAffinityLookup(loweredTranscript) is not null;
+    }
+
+    private static (string Item, PersonalAffinity Affinity)? TryExtractAffinitySet(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+
+        var directMappings = new (string Prefix, PersonalAffinity Affinity)[]
+        {
+            ("i love ", PersonalAffinity.Love),
+            ("i like ", PersonalAffinity.Like),
+            ("i dislike ", PersonalAffinity.Dislike),
+            ("i hate ", PersonalAffinity.Dislike),
+            ("i don t like ", PersonalAffinity.Dislike),
+            ("i dont like ", PersonalAffinity.Dislike),
+            ("i do not like ", PersonalAffinity.Dislike)
+        };
+
+        foreach (var (prefix, affinity) in directMappings)
+        {
+            if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var item = normalized[prefix.Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(item))
+            {
+                return (item, affinity);
+            }
+        }
+
+        return null;
+    }
+
+    private static (string Item, PersonalAffinity? ExpectedAffinity)? TryExtractAffinityLookup(string transcript)
+    {
+        var normalized = NormalizeCommandPhrase(transcript);
+        var expectationPrefixes = new (string Prefix, PersonalAffinity? ExpectedAffinity)[]
+        {
+            ("do i love ", PersonalAffinity.Love),
+            ("do i like ", PersonalAffinity.Like),
+            ("do i dislike ", PersonalAffinity.Dislike),
+            ("do i hate ", PersonalAffinity.Dislike),
+            ("how do i feel about ", null),
+            ("what do i think about ", null)
+        };
+
+        foreach (var (prefix, expectedAffinity) in expectationPrefixes)
+        {
+            if (!normalized.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var item = normalized[prefix.Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(item))
+            {
+                return (item, expectedAffinity);
+            }
+        }
+
+        return null;
+    }
+
+    private static string DescribeAffinityAsVerb(PersonalAffinity affinity)
+    {
+        return affinity switch
+        {
+            PersonalAffinity.Love => "love",
+            PersonalAffinity.Like => "like",
+            PersonalAffinity.Dislike => "dislike",
+            _ => "like"
+        };
     }
 
     private static PersonalMemoryTenantScope ResolveTenantScope(TurnContext turn)
@@ -1894,6 +2731,10 @@ public sealed class JiboInteractionService(
 
     private sealed record PizzaMimPrompt(string PromptId, string Esml);
 
+    private sealed record ProactivityCandidate(string IntentName, int Weight);
+
+    private sealed record PizzaSignal(PersonalAffinity? Affinity);
+
     private static readonly Regex SplitAlarmPattern = new(
         @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s,-]+(?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
@@ -1922,12 +2763,67 @@ public sealed class JiboInteractionService(
         @"\b(?:cancel|delete|remove|stop|turn\s+off)\s+(?:the\s+)?(?:alarm|along|elo)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
+    private static readonly Regex WeatherLocationPattern = new(
+        @"\bin\s+(?<location>[a-z][a-z\s'\-]+)$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex WeatherLocationSuffixPattern = new(
+        @"\b(?:today|tonight|tomorrow|outside|right now|please|thanks)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
     private static readonly PizzaMimPrompt[] PizzaMimPrompts =
     [
         new("RA_JBO_ShowPizzaMaking_AN_01", "<speak><anim cat='jiboji' filter='pizza-making'/></speak>"),
         new("RA_JBO_ShowPizzaMaking_AN_02", "<speak><anim cat='jiboji' filter='pizza-making' nonBlocking='true'/><pitch mult='1.2'>One </pitch> pizza, coming right up.</speak>"),
         new("RA_JBO_ShowPizzaMaking_AN_03", "<speak><anim cat='jiboji' filter='pizza-making' nonBlocking='true'/>My <pitch mult='1.2'>specialty </pitch>.</speak>")
     ];
+
+    private static readonly string[] PreferenceSetMarkers =
+    [
+        "my favorite ",
+        "my favourite "
+    ];
+
+    private static readonly string[] PreferenceReverseMarkers =
+    [
+        " is my favorite ",
+        " is my favourite "
+    ];
+
+    private static readonly string[] PizzaPreferenceCategories =
+    [
+        "food",
+        "meal",
+        "dish",
+        "dinner",
+        "lunch",
+        "snack"
+    ];
+
+    private static readonly HashSet<string> GenericWeatherLocationTerms = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "my area",
+        "our area",
+        "this area",
+        "the area",
+        "the city",
+        "this city",
+        "our city",
+        "my city",
+        "the town",
+        "this town",
+        "our town",
+        "my town",
+        "our street",
+        "this street",
+        "my street",
+        "the neighborhood",
+        "the neighbourhood",
+        "this neighborhood",
+        "this neighbourhood",
+        "our neighborhood",
+        "our neighbourhood"
+    };
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

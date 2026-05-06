@@ -1697,6 +1697,92 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_HowIsTheWeather_EmitsReportSkillRedirectAndCompletion()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-token",
+            Text = """{"type":"LISTEN","transID":"trans-weather","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-weather","data":{"text":"how is the weather"}}"""
+        });
+
+        Assert.Equal(5, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[3]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[4]));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("requestWeatherPR", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("report-skill", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("weather", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        Assert.Equal("report-skill", redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("requestWeatherPR", redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        using var completionPayload = JsonDocument.Parse(replies[3].Text!);
+        Assert.Equal("report-skill", completionPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
+
+        using var speakPayload = JsonDocument.Parse(replies[4].Text!);
+        var esml = speakPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+        Assert.Contains("Checking your weather report", esml, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ClientAsr_WillItRainTomorrow_EmitsReportSkillWeatherEntities()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-entities-token",
+            Text = """{"type":"LISTEN","transID":"trans-weather-entities","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-entities-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-weather-entities","data":{"text":"will it rain tomorrow"}}"""
+        });
+
+        Assert.Equal(5, replies.Count);
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var entities = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities");
+        Assert.Equal("tomorrow", entities.GetProperty("date").GetString());
+        Assert.Equal("rain", entities.GetProperty("Weather").GetString());
+
+        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
+        var redirectEntities = redirectPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities");
+        Assert.Equal("tomorrow", redirectEntities.GetProperty("date").GetString());
+        Assert.Equal("rain", redirectEntities.GetProperty("Weather").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_OpenTheRadio_EmitsRadioRedirectAndSilentCompletion()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -2972,6 +3058,51 @@ public sealed class JiboWebSocketServiceTests
             .GetProperty("esml")
             .GetString();
         Assert.Contains("I do not know your birthday yet", otherEsml, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ClientAsrSurpriseOffer_PersistsPendingOfferAndResolvesYesFollowUp()
+    {
+        var token = _store.IssueRobotToken("proactivity-device-a");
+
+        var offerReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer","data":{"text":"surprise me"}}"""
+        });
+
+        Assert.Equal(3, offerReplies.Count);
+        using (var offerListenPayload = JsonDocument.Parse(offerReplies[0].Text!))
+        {
+            Assert.Equal("proactive_offer_pizza_fact", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue("pendingProactivityOffer", out var pendingOffer));
+        Assert.Equal("pizza_fact", pendingOffer?.ToString());
+
+        var followUpReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-yes","data":{"text":"yes"}}"""
+        });
+
+        Assert.Equal(3, followUpReplies.Count);
+        using (var followUpListenPayload = JsonDocument.Parse(followUpReplies[0].Text!))
+        {
+            Assert.Equal("proactive_pizza_fact", followUpListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.False(session.Metadata.ContainsKey("pendingProactivityOffer"));
     }
 
     [Fact]
