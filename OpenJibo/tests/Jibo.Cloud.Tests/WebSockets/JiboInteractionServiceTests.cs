@@ -221,6 +221,72 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_HowAngryAreYou_RoutesThroughPegasusEmotionQueryPhrase()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "how angry are you",
+            NormalizedTranscript = "how angry are you"
+        });
+
+        Assert.Equal("emotion_query", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_YouSeemSad_RoutesThroughPegasusEmotionAssertionPhrase()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "you seem sad",
+            NormalizedTranscript = "you seem sad"
+        });
+
+        Assert.Equal("emotion_query", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_YouShouldTryToBeHappy_RoutesThroughPegasusEmotionCommandPhrase()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "you should try to be happy",
+            NormalizedTranscript = "you should try to be happy"
+        });
+
+        Assert.Equal("emotion_command", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionCommand", decision.ContextUpdates![ChitchatRouteKey]);
+        Assert.Equal("happy", decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_DontBeAngry_RoutesThroughPegasusNegativeEmotionCommandPhrase()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "don't be angry",
+            NormalizedTranscript = "don't be angry"
+        });
+
+        Assert.Equal("emotion_command", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionCommand", decision.ContextUpdates![ChitchatRouteKey]);
+        Assert.Equal("calm", decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_BirthdayMemory_SetThenRecallWithinTenant()
     {
         var memoryStore = new InMemoryPersonalMemoryStore();
