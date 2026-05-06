@@ -35,6 +35,9 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
                     ExpectedTopic = "conversation"
                 }
                 : FollowUpPolicy.None,
+            ContextUpdates = decision.ContextUpdates is not null
+                ? new Dictionary<string, object?>(decision.ContextUpdates, StringComparer.OrdinalIgnoreCase)
+                : new Dictionary<string, object?>(),
             ProtocolMetadata = new Dictionary<string, object?>
             {
                 ["host"] = turn.HostName,

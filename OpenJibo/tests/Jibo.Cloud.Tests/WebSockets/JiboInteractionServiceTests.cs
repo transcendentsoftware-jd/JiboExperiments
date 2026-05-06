@@ -9,6 +9,15 @@ namespace Jibo.Cloud.Tests.WebSockets;
 
 public sealed class JiboInteractionServiceTests
 {
+    private const string PersonalReportStateKey = "personalReportState";
+    private const string PersonalReportNoMatchCountKey = "personalReportNoMatchCount";
+    private const string PersonalReportUserNameKey = "personalReportUserName";
+    private const string PersonalReportUserVerifiedKey = "personalReportUserVerified";
+    private const string PersonalReportWeatherEnabledKey = "personalReportWeatherEnabled";
+    private const string PersonalReportCalendarEnabledKey = "personalReportCalendarEnabled";
+    private const string PersonalReportCommuteEnabledKey = "personalReportCommuteEnabled";
+    private const string PersonalReportNewsEnabledKey = "personalReportNewsEnabled";
+
     [Fact]
     public async Task BuildDecisionAsync_Joke_UsesCatalogBackedRandomContent()
     {
@@ -639,6 +648,138 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("order_pizza", decision.IntentName);
         Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.Equal("RA_JBO_OrderPizza", decision.SkillPayload!["mim_id"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalReport_StartsOptInStateMachine()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "personal report",
+            NormalizedTranscript = "personal report"
+        });
+
+        Assert.Equal("personal_report_opt_in", decision.IntentName);
+        Assert.Equal("Would you like your personal report now?", decision.ReplyText);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("awaiting_opt_in", decision.ContextUpdates![PersonalReportStateKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportWeatherEnabledKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportCalendarEnabledKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportCommuteEnabledKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportNewsEnabledKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalReport_OptInYesWithKnownName_AsksForIdentityConfirmation()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        memoryStore.SetName(new PersonalMemoryTenantScope("acct-a", "loop-a", "device-a"), "alex");
+        var service = CreateService(memoryStore);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes",
+            NormalizedTranscript = "yes",
+            DeviceId = "device-a",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a",
+                [PersonalReportStateKey] = "awaiting_opt_in"
+            }
+        });
+
+        Assert.Equal("personal_report_verify_user", decision.IntentName);
+        Assert.Equal("I think this is alex. Is that right?", decision.ReplyText);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("awaiting_identity_confirmation", decision.ContextUpdates![PersonalReportStateKey]);
+        Assert.Equal("alex", decision.ContextUpdates[PersonalReportUserNameKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalReport_VerifiedIdentity_DeliversReportAndResetsState()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Boston, US", "light rain", 61, 65, 54, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes",
+            NormalizedTranscript = "yes",
+            Attributes = new Dictionary<string, object?>
+            {
+                [PersonalReportStateKey] = "awaiting_identity_confirmation",
+                [PersonalReportUserNameKey] = "alex"
+            }
+        });
+
+        Assert.Equal("personal_report_delivered", decision.IntentName);
+        Assert.Contains("Great, alex. Here is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("That is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("idle", decision.ContextUpdates![PersonalReportStateKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportUserVerifiedKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalReport_NoMatchRetriesThenDeclines()
+    {
+        var service = CreateService();
+
+        var firstDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "maybe",
+            NormalizedTranscript = "maybe",
+            Attributes = new Dictionary<string, object?>
+            {
+                [PersonalReportStateKey] = "awaiting_opt_in",
+                [PersonalReportNoMatchCountKey] = 0
+            }
+        });
+
+        Assert.Equal("personal_report_no_match", firstDecision.IntentName);
+        Assert.NotNull(firstDecision.ContextUpdates);
+        Assert.Equal(1, firstDecision.ContextUpdates![PersonalReportNoMatchCountKey]);
+
+        var secondDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "maybe",
+            NormalizedTranscript = "maybe",
+            Attributes = new Dictionary<string, object?>
+            {
+                [PersonalReportStateKey] = "awaiting_opt_in",
+                [PersonalReportNoMatchCountKey] = 1
+            }
+        });
+
+        Assert.Equal("personal_report_declined", secondDecision.IntentName);
+        Assert.NotNull(secondDecision.ContextUpdates);
+        Assert.Equal("idle", secondDecision.ContextUpdates![PersonalReportStateKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PersonalReport_StartCanApplyToggleHints()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "personal report without weather and no news",
+            NormalizedTranscript = "personal report without weather and no news"
+        });
+
+        Assert.Equal("personal_report_opt_in", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal(false, decision.ContextUpdates![PersonalReportWeatherEnabledKey]);
+        Assert.Equal(false, decision.ContextUpdates[PersonalReportNewsEnabledKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportCalendarEnabledKey]);
+        Assert.Equal(true, decision.ContextUpdates[PersonalReportCommuteEnabledKey]);
     }
 
     [Fact]

@@ -57,6 +57,17 @@ public sealed class ProtocolToTurnContextMapper
             attributes["pendingProactivityOffer"] = pendingProactivityOfferText;
         }
 
+        foreach (var pair in session.Metadata)
+        {
+            if (!pair.Key.StartsWith("personalReport", StringComparison.OrdinalIgnoreCase) ||
+                pair.Value is null)
+            {
+                continue;
+            }
+
+            attributes[pair.Key] = pair.Value;
+        }
+
         attributes["listenHotphrase"] = turnState.ListenHotphrase;
 
         if (turnState.ListenRules.Count > 0)

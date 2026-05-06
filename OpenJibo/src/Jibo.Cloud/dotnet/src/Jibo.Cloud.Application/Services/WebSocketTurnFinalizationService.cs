@@ -485,7 +485,9 @@ public sealed partial class WebSocketTurnFinalizationService(
             return [];
         }
 
-        if (string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
+        var allowEmptyTranscriptForPersonalReport = IsActivePersonalReportTurn(finalizedTurn);
+        if (!allowEmptyTranscriptForPersonalReport &&
+            string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
             string.IsNullOrWhiteSpace(finalizedTurn.RawTranscript))
         {
             turnState.AwaitingTurnCompletion = true;
@@ -592,6 +594,7 @@ public sealed partial class WebSocketTurnFinalizationService(
         }
 
         UpdatePendingProactivityOffer(session, plan.IntentName);
+        await ApplyContextUpdatesAsync(session, plan.ContextUpdates, envelope, plan.IntentName, cancellationToken);
 
         session.FollowUpExpiresUtc = plan.FollowUp.KeepMicOpen
             ? DateTimeOffset.UtcNow.Add(plan.FollowUp.Timeout)
@@ -868,6 +871,7 @@ public sealed partial class WebSocketTurnFinalizationService(
         var messageType = ReadMessageType(turn);
         var clientIntent = ReadAttribute(turn, "clientIntent");
         var pendingProactivityOffer = ReadAttribute(turn, "pendingProactivityOffer");
+        var personalReportState = ReadAttribute(turn, PersonalReportOrchestrator.StateMetadataKey);
         var transcript = NormalizeTranscript(turn.NormalizedTranscript ?? turn.RawTranscript);
         var listenRules = ReadRules(turn, "listenRules").Concat(ReadRules(turn, "clientRules")).ToArray();
 
@@ -880,6 +884,12 @@ public sealed partial class WebSocketTurnFinalizationService(
         if (string.IsNullOrWhiteSpace(transcript))
         {
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(personalReportState) &&
+            !string.Equals(personalReportState, PersonalReportOrchestrator.IdleState, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
         }
 
         if (transcript is "blank_audio" or "blank audio")
@@ -922,6 +932,13 @@ public sealed partial class WebSocketTurnFinalizationService(
             .Concat(ReadRules(turn, "clientRules"))
             .Concat(ReadRules(turn, "listenAsrHints"))
             .Any(IsYesNoRule);
+    }
+
+    private static bool IsActivePersonalReportTurn(TurnContext turn)
+    {
+        var state = ReadAttribute(turn, PersonalReportOrchestrator.StateMetadataKey);
+        return !string.IsNullOrWhiteSpace(state) &&
+               !string.Equals(state, PersonalReportOrchestrator.IdleState, StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool ShouldHandleAsLocalNoInput(TurnContext turn)
@@ -1022,6 +1039,134 @@ public sealed partial class WebSocketTurnFinalizationService(
                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
     }
 
+    private async Task ApplyContextUpdatesAsync(
+        CloudSession session,
+        IDictionary<string, object?> contextUpdates,
+        WebSocketMessageEnvelope envelope,
+        string? intentName,
+        CancellationToken cancellationToken)
+    {
+        if (contextUpdates.Count == 0)
+        {
+            return;
+        }
+
+        var previousState = ReadMetadataString(session.Metadata, PersonalReportOrchestrator.StateMetadataKey);
+        var previousNoMatchCount = ReadMetadataInt(session.Metadata, PersonalReportOrchestrator.NoMatchCountMetadataKey);
+        var previousNoInputCount = ReadMetadataInt(session.Metadata, PersonalReportOrchestrator.NoInputCountMetadataKey);
+        var previousWeatherEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.WeatherEnabledMetadataKey) ?? true;
+        var previousCalendarEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CalendarEnabledMetadataKey) ?? true;
+        var previousCommuteEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CommuteEnabledMetadataKey) ?? true;
+        var previousNewsEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.NewsEnabledMetadataKey) ?? true;
+
+        foreach (var pair in contextUpdates)
+        {
+            if (pair.Value is null)
+            {
+                session.Metadata.Remove(pair.Key);
+                continue;
+            }
+
+            session.Metadata[pair.Key] = pair.Value;
+        }
+
+        var nextState = ReadMetadataString(session.Metadata, PersonalReportOrchestrator.StateMetadataKey);
+        var nextNoMatchCount = ReadMetadataInt(session.Metadata, PersonalReportOrchestrator.NoMatchCountMetadataKey);
+        var nextNoInputCount = ReadMetadataInt(session.Metadata, PersonalReportOrchestrator.NoInputCountMetadataKey);
+        var nextWeatherEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.WeatherEnabledMetadataKey) ?? true;
+        var nextCalendarEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CalendarEnabledMetadataKey) ?? true;
+        var nextCommuteEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CommuteEnabledMetadataKey) ?? true;
+        var nextNewsEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.NewsEnabledMetadataKey) ?? true;
+        var serviceError = ReadMetadataString(session.Metadata, PersonalReportOrchestrator.LastServiceErrorMetadataKey);
+
+        if (!string.Equals(previousState, nextState, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.IsNullOrWhiteSpace(previousState) &&
+                !string.Equals(previousState, PersonalReportOrchestrator.IdleState, StringComparison.OrdinalIgnoreCase))
+            {
+                await sink.RecordTurnDiagnosticAsync("personal_report_state_exit", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                {
+                    ["state"] = previousState,
+                    ["nextState"] = nextState,
+                    ["intent"] = intentName
+                }), cancellationToken);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nextState) &&
+                !string.Equals(nextState, PersonalReportOrchestrator.IdleState, StringComparison.OrdinalIgnoreCase))
+            {
+                await sink.RecordTurnDiagnosticAsync("personal_report_state_enter", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                {
+                    ["state"] = nextState,
+                    ["previousState"] = previousState,
+                    ["intent"] = intentName
+                }), cancellationToken);
+            }
+        }
+
+        if (nextNoMatchCount != previousNoMatchCount)
+        {
+            await sink.RecordTurnDiagnosticAsync("personal_report_nomatch_count", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["count"] = nextNoMatchCount,
+                ["previousCount"] = previousNoMatchCount,
+                ["state"] = nextState,
+                ["intent"] = intentName
+            }), cancellationToken);
+        }
+
+        if (nextNoInputCount != previousNoInputCount)
+        {
+            await sink.RecordTurnDiagnosticAsync("personal_report_noinput_count", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["count"] = nextNoInputCount,
+                ["previousCount"] = previousNoInputCount,
+                ["state"] = nextState,
+                ["intent"] = intentName
+            }), cancellationToken);
+        }
+
+        await EmitServiceToggleDiagnosticAsync("weather", previousWeatherEnabled, nextWeatherEnabled, session, envelope, intentName, cancellationToken);
+        await EmitServiceToggleDiagnosticAsync("calendar", previousCalendarEnabled, nextCalendarEnabled, session, envelope, intentName, cancellationToken);
+        await EmitServiceToggleDiagnosticAsync("commute", previousCommuteEnabled, nextCommuteEnabled, session, envelope, intentName, cancellationToken);
+        await EmitServiceToggleDiagnosticAsync("news", previousNewsEnabled, nextNewsEnabled, session, envelope, intentName, cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(serviceError))
+        {
+            await sink.RecordTurnDiagnosticAsync("personal_report_service_error", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["service"] = serviceError,
+                ["state"] = nextState,
+                ["intent"] = intentName
+            }), cancellationToken);
+        }
+    }
+
+    private async Task EmitServiceToggleDiagnosticAsync(
+        string service,
+        bool previousEnabled,
+        bool nextEnabled,
+        CloudSession session,
+        WebSocketMessageEnvelope envelope,
+        string? intentName,
+        CancellationToken cancellationToken)
+    {
+        if (previousEnabled == nextEnabled)
+        {
+            return;
+        }
+
+        await sink.RecordTurnDiagnosticAsync(
+            nextEnabled ? "personal_report_service_on" : "personal_report_service_off",
+            BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["service"] = service,
+                ["enabled"] = nextEnabled,
+                ["intent"] = intentName
+            }),
+            cancellationToken);
+    }
+
     private static void UpdatePendingProactivityOffer(CloudSession session, string? intentName)
     {
         if (string.Equals(intentName, "proactive_offer_pizza_fact", StringComparison.OrdinalIgnoreCase))
@@ -1048,6 +1193,57 @@ public sealed partial class WebSocketTurnFinalizationService(
                 .Where(static item => item.ValueKind == JsonValueKind.String)
                 .Select(static item => item.GetString() ?? string.Empty),
             _ => []
+        };
+    }
+
+    private static string? ReadMetadataString(IDictionary<string, object?> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            string text => string.IsNullOrWhiteSpace(text) ? null : text.Trim(),
+            JsonElement { ValueKind: JsonValueKind.String } json => json.GetString(),
+            _ => value.ToString()
+        };
+    }
+
+    private static int ReadMetadataInt(IDictionary<string, object?> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value) || value is null)
+        {
+            return 0;
+        }
+
+        return value switch
+        {
+            int integer => integer,
+            long whole when whole <= int.MaxValue && whole >= int.MinValue => (int)whole,
+            string text when int.TryParse(text, out var parsed) => parsed,
+            JsonElement { ValueKind: JsonValueKind.Number } json when json.TryGetInt32(out var parsed) => parsed,
+            JsonElement json when json.ValueKind == JsonValueKind.String && int.TryParse(json.GetString(), out var parsed) => parsed,
+            _ => 0
+        };
+    }
+
+    private static bool? ReadMetadataBool(IDictionary<string, object?> metadata, string key)
+    {
+        if (!metadata.TryGetValue(key, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            bool flag => flag,
+            string text when bool.TryParse(text, out var parsed) => parsed,
+            JsonElement { ValueKind: JsonValueKind.True } => true,
+            JsonElement { ValueKind: JsonValueKind.False } => false,
+            JsonElement json when json.ValueKind == JsonValueKind.String && bool.TryParse(json.GetString(), out var parsed) => parsed,
+            _ => null
         };
     }
 

@@ -3175,6 +3175,73 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsrPersonalReport_StateMachinePersistsAcrossTurns()
+    {
+        const string stateKey = "personalReportState";
+        var token = _store.IssueRobotToken("personal-report-device-a");
+
+        var startReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-personal-report-start","data":{"text":"personal report"}}"""
+        });
+
+        Assert.Equal(3, startReplies.Count);
+        using (var startListenPayload = JsonDocument.Parse(startReplies[0].Text!))
+        {
+            Assert.Equal("personal_report_opt_in", startListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue(stateKey, out var stateValue));
+        Assert.Equal("awaiting_opt_in", stateValue?.ToString());
+
+        var optInReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-personal-report-optin","data":{"text":"yes"}}"""
+        });
+
+        Assert.Equal(3, optInReplies.Count);
+        using (var optInListenPayload = JsonDocument.Parse(optInReplies[0].Text!))
+        {
+            Assert.Equal("personal_report_request_name", optInListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue(stateKey, out stateValue));
+        Assert.Equal("awaiting_identity_name", stateValue?.ToString());
+
+        var identifyReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-personal-report-name","data":{"text":"my name is alex"}}"""
+        });
+
+        Assert.Equal(3, identifyReplies.Count);
+        using (var identifyListenPayload = JsonDocument.Parse(identifyReplies[0].Text!))
+        {
+            Assert.Equal("personal_report_delivered", identifyListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue(stateKey, out stateValue));
+        Assert.Equal("idle", stateValue?.ToString());
+    }
+
+    [Fact]
     public async Task FollowUpTurn_UsesNewTurnStateWithoutLeakingBufferedAudio()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

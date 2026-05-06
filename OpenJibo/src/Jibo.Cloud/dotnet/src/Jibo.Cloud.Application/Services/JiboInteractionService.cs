@@ -47,6 +47,23 @@ public sealed class JiboInteractionService(
             isYesNoTurn,
             isTimerValueTurn,
             isAlarmValueTurn);
+
+        var personalReportDecision = await PersonalReportOrchestrator.TryBuildDecisionAsync(
+            turn,
+            semanticIntent,
+            transcript,
+            lowered,
+            catalog,
+            randomizer,
+            personalMemoryStore,
+            BuildWeatherReportDecisionAsync,
+            ResolveTenantScope,
+            cancellationToken);
+        if (personalReportDecision is not null)
+        {
+            return personalReportDecision;
+        }
+
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
@@ -2876,4 +2893,5 @@ public sealed record JiboInteractionDecision(
     string IntentName,
     string ReplyText,
     string? SkillName = null,
-    IDictionary<string, object?>? SkillPayload = null);
+    IDictionary<string, object?>? SkillPayload = null,
+    IDictionary<string, object?>? ContextUpdates = null);
