@@ -59,7 +59,8 @@ public sealed class ProtocolToTurnContextMapper
 
         foreach (var pair in session.Metadata)
         {
-            if (!pair.Key.StartsWith("personalReport", StringComparison.OrdinalIgnoreCase) ||
+            if ((!pair.Key.StartsWith("personalReport", StringComparison.OrdinalIgnoreCase) &&
+                 !pair.Key.StartsWith("chitchat", StringComparison.OrdinalIgnoreCase)) ||
                 pair.Value is null)
             {
                 continue;

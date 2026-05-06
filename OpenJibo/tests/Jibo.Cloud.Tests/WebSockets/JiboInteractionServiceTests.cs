@@ -17,6 +17,9 @@ public sealed class JiboInteractionServiceTests
     private const string PersonalReportCalendarEnabledKey = "personalReportCalendarEnabled";
     private const string PersonalReportCommuteEnabledKey = "personalReportCommuteEnabled";
     private const string PersonalReportNewsEnabledKey = "personalReportNewsEnabled";
+    private const string ChitchatStateKey = "chitchatState";
+    private const string ChitchatRouteKey = "chitchatRoute";
+    private const string ChitchatEmotionKey = "chitchatEmotion";
 
     [Fact]
     public async Task BuildDecisionAsync_Joke_UsesCatalogBackedRandomContent()
@@ -145,6 +148,76 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("robot_personality", decision.IntentName);
         Assert.Equal("I do. I am curious, playful, and always up for a new experiment.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_Hello_RoutesThroughChitchatScriptedResponse()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "hello",
+            NormalizedTranscript = "hello"
+        });
+
+        Assert.Equal("hello", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("complete", decision.ContextUpdates![ChitchatStateKey]);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates[ChitchatRouteKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AreYouHappy_RoutesThroughEmotionQuerySplit()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "are you happy",
+            NormalizedTranscript = "are you happy"
+        });
+
+        Assert.Equal("emotion_query", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
+        Assert.Equal(string.Empty, decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_Smile_RoutesThroughEmotionCommandSplit()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "smile",
+            NormalizedTranscript = "smile"
+        });
+
+        Assert.Equal("emotion_command", decision.IntentName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.NotNull(decision.SkillPayload);
+        Assert.Contains("cat='happy'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.Ordinal);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionCommand", decision.ContextUpdates![ChitchatRouteKey]);
+        Assert.Equal("happy", decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_UnhandledChat_RoutesThroughErrorResponseSplit()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "blargh",
+            NormalizedTranscript = "blargh"
+        });
+
+        Assert.Equal("chat", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("ErrorResponse", decision.ContextUpdates![ChitchatRouteKey]);
     }
 
     [Fact]

@@ -64,6 +64,18 @@ public sealed class JiboInteractionService(
             return personalReportDecision;
         }
 
+        var chitchatDecision = ChitchatStateMachine.TryBuildDecision(
+            semanticIntent,
+            transcript,
+            lowered,
+            catalog,
+            randomizer,
+            () => BuildGenericReply(catalog, transcript, lowered));
+        if (chitchatDecision is not null)
+        {
+            return chitchatDecision;
+        }
+
         return semanticIntent switch
         {
             "joke" => BuildJokeDecision(catalog),
@@ -96,11 +108,8 @@ public sealed class JiboInteractionService(
             "photo_gallery" => BuildPhotoGalleryLaunchDecision(),
             "snapshot" => BuildPhotoCreateDecision("snapshot", "Taking a picture.", "createOnePhoto"),
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
-            "hello" => new JiboInteractionDecision("hello", randomizer.Choose(catalog.GreetingReplies)),
-            "how_are_you" => new JiboInteractionDecision("how_are_you", randomizer.Choose(catalog.HowAreYouReplies)),
             "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
             "robot_birthday" => BuildRobotBirthdayDecision(),
-            "robot_personality" => new JiboInteractionDecision("robot_personality", randomizer.Choose(catalog.PersonalityReplies)),
             "memory_set_name" => BuildRememberNameDecision(turn, transcript),
             "memory_get_name" => BuildRecallNameDecision(turn),
             "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),

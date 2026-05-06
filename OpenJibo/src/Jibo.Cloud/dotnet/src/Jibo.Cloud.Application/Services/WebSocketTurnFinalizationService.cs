@@ -902,6 +902,11 @@ public sealed partial class WebSocketTurnFinalizationService(
             return true;
         }
 
+        if (ChitchatStateMachine.IsLikelyEmotionUtterance(transcript))
+        {
+            return true;
+        }
+
         if (transcript.Length >= 6)
         {
             return true;
@@ -1058,6 +1063,9 @@ public sealed partial class WebSocketTurnFinalizationService(
         var previousCalendarEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CalendarEnabledMetadataKey) ?? true;
         var previousCommuteEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CommuteEnabledMetadataKey) ?? true;
         var previousNewsEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.NewsEnabledMetadataKey) ?? true;
+        var previousChitchatState = ReadMetadataString(session.Metadata, ChitchatStateMachine.StateMetadataKey);
+        var previousChitchatRoute = ReadMetadataString(session.Metadata, ChitchatStateMachine.RouteMetadataKey);
+        var previousChitchatEmotion = ReadMetadataString(session.Metadata, ChitchatStateMachine.EmotionMetadataKey);
 
         foreach (var pair in contextUpdates)
         {
@@ -1078,6 +1086,9 @@ public sealed partial class WebSocketTurnFinalizationService(
         var nextCommuteEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.CommuteEnabledMetadataKey) ?? true;
         var nextNewsEnabled = ReadMetadataBool(session.Metadata, PersonalReportOrchestrator.NewsEnabledMetadataKey) ?? true;
         var serviceError = ReadMetadataString(session.Metadata, PersonalReportOrchestrator.LastServiceErrorMetadataKey);
+        var nextChitchatState = ReadMetadataString(session.Metadata, ChitchatStateMachine.StateMetadataKey);
+        var nextChitchatRoute = ReadMetadataString(session.Metadata, ChitchatStateMachine.RouteMetadataKey);
+        var nextChitchatEmotion = ReadMetadataString(session.Metadata, ChitchatStateMachine.EmotionMetadataKey);
 
         if (!string.Equals(previousState, nextState, StringComparison.OrdinalIgnoreCase))
         {
@@ -1137,6 +1148,30 @@ public sealed partial class WebSocketTurnFinalizationService(
             {
                 ["service"] = serviceError,
                 ["state"] = nextState,
+                ["intent"] = intentName
+            }), cancellationToken);
+        }
+
+        if (!string.Equals(previousChitchatState, nextChitchatState, StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(nextChitchatState))
+        {
+            await sink.RecordTurnDiagnosticAsync("chitchat_state_transition", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["previousState"] = previousChitchatState,
+                ["state"] = nextChitchatState,
+                ["intent"] = intentName
+            }), cancellationToken);
+        }
+
+        if (!string.Equals(previousChitchatRoute, nextChitchatRoute, StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(nextChitchatRoute))
+        {
+            await sink.RecordTurnDiagnosticAsync("chitchat_route_selected", BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+            {
+                ["route"] = nextChitchatRoute,
+                ["previousRoute"] = previousChitchatRoute,
+                ["emotion"] = nextChitchatEmotion,
+                ["previousEmotion"] = previousChitchatEmotion,
                 ["intent"] = intentName
             }), cancellationToken);
         }

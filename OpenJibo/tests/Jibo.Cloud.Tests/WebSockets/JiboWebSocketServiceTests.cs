@@ -3242,6 +3242,36 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsrChitchatEmotionCommand_PersistsSplitRouteMetadata()
+    {
+        const string routeKey = "chitchatRoute";
+        const string emotionKey = "chitchatEmotion";
+        var token = _store.IssueRobotToken("chitchat-emotion-device-a");
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-chitchat-emotion","data":{"text":"smile"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        using (var listenPayload = JsonDocument.Parse(replies[0].Text!))
+        {
+            Assert.Equal("emotion_command", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue(routeKey, out var routeValue));
+        Assert.Equal("EmotionCommand", routeValue?.ToString());
+        Assert.True(session.Metadata.TryGetValue(emotionKey, out var emotionValue));
+        Assert.Equal("happy", emotionValue?.ToString());
+    }
+
+    [Fact]
     public async Task FollowUpTurn_UsesNewTurnStateWithoutLeakingBufferedAudio()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
