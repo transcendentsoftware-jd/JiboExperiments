@@ -116,7 +116,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.False(session.FollowUpOpen);
         Assert.False(session.TurnState.AwaitingTurnCompletion);
         Assert.False(session.TurnState.SawListen);
-        Assert.True(session.TurnState.IgnoreAdditionalAudioUntilUtc > DateTimeOffset.UtcNow.AddSeconds(6));
+        Assert.True(session.TurnState.IgnoreAdditionalAudioUntilUtc > DateTimeOffset.UtcNow.AddSeconds(3));
 
         var tailListenReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -3225,8 +3225,20 @@ public sealed class JiboWebSocketServiceTests
         {
             Assert.Equal("proactive_offer_pizza_fact", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
             Assert.Equal("shared/yes_no", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
-            Assert.Equal("$YESNO", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[1].GetString());
             Assert.Equal("shared/yes_no", offerListenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        }
+        using (var offerSkillPayload = JsonDocument.Parse(offerReplies[2].Text!))
+        {
+            var jcpConfig = offerSkillPayload.RootElement
+                .GetProperty("data")
+                .GetProperty("action")
+                .GetProperty("config")
+                .GetProperty("jcp")
+                .GetProperty("config");
+            Assert.Equal("Q", jcpConfig.GetProperty("play").GetProperty("meta").GetProperty("prompt_sub_category").GetString());
+            Assert.Equal("question", jcpConfig.GetProperty("play").GetProperty("meta").GetProperty("mim_type").GetString());
+            Assert.Equal("LISTEN", jcpConfig.GetProperty("listen").GetProperty("type").GetString());
+            Assert.Equal("shared/yes_no", jcpConfig.GetProperty("listen").GetProperty("contexts")[0].GetString());
         }
 
         var session = _store.FindSessionByToken(token);

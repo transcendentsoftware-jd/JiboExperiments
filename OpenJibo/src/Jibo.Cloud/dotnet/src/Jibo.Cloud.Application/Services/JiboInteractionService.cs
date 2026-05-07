@@ -386,7 +386,16 @@ public sealed class JiboInteractionService(
     {
         return new JiboInteractionDecision(
             "proactive_offer_pizza_fact",
-            "Do you want to hear a fun pizza fact?");
+            "Do you want to hear a fun pizza fact?",
+            "chitchat-skill",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["mim_id"] = "runtime-chat",
+                ["mim_type"] = "question",
+                ["prompt_id"] = "RUNTIME_PROMPT",
+                ["prompt_sub_category"] = "Q",
+                ["listen_contexts"] = new[] { "shared/yes_no" }
+            });
     }
 
     private static JiboInteractionDecision BuildProactivePizzaFactDecision()

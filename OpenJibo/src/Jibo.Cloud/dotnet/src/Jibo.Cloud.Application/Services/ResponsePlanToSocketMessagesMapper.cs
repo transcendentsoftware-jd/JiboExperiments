@@ -101,7 +101,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                                                 ? clientIntent
                                                 : transcript;
         var outboundRules = isProactivePizzaFactOffer
-            ? ["shared/yes_no", "$YESNO"]
+            ? ["shared/yes_no"]
             : isWordOfDayLaunch
             ? ["word-of-the-day/menu"]
             : isGlobalCommand
@@ -794,6 +794,31 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var mimType = ReadPayloadString(skillPayload, "mim_type") ?? "announcement";
         var promptId = ReadPayloadString(skillPayload, "prompt_id") ?? "RUNTIME_PROMPT";
         var promptSubCategory = ReadPayloadString(skillPayload, "prompt_sub_category") ?? "AN";
+        var listenContexts = ReadPayloadStringArray(skillPayload, "listen_contexts");
+        var jcpConfig = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["play"] = new
+            {
+                esml,
+                meta = new
+                {
+                    prompt_id = promptId,
+                    prompt_sub_category = promptSubCategory,
+                    mim_id = mimId,
+                    mim_type = mimType
+                }
+            }
+        };
+
+        if (listenContexts.Count > 0)
+        {
+            jcpConfig["listen"] = new
+            {
+                id = CreateProtocolId(),
+                type = "LISTEN",
+                contexts = listenContexts
+            };
+        }
 
         return new
         {
@@ -814,20 +839,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         jcp = new
                         {
                             type = "SLIM",
-                            config = new
-                            {
-                                play = new
-                                {
-                                    esml,
-                                    meta = new
-                                    {
-                                        prompt_id = promptId,
-                                        prompt_sub_category = promptSubCategory,
-                                        mim_id = mimId,
-                                        mim_type = mimType
-                                    }
-                                }
-                            }
+                            config = jcpConfig
                         }
                     }
                 },
@@ -1031,9 +1043,41 @@ public sealed class ResponsePlanToSocketMessagesMapper
         return value?.ToString();
     }
 
+    private static IReadOnlyList<string> ReadPayloadStringArray(IDictionary<string, object?>? payload, string key)
+    {
+        if (payload is null || !payload.TryGetValue(key, out var value) || value is null)
+        {
+            return [];
+        }
+
+        return value switch
+        {
+            string text => [.. text
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(static context => !string.IsNullOrWhiteSpace(context))],
+            string[] contexts => [.. contexts.Where(static context => !string.IsNullOrWhiteSpace(context))],
+            IEnumerable<string> contexts => [.. contexts.Where(static context => !string.IsNullOrWhiteSpace(context))],
+            JsonElement jsonElement when jsonElement.ValueKind == JsonValueKind.Array => [.. jsonElement
+                .EnumerateArray()
+                .Select(static item => item.GetString())
+                .Where(static context => !string.IsNullOrWhiteSpace(context))
+                .Select(static context => context!)],
+            IEnumerable<object?> contexts => [.. contexts
+                .Select(static context => context?.ToString())
+                .Where(static context => !string.IsNullOrWhiteSpace(context))
+                .Select(static context => context!)],
+            _ => string.IsNullOrWhiteSpace(value.ToString()) ? [] : [value.ToString()!]
+        };
+    }
+
     private static string CreateHubMessageId()
     {
         return $"mid-{Guid.NewGuid()}";
+    }
+
+    private static string CreateProtocolId()
+    {
+        return Guid.NewGuid().ToString("N");
     }
 
     public sealed record SocketReplyPlan(string Text, int DelayMs = 0);

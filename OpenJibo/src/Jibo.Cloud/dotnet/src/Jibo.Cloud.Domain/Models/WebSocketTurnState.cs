@@ -3,7 +3,7 @@ namespace Jibo.Cloud.Domain.Models;
 public sealed class WebSocketTurnState
 {
     public static readonly TimeSpan DefaultLateAudioIgnoreWindow = TimeSpan.FromSeconds(2);
-    public static readonly TimeSpan DiagnosticSpeechLateAudioIgnoreWindow = TimeSpan.FromSeconds(8);
+    public static readonly TimeSpan DiagnosticSpeechLateAudioIgnoreWindow = TimeSpan.FromSeconds(4);
 
     public string? TransId { get; set; }
     public string? ContextPayload { get; set; }
