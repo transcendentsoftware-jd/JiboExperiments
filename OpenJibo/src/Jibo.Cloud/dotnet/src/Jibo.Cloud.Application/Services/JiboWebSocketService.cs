@@ -25,7 +25,8 @@ public sealed class JiboWebSocketService(
             var replies = await turnFinalizationService.HandleBinaryAudioAsync(session, envelope, cancellationToken);
             await telemetrySink.RecordTurnEventAsync(envelope, session, "binary_audio_received", new Dictionary<string, object?>
             {
-                ["bytes"] = envelope.Binary?.Length ?? 0
+                ["bytes"] = envelope.Binary?.Length ?? 0,
+                ["glsmPhase"] = WebSocketTurnFinalizationService.ResolveGlsmPhase(session)
             }, cancellationToken);
             return replies;
         }
@@ -33,6 +34,8 @@ public sealed class JiboWebSocketService(
         var parsedType = ReadMessageType(envelope.Text);
         session.LastMessageType = parsedType;
         var containsInlineTurnPayload = parsedType == "LISTEN" && ContainsInlineTurnPayload(envelope.Text);
+        var staleListenRecovered = false;
+        var staleListenAgeMs = 0;
         if (parsedType == "LISTEN" &&
             !containsInlineTurnPayload &&
             WebSocketTurnFinalizationService.ShouldIgnoreLateListenSetup(session, envelope.Text))
@@ -57,6 +60,19 @@ public sealed class JiboWebSocketService(
             return replies;
         }
 
+        if (parsedType == "LISTEN" &&
+            !containsInlineTurnPayload &&
+            WebSocketTurnFinalizationService.TryRecoverStalePendingListen(session, out staleListenAgeMs))
+        {
+            staleListenRecovered = true;
+            await telemetrySink.RecordTurnEventAsync(envelope, session, "glsm_stale_listen_recovered", new Dictionary<string, object?>
+            {
+                ["staleAgeMs"] = staleListenAgeMs,
+                ["transID"] = session.TurnState.TransId,
+                ["glsmPhase"] = WebSocketTurnFinalizationService.ResolveGlsmPhase(session)
+            }, cancellationToken);
+        }
+
         WebSocketTurnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
 
         switch (parsedType)
@@ -66,7 +82,8 @@ public sealed class JiboWebSocketService(
                 var replies = await turnFinalizationService.HandleContextAsync(session, envelope, cancellationToken);
                 await telemetrySink.RecordTurnEventAsync(envelope, session, "context_received", new Dictionary<string, object?>
                 {
-                    ["transID"] = session.TurnState.TransId
+                    ["transID"] = session.TurnState.TransId,
+                    ["glsmPhase"] = WebSocketTurnFinalizationService.ResolveGlsmPhase(session)
                 }, cancellationToken);
                 return replies;
             }
@@ -80,7 +97,10 @@ public sealed class JiboWebSocketService(
                     ["messageType"] = parsedType,
                     ["replyCount"] = replies.Count,
                     ["transcript"] = session.LastTranscript,
-                    ["intent"] = session.LastIntent
+                    ["intent"] = session.LastIntent,
+                    ["glsmPhase"] = WebSocketTurnFinalizationService.ResolveGlsmPhase(session),
+                    ["staleListenRecovered"] = staleListenRecovered,
+                    ["staleListenAgeMs"] = staleListenAgeMs
                 }, cancellationToken);
                 return replies;
             }
@@ -92,7 +112,8 @@ public sealed class JiboWebSocketService(
                     ["messageType"] = parsedType,
                     ["replyCount"] = replies.Count,
                     ["transcript"] = session.LastTranscript,
-                    ["intent"] = session.LastIntent
+                    ["intent"] = session.LastIntent,
+                    ["glsmPhase"] = WebSocketTurnFinalizationService.ResolveGlsmPhase(session)
                 }, cancellationToken);
                 return replies;
             }

@@ -301,6 +301,20 @@ Current release theme:
 - Follow-up:
   - live smoke should confirm `cloud version` speaks `1.0.18`, carries `match.skipSurprises = true`, does not stop itself on the word `Jibo`, and settles without a generic `I heard...` reply or a local surprise handoff
 
+### GLSM Listener Flow Capture And Recovery
+
+- Status: `implemented`
+- Tags: `protocol`, `docs`
+- Result:
+  - the legacy listener state machine source (`sdk ... glsm.png`) is now captured in current planning docs
+  - runtime now emits GLSM-aligned phase snapshots (`HJ_LISTENING`, `LISTENING`, `WAIT_LISTEN_FINISHED`, `DISPATCH_DIALOG`, `PROCESS_LISTENER_QUEUE`)
+  - turn diagnostics now include `glsm_phase_transition` for phase changes
+  - websocket telemetry now records `glsmPhase` on binary/context/turn events
+  - stale pending-listen recovery is now in source so a long-open no-context/no-audio listen can be cleared when the next hotphrase listen arrives
+- Follow-up:
+  - live-capture proof is still required against the recurring blue-ring/stuck-listening sequence
+  - deeper GLSM parity (`Interrupt Listeners`, launch/global parse branches) should be tackled after this first capture slice is validated on-device
+
 ### End-Of-Skill Surprise Suppression
 
 - Status: `implemented`

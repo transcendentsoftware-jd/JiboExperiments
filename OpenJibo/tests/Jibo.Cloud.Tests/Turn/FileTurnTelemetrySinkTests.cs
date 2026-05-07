@@ -101,4 +101,49 @@ public sealed class FileTurnTelemetrySinkTests
             s => s.RecordTranscriptError(It.IsAny<Exception>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Once());
     }
+
+    [Fact]
+    public async Task HandleContext_EmitsGlsmPhaseTransitionDiagnostic()
+    {
+        var sink = new Mock<ITurnTelemetrySink>();
+        sink.Setup(s => s.RecordTurnDiagnosticAsync(It.IsAny<string>(), It.IsAny<IReadOnlyDictionary<string, object?>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var turnService = new WebSocketTurnFinalizationService(
+            Mock.Of<IConversationBroker>(),
+            Mock.Of<ISttStrategySelector>(),
+            sink.Object);
+
+        var session = new CloudSession
+        {
+            Token = "glsm-phase-token",
+            TurnState =
+            {
+                TransId = "trans-glsm",
+                AwaitingTurnCompletion = true,
+                SawListen = true,
+                ListenOpenedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(1)
+            }
+        };
+        session.Metadata["glsmPhase"] = "HJ_LISTENING";
+
+        await turnService.HandleContextAsync(
+            session,
+            new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Text = """{"type":"CONTEXT","transID":"trans-glsm","data":{"topic":"conversation"}}"""
+            },
+            CancellationToken.None);
+
+        sink.Verify(
+            s => s.RecordTurnDiagnosticAsync(
+                "glsm_phase_transition",
+                It.Is<IReadOnlyDictionary<string, object?>>(details =>
+                    details.ContainsKey("state") &&
+                    string.Equals(details["state"] == null ? null : details["state"]!.ToString(), "LISTENING", StringComparison.OrdinalIgnoreCase)),
+                It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce());
+    }
 }

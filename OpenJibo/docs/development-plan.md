@@ -88,6 +88,11 @@ Current websocket scope:
 - active local prompt preservation so `shared/yes_no`, clock, gallery, and settings prompts can still consume transcript-bearing short replies even when the stock skill reports a local context
 - binary audio ignored for an existing transID until a fresh `LISTEN` has been seen, preventing context-only or post-speech tails from reopening an endless buffered turn
 - blank-audio hotphrase turns clear pending listen state and install a short late-audio ignore window
+- first GLSM-aligned listener telemetry and recovery slice is now in source:
+  - derived phase labels (`HJ_LISTENING`, `LISTENING`, `WAIT_LISTEN_FINISHED`, `DISPATCH_DIALOG`, `PROCESS_LISTENER_QUEUE`)
+  - `glsm_phase_transition` turn diagnostics
+  - websocket turn events with `glsmPhase` snapshots
+  - stale pending-listen recovery for long-open no-context/no-audio listens before processing a new hotphrase listen
 - unknown inbound websocket types dropped silently instead of echoing stock-OS-unknown OpenJibo events
 - file telemetry and fixture export for HTTP, websocket, and turn captures
 
@@ -145,6 +150,7 @@ Use these sources as evidence, not as code to copy blindly:
 - User-provided original source snapshot: `..\jibo` when extracted locally
 - Original Pegasus cloud source inside that snapshot: `pegasus`
 - Original SDK and skill source inside that snapshot: `sdk`
+- Legacy listener flow reference diagram: `..\jibo\sdk\packages\skills-service-manager\resources\state-diagrams\glsm.png`
 - JiboOS reference tree: `..\JiboOS`
 - JiboOS skill snapshot: `..\JiboOS\opt\jibo\Jibo\Skills\@be`
 

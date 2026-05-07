@@ -2524,6 +2524,47 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task StaleListenSetup_IsRecoveredWhenNextHotphraseListenArrives()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-stale-listen-token",
+            Text = """{"type":"LISTEN","transID":"trans-stale-listen","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var session = _store.FindSessionByToken("hub-stale-listen-token");
+        Assert.NotNull(session);
+        session.TurnState.ListenOpenedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(12);
+        session.TurnState.AwaitingTurnCompletion = true;
+        session.TurnState.SawListen = true;
+        session.TurnState.SawContext = false;
+        session.TurnState.BufferedAudioBytes = 0;
+        session.TurnState.BufferedAudioChunkCount = 0;
+        session.TurnState.HotphraseEmptyTurnCount = 2;
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-stale-listen-token",
+            Text = """{"type":"LISTEN","transID":"trans-stale-listen","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        Assert.Empty(replies);
+        Assert.True(session.TurnState.AwaitingTurnCompletion);
+        Assert.True(session.TurnState.SawListen);
+        Assert.False(session.TurnState.SawContext);
+        Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+        Assert.Equal(0, session.TurnState.BufferedAudioChunkCount);
+        Assert.Equal(0, session.TurnState.HotphraseEmptyTurnCount);
+        Assert.True(session.TurnState.ListenOpenedUtc > DateTimeOffset.UtcNow - TimeSpan.FromSeconds(3));
+    }
+
+    [Fact]
     public async Task BinaryAudio_AfterWordOfDayRightWordListen_IsIgnoredDuringCleanupWindow()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope

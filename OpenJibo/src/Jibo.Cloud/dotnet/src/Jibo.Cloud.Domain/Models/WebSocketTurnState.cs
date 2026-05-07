@@ -7,6 +7,7 @@ public sealed class WebSocketTurnState
 
     public string? TransId { get; set; }
     public string? ContextPayload { get; set; }
+    public DateTimeOffset? ListenOpenedUtc { get; set; }
     public bool ListenHotphrase { get; set; }
     public int HotphraseEmptyTurnCount { get; set; }
     public DateTimeOffset? IgnoreAdditionalAudioUntilUtc { get; set; }

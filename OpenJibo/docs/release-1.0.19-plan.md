@@ -119,7 +119,7 @@ Reference:
 
 ## Next Queued Task (`2026-05-06`)
 
-Queued next `1.0.19` implementation task:
+Queued next `1.0.19` implementation task (now started):
 
 - dialog parsing expansion and ambiguity guardrails
 
@@ -129,6 +129,12 @@ Execution focus:
 - reduce trigger-only captures that drop the rest of the utterance
 - preserve command-vs-question personality split and local skill payload compatibility
 - add focused tests for new phrase families and ambiguity boundaries
+- keep listener-state observability aligned with the legacy GLSM flow while phrase guardrails are added
+
+First completed guardrail slice under this queue:
+
+- GLSM listener flow capture + telemetry mapping
+- stale pending-listen recovery path for long-open no-context/no-audio listens
 
 ## Next Slices
 

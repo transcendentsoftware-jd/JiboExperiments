@@ -16,6 +16,7 @@ As-of date: `2026-05-06`
 
 - Legacy system architecture: `C:\Projects\jibo\pegasus\resources\system_diagram.png`
 - Legacy generic skill scaffold: `C:\Projects\jibo\pegasus\packages\template-skill\docs\TemplateSkill.png`
+- Legacy listener state machine: `C:\Projects\jibo\sdk\packages\skills-service-manager\resources\state-diagrams\glsm.png`
 
 ## Template Skill Verdict
 
@@ -44,6 +45,30 @@ Conclusion: do not treat template-skill flow as a port target. Treat it as a sha
 | `Lasso` provider aggregation | partial provider integration via weather provider wiring in [ServiceCollectionExtensions.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs) | full aggregation service for weather/news/calendar/knowledge inputs |
 | `Proactivity Catalog` | in-code candidate lists/weights | explicit catalog service with tuned weights and operator controls |
 | `Audio Logs` | file telemetry sinks in infrastructure telemetry | hosted indexed capture/retention for multi-operator analysis |
+
+## GLSM Listener Flow Alignment (`2026-05-06`)
+
+Captured source:
+
+- `C:\Projects\jibo\sdk\packages\skills-service-manager\resources\state-diagrams\glsm.png`
+
+First OpenJibo support slice (implemented):
+
+- explicit derived listener phases are now emitted in cloud diagnostics:
+  - `HJ_LISTENING`
+  - `LISTENING`
+  - `WAIT_LISTEN_FINISHED`
+  - `DISPATCH_DIALOG`
+  - `PROCESS_LISTENER_QUEUE`
+- turn telemetry now records `glsm_phase_transition` with previous/next state and trigger
+- websocket telemetry now includes `glsmPhase` on binary, context, and turn-processed events
+- stale pending-listen recovery is now implemented:
+  - when a pending `LISTEN` stays open long enough with no context/audio, a new hotphrase listen can recover the stuck state before continuing
+
+Current parity boundary:
+
+- this slice focuses on listener lifecycle observability plus stuck-listen recovery
+- deeper explicit parity states from GLSM (`Interrupt Listeners`, `Handle Launch Parse`, `Handle Global Parse`, `Dispatch Dialog` sub-branches) are next candidates once this capture-driven slice is validated live
 
 ## Where We Were
 
