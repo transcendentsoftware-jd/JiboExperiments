@@ -1556,9 +1556,15 @@ public sealed partial class WebSocketTurnFinalizationService(
         if (normalized.StartsWith("my favorite ", StringComparison.Ordinal) ||
             normalized.StartsWith("my favourite ", StringComparison.Ordinal))
         {
+            var preferenceTail = normalized.StartsWith("my favourite ", StringComparison.Ordinal)
+                ? normalized["my favourite ".Length..].Trim()
+                : normalized["my favorite ".Length..].Trim();
+            var missingCopula = !normalized.Contains(" is ", StringComparison.Ordinal) &&
+                                !normalized.Contains(" are ", StringComparison.Ordinal);
+
             if (normalized.EndsWith(" is", StringComparison.Ordinal) ||
                 normalized.EndsWith(" are", StringComparison.Ordinal) ||
-                !normalized.Contains(" is ", StringComparison.Ordinal))
+                (missingCopula && !LooksLikeBarePreferenceSet(preferenceTail)))
             {
                 reason = "preference_set_incomplete";
                 return true;
@@ -1589,6 +1595,17 @@ public sealed partial class WebSocketTurnFinalizationService(
     private static bool LooksLikeIncompleteAffinitySet(string normalized)
     {
         return PegasusAffinityContinuationStems.Contains(normalized);
+    }
+
+    private static bool LooksLikeBarePreferenceSet(string preferenceTail)
+    {
+        if (string.IsNullOrWhiteSpace(preferenceTail))
+        {
+            return false;
+        }
+
+        var tokens = preferenceTail.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return tokens.Length >= 2;
     }
 
     private static void ClearListenTracking(WebSocketTurnState turnState)

@@ -10,7 +10,7 @@ Use it to keep release planning grounded in three views:
 - where we are (current hosted `.NET` implementation)
 - where we are headed (next architecture slices)
 
-As-of date: `2026-05-06`
+As-of date: `2026-05-07`
 
 ## Diagram Inputs
 
@@ -40,6 +40,7 @@ Conclusion: do not treat template-skill flow as a port target. Treat it as a sha
 | `Parser / Robust Parser` | rule-based intent resolution in [JiboInteractionService.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/JiboInteractionService.cs) + focused state machines (personal report/chitchat) | deeper phrase import from Pegasus intents/entities plus ambiguity guardrails |
 | `Skill Router` | [JiboInteractionService.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/JiboInteractionService.cs) decision switch and local skill payload shaping | external skill routing config and safer declarative intent mapping |
 | `Proactivity Selector` | weighted candidate selection in [JiboInteractionService.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/JiboInteractionService.cs) + pending-offer session state in [WebSocketTurnFinalizationService.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/WebSocketTurnFinalizationService.cs) | externalized proactivity catalog, cooldown policy, and broader category coverage |
+| `Presence / Identity Context` | runtime context passthrough in [ProtocolToTurnContextMapper.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/ProtocolToTurnContextMapper.cs) and turn metadata handling in [WebSocketTurnFinalizationService.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Application/Services/WebSocketTurnFinalizationService.cs) | normalize `runtime.perception` fields (`speaker`, `peoplePresent`, focused person) for greeting/proactivity policy decisions |
 | `Skill Registry` | implicit in current code/routing | formal registry abstraction for local/cloud capabilities and manifest metadata |
 | `History` | tenant-scoped memory store in [InMemoryPersonalMemoryStore.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/Persistence/InMemoryPersonalMemoryStore.cs) | durable multi-tenant persistence and history timeline/query support |
 | `Lasso` provider aggregation | partial provider integration via weather provider wiring in [ServiceCollectionExtensions.cs](../src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs) | full aggregation service for weather/news/calendar/knowledge inputs |
@@ -127,3 +128,24 @@ Tracking anchors:
 Primary objective:
 
 - import Pegasus parser intent phrases/entities to improve intent confidence while preserving command-vs-question personality behavior.
+
+## Greetings And Presence Track (`2026-05-07`)
+
+A dedicated presence-aware greetings plan is now captured for the next personality slice, grounded in Pegasus `@be/greetings` state, identity, and proactive policy behavior.
+
+Reference:
+
+- [greetings-presence-plan.md](greetings-presence-plan.md)
+
+## Personal Report Parity Track (`2026-05-07`)
+
+Personal report parity planning is now captured with a source-anchored implementation sequence for:
+
+- weather visual/personality parity
+- live news provider path
+- commute provider path
+- calendar/report coverage matrix
+
+Reference:
+
+- [personal-report-parity-plan.md](personal-report-parity-plan.md)

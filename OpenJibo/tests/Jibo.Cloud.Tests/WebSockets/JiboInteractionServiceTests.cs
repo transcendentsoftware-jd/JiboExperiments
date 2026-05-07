@@ -136,6 +136,21 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_WhatsYourBday_DoesNotFallThroughToDateIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's your bday",
+            NormalizedTranscript = "what's your bday"
+        });
+
+        Assert.Equal("robot_birthday", decision.IntentName);
+        Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_DoYouHaveAPersonality_UsesCatalogBackedPersonalityReply()
     {
         var service = CreateService();
@@ -339,6 +354,43 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_BirthdayMemory_BdayAliasSetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my bday is April 12",
+            NormalizedTranscript = "my bday is April 12",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_birthday", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your birthday is april 12.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "when is my bday",
+            NormalizedTranscript = "when is my bday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_birthday", recallDecision.IntentName);
+        Assert.Equal("You told me your birthday is april 12.", recallDecision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_PreferenceMemory_SetThenRecallWithinTenant()
     {
         var memoryStore = new InMemoryPersonalMemoryStore();
@@ -373,6 +425,43 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("memory_get_preference", recallDecision.IntentName);
         Assert.Equal("You told me your favorite music is jazz.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PreferenceMemory_BareFavoriteSetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "my favorite sport football",
+            NormalizedTranscript = "my favorite sport football",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_preference", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember your favorite sport is football.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what is my favorite sport",
+            NormalizedTranscript = "what is my favorite sport",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_preference", recallDecision.IntentName);
+        Assert.Equal("You told me your favorite sport is football.", recallDecision.ReplyText);
     }
 
     [Fact]
@@ -1028,6 +1117,36 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_WeatherTodaysForecastQuery_WithoutProvider_StillReturnsFallback()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's today's weather look like",
+            NormalizedTranscript = "what's today's weather look like"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherConditionForecastQuery_WithoutProvider_StillReturnsFallback()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "will it be sunny tomorrow",
+            NormalizedTranscript = "will it be sunny tomorrow"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_ClientNluRequestWeatherPR_WithoutProvider_StillReturnsFallback()
     {
         var service = CreateService();
@@ -1063,7 +1182,10 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("weather", decision.IntentName);
         Assert.Null(decision.SkillName);
-        Assert.Null(decision.SkillPayload);
+        Assert.NotNull(decision.SkillPayload);
+        Assert.Contains("cat='weather'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("meta='rain'", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("WeatherCommentRain", decision.SkillPayload["mim_id"]);
         Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
         Assert.NotNull(provider.LastRequest);
         Assert.False(provider.LastRequest!.IsTomorrow);
@@ -1088,6 +1210,48 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal("Tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherLocationForToday_WithProvider_PassesLocation()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather for seattle today",
+            NormalizedTranscript = "what's the weather for seattle today"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal("Right now in Seattle, US, it is light rain and 58 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherLocationWithWeekendSuffix_WithProvider_PassesLocation()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Paris, FR", "overcast clouds", 66, 70, 60, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather in paris this weekend",
+            NormalizedTranscript = "what's the weather in paris this weekend"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Paris", provider.LastRequest?.LocationQuery);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal("Right now in Paris, FR, it is overcast clouds and 66 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]

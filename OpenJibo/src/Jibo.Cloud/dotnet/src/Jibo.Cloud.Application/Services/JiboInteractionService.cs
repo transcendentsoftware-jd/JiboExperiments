@@ -452,9 +452,12 @@ public sealed class JiboInteractionService(
                 "I couldn't fetch the weather right now. Please try again.");
         }
 
+        var spokenReply = BuildWeatherSpokenReply(snapshot, dateEntity);
+        var weatherPayload = BuildWeatherSkillPayload(spokenReply, snapshot, TryResolveReferenceLocalTime(turn));
         return new JiboInteractionDecision(
             "weather",
-            BuildWeatherSpokenReply(snapshot, dateEntity));
+            spokenReply,
+            SkillPayload: weatherPayload);
     }
 
     private static string BuildWeatherSpokenReply(
@@ -486,6 +489,114 @@ public sealed class JiboInteractionService(
         }
 
         return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
+    }
+
+    private static IDictionary<string, object?> BuildWeatherSkillPayload(
+        string spokenReply,
+        WeatherReportSnapshot snapshot,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var weatherIcon = ResolveWeatherAnimationIcon(snapshot, referenceLocalTime);
+        var promptToken = ResolveWeatherPromptToken(weatherIcon);
+
+        return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["esml"] =
+                $"<speak><anim cat='weather' meta='{weatherIcon}' nonBlocking='true' /><break size='0.35'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeForEsml(spokenReply)}</es></speak>",
+            ["mim_id"] = $"WeatherComment{promptToken}",
+            ["mim_type"] = "announcement",
+            ["prompt_id"] = $"WeatherComment{promptToken}_AN_13",
+            ["prompt_sub_category"] = "AN"
+        };
+    }
+
+    private static string ResolveWeatherAnimationIcon(
+        WeatherReportSnapshot snapshot,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var isDaytime = (referenceLocalTime ?? DateTimeOffset.UtcNow).Hour is >= 6 and < 18;
+        var normalized = NormalizeCommandPhrase(
+            $"{snapshot.Condition ?? string.Empty} {snapshot.Summary ?? string.Empty}");
+
+        if (normalized.Contains("thunder", StringComparison.Ordinal) ||
+            normalized.Contains("drizzle", StringComparison.Ordinal) ||
+            normalized.Contains("rain", StringComparison.Ordinal))
+        {
+            return "rain";
+        }
+
+        if (normalized.Contains("snow", StringComparison.Ordinal))
+        {
+            return "snow";
+        }
+
+        if (normalized.Contains("sleet", StringComparison.Ordinal) ||
+            normalized.Contains("freezing rain", StringComparison.Ordinal) ||
+            normalized.Contains("ice", StringComparison.Ordinal))
+        {
+            return "sleet";
+        }
+
+        if (normalized.Contains("fog", StringComparison.Ordinal) ||
+            normalized.Contains("mist", StringComparison.Ordinal) ||
+            normalized.Contains("haze", StringComparison.Ordinal) ||
+            normalized.Contains("smoke", StringComparison.Ordinal))
+        {
+            return "fog";
+        }
+
+        if (normalized.Contains("wind", StringComparison.Ordinal))
+        {
+            return "wind";
+        }
+
+        if (normalized.Contains("partly cloudy", StringComparison.Ordinal) ||
+            normalized.Contains("scattered clouds", StringComparison.Ordinal) ||
+            normalized.Contains("few clouds", StringComparison.Ordinal))
+        {
+            return isDaytime ? "partly-cloudy-day" : "partly-cloudy-night";
+        }
+
+        if (normalized.Contains("cloud", StringComparison.Ordinal) ||
+            normalized.Contains("overcast", StringComparison.Ordinal))
+        {
+            return "cloudy";
+        }
+
+        if (normalized.Contains("clear", StringComparison.Ordinal) ||
+            normalized.Contains("sunny", StringComparison.Ordinal))
+        {
+            return isDaytime ? "clear-day" : "clear-night";
+        }
+
+        return isDaytime ? "clear-day" : "clear-night";
+    }
+
+    private static string ResolveWeatherPromptToken(string weatherIcon)
+    {
+        return weatherIcon switch
+        {
+            "clear-day" => "ClearDay",
+            "clear-night" => "ClearNight",
+            "rain" => "Rain",
+            "snow" => "Snow",
+            "sleet" => "Sleet",
+            "fog" => "Fog",
+            "wind" => "Wind",
+            "cloudy" => "Cloudy",
+            "partly-cloudy-day" => "PartlyCloudyDay",
+            "partly-cloudy-night" => "PartlyCloudyNight",
+            _ => "Cloudy"
+        };
+    }
+
+    private static string EscapeForEsml(string value)
+    {
+        return value
+            .Replace("&", "&amp;", StringComparison.Ordinal)
+            .Replace("<", "&lt;", StringComparison.Ordinal)
+            .Replace(">", "&gt;", StringComparison.Ordinal)
+            .Replace("\"", "&quot;", StringComparison.Ordinal);
     }
 
     private static JiboInteractionDecision BuildOrderPizzaDecision()
@@ -1151,8 +1262,7 @@ public sealed class JiboInteractionService(
                 return "no";
         }
 
-        if (MatchesAny(loweredTranscript, "what time is it", "current time", "the time", "time is it") ||
-            loweredTranscript.Contains("time", StringComparison.Ordinal))
+        if (IsTimeRequest(loweredTranscript))
         {
             return "time";
         }
@@ -1162,9 +1272,7 @@ public sealed class JiboInteractionService(
             return "day";
         }
 
-        if (MatchesAny(loweredTranscript, "what day is it", "what is the date", "today s date", "today's date") ||
-            loweredTranscript.Contains("date", StringComparison.Ordinal) ||
-            loweredTranscript.Contains("day", StringComparison.Ordinal))
+        if (IsDateRequest(loweredTranscript))
         {
             return "date";
         }
@@ -1630,6 +1738,44 @@ public sealed class JiboInteractionService(
                MatchesAny(normalized, "no thank you", "maybe later");
     }
 
+    private static bool IsTimeRequest(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        if (normalized is "time" or "the time" or "current time" or "what time is it" or "what s the time" or "what is the time")
+        {
+            return true;
+        }
+
+        return normalized.StartsWith("what time", StringComparison.Ordinal) ||
+               normalized.StartsWith("tell me the time", StringComparison.Ordinal) ||
+               normalized.StartsWith("show me the time", StringComparison.Ordinal);
+    }
+
+    private static bool IsDateRequest(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        return normalized is
+            "what is the date" or
+            "what s the date" or
+            "what date is it" or
+            "today s date" or
+            "today date" or
+            "what is today s date" or
+            "what s today s date" or
+            "what is todays date" or
+            "what s todays date";
+    }
+
     private static bool IsWeatherRequest(string loweredTranscript)
     {
         if (MatchesAny(
@@ -1652,12 +1798,22 @@ public sealed class JiboInteractionService(
                 "what is today s humidity",
                 "what is today's humidity",
                 "what's the humidity",
-                "what is the humidity"))
+                "what is the humidity",
+                "what's today's forecast",
+                "what s today's forecast",
+                "what s today s forecast",
+                "what is today s forecast",
+                "what is today's forecast",
+                "what's today's weather look like",
+                "what s today's weather look like",
+                "what s today s weather look like",
+                "what is today s weather look like",
+                "what is today's weather look like"))
         {
             return true;
         }
 
-        return MatchesAny(
+        if (MatchesAny(
             loweredTranscript,
             "will it rain",
             "will it snow",
@@ -1669,7 +1825,12 @@ public sealed class JiboInteractionService(
             "is it going to rain",
             "is it going to snow",
             "do you think it will rain",
-            "do you think it will snow");
+            "do you think it will snow"))
+        {
+            return true;
+        }
+
+        return WeatherConditionForecastPattern.IsMatch(loweredTranscript);
     }
 
     private static string? TryResolveWeatherLocationQuery(string transcript)
@@ -1830,6 +1991,10 @@ public sealed class JiboInteractionService(
                 "when s your birthday",
                 "what s your birthday",
                 "what is your birthday",
+                "when is your bday",
+                "when s your bday",
+                "what s your bday",
+                "what is your bday",
                 "when were you born",
                 "what day is your birthday"))
         {
@@ -1837,6 +2002,7 @@ public sealed class JiboInteractionService(
         }
 
         return (normalized.Contains("your birthday", StringComparison.Ordinal) ||
+                normalized.Contains("your bday", StringComparison.Ordinal) ||
                 normalized.Contains("your birth date", StringComparison.Ordinal))
                && !normalized.Contains("my birthday", StringComparison.Ordinal);
     }
@@ -1889,6 +2055,11 @@ public sealed class JiboInteractionService(
             "what is my birthday",
             "what s my birthday",
             "what's my birthday",
+            "when is my bday",
+            "when s my bday",
+            "what is my bday",
+            "what s my bday",
+            "what's my bday",
             "do you remember my birthday");
     }
 
@@ -1900,13 +2071,15 @@ public sealed class JiboInteractionService(
     private static bool IsUserBirthdaySetAttempt(string loweredTranscript)
     {
         var normalized = NormalizeCommandPhrase(loweredTranscript);
-        return normalized.Contains("my birthday is", StringComparison.Ordinal);
+        return normalized.Contains("my birthday is", StringComparison.Ordinal) ||
+               normalized.Contains("my bday is", StringComparison.Ordinal);
     }
 
     private static bool IsUserBirthdayRecallAttempt(string loweredTranscript)
     {
         var normalized = NormalizeCommandPhrase(loweredTranscript);
-        return normalized.Contains("my birthday", StringComparison.Ordinal) &&
+        return (normalized.Contains("my birthday", StringComparison.Ordinal) ||
+                normalized.Contains("my bday", StringComparison.Ordinal)) &&
                (normalized.StartsWith("when", StringComparison.Ordinal) ||
                 normalized.StartsWith("what", StringComparison.Ordinal) ||
                 normalized.StartsWith("tell me", StringComparison.Ordinal) ||
@@ -1916,15 +2089,28 @@ public sealed class JiboInteractionService(
     private static string? TryExtractBirthdayFact(string transcript)
     {
         var normalized = NormalizeCommandPhrase(transcript);
-        var marker = "my birthday is ";
-        var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
-        if (markerIndex < 0)
+        var markers = new[]
         {
-            return null;
+            "my birthday is ",
+            "my bday is "
+        };
+
+        foreach (var marker in markers)
+        {
+            var markerIndex = normalized.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex < 0)
+            {
+                continue;
+            }
+
+            var value = normalized[(markerIndex + marker.Length)..].Trim();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
         }
 
-        var value = normalized[(markerIndex + marker.Length)..].Trim();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
+        return null;
     }
 
     private static bool IsPreferenceRecallQuestion(string loweredTranscript)
@@ -2006,6 +2192,12 @@ public sealed class JiboInteractionService(
             var splitIndex = preferencePhrase.IndexOf(splitMarker, StringComparison.Ordinal);
             if (splitIndex <= 0 || splitIndex >= preferencePhrase.Length - splitMarker.Length)
             {
+                var fallbackPreference = TryExtractPreferenceSetWithoutCopula(preferencePhrase);
+                if (fallbackPreference is not null)
+                {
+                    return fallbackPreference;
+                }
+
                 continue;
             }
 
@@ -2040,6 +2232,38 @@ public sealed class JiboInteractionService(
         }
 
         return null;
+    }
+
+    private static (string Category, string Value)? TryExtractPreferenceSetWithoutCopula(string preferencePhrase)
+    {
+        if (string.IsNullOrWhiteSpace(preferencePhrase))
+        {
+            return null;
+        }
+
+        var normalized = preferencePhrase.Trim();
+        if (normalized.Contains(" is ", StringComparison.Ordinal) ||
+            normalized.Contains(" are ", StringComparison.Ordinal) ||
+            normalized.EndsWith(" is", StringComparison.Ordinal) ||
+            normalized.EndsWith(" are", StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        var parts = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var category = parts[0];
+        var value = string.Join(' ', parts.Skip(1)).Trim();
+        if (string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return (category, value);
     }
 
     private static bool IsImportantDateSetStatement(string loweredTranscript)
@@ -2792,11 +3016,15 @@ public sealed class JiboInteractionService(
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex WeatherLocationPattern = new(
-        @"\bin\s+(?<location>[a-z][a-z\s'\-]+)$",
+        @"\b(?:in|for|at)\s+(?<location>[a-z][a-z\s'\-]+)$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly Regex WeatherLocationSuffixPattern = new(
-        @"\b(?:today|tonight|tomorrow|outside|right now|please|thanks)\b",
+        @"\b(?:today|tonight|tomorrow|outside|right now|please|thanks|this weekend|next weekend|the weekend|weekend|this week|next week|on monday|on tuesday|on wednesday|on thursday|on friday|on saturday|on sunday|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
+    private static readonly Regex WeatherConditionForecastPattern = new(
+        @"\bwill it be\s+(sunny|cloudy|windy|foggy|stormy|rainy|snowy|hail|hailing)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly PizzaMimPrompt[] PizzaMimPrompts =

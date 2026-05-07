@@ -364,6 +364,64 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task BufferedAudio_WithBarePreferenceSetHint_FinalizesWithoutDeferral()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-bare-token",
+            Text = """{"type":"LISTEN","transID":"trans-preference-bare","data":{"rules":["launch"]}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-bare-token",
+            Text = """{"type":"CONTEXT","transID":"trans-preference-bare","data":{"audioTranscriptHint":"my favorite sport football"}}"""
+        });
+
+        for (var index = 0; index < 4; index += 1)
+        {
+            var chunkReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+            {
+                HostName = "neo-hub.jibo.com",
+                Path = "/listen",
+                Kind = "neo-hub-listen",
+                Token = "hub-preference-bare-token",
+                Binary = new byte[3000]
+            });
+
+            Assert.Empty(chunkReplies);
+        }
+
+        var session = _store.FindSessionByToken("hub-preference-bare-token");
+        Assert.NotNull(session);
+        session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromSeconds(2);
+
+        var finalizedReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-preference-bare-token",
+            Binary = new byte[3000]
+        });
+
+        Assert.Equal(3, finalizedReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(finalizedReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(finalizedReplies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(finalizedReplies[2]));
+
+        using var listenPayload = JsonDocument.Parse(finalizedReplies[0].Text!);
+        Assert.Equal("memory_set_preference", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("my favorite sport football", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+    }
+
+    [Fact]
     public async Task BufferedAudio_WithIncompleteAffinityHint_DefersThenFinalizesWhenContinuationArrives()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -3300,6 +3358,66 @@ public sealed class JiboWebSocketServiceTests
         using (var followUpListenPayload = JsonDocument.Parse(followUpReplies[0].Text!))
         {
             Assert.Equal("proactive_pizza_fact", followUpListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.False(session.Metadata.ContainsKey("pendingProactivityOffer"));
+    }
+
+    [Fact]
+    public async Task ClientAsrSurpriseOffer_PersistsPendingOfferAndResolvesNoFollowUp()
+    {
+        var token = _store.IssueRobotToken("proactivity-device-b");
+
+        var offerReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-no","data":{"text":"surprise me"}}"""
+        });
+
+        Assert.Equal(3, offerReplies.Count);
+        using (var offerListenPayload = JsonDocument.Parse(offerReplies[0].Text!))
+        {
+            Assert.Equal("proactive_offer_pizza_fact", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+            Assert.Equal("shared/yes_no", offerListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        }
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.True(session.Metadata.TryGetValue("pendingProactivityOffer", out var pendingOffer));
+        Assert.Equal("pizza_fact", pendingOffer?.ToString());
+
+        var followUpReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-no-followup","data":{"text":"no"}}"""
+        });
+
+        Assert.Equal(3, followUpReplies.Count);
+        using (var followUpListenPayload = JsonDocument.Parse(followUpReplies[0].Text!))
+        {
+            Assert.Equal("proactive_offer_declined", followUpListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        using (var followUpSkillPayload = JsonDocument.Parse(followUpReplies[2].Text!))
+        {
+            var esml = followUpSkillPayload.RootElement
+                .GetProperty("data")
+                .GetProperty("action")
+                .GetProperty("config")
+                .GetProperty("jcp")
+                .GetProperty("config")
+                .GetProperty("play")
+                .GetProperty("esml")
+                .GetString();
+            Assert.Contains("No problem", esml, StringComparison.OrdinalIgnoreCase);
         }
 
         session = _store.FindSessionByToken(token);

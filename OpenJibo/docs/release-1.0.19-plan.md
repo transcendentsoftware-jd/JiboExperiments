@@ -117,6 +117,33 @@ Reference:
 
 - [system-diagram-alignment.md](system-diagram-alignment.md)
 
+## Greetings And Presence Planning Snapshot (`2026-05-07`)
+
+Pegasus greeting and presence behavior has now been captured into a source-anchored OpenJibo implementation plan.
+
+Reference:
+
+- [greetings-presence-plan.md](greetings-presence-plan.md)
+
+## Live Validation Snapshot (`2026-05-07`)
+
+User-confirmed end-to-end behavior now includes:
+
+- `Hey Jibo -> What's your cloud version?` (working)
+- `Hey Jibo -> What's the time?` (working)
+- `Hey Jibo -> Surprise me -> pizza fact -> $YESNO (Yes) -> fact` (working)
+- `Hey Jibo -> Surprise me -> pizza fact -> $YESNO (No) -> decline reply` (working)
+
+This confirms the pizza-fact offer state now keeps the yes/no branch open through completion and does not require a second wake-word reset for the follow-up answer.
+
+## Personal Report Planning Snapshot (`2026-05-07`)
+
+Personal report parity planning is now captured with Pegasus source anchors for weather visuals/animations, live news, commute, and calendar gap coverage.
+
+Reference:
+
+- [personal-report-parity-plan.md](personal-report-parity-plan.md)
+
 ## Next Queued Task (`2026-05-06`)
 
 Queued next `1.0.19` implementation task (now started):
@@ -136,15 +163,30 @@ First completed guardrail slice under this queue:
 - GLSM listener flow capture + telemetry mapping
 - stale pending-listen recovery path for long-open no-context/no-audio listens
 
+Second completed guardrail slice under this queue:
+
+- tightened date/time ambiguity handling (`what's your birthday`/`what's your bday` no longer falls into date intent)
+- expanded Pegasus-inspired memory/weather phrase coverage:
+  - birthday alias parsing (`my bday is ...`, `when is my bday`)
+  - shorthand preference sets (`my favorite sport football`)
+  - weather variants (`what's today's weather look like`, `will it be sunny tomorrow`)
+- listener continuation guardrail now differentiates incomplete preference fragments from complete shorthand preference sets
+
+Next queued implementation track after parser guardrails:
+
+- presence-aware greetings and identity-triggered proactivity (Pegasus `@be/greetings` parity slice)
+
 ## Next Slices
 
 1. Dialog parsing expansion (queued next as of `2026-05-06`; more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
-2. Holidays and seasonal personality slice beyond pizza day (time-scoped content backed by memory/proactivity path)
-3. Durable memory persistence path (swap in provider-backed multi-tenant storage while preserving behavior contracts)
-4. Update/backup/restore end-to-end proof (operator-run and documented)
-5. STT noise-screening and short-utterance reliability pass
-6. Provider-backed news expansion and deeper weather parity using Pegasus-backed contracts
-7. Capture indexing and retention boundary for group testing
+2. Presence-aware greetings and identity-triggered proactivity (reactive/proactive split, cooldowns, person-aware greeting hooks)
+3. Personal report parity slices (weather visual layer, live news path, commute path, calendar parity matrix)
+4. Holidays and seasonal personality slice beyond pizza day (time-scoped content backed by memory/proactivity path)
+5. Durable memory persistence path (swap in provider-backed multi-tenant storage while preserving behavior contracts)
+6. Update/backup/restore end-to-end proof (operator-run and documented)
+7. STT noise-screening and short-utterance reliability pass
+8. Provider-backed news expansion and deeper weather parity using Pegasus-backed contracts
+9. Capture indexing and retention boundary for group testing
 
 For slices 1-5, use Pegasus phrase lists, MIM IDs, and behavior patterns as the source anchor before broadening into OpenJibo-native improvements.
 

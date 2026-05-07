@@ -476,7 +476,7 @@ Current release theme:
 
 ### Next Up (`2026-05-06`): Dialog Parsing Expansion And Ambiguity Guardrails
 
-- Status: `ready`
+- Status: `polish`
 - Tags: `protocol`, `content`, `stt`, `docs`
 - Why now:
   - this is the next queued `1.0.19` implementation slice after weather provider bring-up
@@ -487,6 +487,13 @@ Current release theme:
   - add ambiguity guardrails for overlapping intents (date vs birthday, generic chat vs memory set/lookup, weather variants)
   - preserve command-vs-question personality behavior and stock skill launch compatibility
   - add focused tests for new phrase families and negative boundary cases
+- Progress update (`2026-05-07`):
+  - implemented date/time guardrails so birthday phrasing is not misrouted to date
+  - expanded phrase coverage for:
+    - birthday alias set/recall (`bday` variants)
+    - shorthand favorites (`my favorite sport football`)
+    - weather phrasing (`what's today's weather look like`, `will it be sunny tomorrow`)
+  - updated continuation deferral so complete shorthand favorites finalize instead of waiting for missing continuation
 - Exit criteria:
   - ambiguous phrase handling is improved without regressions in existing `1.0.19` features
   - phrase imports are documented and traceable to Pegasus parser sources
@@ -678,6 +685,76 @@ Current release theme:
   - connect weather units and location directly to user/report-skill settings parity instead of config defaults
   - add richer condition-change commentary and view parity with original report-skill weather behaviors
 
+### 26. Presence-Aware Greetings And Identity Proactivity
+
+- Status: `ready`
+- Tags: `protocol`, `content`, `storage`, `docs`
+- Why now:
+  - this is the next personality-charm expansion after parser guardrail and weather bring-up
+  - Pegasus greetings behavior is strongly tied to presence/identity signals and proactive cooldown policy
+  - current OpenJibo has memory/proactivity foundations but no first-class presence extraction path yet
+- Pegasus source anchors:
+  - `C:\Projects\jibo\pegasus\packages\hub\be-skills\greetings_manifest.json`
+  - `C:\Projects\jibo\sdk\skills\greetings\src\GreetingsSkill.ts`
+  - `C:\Projects\jibo\sdk\skills\greetings\src\GreetingsSM.ts`
+  - `C:\Projects\jibo\pegasus\packages\hub\src\proactive\ProactiveTransactionHandler.ts`
+  - `C:\Projects\jibo\pegasus\packages\hub\src\proactive\tools\ContextTools.ts`
+- Scope:
+  - extract presence/identity context (`speaker`, `peoplePresent`, focused person) from runtime context payload
+  - add greeting intent families and state-machine split for reactive vs proactive greeting routes
+  - add cooldown and trigger-source guardrails for proactive greetings
+  - start person-aware greeting hooks (name-aware greeting, morning greeting policy, return greeting policy)
+- Exit criteria:
+  - presence-aware greetings are routed deterministically with tests
+  - proactive greetings are frequency-bounded and do not trigger from surprise source when blocked by policy
+  - fallback behavior remains stable when identity is unknown or context is incomplete
+  - docs and release tracking are updated with shipped scope and residual gaps
+- Tracking:
+  - [greetings-presence-plan.md](greetings-presence-plan.md)
+  - [release-1.0.19-plan.md](release-1.0.19-plan.md)
+
+### 27. Personal Report Parity Track (Weather/News/Commute/Calendar)
+
+- Status: `ready`
+- Tags: `protocol`, `content`, `storage`, `docs`
+- Why now:
+  - personal report is a core Jibo charm surface and currently split between implemented weather speech and placeholder calendar/commute/news content
+  - Pegasus weather used explicit condition animations and weather views; current OpenJibo weather is functional but visually lighter
+- Scope:
+  - weather icon/animation parity and view support
+  - broader non-local weather query handling and short-range date coverage
+  - provider-backed news ingestion and filtering
+  - commute provider path and settings schema
+  - coverage matrix for personal report parity gaps and test/capture exit criteria
+- Source anchors:
+  - `C:\Projects\jibo\pegasus\packages\report-skill\src\subskills\weather\WeatherMimLogic.ts`
+  - `C:\Projects\jibo\pegasus\packages\report-skill\resources\views\weatherHiLo.json`
+  - `C:\Projects\jibo\pegasus\packages\report-skill\src\subskills\news\NewsMimLogic.ts`
+  - `C:\Projects\jibo\pegasus\packages\report-skill\src\subskills\commute\CommuteMimLogic.ts`
+  - `C:\Projects\jibo\pegasus\packages\hub\pegasus-skills\report_skill_manifest.json`
+- Tracking:
+  - [personal-report-parity-plan.md](personal-report-parity-plan.md)
+  - [release-1.0.19-plan.md](release-1.0.19-plan.md)
+
+### 28. Grocery List Capability (Requested Feature)
+
+- Status: `discovery`
+- Tags: `content`, `docs`, `storage`
+- Why now:
+  - directly requested by Jibo owners and fits memory + household utility roadmap
+- Source findings:
+  - Pegasus has scripted responses for shopping/to-do list requests but no standalone grocery-list skill in this snapshot
+  - examples:
+    - `C:\Projects\jibo\pegasus\packages\chitchat-skill\mims\scripted-responses\RA_JBO_ShoppingList.mim`
+    - `C:\Projects\jibo\pegasus\packages\chitchat-skill\mims\scripted-responses\RA_JBO_ManageToDoList.mim`
+- Candidate delivery paths:
+  - native lightweight list skill (fastest user value)
+  - integration-backed list orchestration (long-term richer ecosystem fit)
+- Exit criteria:
+  - clear decision on MVP path
+  - first schema for list items + ownership scope
+  - initial voice flows and follow-up intent handling defined
+
 ## Suggested Order
 
 Before closing `1.0.18`:
@@ -696,15 +773,18 @@ For `1.0.19`:
 2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation) - implemented
 3. Proactivity selector baseline with source-backed first offers - implemented
 4. Weather report-skill launch compatibility - implemented
-5. Dialog parsing expansion and ambiguity guardrails - queued next as of `2026-05-06`
-6. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
-7. Durable memory persistence path (multi-tenant backing store)
-8. Update, backup, and restore proof
-9. STT upgrade and noise screening
-10. Hosted capture/storage plan / indexing for group testing
-11. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
-12. Provider-backed news and weather parity polish
-13. Lasso, identity, and onboarding as larger discovery-driven tracks
+5. Dialog parsing expansion and ambiguity guardrails - in progress (`2026-05-07` first guardrail slice implemented)
+6. Presence-aware greetings and identity-triggered proactivity - ready
+7. Personal report parity track (weather visuals, live news path, commute path, calendar parity matrix) - ready
+8. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
+9. Durable memory persistence path (multi-tenant backing store)
+10. Update, backup, and restore proof
+11. STT upgrade and noise screening
+12. Hosted capture/storage plan / indexing for group testing
+13. Binary-safe media storage / sync to cloud drive: OneDrive, Google Drive, Box, etc.
+14. Provider-backed news and weather parity polish
+15. Grocery list capability discovery and MVP selection
+16. Lasso, identity, and onboarding as larger discovery-driven tracks
 
 For `1.0.20` and beyond:
 
