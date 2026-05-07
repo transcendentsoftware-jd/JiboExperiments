@@ -820,6 +820,21 @@ public sealed class ResponsePlanToSocketMessagesMapper
             };
         }
 
+        var weatherHiLoView = BuildWeatherHiLoView(skillPayload);
+        if (weatherHiLoView is not null)
+        {
+            jcpConfig["gui"] = new
+            {
+                type = "Javascript",
+                data = "views.weatherHiLo",
+                pause = true
+            };
+            jcpConfig["views"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["weatherHiLo"] = weatherHiLoView
+            };
+        }
+
         return new
         {
             type = "SKILL_ACTION",
@@ -1067,6 +1082,188 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 .Where(static context => !string.IsNullOrWhiteSpace(context))
                 .Select(static context => context!)],
             _ => string.IsNullOrWhiteSpace(value.ToString()) ? [] : [value.ToString()!]
+        };
+    }
+
+    private static object? BuildWeatherHiLoView(IDictionary<string, object?>? payload)
+    {
+        if (!TryReadPayloadBool(payload, "weather_view_enabled"))
+        {
+            return null;
+        }
+
+        if (!string.Equals(
+                ReadPayloadString(payload, "weather_view_kind"),
+                "weatherHiLo",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var icon = ReadPayloadString(payload, "weather_icon");
+        var unit = ReadPayloadString(payload, "weather_unit") ?? "F";
+        var theme = ReadPayloadString(payload, "weather_theme") ?? "Normal";
+        var high = TryReadPayloadInt(payload, "weather_high");
+        var low = TryReadPayloadInt(payload, "weather_low");
+        if (string.IsNullOrWhiteSpace(icon) || high is null || low is null)
+        {
+            return null;
+        }
+
+        return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["viewConfig"] = new
+            {
+                type = "View",
+                id = "weatherTempView",
+                category = "gui"
+            },
+            ["open"] = new
+            {
+                transitionOpen = "trans_in",
+                removeAll = true
+            },
+            ["defaultSelect"] = new
+            {
+                transitionClose = "trans_out",
+                removeAll = true,
+                leaveEmpty = false
+            },
+            ["componentConfigs"] = new object[]
+            {
+                new
+                {
+                    id = "tempBGClip",
+                    type = "Clip",
+                    assets = new object[]
+                    {
+                        new
+                        {
+                            id = "tempBG",
+                            src = $"assets/personal-report-skill/weather/bg/temp{theme}_v01.crn",
+                            type = "texture"
+                        }
+                    },
+                    position = new { x = 36, y = 0 }
+                },
+                new
+                {
+                    id = "iconClip",
+                    type = "Clip",
+                    assets = new object[]
+                    {
+                        new
+                        {
+                            id = "icon",
+                            src = $"assets/personal-report-skill/weather/icons/{icon}_v01.crn",
+                            type = "texture"
+                        }
+                    },
+                    position = new { x = 475, y = 195 }
+                },
+                new
+                {
+                    id = "hiNumLabel",
+                    type = "Label",
+                    text = $"{high.Value}°",
+                    style = new
+                    {
+                        fontSize = "160",
+                        fontFamily = "Proxima Nova Soft",
+                        fontWeight = "bold",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 370, y = 430 },
+                    targetAnchor = new { x = 1, y = 1 }
+                },
+                new
+                {
+                    id = "hiUnitLabel",
+                    type = "Label",
+                    text = unit,
+                    style = new
+                    {
+                        fontSize = "90",
+                        fontFamily = "Proxima Nova Soft",
+                        fontWeight = "bold",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 360, y = 418 },
+                    targetAnchor = new { x = 0, y = 1 }
+                },
+                new
+                {
+                    id = "loNumLabel",
+                    type = "Label",
+                    text = $"{low.Value}°",
+                    style = new
+                    {
+                        fontSize = "160",
+                        fontFamily = "Proxima Nova Soft",
+                        fontWeight = "bold",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 1110, y = 430 },
+                    targetAnchor = new { x = 1, y = 1 }
+                },
+                new
+                {
+                    id = "loUnitLabel",
+                    type = "Label",
+                    text = unit,
+                    style = new
+                    {
+                        fontSize = "90",
+                        fontFamily = "Proxima Nova Soft",
+                        fontWeight = "bold",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 1100, y = 418 },
+                    targetAnchor = new { x = 0, y = 1 }
+                }
+            }
+        };
+    }
+
+    private static int? TryReadPayloadInt(IDictionary<string, object?>? payload, string key)
+    {
+        if (payload is null || !payload.TryGetValue(key, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            int number => number,
+            long number when number <= int.MaxValue && number >= int.MinValue => (int)number,
+            double number => (int)Math.Round(number, MidpointRounding.AwayFromZero),
+            float number => (int)Math.Round(number, MidpointRounding.AwayFromZero),
+            string text when int.TryParse(text, out var parsed) => parsed,
+            JsonElement { ValueKind: JsonValueKind.Number } jsonNumber when jsonNumber.TryGetInt32(out var parsed) => parsed,
+            JsonElement jsonText when jsonText.ValueKind == JsonValueKind.String && int.TryParse(jsonText.GetString(), out var parsed) => parsed,
+            _ => null
+        };
+    }
+
+    private static bool TryReadPayloadBool(IDictionary<string, object?>? payload, string key)
+    {
+        if (payload is null || !payload.TryGetValue(key, out var value) || value is null)
+        {
+            return false;
+        }
+
+        return value switch
+        {
+            bool flag => flag,
+            string text when bool.TryParse(text, out var parsed) => parsed,
+            JsonElement { ValueKind: JsonValueKind.True } => true,
+            JsonElement { ValueKind: JsonValueKind.False } => false,
+            JsonElement jsonText when jsonText.ValueKind == JsonValueKind.String && bool.TryParse(jsonText.GetString(), out var parsed) => parsed,
+            _ => false
         };
     }
 

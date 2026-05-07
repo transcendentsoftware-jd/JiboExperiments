@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.Content;
@@ -1987,6 +1988,63 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_HowIsTheWeather_WithProvider_EmitsWeatherHiLoGuiCard()
+    {
+        var customStore = new InMemoryCloudStateStore();
+        var customService = CreateService(
+            customStore,
+            new StubWeatherReportProvider(
+                new WeatherReportSnapshot("Boston, US", "light rain", 61, 65, 54, "rain", false)));
+
+        await customService.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-provider-token",
+            Text = """{"type":"LISTEN","transID":"trans-weather-provider","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await customService.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-provider-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-weather-provider","data":{"text":"how is the weather"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        var jcpConfig = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config");
+
+        var esml = jcpConfig.GetProperty("play").GetProperty("esml").GetString();
+        Assert.Contains("cat='weather'", esml, StringComparison.OrdinalIgnoreCase);
+
+        Assert.True(jcpConfig.TryGetProperty("gui", out var gui));
+        Assert.Equal("Javascript", gui.GetProperty("type").GetString());
+        Assert.Equal("views.weatherHiLo", gui.GetProperty("data").GetString());
+        Assert.True(gui.GetProperty("pause").GetBoolean());
+
+        Assert.True(jcpConfig.TryGetProperty("views", out var views));
+        var weatherHiLo = views.GetProperty("weatherHiLo");
+        Assert.Equal("weatherTempView", weatherHiLo.GetProperty("viewConfig").GetProperty("id").GetString());
+
+        var payloadText = replies[2].Text!;
+        Assert.Contains("assets/personal-report-skill/weather/icons/rain_v01.crn", payloadText, StringComparison.Ordinal);
+        Assert.Contains("tempNormal_v01.crn", payloadText, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ClientAsr_OpenTheRadio_EmitsRadioRedirectAndSilentCompletion()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -3735,9 +3793,43 @@ public sealed class JiboWebSocketServiceTests
         }
     }
 
+    private static JiboWebSocketService CreateService(
+        InMemoryCloudStateStore stateStore,
+        IWeatherReportProvider? weatherReportProvider = null)
+    {
+        var contentRepository = new InMemoryJiboExperienceContentRepository();
+        var contentCache = new JiboExperienceContentCache(contentRepository);
+        var interactionService = new JiboInteractionService(
+            contentCache,
+            new DefaultJiboRandomizer(),
+            new InMemoryPersonalMemoryStore(),
+            weatherReportProvider);
+        var conversationBroker = new DemoConversationBroker(interactionService);
+        var sttSelector = new DefaultSttStrategySelector(
+        [
+            new SyntheticBufferedAudioSttStrategy()
+        ]);
+        var sink = new NullTurnTelemetrySink();
+
+        return new JiboWebSocketService(
+            stateStore,
+            new NullWebSocketTelemetrySink(),
+            new WebSocketTurnFinalizationService(conversationBroker, sttSelector, sink));
+    }
+
     private static string ReadReplyType(WebSocketReply reply)
     {
         using var payload = JsonDocument.Parse(reply.Text!);
         return payload.RootElement.GetProperty("type").GetString() ?? string.Empty;
+    }
+
+    private sealed class StubWeatherReportProvider(WeatherReportSnapshot snapshot) : IWeatherReportProvider
+    {
+        public Task<WeatherReportSnapshot?> GetReportAsync(
+            WeatherReportRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<WeatherReportSnapshot?>(snapshot);
+        }
     }
 }

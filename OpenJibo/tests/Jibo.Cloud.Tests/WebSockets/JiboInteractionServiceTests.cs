@@ -1181,11 +1181,18 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Null(decision.SkillName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.NotNull(decision.SkillPayload);
         Assert.Contains("cat='weather'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("meta='rain'", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("WeatherCommentRain", decision.SkillPayload["mim_id"]);
+        Assert.Equal(true, decision.SkillPayload["weather_view_enabled"]);
+        Assert.Equal("weatherHiLo", decision.SkillPayload["weather_view_kind"]);
+        Assert.Equal("rain", decision.SkillPayload["weather_icon"]);
+        Assert.Equal(65, decision.SkillPayload["weather_high"]);
+        Assert.Equal(54, decision.SkillPayload["weather_low"]);
+        Assert.Equal("F", decision.SkillPayload["weather_unit"]);
+        Assert.Equal("Normal", decision.SkillPayload["weather_theme"]);
         Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
         Assert.NotNull(provider.LastRequest);
         Assert.False(provider.LastRequest!.IsTomorrow);

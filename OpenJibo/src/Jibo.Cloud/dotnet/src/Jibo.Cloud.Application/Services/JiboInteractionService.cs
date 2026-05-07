@@ -457,6 +457,7 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "weather",
             spokenReply,
+            "chitchat-skill",
             SkillPayload: weatherPayload);
     }
 
@@ -498,6 +499,10 @@ public sealed class JiboInteractionService(
     {
         var weatherIcon = ResolveWeatherAnimationIcon(snapshot, referenceLocalTime);
         var promptToken = ResolveWeatherPromptToken(weatherIcon);
+        var highTemperature = snapshot.HighTemperature ?? snapshot.Temperature;
+        var lowTemperature = snapshot.LowTemperature ?? snapshot.Temperature;
+        var temperatureUnit = snapshot.UseCelsius ? "C" : "F";
+        var temperatureBand = ResolveWeatherTemperatureBand(highTemperature, snapshot.UseCelsius);
 
         return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
@@ -506,7 +511,16 @@ public sealed class JiboInteractionService(
             ["mim_id"] = $"WeatherComment{promptToken}",
             ["mim_type"] = "announcement",
             ["prompt_id"] = $"WeatherComment{promptToken}_AN_13",
-            ["prompt_sub_category"] = "AN"
+            ["prompt_sub_category"] = "AN",
+            ["weather_view_enabled"] = true,
+            ["weather_view_kind"] = "weatherHiLo",
+            ["weather_icon"] = weatherIcon,
+            ["weather_summary"] = snapshot.Summary,
+            ["weather_location"] = snapshot.LocationName,
+            ["weather_high"] = highTemperature,
+            ["weather_low"] = lowTemperature,
+            ["weather_unit"] = temperatureUnit,
+            ["weather_theme"] = temperatureBand
         };
     }
 
@@ -588,6 +602,23 @@ public sealed class JiboInteractionService(
             "partly-cloudy-night" => "PartlyCloudyNight",
             _ => "Cloudy"
         };
+    }
+
+    private static string ResolveWeatherTemperatureBand(int highTemperature, bool useCelsius)
+    {
+        var hotThreshold = useCelsius ? 29 : 85;
+        var coldThreshold = useCelsius ? 4 : 40;
+        if (highTemperature > hotThreshold)
+        {
+            return "Hot";
+        }
+
+        if (highTemperature < coldThreshold)
+        {
+            return "Cold";
+        }
+
+        return "Normal";
     }
 
     private static string EscapeForEsml(string value)
