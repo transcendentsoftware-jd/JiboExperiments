@@ -37,12 +37,24 @@ public sealed class JiboWebSocketService(
             !containsInlineTurnPayload &&
             WebSocketTurnFinalizationService.ShouldIgnoreLateListenSetup(session, envelope.Text))
         {
+            var (lateTransId, lateRules) = ResolveLateListenNoInputPayload(session, envelope.Text);
+            var replies = ResponsePlanToSocketMessagesMapper
+                .MapNoInputAndRedirectToSkill(lateTransId, lateRules, "@be/idle")
+                .Select(map => new WebSocketReply
+                {
+                    Text = map.Text,
+                    DelayMs = map.DelayMs
+                })
+                .ToArray();
+
             await telemetrySink.RecordTurnEventAsync(envelope, session, "late_listen_ignored", new Dictionary<string, object?>
             {
                 ["messageType"] = parsedType,
-                ["activeTransID"] = session.TurnState.TransId
+                ["activeTransID"] = session.TurnState.TransId,
+                ["ignoredTransID"] = lateTransId,
+                ["replyCount"] = replies.Length
             }, cancellationToken);
-            return [];
+            return replies;
         }
 
         WebSocketTurnFinalizationService.ObserveIncomingMessage(session, envelope.Text);
@@ -144,5 +156,54 @@ public sealed class JiboWebSocketService(
         {
             return false;
         }
+    }
+
+    private static (string TransId, IReadOnlyList<string> Rules) ResolveLateListenNoInputPayload(
+        CloudSession session,
+        string? text)
+    {
+        var transId = session.TurnState.TransId ?? session.LastTransId ?? string.Empty;
+        var rules = session.TurnState.ListenRules;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return (transId, rules);
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("transID", out var transIdValue) &&
+                transIdValue.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(transIdValue.GetString()))
+            {
+                transId = transIdValue.GetString()!;
+            }
+
+            if (root.TryGetProperty("data", out var data) &&
+                data.ValueKind == JsonValueKind.Object &&
+                data.TryGetProperty("rules", out var ruleValues) &&
+                ruleValues.ValueKind == JsonValueKind.Array)
+            {
+                var parsedRules = ruleValues.EnumerateArray()
+                    .Where(static item => item.ValueKind == JsonValueKind.String)
+                    .Select(static item => item.GetString() ?? string.Empty)
+                    .Where(static rule => !string.IsNullOrWhiteSpace(rule))
+                    .ToArray();
+
+                if (parsedRules.Length > 0)
+                {
+                    rules = parsedRules;
+                }
+            }
+        }
+        catch
+        {
+            // Best effort parsing for late-listen cleanup.
+        }
+
+        return (transId, rules);
     }
 }

@@ -77,7 +77,7 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
-    public async Task Listen_CloudVersion_DoesNotOpenFollowUpAndIgnoresSpeechTailListen()
+    public async Task Listen_CloudVersion_DoesNotOpenFollowUpAndClosesLateTailListen()
     {
         var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -127,7 +127,15 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"LISTEN","transID":"trans-cloud-version-tail","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
         });
 
-        Assert.Empty(tailListenReplies);
+        Assert.Equal(3, tailListenReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(tailListenReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(tailListenReplies[1]));
+        Assert.Equal("SKILL_REDIRECT", ReadReplyType(tailListenReplies[2]));
+        using (var lateListenPayload = JsonDocument.Parse(tailListenReplies[0].Text!))
+        {
+            Assert.Equal("trans-cloud-version-tail", lateListenPayload.RootElement.GetProperty("transID").GetString());
+            Assert.Equal("launch", lateListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        }
         Assert.Equal("trans-cloud-version", session.TurnState.TransId);
         Assert.False(session.TurnState.AwaitingTurnCompletion);
         Assert.False(session.TurnState.SawListen);
