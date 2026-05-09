@@ -1196,6 +1196,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
         Assert.NotNull(provider.LastRequest);
         Assert.False(provider.LastRequest!.IsTomorrow);
+        Assert.Equal(0, provider.LastRequest.ForecastDayOffset);
     }
 
     [Fact]
@@ -1216,6 +1217,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
         Assert.Equal("Tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
@@ -1237,6 +1239,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
         Assert.Equal("Right now in Seattle, US, it is light rain and 58 degrees Fahrenheit.", decision.ReplyText);
     }
 
@@ -1258,7 +1261,229 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Paris", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
         Assert.Equal("Right now in Paris, FR, it is overcast clouds and 66 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TemperatureLocationQuery_WithProvider_MapsToWeatherIntent()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Redmond, US", "clear sky", 63, 66, 52, "sunny", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what is the temperature in redmond oregon",
+            NormalizedTranscript = "what is the temperature in redmond oregon"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Redmond Oregon", provider.LastRequest?.LocationQuery);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("Right now in Redmond, US, it is clear sky and 63 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_ForecastLocationQuery_WithProvider_MapsToWeatherIntent()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("New York, US", "partly cloudy", 71, 76, 61, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "forecast for new york city",
+            NormalizedTranscript = "forecast for new york city"
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("New York City", provider.LastRequest?.LocationQuery);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("Right now in New York, US, it is partly cloudy and 71 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherQueryWithClientDateEntity_UsesForecastDayOffset()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Portland, US", "scattered clouds", 64, 68, 53, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather",
+            NormalizedTranscript = "what's the weather",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["clientEntities"] = new Dictionary<string, object?>
+                {
+                    ["date"] = "2026-05-11"
+                },
+                ["context"] = """{"runtime":{"location":{"iso":"2026-05-09T09:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal("On Monday in Portland, US, expect scattered clouds with a high near 68 degrees Fahrenheit and a low around 53 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherQueryWithWeekday_UsesForecastDayOffset()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Chicago, US", "light rain", 59, 63, 51, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather in chicago on tuesday",
+            NormalizedTranscript = "what's the weather in chicago on tuesday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
+        Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("On Tuesday in Chicago, US, expect light rain with a high near 63 degrees Fahrenheit and a low around 51 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherQueryBeyondSupportedForecastRange_ReturnsGuardrailMessage()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Chicago, US", "light rain", 59, 63, 51, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather next saturday",
+            NormalizedTranscript = "what's the weather next saturday",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("I can forecast up to 5 days ahead. Try tomorrow or another day this week.", decision.ReplyText);
+        Assert.Null(provider.LastRequest);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherThisWeekend_WithContext_UsesWeekendOffset()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Paris, FR", "overcast clouds", 66, 70, 60, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather in paris this weekend",
+            NormalizedTranscript = "what's the weather in paris this weekend",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Paris", provider.LastRequest?.LocationQuery);
+        Assert.Equal(5, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("This weekend in Paris, FR, expect overcast clouds with a high near 70 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherThisWeek_WithContext_UsesRangeOffset()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "forecast for seattle this week",
+            NormalizedTranscript = "forecast for seattle this week",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
+        Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("Later this week in Seattle, US, expect light rain with a high near 61 degrees Fahrenheit and a low around 52 degrees Fahrenheit.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherNextWeek_WithContext_ReturnsGuardrailMessage()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "forecast for seattle next week",
+            NormalizedTranscript = "forecast for seattle next week",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("I can forecast up to 5 days ahead. Try tomorrow or another day this week.", decision.ReplyText);
+        Assert.Null(provider.LastRequest);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherDayAfterTomorrow_WithContext_PassesDayOffsetAndLocation()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Chicago, US", "mostly cloudy", 72, 74, 60, "cloudy", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the weather in chicago day after tomorrow",
+            NormalizedTranscript = "what's the weather in chicago day after tomorrow",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
+        Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal("The day after tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]

@@ -29,9 +29,18 @@ public sealed class OpenWeatherReportProvider(
             }
 
             var useCelsius = request.UseCelsius ?? options.UseCelsius;
-            return request.IsTomorrow
-                ? await GetTomorrowForecastAsync(location.Value, useCelsius, cancellationToken)
-                : await GetCurrentWeatherAsync(location.Value, useCelsius, cancellationToken);
+            var forecastDayOffset = request.ForecastDayOffset ?? (request.IsTomorrow ? 1 : 0);
+            if (forecastDayOffset <= 0)
+            {
+                return await GetCurrentWeatherAsync(location.Value, useCelsius, cancellationToken);
+            }
+
+            if (forecastDayOffset > MaxForecastDayOffset)
+            {
+                return null;
+            }
+
+            return await GetForecastForDayOffsetAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
         }
         catch (Exception exception)
         {
@@ -134,9 +143,10 @@ public sealed class OpenWeatherReportProvider(
             useCelsius);
     }
 
-    private async Task<WeatherReportSnapshot?> GetTomorrowForecastAsync(
+    private async Task<WeatherReportSnapshot?> GetForecastForDayOffsetAsync(
         LocationPoint location,
         bool useCelsius,
+        int forecastDayOffset,
         CancellationToken cancellationToken)
     {
         var forecastUri = BuildRequestUri(
@@ -160,7 +170,7 @@ public sealed class OpenWeatherReportProvider(
         }
 
         var offset = TryReadForecastOffset(root);
-        var tomorrow = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(offset).DateTime.AddDays(1));
+        var targetDate = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(offset).DateTime.AddDays(forecastDayOffset));
         var entries = new List<ForecastEntry>();
         foreach (var item in list.EnumerateArray())
         {
@@ -170,7 +180,7 @@ public sealed class OpenWeatherReportProvider(
             }
 
             var localTimestamp = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).ToOffset(offset);
-            if (DateOnly.FromDateTime(localTimestamp.DateTime) != tomorrow)
+            if (DateOnly.FromDateTime(localTimestamp.DateTime) != targetDate)
             {
                 continue;
             }
@@ -361,4 +371,6 @@ public sealed class OpenWeatherReportProvider(
         int? LowTemperature,
         string? Summary,
         string? Condition);
+
+    private const int MaxForecastDayOffset = 5;
 }

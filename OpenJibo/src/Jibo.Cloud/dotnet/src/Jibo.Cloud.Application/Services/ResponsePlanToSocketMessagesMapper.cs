@@ -795,19 +795,20 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var promptId = ReadPayloadString(skillPayload, "prompt_id") ?? "RUNTIME_PROMPT";
         var promptSubCategory = ReadPayloadString(skillPayload, "prompt_sub_category") ?? "AN";
         var listenContexts = ReadPayloadStringArray(skillPayload, "listen_contexts");
+        var playConfig = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["esml"] = esml,
+            ["meta"] = new
+            {
+                prompt_id = promptId,
+                prompt_sub_category = promptSubCategory,
+                mim_id = mimId,
+                mim_type = mimType
+            }
+        };
         var jcpConfig = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
-            ["play"] = new
-            {
-                esml,
-                meta = new
-                {
-                    prompt_id = promptId,
-                    prompt_sub_category = promptSubCategory,
-                    mim_id = mimId,
-                    mim_type = mimType
-                }
-            }
+            ["play"] = playConfig
         };
 
         if (listenContexts.Count > 0)
@@ -823,12 +824,16 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var weatherHiLoView = BuildWeatherHiLoView(skillPayload);
         if (weatherHiLoView is not null)
         {
-            jcpConfig["gui"] = new
+            var guiConfig = new
             {
                 type = "Javascript",
                 data = "views.weatherHiLo",
                 pause = true
             };
+            jcpConfig["gui"] = guiConfig;
+            playConfig["gui"] = guiConfig;
+            playConfig["no_matches_for_gui"] = 0;
+            playConfig["no_inputs_for_gui"] = 0;
             jcpConfig["views"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["weatherHiLo"] = weatherHiLoView
@@ -1110,6 +1115,11 @@ public sealed class ResponsePlanToSocketMessagesMapper
             return null;
         }
 
+        var hiNumX = GetTemperatureLabelXPosition(370, high.Value);
+        var hiUnitX = GetTemperatureLabelXPosition(360, high.Value);
+        var loNumX = GetTemperatureLabelXPosition(1110, low.Value);
+        var loUnitX = GetTemperatureLabelXPosition(1100, low.Value);
+
         return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
             ["viewConfig"] = new
@@ -1165,7 +1175,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     id = "hiNumLabel",
                     type = "Label",
-                    text = $"{high.Value}°",
+                    text = $"{high.Value}\u00B0",
                     style = new
                     {
                         fontSize = "160",
@@ -1174,7 +1184,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         fill = "#FFFFFF",
                         align = "center"
                     },
-                    position = new { x = 370, y = 430 },
+                    position = new { x = hiNumX, y = 430 },
                     targetAnchor = new { x = 1, y = 1 }
                 },
                 new
@@ -1190,14 +1200,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         fill = "#FFFFFF",
                         align = "center"
                     },
-                    position = new { x = 360, y = 418 },
+                    position = new { x = hiUnitX, y = 418 },
                     targetAnchor = new { x = 0, y = 1 }
                 },
                 new
                 {
                     id = "loNumLabel",
                     type = "Label",
-                    text = $"{low.Value}°",
+                    text = $"{low.Value}\u00B0",
                     style = new
                     {
                         fontSize = "160",
@@ -1206,7 +1216,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         fill = "#FFFFFF",
                         align = "center"
                     },
-                    position = new { x = 1110, y = 430 },
+                    position = new { x = loNumX, y = 430 },
                     targetAnchor = new { x = 1, y = 1 }
                 },
                 new
@@ -1222,13 +1232,58 @@ public sealed class ResponsePlanToSocketMessagesMapper
                         fill = "#FFFFFF",
                         align = "center"
                     },
-                    position = new { x = 1100, y = 418 },
+                    position = new { x = loUnitX, y = 418 },
                     targetAnchor = new { x = 0, y = 1 }
+                },
+                new
+                {
+                    id = "hiTextLabel",
+                    type = "Label",
+                    text = "Hi",
+                    style = new
+                    {
+                        fontSize = "60",
+                        fontFamily = "Proxima Nova Light",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 280, y = 496 },
+                    targetAnchor = new { x = 0.5, y = 1 }
+                },
+                new
+                {
+                    id = "loTextLabel",
+                    type = "Label",
+                    text = "Lo",
+                    style = new
+                    {
+                        fontSize = "60",
+                        fontFamily = "Proxima Nova Light",
+                        fill = "#FFFFFF",
+                        align = "center"
+                    },
+                    position = new { x = 990, y = 496 },
+                    targetAnchor = new { x = 0.5, y = 1 }
                 }
             }
         };
     }
 
+    private static int GetTemperatureLabelXPosition(int baseX, int temperature)
+    {
+        const int xOffset = 70;
+        if (temperature < -9 || temperature > 99)
+        {
+            return baseX + xOffset;
+        }
+
+        if (temperature is >= 0 and < 10)
+        {
+            return baseX - xOffset;
+        }
+
+        return baseX;
+    }
     private static int? TryReadPayloadInt(IDictionary<string, object?>? payload, string key)
     {
         if (payload is null || !payload.TryGetValue(key, out var value) || value is null)
@@ -1279,3 +1334,4 @@ public sealed class ResponsePlanToSocketMessagesMapper
 
     public sealed record SocketReplyPlan(string Text, int DelayMs = 0);
 }
+
