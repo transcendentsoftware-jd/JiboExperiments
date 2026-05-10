@@ -172,6 +172,16 @@ Second completed guardrail slice under this queue:
   - weather variants (`what's today's weather look like`, `will it be sunny tomorrow`)
 - listener continuation guardrail now differentiates incomplete preference fragments from complete shorthand preference sets
 
+Third completed guardrail slice under this queue:
+
+- expanded Pegasus `userLikesThing` / `userDislikesThing` / `doesUserLikeThing` / `doesUserDislikeThing` phrase-family coverage
+  - includes additional dislike/negation variants (`loathe`, `did not like`, `didn't enjoy`, `don't really like`)
+  - includes group-preference variants (`we like`, `we love`, `we dislike`, `we can't stand`)
+  - includes lookup variants (`do you think i like ...`, `do you believe i don't like ...`)
+- added affinity set/lookup attempt guardrails so partial captures route to affinity prompts instead of generic chat
+- extended auto-finalize continuation deferral for the new Pegasus affinity stems (`we like`, `i loathe`, and related variants)
+- added focused interaction + websocket tests for the new parser/guardrail behavior
+
 Next queued implementation track after parser guardrails:
 
 - presence-aware greetings and identity-triggered proactivity (Pegasus `@be/greetings` parity slice)

@@ -104,7 +104,7 @@ public sealed class JiboWebSocketService(
                 }, cancellationToken);
                 return replies;
             }
-            case "CLIENT_NLU" or "CLIENT_ASR":
+            case "CLIENT_NLU" or "CLIENT_ASR" or "TRIGGER":
             {
                 var replies = await turnFinalizationService.HandleTurnAsync(session, envelope, parsedType, cancellationToken);
                 await telemetrySink.RecordTurnEventAsync(envelope, session, "turn_processed", new Dictionary<string, object?>

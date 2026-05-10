@@ -100,6 +100,8 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
             "snapshot" => false,
             "photobooth" => false,
             "news" => false,
+            "trigger_ignored" => false,
+            "proactive_greeting" => false,
             _ => true
         };
     }

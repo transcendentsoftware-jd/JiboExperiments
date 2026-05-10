@@ -24,21 +24,52 @@ public sealed partial class WebSocketTurnFinalizationService(
     {
         "i love",
         "i like",
+        "i like the",
         "i enjoy",
         "i do like",
+        "we love",
+        "we like",
+        "we enjoy",
         "i dislike",
         "i hate",
+        "i hate the",
+        "i loathe",
+        "i not like",
         "i dont like",
         "i don t like",
         "i do not like",
+        "i did not like",
+        "i didn t like",
+        "i didnt like",
+        "i didn t really like",
+        "i didnt really like",
+        "i don t really like",
+        "i dont really like",
         "i dont enjoy",
         "i don t enjoy",
         "i do not enjoy",
+        "i did not enjoy",
+        "i didn t enjoy",
+        "i didnt enjoy",
+        "i didn t really enjoy",
+        "i didnt really enjoy",
         "i dont love",
         "i don t love",
         "i do not love",
+        "i don t love to",
+        "i dont love to",
+        "i do not love to",
         "i cant stand",
         "i can t stand",
+        "i cant stand the",
+        "i can t stand the",
+        "we dislike",
+        "we hate",
+        "we despise",
+        "we detest",
+        "we loathe",
+        "we cant stand",
+        "we can t stand",
         "i despise",
         "i detest"
     };
@@ -526,7 +557,9 @@ public sealed partial class WebSocketTurnFinalizationService(
         }
 
         var allowEmptyTranscriptForPersonalReport = IsActivePersonalReportTurn(finalizedTurn);
+        var allowEmptyTranscriptForTrigger = string.Equals(ReadMessageType(finalizedTurn), "TRIGGER", StringComparison.OrdinalIgnoreCase);
         if (!allowEmptyTranscriptForPersonalReport &&
+            !allowEmptyTranscriptForTrigger &&
             string.IsNullOrWhiteSpace(finalizedTurn.NormalizedTranscript) &&
             string.IsNullOrWhiteSpace(finalizedTurn.RawTranscript))
         {

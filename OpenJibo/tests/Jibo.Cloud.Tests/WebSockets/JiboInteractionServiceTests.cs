@@ -20,6 +20,10 @@ public sealed class JiboInteractionServiceTests
     private const string ChitchatStateKey = "chitchatState";
     private const string ChitchatRouteKey = "chitchatRoute";
     private const string ChitchatEmotionKey = "chitchatEmotion";
+    private const string GreetingRouteKey = "greetingsRoute";
+    private const string GreetingSpeakerKey = "greetingsSpeaker";
+    private const string GreetingLastProactiveUtcKey = "greetingsLastProactiveUtc";
+    private const string GreetingLastReactiveUtcKey = "greetingsLastReactiveUtc";
 
     [Fact]
     public async Task BuildDecisionAsync_Joke_UsesCatalogBackedRandomContent()
@@ -148,6 +152,103 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("robot_birthday", decision.IntentName);
         Assert.Equal("My birthday is March 22, 2026.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_GoodMorning_UsesReactiveGreetingWithRememberedName()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        memoryStore.SetName(new PersonalMemoryTenantScope("acct-a", "loop-a", "device-a"), "jake");
+        var service = CreateService(memoryStore);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "good morning",
+            NormalizedTranscript = "good morning",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("good_morning", decision.IntentName);
+        Assert.Equal("Good morning, Jake. It is great to see you.", decision.ReplyText);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("ReactiveGreeting", decision.ContextUpdates![GreetingRouteKey]);
+        Assert.Equal(string.Empty, decision.ContextUpdates[GreetingSpeakerKey]);
+        Assert.True(DateTimeOffset.TryParse(decision.ContextUpdates[GreetingLastReactiveUtcKey]?.ToString(), out _));
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TriggerWithKnownIdentity_BuildsProactiveGreetingAndContext()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = string.Empty,
+            NormalizedTranscript = string.Empty,
+            Attributes = new Dictionary<string, object?>
+            {
+                ["messageType"] = "TRIGGER",
+                ["triggerSource"] = "PRESENCE",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-1","peoplePresent":[{"id":"person-1"}]},"loop":{"users":[{"id":"person-1","firstName":"jake"}]}}}"""
+            }
+        });
+
+        Assert.Equal("proactive_greeting", decision.IntentName);
+        Assert.Contains("Jake", decision.ReplyText, StringComparison.Ordinal);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("ProactiveGreeting", decision.ContextUpdates![GreetingRouteKey]);
+        Assert.Equal("person-1", decision.ContextUpdates[GreetingSpeakerKey]);
+        Assert.True(DateTimeOffset.TryParse(decision.ContextUpdates[GreetingLastProactiveUtcKey]?.ToString(), out _));
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TriggerFromSurprise_ReturnsSilentTriggerIgnoredDecision()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = string.Empty,
+            NormalizedTranscript = string.Empty,
+            Attributes = new Dictionary<string, object?>
+            {
+                ["messageType"] = "TRIGGER",
+                ["triggerSource"] = "SURPRISE",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-1"},"loop":{"users":[{"id":"person-1","firstName":"jake"}]}}}"""
+            }
+        });
+
+        Assert.Equal("trigger_ignored", decision.IntentName);
+        Assert.Equal(string.Empty, decision.ReplyText);
+        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.NotNull(decision.SkillPayload);
+        Assert.Equal("completion_only", decision.SkillPayload!["cloudResponseMode"]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TriggerWithinCooldown_IsIgnored()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = string.Empty,
+            NormalizedTranscript = string.Empty,
+            Attributes = new Dictionary<string, object?>
+            {
+                ["messageType"] = "TRIGGER",
+                ["triggerSource"] = "PRESENCE",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-1"},"loop":{"users":[{"id":"person-1","firstName":"jake"}]}}}""",
+                [GreetingLastProactiveUtcKey] = DateTimeOffset.UtcNow.ToString("O")
+            }
+        });
+
+        Assert.Equal("trigger_ignored", decision.IntentName);
     }
 
     [Fact]
@@ -689,6 +790,144 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("memory_get_affinity", recallDecision.IntentName);
         Assert.Equal("Yes. You told me you like country music.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinityMemory_PegasusWeLovePhrase_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "we love pizza",
+            NormalizedTranscript = "we love pizza",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_affinity", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember you love pizza.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do i love pizza",
+            NormalizedTranscript = "do i love pizza",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_affinity", recallDecision.IntentName);
+        Assert.Equal("Yes. You told me you love pizza.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinityMemory_PegasusLoathePhrase_SetThenRecallWithinTenant()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        var setDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "I loathe celery",
+            NormalizedTranscript = "I loathe celery",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_set_affinity", setDecision.IntentName);
+        Assert.Equal("Got it. I will remember you dislike celery.", setDecision.ReplyText);
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do i loathe celery",
+            NormalizedTranscript = "do i loathe celery",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_affinity", recallDecision.IntentName);
+        Assert.Equal("Yes. You told me you dislike celery.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinityMemory_PegasusDoYouThinkLikeLookup_SetsAndRecalls()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var service = CreateService(memoryStore);
+
+        await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "I enjoy country music",
+            NormalizedTranscript = "I enjoy country music",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        var recallDecision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do you think i like country music",
+            NormalizedTranscript = "do you think i like country music",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("memory_get_affinity", recallDecision.IntentName);
+        Assert.Equal("Yes. You told me you like country music.", recallDecision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinitySetAttemptWithoutItem_RoutesToAffinityPrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "we like",
+            NormalizedTranscript = "we like"
+        });
+
+        Assert.Equal("memory_set_affinity", decision.IntentName);
+        Assert.Equal("I can remember it if you say, I like pizza or I dislike mushrooms.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AffinityRecallAttemptWithoutItem_RoutesToRecallPrompt()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do you think i like",
+            NormalizedTranscript = "do you think i like"
+        });
+
+        Assert.Equal("memory_get_affinity", decision.IntentName);
+        Assert.Equal("Ask me like this: do I like pizza?", decision.ReplyText);
     }
 
     [Fact]

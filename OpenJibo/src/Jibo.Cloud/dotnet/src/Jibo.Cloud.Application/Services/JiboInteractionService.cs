@@ -18,6 +18,12 @@ public sealed class JiboInteractionService(
         var transcript = (turn.NormalizedTranscript ?? turn.RawTranscript ?? string.Empty).Trim();
         var lowered = transcript.ToLowerInvariant();
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
+        var messageType = turn.Attributes.TryGetValue("messageType", out var rawMessageType)
+            ? rawMessageType?.ToString()
+            : null;
+        var triggerSource = turn.Attributes.TryGetValue("triggerSource", out var rawTriggerSource)
+            ? rawTriggerSource?.ToString()
+            : null;
         var clientIntent = turn.Attributes.TryGetValue("clientIntent", out var rawClientIntent)
             ? rawClientIntent?.ToString()
             : null;
@@ -32,6 +38,17 @@ public sealed class JiboInteractionService(
             ? rawPendingProactivityOffer?.ToString()
             : null;
         var isYesNoTurn = IsYesNoTurn(turn);
+        var greetingPresence = ResolveGreetingPresenceProfile(turn);
+
+        if (string.Equals(messageType, "TRIGGER", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ShouldHandleProactiveGreetingTrigger(turn, triggerSource, greetingPresence))
+            {
+                return BuildProactiveGreetingDecision(turn, greetingPresence, referenceLocalTime);
+            }
+
+            return BuildTriggerIgnoredDecision();
+        }
 
         var isTimerValueTurn = IsClockTimerValueTurn(clientRules, listenRules);
         var isAlarmValueTurn = IsClockAlarmValueTurn(clientRules, listenRules);
@@ -110,6 +127,11 @@ public sealed class JiboInteractionService(
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
             "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
             "robot_birthday" => BuildRobotBirthdayDecision(),
+            "good_morning" => BuildReactiveGreetingDecision(turn, "good_morning", referenceLocalTime),
+            "good_afternoon" => BuildReactiveGreetingDecision(turn, "good_afternoon", referenceLocalTime),
+            "good_evening" => BuildReactiveGreetingDecision(turn, "good_evening", referenceLocalTime),
+            "good_night" => BuildReactiveGreetingDecision(turn, "good_night", referenceLocalTime),
+            "welcome_back" => BuildReactiveGreetingDecision(turn, "welcome_back", referenceLocalTime),
             "memory_set_name" => BuildRememberNameDecision(turn, transcript),
             "memory_get_name" => BuildRecallNameDecision(turn),
             "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),
@@ -161,6 +183,159 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "robot_birthday",
             $"My birthday is {OpenJiboCloudBuildInfo.PersonaBirthdayWords}.");
+    }
+
+    private static JiboInteractionDecision BuildTriggerIgnoredDecision()
+    {
+        return new JiboInteractionDecision(
+            "trigger_ignored",
+            string.Empty,
+            "chitchat-skill",
+            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["skillId"] = "chitchat-skill",
+                ["cloudResponseMode"] = "completion_only"
+            });
+    }
+
+    private JiboInteractionDecision BuildReactiveGreetingDecision(
+        TurnContext turn,
+        string greetingIntent,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var presence = ResolveGreetingPresenceProfile(turn);
+        var displayName = ResolvePreferredGreetingName(turn, presence);
+        var replyText = BuildReactiveGreetingReply(greetingIntent, displayName, referenceLocalTime);
+        return new JiboInteractionDecision(
+            greetingIntent,
+            replyText,
+            ContextUpdates: BuildGreetingContextUpdates("ReactiveGreeting", presence.PrimaryPersonId, proactive: false));
+    }
+
+    private JiboInteractionDecision BuildProactiveGreetingDecision(
+        TurnContext turn,
+        GreetingPresenceProfile presence,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var displayName = ResolvePreferredGreetingName(turn, presence);
+        var greetingPrefix = ResolveTimeOfDayGreetingPrefix(referenceLocalTime);
+        var replyText = string.IsNullOrWhiteSpace(displayName)
+            ? $"{greetingPrefix}. I am glad to see you."
+            : $"{greetingPrefix}, {displayName}. Welcome back.";
+        return new JiboInteractionDecision(
+            "proactive_greeting",
+            replyText,
+            ContextUpdates: BuildGreetingContextUpdates("ProactiveGreeting", presence.PrimaryPersonId, proactive: true));
+    }
+
+    private static string BuildReactiveGreetingReply(
+        string greetingIntent,
+        string? displayName,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var namePrefix = string.IsNullOrWhiteSpace(displayName)
+            ? string.Empty
+            : $", {displayName}";
+
+        return greetingIntent switch
+        {
+            "good_morning" => $"Good morning{namePrefix}. It is great to see you.",
+            "good_afternoon" => $"Good afternoon{namePrefix}. I am glad you are here.",
+            "good_evening" => $"Good evening{namePrefix}. It is nice to have you back.",
+            "good_night" => $"Good night{namePrefix}. Sleep well.",
+            "welcome_back" => string.IsNullOrWhiteSpace(displayName)
+                ? $"Welcome back. {ResolveTimeOfDayGreetingPrefix(referenceLocalTime)}."
+                : $"Welcome back, {displayName}. {ResolveTimeOfDayGreetingPrefix(referenceLocalTime)}.",
+            _ => $"Hello{namePrefix}. It is nice to see you."
+        };
+    }
+
+    private string? ResolvePreferredGreetingName(TurnContext turn, GreetingPresenceProfile presence)
+    {
+        var rememberedName = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        if (!string.IsNullOrWhiteSpace(rememberedName))
+        {
+            return ToDisplayName(rememberedName);
+        }
+
+        if (!string.IsNullOrWhiteSpace(presence.PrimaryPersonId) &&
+            presence.LoopUserFirstNames.TryGetValue(presence.PrimaryPersonId, out var firstName) &&
+            !string.IsNullOrWhiteSpace(firstName))
+        {
+            return ToDisplayName(firstName);
+        }
+
+        return null;
+    }
+
+    private static string ToDisplayName(string value)
+    {
+        var trimmed = value.Trim();
+        return string.IsNullOrWhiteSpace(trimmed)
+            ? string.Empty
+            : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(trimmed);
+    }
+
+    private static bool ShouldHandleProactiveGreetingTrigger(
+        TurnContext turn,
+        string? triggerSource,
+        GreetingPresenceProfile presence)
+    {
+        if (string.Equals(triggerSource, "SURPRISE", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!presence.HasKnownIdentity)
+        {
+            return false;
+        }
+
+        var lastGreetingUtc = ReadTimestampAttribute(turn, LastProactiveGreetingUtcMetadataKey);
+        return !lastGreetingUtc.HasValue || DateTimeOffset.UtcNow - lastGreetingUtc.Value >= ProactiveGreetingCooldown;
+    }
+
+    private static DateTimeOffset? ReadTimestampAttribute(TurnContext turn, string key)
+    {
+        if (!turn.Attributes.TryGetValue(key, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return DateTimeOffset.TryParse(
+            value.ToString(),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind,
+            out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static IDictionary<string, object?> BuildGreetingContextUpdates(string route, string? speakerId, bool proactive)
+    {
+        var updates = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            [ChitchatStateMachine.StateMetadataKey] = "complete",
+            [ChitchatStateMachine.RouteMetadataKey] = "ScriptedResponse",
+            [ChitchatStateMachine.EmotionMetadataKey] = string.Empty,
+            [GreetingRouteMetadataKey] = route,
+            [GreetingSpeakerMetadataKey] = speakerId ?? string.Empty
+        };
+
+        updates[proactive ? LastProactiveGreetingUtcMetadataKey : LastReactiveGreetingUtcMetadataKey] =
+            DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+        return updates;
+    }
+
+    private static string ResolveTimeOfDayGreetingPrefix(DateTimeOffset? referenceLocalTime)
+    {
+        var hour = (referenceLocalTime ?? DateTimeOffset.UtcNow).Hour;
+        return hour switch
+        {
+            >= 5 and < 12 => "Good morning",
+            >= 12 and < 17 => "Good afternoon",
+            _ => "Good evening"
+        };
     }
 
     private JiboInteractionDecision BuildRememberNameDecision(TurnContext turn, string transcript)
@@ -1084,12 +1259,12 @@ public sealed class JiboInteractionService(
             return "memory_get_important_date";
         }
 
-        if (IsAffinitySetStatement(loweredTranscript))
+        if (IsAffinitySetStatement(loweredTranscript) || IsAffinitySetAttempt(loweredTranscript))
         {
             return "memory_set_affinity";
         }
 
-        if (IsAffinityRecallQuestion(loweredTranscript))
+        if (IsAffinityRecallQuestion(loweredTranscript) || IsAffinityRecallAttempt(loweredTranscript))
         {
             return "memory_get_affinity";
         }
@@ -1313,6 +1488,31 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "news", "headlines", "news update", "tell me the news"))
         {
             return "news";
+        }
+
+        if (IsWelcomeBackGreeting(loweredTranscript))
+        {
+            return "welcome_back";
+        }
+
+        if (IsGoodMorningGreeting(loweredTranscript))
+        {
+            return "good_morning";
+        }
+
+        if (IsGoodAfternoonGreeting(loweredTranscript))
+        {
+            return "good_afternoon";
+        }
+
+        if (IsGoodEveningGreeting(loweredTranscript))
+        {
+            return "good_evening";
+        }
+
+        if (IsGoodNightGreeting(loweredTranscript))
+        {
+            return "good_night";
         }
 
         if (MatchesAny(loweredTranscript, "how are you", "what's up", "what s up", "what up"))
@@ -2004,6 +2204,115 @@ public sealed class JiboInteractionService(
         }
     }
 
+    private static GreetingPresenceProfile ResolveGreetingPresenceProfile(TurnContext turn)
+    {
+        if (!turn.Attributes.TryGetValue("context", out var contextValue) ||
+            contextValue is null ||
+            string.IsNullOrWhiteSpace(contextValue.ToString()))
+        {
+            return GreetingPresenceProfile.Empty;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(contextValue.ToString()!);
+            if (!document.RootElement.TryGetProperty("runtime", out var runtime) ||
+                runtime.ValueKind != JsonValueKind.Object)
+            {
+                return GreetingPresenceProfile.Empty;
+            }
+
+            var loopUsers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (runtime.TryGetProperty("loop", out var loop) &&
+                loop.ValueKind == JsonValueKind.Object &&
+                loop.TryGetProperty("users", out var users) &&
+                users.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var user in users.EnumerateArray())
+                {
+                    var id = TryReadStringProperty(user, "id");
+                    var firstName = TryReadStringProperty(user, "firstName");
+                    if (!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(firstName))
+                    {
+                        loopUsers[id] = firstName;
+                    }
+                }
+            }
+
+            var speakerId = string.Empty;
+            var peoplePresentIds = new List<string>();
+            if (runtime.TryGetProperty("perception", out var perception) &&
+                perception.ValueKind == JsonValueKind.Object)
+            {
+                if (perception.TryGetProperty("speaker", out var speaker))
+                {
+                    if (speaker.ValueKind == JsonValueKind.String)
+                    {
+                        speakerId = speaker.GetString() ?? string.Empty;
+                    }
+                    else if (speaker.ValueKind == JsonValueKind.Object)
+                    {
+                        speakerId = TryReadStringProperty(speaker, "id", "looperID", "looperId") ?? string.Empty;
+                    }
+                }
+
+                if (perception.TryGetProperty("peoplePresent", out var peoplePresent) &&
+                    peoplePresent.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var person in peoplePresent.EnumerateArray())
+                    {
+                        var personId = person.ValueKind switch
+                        {
+                            JsonValueKind.String => person.GetString(),
+                            JsonValueKind.Object => TryReadStringProperty(person, "id", "looperID", "looperId"),
+                            _ => null
+                        };
+
+                        if (!string.IsNullOrWhiteSpace(personId) &&
+                            !string.Equals(personId, "NOT_TRAINED", StringComparison.OrdinalIgnoreCase))
+                        {
+                            peoplePresentIds.Add(personId);
+                        }
+                    }
+                }
+            }
+
+            var triggerLooperId = turn.Attributes.TryGetValue("triggerLooperId", out var rawTriggerLooperId)
+                ? rawTriggerLooperId?.ToString()
+                : null;
+            var primaryPersonId = !string.IsNullOrWhiteSpace(speakerId)
+                ? speakerId
+                : !string.IsNullOrWhiteSpace(triggerLooperId)
+                    ? triggerLooperId
+                    : peoplePresentIds.FirstOrDefault();
+
+            return new GreetingPresenceProfile(
+                primaryPersonId,
+                string.IsNullOrWhiteSpace(speakerId) ? null : speakerId,
+                peoplePresentIds,
+                loopUsers);
+        }
+        catch
+        {
+            return GreetingPresenceProfile.Empty;
+        }
+    }
+
+    private static string? TryReadStringProperty(JsonElement source, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (source.TryGetProperty(propertyName, out var value) &&
+                value.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(value.GetString()))
+            {
+                return value.GetString();
+            }
+        }
+
+        return null;
+    }
+
     private static double? TryReadDoubleProperty(JsonElement source, params string[] propertyNames)
     {
         foreach (var propertyName in propertyNames)
@@ -2313,6 +2622,57 @@ public sealed class JiboInteractionService(
             _ when normalized.Contains("fog", StringComparison.Ordinal) => "fog",
             _ => null
         };
+    }
+
+    private static bool IsWelcomeBackGreeting(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "i am back",
+            "i m back",
+            "im back",
+            "i am home",
+            "i m home",
+            "im home",
+            "i'm back",
+            "i'm home",
+            "welcome back");
+    }
+
+    private static bool IsGoodMorningGreeting(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "good morning",
+            "morning jibo",
+            "morning, jibo");
+    }
+
+    private static bool IsGoodAfternoonGreeting(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "good afternoon",
+            "afternoon jibo",
+            "afternoon, jibo");
+    }
+
+    private static bool IsGoodEveningGreeting(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "good evening",
+            "evening jibo",
+            "evening, jibo");
+    }
+
+    private static bool IsGoodNightGreeting(string loweredTranscript)
+    {
+        return MatchesAny(
+            loweredTranscript,
+            "good night",
+            "night jibo",
+            "night, jibo");
     }
 
     private static bool IsDanceQuestion(string loweredTranscript)
@@ -2670,9 +3030,27 @@ public sealed class JiboInteractionService(
         return TryExtractAffinitySet(loweredTranscript) is not null;
     }
 
+    private static bool IsAffinitySetAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return PegasusUserAffinitySetPrefixes.Any(prefix => MatchesPrefixOrStem(normalized, prefix.Prefix));
+    }
+
     private static bool IsAffinityRecallQuestion(string loweredTranscript)
     {
         return TryExtractAffinityLookup(loweredTranscript) is not null;
+    }
+
+    private static bool IsAffinityRecallAttempt(string loweredTranscript)
+    {
+        var normalized = NormalizeCommandPhrase(loweredTranscript);
+        return PegasusUserAffinityLookupPrefixes.Any(prefix => MatchesPrefixOrStem(normalized, prefix.Prefix));
+    }
+
+    private static bool MatchesPrefixOrStem(string normalized, string prefix)
+    {
+        return normalized.StartsWith(prefix, StringComparison.Ordinal) ||
+               string.Equals(normalized, prefix.TrimEnd(), StringComparison.Ordinal);
     }
 
     private static (string Item, PersonalAffinity Affinity)? TryExtractAffinitySet(string transcript)
@@ -3331,6 +3709,21 @@ public sealed class JiboInteractionService(
 
     private sealed record PizzaSignal(PersonalAffinity? Affinity);
 
+    private sealed record GreetingPresenceProfile(
+        string? PrimaryPersonId,
+        string? SpeakerId,
+        IReadOnlyList<string> PeoplePresentIds,
+        IReadOnlyDictionary<string, string> LoopUserFirstNames)
+    {
+        public static GreetingPresenceProfile Empty { get; } = new(
+            null,
+            null,
+            Array.Empty<string>(),
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+
+        public bool HasKnownIdentity => !string.IsNullOrWhiteSpace(PrimaryPersonId);
+    }
+
     private sealed record WeatherDateEntity(string? DateEntity, int ForecastDayOffset, string? ForecastLeadIn)
     {
         public static WeatherDateEntity None { get; } = new(null, 0, null);
@@ -3421,21 +3814,55 @@ public sealed class JiboInteractionService(
     [
         ("i love ", PersonalAffinity.Love),
         ("i like ", PersonalAffinity.Like),
+        ("i like the ", PersonalAffinity.Like),
         ("i enjoy ", PersonalAffinity.Like),
         ("i do like ", PersonalAffinity.Like),
+        ("we love ", PersonalAffinity.Love),
+        ("we like ", PersonalAffinity.Like),
+        ("we enjoy ", PersonalAffinity.Like),
         ("i dislike ", PersonalAffinity.Dislike),
         ("i hate ", PersonalAffinity.Dislike),
+        ("i hate the ", PersonalAffinity.Dislike),
+        ("i loathe ", PersonalAffinity.Dislike),
         ("i don t like ", PersonalAffinity.Dislike),
         ("i dont like ", PersonalAffinity.Dislike),
+        ("i not like ", PersonalAffinity.Dislike),
         ("i do not like ", PersonalAffinity.Dislike),
+        ("i did not like ", PersonalAffinity.Dislike),
+        ("i did not like the ", PersonalAffinity.Dislike),
+        ("i didn t like ", PersonalAffinity.Dislike),
+        ("i didnt like ", PersonalAffinity.Dislike),
+        ("i didn t like the ", PersonalAffinity.Dislike),
+        ("i didnt like the ", PersonalAffinity.Dislike),
+        ("i didn t really like ", PersonalAffinity.Dislike),
+        ("i didnt really like ", PersonalAffinity.Dislike),
+        ("i don t really like ", PersonalAffinity.Dislike),
+        ("i dont really like ", PersonalAffinity.Dislike),
         ("i don t enjoy ", PersonalAffinity.Dislike),
         ("i dont enjoy ", PersonalAffinity.Dislike),
         ("i do not enjoy ", PersonalAffinity.Dislike),
+        ("i did not enjoy ", PersonalAffinity.Dislike),
+        ("i didn t enjoy ", PersonalAffinity.Dislike),
+        ("i didnt enjoy ", PersonalAffinity.Dislike),
+        ("i didn t really enjoy ", PersonalAffinity.Dislike),
+        ("i didnt really enjoy ", PersonalAffinity.Dislike),
         ("i don t love ", PersonalAffinity.Dislike),
         ("i dont love ", PersonalAffinity.Dislike),
         ("i do not love ", PersonalAffinity.Dislike),
+        ("i don t love to ", PersonalAffinity.Dislike),
+        ("i dont love to ", PersonalAffinity.Dislike),
+        ("i do not love to ", PersonalAffinity.Dislike),
         ("i can t stand ", PersonalAffinity.Dislike),
         ("i cant stand ", PersonalAffinity.Dislike),
+        ("i can t stand the ", PersonalAffinity.Dislike),
+        ("i cant stand the ", PersonalAffinity.Dislike),
+        ("we dislike ", PersonalAffinity.Dislike),
+        ("we hate ", PersonalAffinity.Dislike),
+        ("we despise ", PersonalAffinity.Dislike),
+        ("we detest ", PersonalAffinity.Dislike),
+        ("we loathe ", PersonalAffinity.Dislike),
+        ("we can t stand ", PersonalAffinity.Dislike),
+        ("we cant stand ", PersonalAffinity.Dislike),
         ("i despise ", PersonalAffinity.Dislike),
         ("i detest ", PersonalAffinity.Dislike)
     ];
@@ -3447,8 +3874,14 @@ public sealed class JiboInteractionService(
         ("do i enjoy ", PersonalAffinity.Like),
         ("do i dislike ", PersonalAffinity.Dislike),
         ("do i hate ", PersonalAffinity.Dislike),
+        ("do i loathe ", PersonalAffinity.Dislike),
+        ("do i not like ", PersonalAffinity.Dislike),
         ("do i despise ", PersonalAffinity.Dislike),
         ("do i detest ", PersonalAffinity.Dislike),
+        ("do you think i like ", PersonalAffinity.Like),
+        ("do you believe i like ", PersonalAffinity.Like),
+        ("do you think i don t like ", PersonalAffinity.Dislike),
+        ("do you believe i don t like ", PersonalAffinity.Dislike),
         ("how do i feel about ", null),
         ("what do i think about ", null)
     ];
@@ -3487,6 +3920,12 @@ public sealed class JiboInteractionService(
         "our neighborhood",
         "our neighbourhood"
     };
+
+    private const string GreetingRouteMetadataKey = "greetingsRoute";
+    private const string GreetingSpeakerMetadataKey = "greetingsSpeaker";
+    private const string LastProactiveGreetingUtcMetadataKey = "greetingsLastProactiveUtc";
+    private const string LastReactiveGreetingUtcMetadataKey = "greetingsLastReactiveUtc";
+    private static readonly TimeSpan ProactiveGreetingCooldown = TimeSpan.FromMinutes(20);
 
     private const int MaxWeatherForecastDayOffset = 5;
 

@@ -60,7 +60,8 @@ public sealed class ProtocolToTurnContextMapper
         foreach (var pair in session.Metadata)
         {
             if ((!pair.Key.StartsWith("personalReport", StringComparison.OrdinalIgnoreCase) &&
-                 !pair.Key.StartsWith("chitchat", StringComparison.OrdinalIgnoreCase)) ||
+                 !pair.Key.StartsWith("chitchat", StringComparison.OrdinalIgnoreCase) &&
+                 !pair.Key.StartsWith("greetings", StringComparison.OrdinalIgnoreCase)) ||
                 pair.Value is null)
             {
                 continue;
@@ -152,6 +153,22 @@ public sealed class ProtocolToTurnContextMapper
             if (data.TryGetProperty("intent", out var intent) && intent.ValueKind == JsonValueKind.String)
             {
                 attributes["clientIntent"] = intent.GetString();
+            }
+
+            if (data.TryGetProperty("triggerSource", out var triggerSource) &&
+                triggerSource.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(triggerSource.GetString()))
+            {
+                attributes["triggerSource"] = triggerSource.GetString();
+            }
+
+            if (data.TryGetProperty("triggerData", out var triggerData) &&
+                triggerData.ValueKind == JsonValueKind.Object &&
+                triggerData.TryGetProperty("looperID", out var triggerLooperId) &&
+                triggerLooperId.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(triggerLooperId.GetString()))
+            {
+                attributes["triggerLooperId"] = triggerLooperId.GetString();
             }
 
             if (data.TryGetProperty("rules", out var rules) && rules.ValueKind == JsonValueKind.Array)

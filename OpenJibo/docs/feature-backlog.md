@@ -773,8 +773,8 @@ For `1.0.19`:
 2. Expand memory-backed personal facts with tenant-scoped storage (beyond the first birthday/preferences foundation) - implemented
 3. Proactivity selector baseline with source-backed first offers - implemented
 4. Weather report-skill launch compatibility - implemented
-5. Dialog parsing expansion and ambiguity guardrails - in progress (`2026-05-07` first guardrail slice implemented)
-6. Presence-aware greetings and identity-triggered proactivity - ready
+5. Dialog parsing expansion and ambiguity guardrails - in progress (`2026-05-09` third guardrail slice implemented; Pegasus affinity phrase families + continuation guardrails expanded)
+6. Presence-aware greetings and identity-triggered proactivity - implemented (trigger path, identity-aware reactive/proactive replies, cooldown metadata wiring, focused websocket coverage)
 7. Personal report parity track (weather visuals, live news path, commute path, calendar parity matrix) - ready
 8. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
 9. Durable memory persistence path (multi-tenant backing store)
