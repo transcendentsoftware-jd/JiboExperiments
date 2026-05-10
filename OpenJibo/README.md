@@ -1,31 +1,41 @@
 # OpenJibo
 
-## Summary
-
 OpenJibo is the working revival track for Jibo.
 
-The near-term plan is intentionally concrete:
+We are rebuilding the hosted cloud first, then using that foundation for OTA, Open Jibo OS, and a tiered brain that can eventually hand higher-order work to CoffeeBreak without losing Jibo's original charm.
 
-1. Build a stable replacement cloud on Azure.
-2. Use the existing Node prototype as the protocol oracle and capture harness.
-3. Port the hosted implementation to .NET as a modular monolith.
-4. Bring real robots online first through RCM plus controlled DNS/TLS patching.
-5. Use OTA later to reduce setup friction once the hosted cloud is proven.
+## Current Focus
 
-This keeps the project grounded in what is already working while moving toward a maintainable hosted platform.
+- ship a stable Azure-hosted replacement cloud
+- keep the Node prototype as the protocol oracle and capture harness
+- port the production path to .NET
+- support real devices through repeatable bootstrap steps first
+- use OTA later to reduce recovery friction once the cloud is trustworthy
 
-## Current Truth
+Current release truth lives in [docs/development-plan.md](docs/development-plan.md). The current cloud release constant is `1.0.19`.
+
+## Roadmap
+
+The long-range plan is summarized in [docs/roadmap.md](docs/roadmap.md). In short:
+
+1. Working hosted cloud.
+2. OTA-assisted recovery and updates.
+3. Open Jibo OS / `open-jibo` mode conversion.
+4. Tiered brain and CoffeeBreak orchestration.
+5. Broader ecosystem expansion.
+
+## Current Architecture
 
 The repo now has three distinct lanes:
 
 - `src/Jibo.Cloud/node`
-  The discovery server. This is the best source of observed protocol behavior today.
+  Protocol oracle, discovery server, fixture source, and rapid reverse-engineering lab.
 - `src/Jibo.Cloud/dotnet`
-  The long-term hosted implementation. This is where the stable cloud is being built.
+  Production-oriented hosted implementation intended for Azure deployment and long-term maintenance.
 - `src/Jibo.Runtime.Abstractions`
-  The normalized runtime seam between robot/cloud traffic and modern conversation logic.
+  The seam between robot/cloud traffic and higher-level runtime and capability logic.
 
-The key architectural idea is:
+The core shape is:
 
 ```text
 Jibo device -> OpenJibo cloud -> normalized runtime contracts -> capabilities and planning
@@ -40,18 +50,30 @@ QR Wi-Fi -> inject OpenJibo region config -> set robot region ->
 RCM/device patch for TLS and host acceptance -> OpenJibo cloud on Azure
 ```
 
-That path is documented in [docs/device-bootstrap.md](/OpenJibo/docs/device-bootstrap.md).
+That path is documented in [docs/device-bootstrap.md](docs/device-bootstrap.md).
+
+## Design Principles
+
+- Preserve the original skills and visual design.
+- Build the hosted cloud before making OTA the default recovery path.
+- Keep every migration reversible whenever possible.
+- Prefer source-backed slices over speculative rewrites.
+- Let Jibo remain the face of the experience, even when higher-level orchestration sits behind him.
 
 ## Repo Map
 
 ```text
 OpenJibo/
   docs/
+    roadmap.md
     development-plan.md
     device-bootstrap.md
-    protocol-inventory.md
+    feature-backlog.md
     public-site-plan.md
+    regression-test-plan.md
+    release-1.0.19-plan.md
     support-tiers.md
+    system-diagram-alignment.md
 
   scripts/bootstrap/
     Discover-JiboHosts.ps1
@@ -67,56 +89,15 @@ OpenJibo/
     OpenJibo.Site/
 ```
 
-## Decisions Locked In
+## Living Docs
 
-- The first milestone is `core revive`, not full protocol parity.
-- Azure SQL is the relational system of record for the hosted cloud.
-- Billing and donations are future-compatible concerns, not phase-one delivery requirements.
-- OTA is a phase-two simplification strategy, not the initial dependency.
+Use these when you want the active technical truth:
 
-## Near-Term Work
+- [Development plan](docs/development-plan.md)
+- [Feature backlog](docs/feature-backlog.md)
+- [Release 1.0.19 plan](docs/release-1.0.19-plan.md)
+- [Support tiers](docs/support-tiers.md)
+- [System diagram alignment](docs/system-diagram-alignment.md)
+- [Public site plan](docs/public-site-plan.md)
 
-- port required endpoint and WebSocket behavior from Node to .NET
-- keep protocol captures and replay fixtures current
-- keep HTTP and websocket live-run telemetry writing to the same repo-root capture tree
-- harden device bootstrap documentation and scripts
-- map more endpoints and behaviors beyond the current Node coverage
-- stand up the initial `openjibo.com` information site
-
-## Live Test Status
-
-The first physical `.NET -> Jibo` experiments have now produced useful captures, but not a full wake-and-interact success yet.
-
-What we have confirmed so far:
-
-- the robot reaches `.NET` HTTP startup calls on `api.jibo.com`
-- `.NET` can issue a robot token and accept the `api-socket.jibo.com` websocket
-- live HTTP and websocket telemetry are now intended to land together under repo-root `captures/`
-
-What remains unresolved:
-
-- matching the Node startup cadence closely enough for consistent wake/eye-open behavior
-- the next post-`api-socket` startup requests and timing seen in successful Node runs
-- broader live websocket behavior on a real robot beyond the current synthetic parity slice
-
-The current websocket bridge now also includes server-driven raw-audio turn completion:
-
-- enough buffered audio plus `CONTEXT` can now trigger auto-finalize on the server side
-- `EOS` is emitted on that auto-finalize path so turns do not remain open indefinitely
-- transcript-less raw-audio turns still fall back to a synthetic compatibility response, not real ASR
-
-The current richer websocket parity slice is still intentionally narrow:
-
-- the successful joke path now has fixture-backed reply sequencing and partial payload-shape fidelity through `CLIENT_ASR -> LISTEN -> EOS -> delayed SKILL_ACTION`
-- menu-side `CLIENT_NLU` parity is beginning to expand from live captures, starting with preserved clock-menu intent/rules/entities
-- `.NET` now preserves buffered websocket audio frames so local tool-based ASR experiments can run without changing the stable cloud-first architecture
-- this is not a claim of broad skill parity or full Jibo websocket coverage
-
-## Important Docs
-
-- [Cloud overview](/src/Jibo.Cloud/README.md)
-- [Development plan](/docs/development-plan.md)
-- [Protocol inventory](/docs/protocol-inventory.md)
-- [Support tiers](/docs/support-tiers.md)
-- [Device bootstrap path](/docs/device-bootstrap.md)
-- [Public site plan](/docs/public-site-plan.md)
+If you only read one document for the long view, make it [docs/roadmap.md](docs/roadmap.md).

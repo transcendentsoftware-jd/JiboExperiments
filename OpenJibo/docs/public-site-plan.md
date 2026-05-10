@@ -9,6 +9,7 @@ Stand up a small public site on `openjibo.com` that makes the project understand
 - project overview
 - current status
 - links to source repositories
+- roadmap / long-range plan
 - links to device bootstrap docs
 - explanation of the hosted-cloud direction
 - contribution/contact or waitlist path
