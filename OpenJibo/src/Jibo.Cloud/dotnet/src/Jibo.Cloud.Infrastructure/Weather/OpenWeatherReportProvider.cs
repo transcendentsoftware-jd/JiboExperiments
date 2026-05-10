@@ -53,14 +53,20 @@ public sealed class OpenWeatherReportProvider(
         WeatherReportRequest request,
         CancellationToken cancellationToken)
     {
-        if (request is { Latitude: not null, Longitude: not null })
+        var query = string.IsNullOrWhiteSpace(request.LocationQuery)
+            ? null
+            : request.LocationQuery.Trim();
+
+        if (string.IsNullOrWhiteSpace(query))
         {
-            return new LocationPoint(request.Latitude.Value, request.Longitude.Value, null);
+            if (request is { Latitude: not null, Longitude: not null })
+            {
+                return new LocationPoint(request.Latitude.Value, request.Longitude.Value, null);
+            }
+
+            query = options.DefaultLocation;
         }
 
-        var query = string.IsNullOrWhiteSpace(request.LocationQuery)
-            ? options.DefaultLocation
-            : request.LocationQuery.Trim();
         if (string.IsNullOrWhiteSpace(query))
         {
             return null;

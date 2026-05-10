@@ -419,6 +419,12 @@ public sealed class JiboInteractionService(
     {
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
         var weatherDate = ResolveWeatherDateEntity(turn, transcript, referenceLocalTime);
+        var normalizedTranscript = NormalizeCommandPhrase(transcript);
+        if (ShouldDefaultForecastToTomorrow(normalizedTranscript, weatherDate))
+        {
+            weatherDate = new WeatherDateEntity("tomorrow", 1, "Tomorrow");
+        }
+
         if (weatherReportProvider is null)
         {
             return new JiboInteractionDecision(
@@ -434,7 +440,9 @@ public sealed class JiboInteractionService(
         }
 
         var locationQuery = TryResolveWeatherLocationQuery(transcript);
-        var weatherCoordinates = TryResolveWeatherCoordinates(turn);
+        var weatherCoordinates = string.IsNullOrWhiteSpace(locationQuery)
+            ? TryResolveWeatherCoordinates(turn)
+            : null;
         var useCelsius = ShouldUseCelsius(turn, transcript);
         WeatherReportSnapshot? snapshot;
         try
@@ -502,6 +510,26 @@ public sealed class JiboInteractionService(
         }
 
         return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
+    }
+
+    private static bool ShouldDefaultForecastToTomorrow(string normalizedTranscript, WeatherDateEntity weatherDate)
+    {
+        if (weatherDate.ForecastDayOffset > 0 ||
+            string.IsNullOrWhiteSpace(normalizedTranscript) ||
+            !normalizedTranscript.Contains("forecast", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return !MatchesAny(
+            normalizedTranscript,
+            "today",
+            "today s",
+            "today's",
+            "tonight",
+            "right now",
+            "current weather",
+            "currently");
     }
 
     private static IDictionary<string, object?> BuildWeatherSkillPayload(

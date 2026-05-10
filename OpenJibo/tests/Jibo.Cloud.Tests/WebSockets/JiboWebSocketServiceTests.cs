@@ -2037,13 +2037,25 @@ public sealed class JiboWebSocketServiceTests
 
         var play = jcpConfig.GetProperty("play");
         Assert.True(play.TryGetProperty("gui", out var playGui));
-        Assert.Equal("views.weatherHiLo", playGui.GetProperty("data").GetString());
+        Assert.Equal("Javascript", playGui.GetProperty("type").GetString());
+        Assert.True(playGui.GetProperty("pause").GetBoolean());
+        Assert.Equal("weatherTempView", playGui.GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
         Assert.Equal(0, play.GetProperty("no_matches_for_gui").GetInt32());
         Assert.Equal(0, play.GetProperty("no_inputs_for_gui").GetInt32());
+
+        Assert.True(jcpConfig.TryGetProperty("display", out var display));
+        Assert.Equal(
+            "weatherTempView",
+            display.GetProperty("view").GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
 
         Assert.True(jcpConfig.TryGetProperty("views", out var views));
         var weatherHiLo = views.GetProperty("weatherHiLo");
         Assert.Equal("weatherTempView", weatherHiLo.GetProperty("viewConfig").GetProperty("id").GetString());
+
+        Assert.True(jcpConfig.TryGetProperty("local", out var local));
+        Assert.Equal(
+            "weatherTempView",
+            local.GetProperty("views").GetProperty("weatherHiLo").GetProperty("viewConfig").GetProperty("id").GetString());
 
         var payloadText = replies[2].Text!;
         Assert.Contains("assets/personal-report-skill/weather/icons/rain_v01.crn", payloadText, StringComparison.Ordinal);

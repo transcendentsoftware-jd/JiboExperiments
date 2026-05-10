@@ -824,19 +824,41 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var weatherHiLoView = BuildWeatherHiLoView(skillPayload);
         if (weatherHiLoView is not null)
         {
-            var guiConfig = new
+            var resolvedGuiConfig = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["type"] = "Javascript",
+                ["data"] = weatherHiLoView,
+                ["pause"] = true
+            };
+
+            var legacyGuiConfig = new
             {
                 type = "Javascript",
                 data = "views.weatherHiLo",
                 pause = true
             };
-            jcpConfig["gui"] = guiConfig;
-            playConfig["gui"] = guiConfig;
+
+            jcpConfig["gui"] = legacyGuiConfig;
+            jcpConfig["display"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["view"] = resolvedGuiConfig
+            };
+
+            playConfig["gui"] = resolvedGuiConfig;
             playConfig["no_matches_for_gui"] = 0;
             playConfig["no_inputs_for_gui"] = 0;
+
+            var weatherViews = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["weatherHiLo"] = weatherHiLoView
+            };
             jcpConfig["views"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["weatherHiLo"] = weatherHiLoView
+            };
+            jcpConfig["local"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["views"] = weatherViews
             };
         }
 
