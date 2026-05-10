@@ -2666,6 +2666,81 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_TellMeTheNews_WithProvider_UsesProviderHeadlines()
+    {
+        var provider = new CapturingNewsBriefingProvider
+        {
+            Snapshot = new NewsBriefingSnapshot(
+                [
+                    new NewsHeadline("Local robotics team unveils weather-ready helper"),
+                    new NewsHeadline("Community makerspace hosts weekend AI expo")
+                ],
+                "NewsAPI")
+        };
+        var service = CreateService(newsBriefingProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "tell me the news",
+            NormalizedTranscript = "tell me the news"
+        });
+
+        Assert.Equal("news", decision.IntentName);
+        Assert.Equal("news", decision.SkillName);
+        Assert.Equal("news", decision.SkillPayload!["skillId"]);
+        Assert.Equal("news", decision.SkillPayload["cloudSkill"]);
+        Assert.Equal("runtime-news", decision.SkillPayload["mim_id"]);
+        Assert.Equal("NewsAPI", decision.SkillPayload["news_source"]);
+        Assert.Equal(2, decision.SkillPayload["news_headline_count"]);
+        Assert.Contains("Local robotics team unveils weather-ready helper", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Equal(3, provider.LastRequest!.MaxHeadlines);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TellMeTheNews_WithMemoryPreference_UsesCategoryHints()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        var provider = new CapturingNewsBriefingProvider
+        {
+            Snapshot = new NewsBriefingSnapshot(
+                [
+                    new NewsHeadline("City soccer clubs prepare for summer playoffs")
+                ],
+                "NewsAPI")
+        };
+        var service = CreateService(memoryStore, newsBriefingProvider: provider);
+
+        await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "i like sports",
+            NormalizedTranscript = "i like sports",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "tell me the news",
+            NormalizedTranscript = "tell me the news",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a"
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("news", decision.IntentName);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Contains("sports", provider.LastRequest!.PreferredCategories, StringComparer.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_CloudVersion_UsesSharedBuildInfo()
     {
         var service = CreateService();
@@ -2786,13 +2861,15 @@ public sealed class JiboInteractionServiceTests
 
     private static JiboInteractionService CreateService(
         IPersonalMemoryStore? personalMemoryStore = null,
-        IWeatherReportProvider? weatherReportProvider = null)
+        IWeatherReportProvider? weatherReportProvider = null,
+        INewsBriefingProvider? newsBriefingProvider = null)
     {
         return new JiboInteractionService(
             new JiboExperienceContentCache(new InMemoryJiboExperienceContentRepository()),
             new FirstItemRandomizer(),
             personalMemoryStore ?? new InMemoryPersonalMemoryStore(),
-            weatherReportProvider);
+            weatherReportProvider,
+            newsBriefingProvider);
     }
 
     private sealed class FirstItemRandomizer : IJiboRandomizer
@@ -2811,6 +2888,21 @@ public sealed class JiboInteractionServiceTests
 
         public Task<WeatherReportSnapshot?> GetReportAsync(
             WeatherReportRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            LastRequest = request;
+            return Task.FromResult(Snapshot);
+        }
+    }
+
+    private sealed class CapturingNewsBriefingProvider : INewsBriefingProvider
+    {
+        public NewsBriefingRequest? LastRequest { get; private set; }
+
+        public NewsBriefingSnapshot? Snapshot { get; init; }
+
+        public Task<NewsBriefingSnapshot?> GetBriefingAsync(
+            NewsBriefingRequest request,
             CancellationToken cancellationToken = default)
         {
             LastRequest = request;

@@ -184,7 +184,15 @@ Third completed guardrail slice under this queue:
 
 Next queued implementation track after parser guardrails:
 
-- presence-aware greetings and identity-triggered proactivity (Pegasus `@be/greetings` parity slice)
+- personal report parity slices (weather visual parity, live news path, commute/calendar gap closure)
+
+First completed slice in this personal-report parity track:
+
+- added provider-ready news briefing path with Nimbus-compatible `news` payload continuity
+- preserved fallback behavior when no live provider is configured
+- added memory/transcript category hinting for provider requests (`sports`, `technology`, `business`, etc.)
+- added provider-side request caching for both news and weather to reduce integration churn and repeated lookups
+- added focused interaction + websocket tests for provider-backed news speech output and request-hint plumbing
 
 ## Next Slices
 

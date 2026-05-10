@@ -2,6 +2,7 @@ using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Infrastructure.Audio;
 using Jibo.Cloud.Infrastructure.Content;
+using Jibo.Cloud.Infrastructure.News;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Jibo.Cloud.Infrastructure.Telemetry;
 using Jibo.Cloud.Infrastructure.Weather;
@@ -35,9 +36,22 @@ public static class ServiceCollectionExtensions
             openWeatherOptions.ApiKey = Environment.GetEnvironmentVariable("OPENWEATHER_API_KEY");
         }
 
+        var newsApiOptions = new NewsApiOptions();
+        if (configuration is not null)
+        {
+            configuration.GetSection("OpenJibo:News:NewsApi").Bind(newsApiOptions);
+        }
+
+        if (string.IsNullOrWhiteSpace(newsApiOptions.ApiKey))
+        {
+            newsApiOptions.ApiKey = Environment.GetEnvironmentVariable("NEWSAPI_KEY");
+        }
+
         services.AddSingleton(sttOptions);
         services.AddSingleton(openWeatherOptions);
+        services.AddSingleton(newsApiOptions);
         services.AddHttpClient<IWeatherReportProvider, OpenWeatherReportProvider>();
+        services.AddHttpClient<INewsBriefingProvider, NewsApiBriefingProvider>();
         var statePersistencePath = configuration?["OpenJibo:State:PersistencePath"]
             ?? Path.Combine(AppContext.BaseDirectory, "App_Data", "cloud-state.json");
         services.AddSingleton<ICloudStateStore>(_ => new InMemoryCloudStateStore(statePersistencePath));

@@ -10,7 +10,8 @@ public sealed class JiboInteractionService(
     JiboExperienceContentCache contentCache,
     IJiboRandomizer randomizer,
     IPersonalMemoryStore personalMemoryStore,
-    IWeatherReportProvider? weatherReportProvider = null)
+    IWeatherReportProvider? weatherReportProvider = null,
+    INewsBriefingProvider? newsBriefingProvider = null)
 {
     public async Task<JiboInteractionDecision> BuildDecisionAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
@@ -158,7 +159,7 @@ public sealed class JiboInteractionService(
             "personal_report" => new JiboInteractionDecision("personal_report", randomizer.Choose(catalog.PersonalReportReplies)),
             "calendar" => new JiboInteractionDecision("calendar", randomizer.Choose(catalog.CalendarReplies)),
             "commute" => new JiboInteractionDecision("commute", randomizer.Choose(catalog.CommuteReplies)),
-            "news" => BuildNewsDecision(catalog),
+            "news" => await BuildNewsDecisionAsync(turn, transcript, catalog, cancellationToken),
             _ => new JiboInteractionDecision("chat", BuildGenericReply(catalog, transcript, lowered))
         };
     }
@@ -900,20 +901,177 @@ public sealed class JiboInteractionService(
             });
     }
 
-    private JiboInteractionDecision BuildNewsDecision(JiboExperienceCatalog catalog)
+    private async Task<JiboInteractionDecision> BuildNewsDecisionAsync(
+        TurnContext turn,
+        string transcript,
+        JiboExperienceCatalog catalog,
+        CancellationToken cancellationToken)
     {
-        var briefing = randomizer.Choose(catalog.NewsBriefings);
-        return new JiboInteractionDecision(
-            "news",
-            briefing,
-            "news",
-            new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        var preferredCategories = ResolvePreferredNewsCategories(turn, transcript);
+        if (newsBriefingProvider is not null)
+        {
+            try
             {
-                ["skillId"] = "news",
-                ["cloudSkill"] = "news",
-                ["mim_id"] = "runtime-news",
-                ["mim_type"] = "announcement"
-            });
+                var snapshot = await newsBriefingProvider.GetBriefingAsync(
+                    new NewsBriefingRequest(preferredCategories, MaxNewsHeadlines),
+                    cancellationToken);
+
+                if (snapshot?.Headlines.Count > 0)
+                {
+                    return BuildProviderNewsDecision(snapshot, preferredCategories);
+                }
+            }
+            catch
+            {
+                // Provider failures should never block baseline news behavior.
+            }
+        }
+
+        var fallbackBriefing = randomizer.Choose(catalog.NewsBriefings);
+        return BuildNewsDecision(
+            fallbackBriefing,
+            sourceName: null,
+            preferredCategories.Count > 0 ? preferredCategories : null,
+            headlineCount: null);
+    }
+
+    private static JiboInteractionDecision BuildNewsDecision(
+        string spokenBriefing,
+        string? sourceName,
+        IReadOnlyList<string>? categories,
+        int? headlineCount)
+    {
+        var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["skillId"] = "news",
+            ["cloudSkill"] = "news",
+            ["mim_id"] = "runtime-news",
+            ["mim_type"] = "announcement"
+        };
+
+        if (!string.IsNullOrWhiteSpace(sourceName))
+        {
+            payload["news_source"] = sourceName;
+        }
+
+        if (headlineCount is > 0)
+        {
+            payload["news_headline_count"] = headlineCount.Value;
+        }
+
+        if (categories is { Count: > 0 })
+        {
+            payload["news_categories"] = categories.ToArray();
+        }
+
+        return new JiboInteractionDecision("news", spokenBriefing, "news", payload);
+    }
+
+    private static JiboInteractionDecision BuildProviderNewsDecision(
+        NewsBriefingSnapshot snapshot,
+        IReadOnlyList<string> preferredCategories)
+    {
+        var headlines = snapshot.Headlines
+            .Where(headline => !string.IsNullOrWhiteSpace(headline.Title))
+            .Take(MaxNewsHeadlines)
+            .ToArray();
+        if (headlines.Length == 0)
+        {
+            return BuildNewsDecision(
+                "I couldn't load fresh headlines right now.",
+                snapshot.SourceName,
+                preferredCategories,
+                headlineCount: 0);
+        }
+
+        var leadIn = BuildNewsLeadIn(snapshot.SourceName, preferredCategories);
+        var joinedHeadlines = string.Join(" ", headlines.Select(static headline => $"{headline.Title}."));
+        var spokenBriefing = $"{leadIn} {joinedHeadlines}".Trim();
+        return BuildNewsDecision(
+            spokenBriefing,
+            snapshot.SourceName,
+            preferredCategories,
+            headlines.Length);
+    }
+
+    private static string BuildNewsLeadIn(string? sourceName, IReadOnlyList<string> preferredCategories)
+    {
+        var categoryLeadIn = preferredCategories.Count switch
+        {
+            <= 0 => "Here are a few headlines.",
+            1 => $"Here are your {preferredCategories[0]} headlines.",
+            _ => $"Here are your {preferredCategories[0]} and {preferredCategories[1]} headlines."
+        };
+
+        return string.IsNullOrWhiteSpace(sourceName)
+            ? categoryLeadIn
+            : $"{categoryLeadIn} Source: {sourceName}.";
+    }
+
+    private List<string> ResolvePreferredNewsCategories(TurnContext turn, string transcript)
+    {
+        var categories = new List<string>();
+        var normalizedTranscript = NormalizeCommandPhrase(transcript);
+
+        foreach (var (keyword, category) in NewsCategoryKeywordMap)
+        {
+            if (normalizedTranscript.Contains(keyword, StringComparison.Ordinal))
+            {
+                AddNewsCategory(categories, category);
+            }
+        }
+
+        var tenantScope = ResolveTenantScope(turn);
+        var explicitPreference = personalMemoryStore.GetPreference(tenantScope, "news");
+        if (!string.IsNullOrWhiteSpace(explicitPreference))
+        {
+            foreach (var category in MapNewsCategoryText(explicitPreference))
+            {
+                AddNewsCategory(categories, category);
+            }
+        }
+
+        foreach (var (item, affinity) in personalMemoryStore.GetAffinities(tenantScope))
+        {
+            if (affinity == PersonalAffinity.Dislike)
+            {
+                continue;
+            }
+
+            foreach (var category in MapNewsCategoryText(item))
+            {
+                AddNewsCategory(categories, category);
+            }
+        }
+
+        return categories.Take(MaxPreferredNewsCategories).ToList();
+    }
+
+    private static IEnumerable<string> MapNewsCategoryText(string text)
+    {
+        var normalized = NormalizeCommandPhrase(text);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            yield break;
+        }
+
+        foreach (var (keyword, category) in NewsCategoryKeywordMap)
+        {
+            if (normalized.Contains(keyword, StringComparison.Ordinal))
+            {
+                yield return category;
+            }
+        }
+    }
+
+    private static void AddNewsCategory(ICollection<string> categories, string category)
+    {
+        if (categories.Contains(category, StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        categories.Add(category);
     }
 
     private JiboInteractionDecision BuildSurpriseDecision(
@@ -3928,6 +4086,32 @@ public sealed class JiboInteractionService(
     private static readonly TimeSpan ProactiveGreetingCooldown = TimeSpan.FromMinutes(20);
 
     private const int MaxWeatherForecastDayOffset = 5;
+    private const int MaxNewsHeadlines = 3;
+    private const int MaxPreferredNewsCategories = 2;
+
+    private static readonly (string Keyword, string Category)[] NewsCategoryKeywordMap =
+    [
+        ("sports", "sports"),
+        ("sport", "sports"),
+        ("football", "sports"),
+        ("baseball", "sports"),
+        ("basketball", "sports"),
+        ("hockey", "sports"),
+        ("technology", "technology"),
+        ("tech", "technology"),
+        ("ai", "technology"),
+        ("science", "science"),
+        ("business", "business"),
+        ("finance", "business"),
+        ("market", "business"),
+        ("stock", "business"),
+        ("politics", "general"),
+        ("political", "general"),
+        ("world", "general"),
+        ("entertainment", "entertainment"),
+        ("movie", "entertainment"),
+        ("music", "entertainment")
+    ];
 
     private static readonly (string Phrase, string Station)[] RadioGenreAliases =
     [

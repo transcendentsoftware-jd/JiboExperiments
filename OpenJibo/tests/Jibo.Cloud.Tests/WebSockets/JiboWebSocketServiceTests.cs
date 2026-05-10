@@ -1971,6 +1971,57 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_TellMeTheNews_WithProvider_UsesProviderHeadlinesInSpeech()
+    {
+        var service = CreateService(
+            new InMemoryCloudStateStore(),
+            newsBriefingProvider: new StubNewsBriefingProvider(
+                new NewsBriefingSnapshot(
+                    [
+                        new NewsHeadline("Robotics club opens a new community lab"),
+                        new NewsHeadline("Local students win a regional coding challenge")
+                    ],
+                    "NewsAPI")));
+
+        await service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-news-provider-token",
+            Text = """{"type":"LISTEN","transID":"trans-news-provider","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-news-provider-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-news-provider","data":{"text":"tell me the news"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(replies[0]));
+        Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+
+        using var speakPayload = JsonDocument.Parse(replies[2].Text!);
+        var esml = speakPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp")
+            .GetProperty("config")
+            .GetProperty("play")
+            .GetProperty("esml")
+            .GetString();
+
+        Assert.Contains("Robotics club opens a new community lab", esml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Source: NewsAPI.", esml, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task ClientAsr_HowIsTheWeather_EmitsSpokenWeatherFallbackWithoutRedirect()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -3998,7 +4049,8 @@ public sealed class JiboWebSocketServiceTests
 
     private static JiboWebSocketService CreateService(
         InMemoryCloudStateStore stateStore,
-        IWeatherReportProvider? weatherReportProvider = null)
+        IWeatherReportProvider? weatherReportProvider = null,
+        INewsBriefingProvider? newsBriefingProvider = null)
     {
         var contentRepository = new InMemoryJiboExperienceContentRepository();
         var contentCache = new JiboExperienceContentCache(contentRepository);
@@ -4006,7 +4058,8 @@ public sealed class JiboWebSocketServiceTests
             contentCache,
             new DefaultJiboRandomizer(),
             new InMemoryPersonalMemoryStore(),
-            weatherReportProvider);
+            weatherReportProvider,
+            newsBriefingProvider);
         var conversationBroker = new DemoConversationBroker(interactionService);
         var sttSelector = new DefaultSttStrategySelector(
         [
@@ -4033,6 +4086,16 @@ public sealed class JiboWebSocketServiceTests
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<WeatherReportSnapshot?>(snapshot);
+        }
+    }
+
+    private sealed class StubNewsBriefingProvider(NewsBriefingSnapshot snapshot) : INewsBriefingProvider
+    {
+        public Task<NewsBriefingSnapshot?> GetBriefingAsync(
+            NewsBriefingRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<NewsBriefingSnapshot?>(snapshot);
         }
     }
 }

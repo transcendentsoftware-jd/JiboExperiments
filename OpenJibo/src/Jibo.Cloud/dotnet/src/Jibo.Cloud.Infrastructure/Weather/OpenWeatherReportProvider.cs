@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using Jibo.Cloud.Application.Abstractions;
@@ -11,6 +12,9 @@ public sealed class OpenWeatherReportProvider(
     ILogger<OpenWeatherReportProvider> logger)
     : IWeatherReportProvider
 {
+    private readonly ConcurrentDictionary<string, CacheEntry<LocationPoint?>> geocodeCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, CacheEntry<WeatherReportSnapshot?>> weatherCache = new(StringComparer.OrdinalIgnoreCase);
+
     public async Task<WeatherReportSnapshot?> GetReportAsync(
         WeatherReportRequest request,
         CancellationToken cancellationToken = default)
@@ -20,6 +24,7 @@ public sealed class OpenWeatherReportProvider(
             return null;
         }
 
+        string? weatherCacheKey = null;
         try
         {
             var location = await ResolveLocationAsync(request, cancellationToken);
@@ -30,21 +35,45 @@ public sealed class OpenWeatherReportProvider(
 
             var useCelsius = request.UseCelsius ?? options.UseCelsius;
             var forecastDayOffset = request.ForecastDayOffset ?? (request.IsTomorrow ? 1 : 0);
+            weatherCacheKey = BuildWeatherCacheKey(location.Value, useCelsius, forecastDayOffset);
+            if (TryGetCachedValue(weatherCache, weatherCacheKey, out var cachedSnapshot))
+            {
+                return cachedSnapshot;
+            }
+
+            WeatherReportSnapshot? snapshot;
             if (forecastDayOffset <= 0)
             {
-                return await GetCurrentWeatherAsync(location.Value, useCelsius, cancellationToken);
+                snapshot = await GetCurrentWeatherAsync(location.Value, useCelsius, cancellationToken);
+                SetCachedValue(
+                    weatherCache,
+                    weatherCacheKey,
+                    snapshot,
+                    snapshot is null ? options.FailureCacheTtlSeconds : options.CurrentCacheTtlSeconds);
+                return snapshot;
             }
 
             if (forecastDayOffset > MaxForecastDayOffset)
             {
+                SetCachedValue(weatherCache, weatherCacheKey, null, options.FailureCacheTtlSeconds);
                 return null;
             }
 
-            return await GetForecastForDayOffsetAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
+            snapshot = await GetForecastForDayOffsetAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
+            SetCachedValue(
+                weatherCache,
+                weatherCacheKey,
+                snapshot,
+                snapshot is null ? options.FailureCacheTtlSeconds : options.ForecastCacheTtlSeconds);
+            return snapshot;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "OpenWeather lookup failed.");
+            if (!string.IsNullOrWhiteSpace(weatherCacheKey))
+            {
+                SetCachedValue(weatherCache, weatherCacheKey, null, options.FailureCacheTtlSeconds);
+            }
             return null;
         }
     }
@@ -72,6 +101,12 @@ public sealed class OpenWeatherReportProvider(
             return null;
         }
 
+        var geocodeCacheKey = NormalizeLocationQueryForCache(query);
+        if (TryGetCachedValue(geocodeCache, geocodeCacheKey, out var cachedLocation))
+        {
+            return cachedLocation;
+        }
+
         var geocodeUri = BuildRequestUri(
             "/geo/1.0/direct",
             ("q", query),
@@ -80,6 +115,7 @@ public sealed class OpenWeatherReportProvider(
         using var response = await httpClient.GetAsync(geocodeUri, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            SetCachedValue(geocodeCache, geocodeCacheKey, null, options.FailureCacheTtlSeconds);
             return null;
         }
 
@@ -88,6 +124,7 @@ public sealed class OpenWeatherReportProvider(
         if (document.RootElement.ValueKind != JsonValueKind.Array ||
             document.RootElement.GetArrayLength() == 0)
         {
+            SetCachedValue(geocodeCache, geocodeCacheKey, null, options.FailureCacheTtlSeconds);
             return null;
         }
 
@@ -95,11 +132,14 @@ public sealed class OpenWeatherReportProvider(
         if (!TryReadDouble(location, "lat", out var latitude) ||
             !TryReadDouble(location, "lon", out var longitude))
         {
+            SetCachedValue(geocodeCache, geocodeCacheKey, null, options.FailureCacheTtlSeconds);
             return null;
         }
 
         var displayName = BuildLocationDisplayName(location);
-        return new LocationPoint(latitude, longitude, displayName);
+        var resolvedLocation = new LocationPoint(latitude, longitude, displayName);
+        SetCachedValue(geocodeCache, geocodeCacheKey, resolvedLocation, options.GeocodeCacheTtlSeconds);
+        return resolvedLocation;
     }
 
     private async Task<WeatherReportSnapshot?> GetCurrentWeatherAsync(
@@ -368,7 +408,53 @@ public sealed class OpenWeatherReportProvider(
         return null;
     }
 
+    private static string BuildWeatherCacheKey(LocationPoint location, bool useCelsius, int forecastDayOffset)
+    {
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"{location.Latitude:F4}|{location.Longitude:F4}|{(useCelsius ? "C" : "F")}|{forecastDayOffset}");
+    }
+
+    private static string NormalizeLocationQueryForCache(string query)
+    {
+        return query.Trim().ToLowerInvariant();
+    }
+
+    private static bool TryGetCachedValue<T>(
+        ConcurrentDictionary<string, CacheEntry<T>> cache,
+        string key,
+        out T value)
+    {
+        value = default!;
+        if (!cache.TryGetValue(key, out var entry))
+        {
+            return false;
+        }
+
+        if (entry.ExpiresUtc > DateTimeOffset.UtcNow)
+        {
+            value = entry.Value;
+            return true;
+        }
+
+        cache.TryRemove(key, out _);
+        return false;
+    }
+
+    private static void SetCachedValue<T>(
+        ConcurrentDictionary<string, CacheEntry<T>> cache,
+        string key,
+        T value,
+        int ttlSeconds)
+    {
+        cache[key] = new CacheEntry<T>(
+            value,
+            DateTimeOffset.UtcNow.AddSeconds(Math.Max(1, ttlSeconds)));
+    }
+
     private readonly record struct LocationPoint(double Latitude, double Longitude, string? DisplayName);
+
+    private sealed record CacheEntry<T>(T Value, DateTimeOffset ExpiresUtc);
 
     private sealed record ForecastEntry(
         DateTimeOffset LocalTime,

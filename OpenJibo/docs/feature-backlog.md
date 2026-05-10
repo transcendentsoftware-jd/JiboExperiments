@@ -715,7 +715,7 @@ Current release theme:
 
 ### 27. Personal Report Parity Track (Weather/News/Commute/Calendar)
 
-- Status: `ready`
+- Status: `in_progress`
 - Tags: `protocol`, `content`, `storage`, `docs`
 - Why now:
   - personal report is a core Jibo charm surface and currently split between implemented weather speech and placeholder calendar/commute/news content
@@ -726,6 +726,11 @@ Current release theme:
   - provider-backed news ingestion and filtering
   - commute provider path and settings schema
   - coverage matrix for personal report parity gaps and test/capture exit criteria
+- Progress update (`2026-05-10`):
+  - added provider-ready news briefing lane with Nimbus-compatible `news` skill payload continuity
+  - added memory/transcript category hint plumbing for provider requests (sports/technology/business/general)
+  - fallback synthetic news behavior remains active when no provider key is configured
+  - added TTL caching for weather/news provider calls to reduce repeated external requests
 - Source anchors:
   - `C:\Projects\jibo\pegasus\packages\report-skill\src\subskills\weather\WeatherMimLogic.ts`
   - `C:\Projects\jibo\pegasus\packages\report-skill\resources\views\weatherHiLo.json`
@@ -775,7 +780,7 @@ For `1.0.19`:
 4. Weather report-skill launch compatibility - implemented
 5. Dialog parsing expansion and ambiguity guardrails - in progress (`2026-05-09` third guardrail slice implemented; Pegasus affinity phrase families + continuation guardrails expanded)
 6. Presence-aware greetings and identity-triggered proactivity - implemented (trigger path, identity-aware reactive/proactive replies, cooldown metadata wiring, focused websocket coverage)
-7. Personal report parity track (weather visuals, live news path, commute path, calendar parity matrix) - ready
+7. Personal report parity track (weather visuals, live news path, commute path, calendar parity matrix) - in progress (`2026-05-10` first live-news provider slice implemented)
 8. Holidays and seasonal personality behavior built on the new memory/proactivity foundation
 9. Durable memory persistence path (multi-tenant backing store)
 10. Update, backup, and restore proof
