@@ -2155,13 +2155,9 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal("views.weatherHiLo", gui.GetProperty("data").GetString());
         Assert.True(gui.GetProperty("pause").GetBoolean());
 
-        var play = jcpConfig.GetProperty("play");
-        Assert.True(play.TryGetProperty("gui", out var playGui));
-        Assert.Equal("Javascript", playGui.GetProperty("type").GetString());
-        Assert.True(playGui.GetProperty("pause").GetBoolean());
-        Assert.Equal("weatherTempView", playGui.GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
-        Assert.Equal(0, play.GetProperty("no_matches_for_gui").GetInt32());
-        Assert.Equal(0, play.GetProperty("no_inputs_for_gui").GetInt32());
+        Assert.Equal(6, jcpConfig.GetProperty("timeout").GetInt32());
+        Assert.Equal(0, jcpConfig.GetProperty("no_matches_for_gui").GetInt32());
+        Assert.Equal(0, jcpConfig.GetProperty("no_inputs_for_gui").GetInt32());
 
         Assert.True(jcpConfig.TryGetProperty("display", out var display));
         Assert.Equal(

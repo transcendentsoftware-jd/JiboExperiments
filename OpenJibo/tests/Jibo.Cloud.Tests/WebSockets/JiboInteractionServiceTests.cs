@@ -1761,7 +1761,7 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_WeatherNextWeek_WithContext_ReturnsGuardrailMessage()
+    public async Task BuildDecisionAsync_WeatherNextWeek_WithContext_ReturnsFiveDaySummary()
     {
         var provider = new CapturingWeatherReportProvider
         {
@@ -1780,8 +1780,12 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can forecast up to 5 days ahead. Try tomorrow or another day this week.", decision.ReplyText);
-        Assert.Null(provider.LastRequest);
+        Assert.Contains("next five-day forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Seattle, US", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Equal("Seattle", provider.LastRequest!.LocationQuery);
+        Assert.Equal(5, provider.LastRequest.ForecastDayOffset);
     }
 
     [Fact]
@@ -2690,11 +2694,36 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("news", decision.SkillPayload!["skillId"]);
         Assert.Equal("news", decision.SkillPayload["cloudSkill"]);
         Assert.Equal("runtime-news", decision.SkillPayload["mim_id"]);
+        Assert.Contains("news-stinger", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("NewsAPI", decision.SkillPayload["news_source"]);
         Assert.Equal(2, decision.SkillPayload["news_headline_count"]);
         Assert.Contains("Local robotics team unveils weather-ready helper", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(provider.LastRequest);
         Assert.Equal(3, provider.LastRequest!.MaxHeadlines);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_TellMeTheNews_WithAIAlias_UsesTechnologyCategory()
+    {
+        var provider = new CapturingNewsBriefingProvider
+        {
+            Snapshot = new NewsBriefingSnapshot(
+                [
+                    new NewsHeadline("AI labs unveil new home companion behaviors")
+                ],
+                "NewsAPI")
+        };
+        var service = CreateService(newsBriefingProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "tell me the a i news",
+            NormalizedTranscript = "tell me the a i news"
+        });
+
+        Assert.Equal("news", decision.IntentName);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Contains("technology", provider.LastRequest!.PreferredCategories, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]

@@ -608,18 +608,64 @@ public sealed class JiboInteractionService(
                 "I can check weather once my weather service is connected.");
         }
 
+        var locationQuery = TryResolveWeatherLocationQuery(transcript);
+        var weatherCoordinates = string.IsNullOrWhiteSpace(locationQuery)
+            ? TryResolveWeatherCoordinates(turn)
+            : null;
+        var useCelsius = ShouldUseCelsius(turn, transcript);
+        var isNextWeekForecast = IsNextWeekForecastRequest(normalizedTranscript);
+
+        if (isNextWeekForecast)
+        {
+            var weeklySnapshots = new List<(int DayOffset, WeatherReportSnapshot Snapshot)>();
+            for (var offset = 1; offset <= MaxWeatherForecastDayOffset; offset += 1)
+            {
+                WeatherReportSnapshot? weeklySnapshot;
+                try
+                {
+                    weeklySnapshot = await weatherReportProvider.GetReportAsync(
+                        new WeatherReportRequest(
+                            locationQuery,
+                            weatherCoordinates?.Latitude,
+                            weatherCoordinates?.Longitude,
+                            IsTomorrow: offset == 1,
+                            useCelsius,
+                            ForecastDayOffset: offset),
+                        cancellationToken);
+                }
+                catch (Exception) when (!cancellationToken.IsCancellationRequested)
+                {
+                    weeklySnapshot = null;
+                }
+
+                if (weeklySnapshot is not null)
+                {
+                    weeklySnapshots.Add((offset, weeklySnapshot));
+                }
+            }
+
+            if (weeklySnapshots.Count == 0)
+            {
+                return new JiboInteractionDecision(
+                    "weather",
+                    "I couldn't fetch the weather right now. Please try again.");
+            }
+
+            var weeklySpokenReply = BuildNextWeekForecastSpokenReply(weeklySnapshots, referenceLocalTime);
+            var weeklyWeatherPayload = BuildWeatherSkillPayload(weeklySpokenReply, weeklySnapshots[0].Snapshot, referenceLocalTime);
+            return new JiboInteractionDecision(
+                "weather",
+                weeklySpokenReply,
+                "chitchat-skill",
+                SkillPayload: weeklyWeatherPayload);
+        }
+
         if (weatherDate.ForecastDayOffset > MaxWeatherForecastDayOffset)
         {
             return new JiboInteractionDecision(
                 "weather",
                 $"I can forecast up to {MaxWeatherForecastDayOffset} days ahead. Try tomorrow or another day this week.");
         }
-
-        var locationQuery = TryResolveWeatherLocationQuery(transcript);
-        var weatherCoordinates = string.IsNullOrWhiteSpace(locationQuery)
-            ? TryResolveWeatherCoordinates(turn)
-            : null;
-        var useCelsius = ShouldUseCelsius(turn, transcript);
         WeatherReportSnapshot? snapshot;
         try
         {
@@ -686,6 +732,52 @@ public sealed class JiboInteractionService(
         }
 
         return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
+    }
+
+    private static string BuildNextWeekForecastSpokenReply(
+        IReadOnlyList<(int DayOffset, WeatherReportSnapshot Snapshot)> snapshots,
+        DateTimeOffset? referenceLocalTime)
+    {
+        if (snapshots.Count == 0)
+        {
+            return "I couldn't build a forecast right now.";
+        }
+
+        var location = snapshots[0].Snapshot.LocationName;
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            location = "your area";
+        }
+
+        var unit = snapshots[0].Snapshot.UseCelsius ? "Celsius" : "Fahrenheit";
+        var referenceDate = (referenceLocalTime ?? DateTimeOffset.UtcNow).Date;
+        var segments = snapshots
+            .OrderBy(static item => item.DayOffset)
+            .Take(MaxWeatherForecastDayOffset)
+            .Select(item =>
+            {
+                var dayName = referenceDate.AddDays(item.DayOffset).ToString("dddd", CultureInfo.InvariantCulture);
+                var summary = string.IsNullOrWhiteSpace(item.Snapshot.Summary)
+                    ? "partly cloudy"
+                    : item.Snapshot.Summary.Trim().TrimEnd('.');
+                var high = item.Snapshot.HighTemperature ?? item.Snapshot.Temperature;
+                var low = item.Snapshot.LowTemperature ?? item.Snapshot.Temperature;
+                return $"{dayName}: {summary}, high {high}, low {low}.";
+            });
+
+        return $"I can share the next five-day forecast in {location}. {string.Join(" ", segments)} Temperatures are in {unit}.";
+    }
+
+    private static bool IsNextWeekForecastRequest(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript) ||
+            !normalizedTranscript.Contains("next week", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return normalizedTranscript.Contains("forecast", StringComparison.Ordinal) ||
+               normalizedTranscript.Contains("weather", StringComparison.Ordinal);
     }
 
     private static bool ShouldDefaultForecastToTomorrow(string normalizedTranscript, WeatherDateEntity weatherDate)
@@ -946,7 +1038,11 @@ public sealed class JiboInteractionService(
             ["skillId"] = "news",
             ["cloudSkill"] = "news",
             ["mim_id"] = "runtime-news",
-            ["mim_type"] = "announcement"
+            ["mim_type"] = "announcement",
+            ["prompt_id"] = "NewsHeadline_AN_01",
+            ["prompt_sub_category"] = "AN",
+            ["esml"] =
+                $"<speak><anim cat='news' meta='news-stinger' nonBlocking='true' /><break size='0.35'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeForEsml(spokenBriefing)}</es></speak>"
         };
 
         if (!string.IsNullOrWhiteSpace(sourceName))
@@ -4100,6 +4196,10 @@ public sealed class JiboInteractionService(
         ("technology", "technology"),
         ("tech", "technology"),
         ("ai", "technology"),
+        ("a i", "technology"),
+        ("a eye", "technology"),
+        ("aye eye", "technology"),
+        ("artificial intelligence", "technology"),
         ("science", "science"),
         ("business", "business"),
         ("finance", "business"),

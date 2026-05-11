@@ -844,9 +844,10 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 ["view"] = resolvedGuiConfig
             };
 
-            playConfig["gui"] = resolvedGuiConfig;
-            playConfig["no_matches_for_gui"] = 0;
-            playConfig["no_inputs_for_gui"] = 0;
+            jcpConfig["timeout"] = 6;
+            jcpConfig["barge_in"] = true;
+            jcpConfig["no_matches_for_gui"] = 0;
+            jcpConfig["no_inputs_for_gui"] = 0;
 
             var weatherViews = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {

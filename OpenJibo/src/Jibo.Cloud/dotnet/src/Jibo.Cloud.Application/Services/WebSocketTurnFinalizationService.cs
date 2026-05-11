@@ -668,6 +668,22 @@ public sealed partial class WebSocketTurnFinalizationService(
         UpdatePendingProactivityOffer(session, plan.IntentName);
         await ApplyContextUpdatesAsync(session, plan.ContextUpdates, envelope, plan.IntentName, cancellationToken);
 
+        var invokedSkillAction = plan.Actions.OfType<InvokeNativeSkillAction>().FirstOrDefault();
+        if ((string.Equals(plan.IntentName, "weather", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(plan.IntentName, "news", StringComparison.OrdinalIgnoreCase)) &&
+            invokedSkillAction is not null)
+        {
+            await sink.RecordTurnDiagnosticAsync(
+                "skill_payload_summary",
+                BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                {
+                    ["intent"] = plan.IntentName,
+                    ["skillName"] = invokedSkillAction.SkillName,
+                    ["payload"] = invokedSkillAction.Payload
+                }),
+                cancellationToken);
+        }
+
         session.FollowUpExpiresUtc = plan.FollowUp.KeepMicOpen
             ? DateTimeOffset.UtcNow.Add(plan.FollowUp.Timeout)
             : null;
