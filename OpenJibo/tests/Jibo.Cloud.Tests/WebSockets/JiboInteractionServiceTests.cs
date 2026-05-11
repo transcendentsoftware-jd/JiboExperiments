@@ -1049,6 +1049,25 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_PendingPizzaFactOffer_YesWithTailMapsToFact()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "yes I want to",
+            NormalizedTranscript = "yes I want to",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["pendingProactivityOffer"] = "pizza_fact"
+            }
+        });
+
+        Assert.Equal("proactive_pizza_fact", decision.IntentName);
+        Assert.Contains("350 slices per second", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_PendingPizzaFactOffer_NoMapsToDecline()
     {
         var service = CreateService();
@@ -1057,6 +1076,25 @@ public sealed class JiboInteractionServiceTests
         {
             RawTranscript = "no",
             NormalizedTranscript = "no",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["pendingProactivityOffer"] = "pizza_fact"
+            }
+        });
+
+        Assert.Equal("proactive_offer_declined", decision.IntentName);
+        Assert.Equal("No problem. We can save the pizza fact for another time.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_PendingPizzaFactOffer_NoWithTailMapsToDecline()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "no I do not",
+            NormalizedTranscript = "no I do not",
             Attributes = new Dictionary<string, object?>
             {
                 ["pendingProactivityOffer"] = "pizza_fact"
@@ -1969,6 +2007,46 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SharedYesNoPrompt_MapsAffirmativeWordToYesIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "affirmative",
+            NormalizedTranscript = "affirmative",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = (string[])["shared/yes_no", "globals/gui_nav"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
+            }
+        });
+
+        Assert.Equal("yes", decision.IntentName);
+        Assert.Equal("Yes.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_SharedYesNoPrompt_MapsNegativeWordToNoIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "negative",
+            NormalizedTranscript = "negative",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = (string[])["shared/yes_no", "globals/gui_nav"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
+            }
+        });
+
+        Assert.Equal("no", decision.IntentName);
+        Assert.Equal("No.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SettingsDownloadPrompt_MapsShortDenialToNoIntent()
     {
         var service = CreateService();
@@ -2666,6 +2744,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("news", decision.SkillPayload!["skillId"]);
         Assert.Equal("news", decision.SkillPayload["cloudSkill"]);
         Assert.Equal("runtime-news", decision.SkillPayload["mim_id"]);
+        Assert.Equal("provider_unavailable", decision.SkillPayload["news_provider_status"]);
         Assert.DoesNotContain("future cloud integration", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -2697,6 +2776,9 @@ public sealed class JiboInteractionServiceTests
         Assert.Contains("news-stinger", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("NewsAPI", decision.SkillPayload["news_source"]);
         Assert.Equal(2, decision.SkillPayload["news_headline_count"]);
+        Assert.Equal("provider_success", decision.SkillPayload["news_provider_status"]);
+        Assert.Equal(3, decision.SkillPayload["news_provider_requested_headlines"]);
+        Assert.Equal(2, decision.SkillPayload["news_provider_resolved_headlines"]);
         Assert.Contains("Local robotics team unveils weather-ready helper", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(provider.LastRequest);
         Assert.Equal(3, provider.LastRequest!.MaxHeadlines);
@@ -2724,6 +2806,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("news", decision.IntentName);
         Assert.NotNull(provider.LastRequest);
         Assert.Contains("technology", provider.LastRequest!.PreferredCategories, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("artificial intelligence", decision.SkillPayload?["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

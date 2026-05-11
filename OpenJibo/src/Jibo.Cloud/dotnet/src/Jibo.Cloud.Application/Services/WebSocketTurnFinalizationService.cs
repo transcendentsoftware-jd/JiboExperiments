@@ -682,6 +682,29 @@ public sealed partial class WebSocketTurnFinalizationService(
                     ["payload"] = invokedSkillAction.Payload
                 }),
                 cancellationToken);
+
+            if (string.Equals(plan.IntentName, "news", StringComparison.OrdinalIgnoreCase) &&
+                invokedSkillAction.Payload.TryGetValue("news_provider_status", out var providerStatus))
+            {
+                invokedSkillAction.Payload.TryGetValue("news_provider_requested_headlines", out var requestedHeadlines);
+                invokedSkillAction.Payload.TryGetValue("news_provider_resolved_headlines", out var resolvedHeadlines);
+                invokedSkillAction.Payload.TryGetValue("news_provider_preferred_categories", out var preferredCategories);
+                invokedSkillAction.Payload.TryGetValue("news_source", out var newsSource);
+
+                await sink.RecordTurnDiagnosticAsync(
+                    "news_provider_trace",
+                    BuildTurnDiagnosticSnapshot(session, envelope, new Dictionary<string, object?>
+                    {
+                        ["intent"] = plan.IntentName,
+                        ["skillName"] = invokedSkillAction.SkillName,
+                        ["status"] = providerStatus,
+                        ["requestedHeadlines"] = requestedHeadlines,
+                        ["resolvedHeadlines"] = resolvedHeadlines,
+                        ["preferredCategories"] = preferredCategories,
+                        ["source"] = newsSource
+                    }),
+                    cancellationToken);
+            }
         }
 
         session.FollowUpExpiresUtc = plan.FollowUp.KeepMicOpen
@@ -1056,13 +1079,13 @@ public sealed partial class WebSocketTurnFinalizationService(
             return true;
         }
 
-        if (IsYesNoTurn(turn) && transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
+        if (IsYesNoTurn(turn) && IsYesNoReplyTranscript(transcript))
         {
             return true;
         }
 
         if (!string.IsNullOrWhiteSpace(pendingProactivityOffer) &&
-            transcript is "yes" or "no" or "sure" or "nope" or "yup" or "uh huh" or "yeah" or "nah")
+            IsYesNoReplyTranscript(transcript))
         {
             return true;
         }
@@ -1186,6 +1209,97 @@ public sealed partial class WebSocketTurnFinalizationService(
                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsYesNoReplyTranscript(string normalizedTranscript)
+    {
+        return TryClassifyYesNoReply(normalizedTranscript) is not YesNoReply.None;
+    }
+
+    private static YesNoReply TryClassifyYesNoReply(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return YesNoReply.None;
+        }
+
+        var normalized = normalizedTranscript;
+        while (TryTrimLeadingAcknowledgement(normalized, out var trimmed))
+        {
+            normalized = trimmed;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return YesNoReply.None;
+        }
+
+        var tokens = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (tokens.Length == 0)
+        {
+            return YesNoReply.None;
+        }
+
+        if (YesNoNegativeLeadTokens.Contains(tokens[0]))
+        {
+            return YesNoReply.Negative;
+        }
+
+        if (YesNoAffirmativeLeadTokens.Contains(tokens[0]))
+        {
+            return YesNoReply.Affirmative;
+        }
+
+        var leadingTwo = tokens.Length >= 2 ? $"{tokens[0]} {tokens[1]}" : null;
+        if (leadingTwo is not null)
+        {
+            if (YesNoNegativeLeadPhrases.Contains(leadingTwo))
+            {
+                return YesNoReply.Negative;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(leadingTwo))
+            {
+                return YesNoReply.Affirmative;
+            }
+        }
+
+        var leadingThree = tokens.Length >= 3 ? $"{tokens[0]} {tokens[1]} {tokens[2]}" : null;
+        if (leadingThree is not null)
+        {
+            if (YesNoNegativeLeadPhrases.Contains(leadingThree))
+            {
+                return YesNoReply.Negative;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(leadingThree))
+            {
+                return YesNoReply.Affirmative;
+            }
+        }
+
+        return YesNoReply.None;
+    }
+
+    private static bool TryTrimLeadingAcknowledgement(string normalizedTranscript, out string trimmedTranscript)
+    {
+        foreach (var acknowledgement in YesNoAcknowledgementPrefixes)
+        {
+            if (string.Equals(normalizedTranscript, acknowledgement, StringComparison.Ordinal))
+            {
+                trimmedTranscript = string.Empty;
+                return true;
+            }
+
+            if (normalizedTranscript.StartsWith($"{acknowledgement} ", StringComparison.Ordinal))
+            {
+                trimmedTranscript = normalizedTranscript[(acknowledgement.Length + 1)..].TrimStart();
+                return true;
+            }
+        }
+
+        trimmedTranscript = normalizedTranscript;
+        return false;
     }
 
     private async Task ApplyContextUpdatesAsync(
@@ -1771,6 +1885,76 @@ public sealed partial class WebSocketTurnFinalizationService(
             _ => false
         };
     }
+
+    private enum YesNoReply
+    {
+        None = 0,
+        Affirmative = 1,
+        Negative = 2
+    }
+
+    private static readonly string[] YesNoAcknowledgementPrefixes =
+    [
+        "uh",
+        "um",
+        "hmm",
+        "well",
+        "so",
+        "actually",
+        "honestly"
+    ];
+
+    private static readonly HashSet<string> YesNoAffirmativeLeadTokens = new(StringComparer.Ordinal)
+    {
+        "yes",
+        "yeah",
+        "yep",
+        "yup",
+        "sure",
+        "ok",
+        "okay",
+        "absolutely",
+        "affirmative",
+        "definitely",
+        "certainly",
+        "indeed"
+    };
+
+    private static readonly HashSet<string> YesNoNegativeLeadTokens = new(StringComparer.Ordinal)
+    {
+        "no",
+        "nope",
+        "nah",
+        "negative",
+        "never"
+    };
+
+    private static readonly HashSet<string> YesNoAffirmativeLeadPhrases = new(StringComparer.Ordinal)
+    {
+        "uh huh",
+        "sounds good",
+        "sure thing",
+        "why not",
+        "please do",
+        "go ahead",
+        "of course",
+        "i guess so",
+        "i think so"
+    };
+
+    private static readonly HashSet<string> YesNoNegativeLeadPhrases = new(StringComparer.Ordinal)
+    {
+        "not now",
+        "not today",
+        "not really",
+        "no thanks",
+        "no thank you",
+        "maybe later",
+        "i guess not",
+        "i do not",
+        "i dont",
+        "i don t"
+    };
 
     [GeneratedRegex(@"[^\w\s]")]
     private static partial Regex TranscriptNormalizationRegex();

@@ -19,6 +19,7 @@ public sealed class NewsApiBriefingProvider(
     {
         if (string.IsNullOrWhiteSpace(options.ApiKey))
         {
+            logger.LogWarning("NewsAPI provider disabled because no API key is configured.");
             return null;
         }
 
@@ -33,8 +34,18 @@ public sealed class NewsApiBriefingProvider(
 
             var requestedHeadlineCount = Math.Clamp(request.MaxHeadlines, 1, MaxHeadlines);
             cacheKey = BuildCacheKey(categories, requestedHeadlineCount);
+            logger.LogInformation(
+                "NewsAPI request started. Categories={Categories} RequestedHeadlineCount={RequestedHeadlineCount} CacheKey={CacheKey}",
+                string.Join(",", categories),
+                requestedHeadlineCount,
+                cacheKey);
             if (TryGetCachedValue(briefingCache, cacheKey, out var cachedBriefing))
             {
+                logger.LogInformation(
+                    "NewsAPI cache hit. CacheKey={CacheKey} HasSnapshot={HasSnapshot} HeadlineCount={HeadlineCount}",
+                    cacheKey,
+                    cachedBriefing is not null,
+                    cachedBriefing?.Headlines.Count ?? 0);
                 return cachedBriefing;
             }
 
@@ -47,14 +58,32 @@ public sealed class NewsApiBriefingProvider(
                 using var response = await httpClient.GetAsync(uri, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
+                    logger.LogWarning(
+                        "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase}",
+                        category,
+                        (int)response.StatusCode,
+                        response.ReasonPhrase);
                     continue;
                 }
 
                 using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
                 using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+                if (document.RootElement.TryGetProperty("status", out var statusNode) &&
+                    statusNode.ValueKind == JsonValueKind.String &&
+                    !string.Equals(statusNode.GetString(), "ok", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogWarning(
+                        "NewsAPI returned non-ok status for category {Category}. Status={Status} Code={Code} Message={Message}",
+                        category,
+                        statusNode.GetString(),
+                        ReadString(document.RootElement, "code") ?? string.Empty,
+                        ReadString(document.RootElement, "message") ?? string.Empty);
+                }
+
                 if (!document.RootElement.TryGetProperty("articles", out var articles) ||
                     articles.ValueKind != JsonValueKind.Array)
                 {
+                    logger.LogWarning("NewsAPI response missing articles array for category {Category}.", category);
                     continue;
                 }
 
@@ -78,6 +107,10 @@ public sealed class NewsApiBriefingProvider(
                     {
                         var snapshot = new NewsBriefingSnapshot(headlines, "NewsAPI");
                         SetCachedValue(briefingCache, cacheKey, snapshot, options.CacheTtlSeconds);
+                        logger.LogInformation(
+                            "NewsAPI request succeeded. Categories={Categories} HeadlineCount={HeadlineCount}",
+                            string.Join(",", categories),
+                            headlines.Count);
                         return snapshot;
                     }
                 }
@@ -86,11 +119,20 @@ public sealed class NewsApiBriefingProvider(
             if (headlines.Count == 0)
             {
                 SetCachedValue(briefingCache, cacheKey, null, options.FailureCacheTtlSeconds);
+                logger.LogWarning(
+                    "NewsAPI returned no usable headlines. Categories={Categories} RequestedHeadlineCount={RequestedHeadlineCount}",
+                    string.Join(",", categories),
+                    requestedHeadlineCount);
                 return null;
             }
 
             var populatedSnapshot = new NewsBriefingSnapshot(headlines, "NewsAPI");
             SetCachedValue(briefingCache, cacheKey, populatedSnapshot, options.CacheTtlSeconds);
+            logger.LogInformation(
+                "NewsAPI request partially filled headlines. Categories={Categories} HeadlineCount={HeadlineCount} RequestedHeadlineCount={RequestedHeadlineCount}",
+                string.Join(",", categories),
+                headlines.Count,
+                requestedHeadlineCount);
             return populatedSnapshot;
         }
         catch (Exception exception)

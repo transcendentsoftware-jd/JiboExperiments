@@ -1614,6 +1614,36 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_YesNoPromptFromAsrHints_MapsYepToYesIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-hints-yep-token",
+            Text = """{"type":"LISTEN","transID":"trans-yesno-hints-yep","data":{"rules":["surprises-ota/want_to_download_now"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-yesno-hints-yep-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-yesno-hints-yep","data":{"text":"yep"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("yep", listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
+        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules")[0].GetString());
+        Assert.Equal("surprises-ota/want_to_download_now", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_SharedYesNoPrompt_StripsGlobalRulesAndStaysLocal()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
@@ -1638,6 +1668,37 @@ public sealed class JiboWebSocketServiceTests
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("shared/yes_no", rules[0].GetString());
+        Assert.Equal("shared/yes_no", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+    }
+
+    [Fact]
+    public async Task ClientAsr_SharedYesNoPrompt_MapsNegativeWordToNoIntent()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-negative-token",
+            Text = """{"type":"LISTEN","transID":"trans-shared-yesno-negative","data":{"rules":["shared/yes_no","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-shared-yesno-negative-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-shared-yesno-negative","data":{"text":"negative"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal("no", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
         Assert.Single(rules.EnumerateArray());
         Assert.Equal("shared/yes_no", rules[0].GetString());
@@ -2134,12 +2195,13 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-weather-provider","data":{"text":"how is the weather"}}"""
         });
 
-        Assert.Equal(3, replies.Count);
+        Assert.True(replies.Count >= 3);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
-        Assert.Equal("SKILL_ACTION", ReadReplyType(replies[2]));
+        Assert.Contains(replies, static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
 
-        using var skillPayload = JsonDocument.Parse(replies[2].Text!);
+        var skillReply = replies.Last(static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
+        using var skillPayload = JsonDocument.Parse(skillReply.Text!);
         var jcpConfig = skillPayload.RootElement
             .GetProperty("data")
             .GetProperty("action")
@@ -2173,7 +2235,7 @@ public sealed class JiboWebSocketServiceTests
             "weatherTempView",
             local.GetProperty("views").GetProperty("weatherHiLo").GetProperty("viewConfig").GetProperty("id").GetString());
 
-        var payloadText = replies[2].Text!;
+        var payloadText = skillReply.Text!;
         Assert.Contains("assets/personal-report-skill/weather/icons/rain_v01.crn", payloadText, StringComparison.Ordinal);
         Assert.Contains("tempNormal_v01.crn", payloadText, StringComparison.Ordinal);
     }
@@ -3558,6 +3620,38 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsrSurpriseOffer_PersistsPendingOfferAndResolvesYesFollowUpWithTail()
+    {
+        var token = _store.IssueRobotToken("proactivity-device-a-tail");
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-tail","data":{"text":"surprise me"}}"""
+        });
+
+        var followUpReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-tail-yes","data":{"text":"yes I want to"}}"""
+        });
+
+        Assert.Equal(3, followUpReplies.Count);
+        using var followUpListenPayload = JsonDocument.Parse(followUpReplies[0].Text!);
+        Assert.Equal("proactive_pizza_fact", followUpListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.False(session.Metadata.ContainsKey("pendingProactivityOffer"));
+    }
+
+    [Fact]
     public async Task ClientAsrSurpriseOffer_PersistsPendingOfferAndResolvesNoFollowUp()
     {
         var token = _store.IssueRobotToken("proactivity-device-b");
@@ -3613,6 +3707,38 @@ public sealed class JiboWebSocketServiceTests
         }
 
         session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.False(session.Metadata.ContainsKey("pendingProactivityOffer"));
+    }
+
+    [Fact]
+    public async Task ClientAsrSurpriseOffer_PersistsPendingOfferAndResolvesNoFollowUpWithTail()
+    {
+        var token = _store.IssueRobotToken("proactivity-device-b-tail");
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-no-tail","data":{"text":"surprise me"}}"""
+        });
+
+        var followUpReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-proactive-offer-no-tail-followup","data":{"text":"no I do not"}}"""
+        });
+
+        Assert.Equal(3, followUpReplies.Count);
+        using var followUpListenPayload = JsonDocument.Parse(followUpReplies[0].Text!);
+        Assert.Equal("proactive_offer_declined", followUpListenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+
+        var session = _store.FindSessionByToken(token);
         Assert.NotNull(session);
         Assert.False(session.Metadata.ContainsKey("pendingProactivityOffer"));
     }

@@ -1198,7 +1198,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     id = "hiNumLabel",
                     type = "Label",
-                    text = $"{high.Value}\u00B0",
+                    text = high.Value.ToString(),
                     style = new
                     {
                         fontSize = "160",
@@ -1230,7 +1230,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     id = "loNumLabel",
                     type = "Label",
-                    text = $"{low.Value}\u00B0",
+                    text = low.Value.ToString(),
                     style = new
                     {
                         fontSize = "160",

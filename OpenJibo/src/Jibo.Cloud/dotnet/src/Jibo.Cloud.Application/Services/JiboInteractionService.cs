@@ -1000,22 +1000,49 @@ public sealed class JiboInteractionService(
         CancellationToken cancellationToken)
     {
         var preferredCategories = ResolvePreferredNewsCategories(turn, transcript);
+        var requestedHeadlineCount = MaxNewsHeadlines;
         if (newsBriefingProvider is not null)
         {
             try
             {
                 var snapshot = await newsBriefingProvider.GetBriefingAsync(
-                    new NewsBriefingRequest(preferredCategories, MaxNewsHeadlines),
+                    new NewsBriefingRequest(preferredCategories, requestedHeadlineCount),
                     cancellationToken);
 
                 if (snapshot?.Headlines.Count > 0)
                 {
-                    return BuildProviderNewsDecision(snapshot, preferredCategories);
+                    return BuildProviderNewsDecision(snapshot, preferredCategories, requestedHeadlineCount);
                 }
+
+                var fallbackBriefingWhenEmpty = randomizer.Choose(catalog.NewsBriefings);
+                return BuildNewsDecision(
+                    fallbackBriefingWhenEmpty,
+                    sourceName: null,
+                    preferredCategories.Count > 0 ? preferredCategories : null,
+                    headlineCount: null,
+                    providerDiagnostics: BuildNewsProviderDiagnostics(
+                        "provider_empty",
+                        preferredCategories,
+                        requestedHeadlineCount,
+                        snapshot?.Headlines.Count ?? 0));
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
             }
             catch
             {
                 // Provider failures should never block baseline news behavior.
+                var fallbackBriefingOnError = randomizer.Choose(catalog.NewsBriefings);
+                return BuildNewsDecision(
+                    fallbackBriefingOnError,
+                    sourceName: null,
+                    preferredCategories.Count > 0 ? preferredCategories : null,
+                    headlineCount: null,
+                    providerDiagnostics: BuildNewsProviderDiagnostics(
+                        "provider_exception",
+                        preferredCategories,
+                        requestedHeadlineCount));
             }
         }
 
@@ -1024,15 +1051,21 @@ public sealed class JiboInteractionService(
             fallbackBriefing,
             sourceName: null,
             preferredCategories.Count > 0 ? preferredCategories : null,
-            headlineCount: null);
+            headlineCount: null,
+            providerDiagnostics: BuildNewsProviderDiagnostics(
+                "provider_unavailable",
+                preferredCategories,
+                requestedHeadlineCount));
     }
 
     private static JiboInteractionDecision BuildNewsDecision(
         string spokenBriefing,
         string? sourceName,
         IReadOnlyList<string>? categories,
-        int? headlineCount)
+        int? headlineCount,
+        IReadOnlyDictionary<string, object?>? providerDiagnostics = null)
     {
+        var speakableBriefing = NormalizeNewsSpeechText(spokenBriefing);
         var payload = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
             ["skillId"] = "news",
@@ -1042,7 +1075,7 @@ public sealed class JiboInteractionService(
             ["prompt_id"] = "NewsHeadline_AN_01",
             ["prompt_sub_category"] = "AN",
             ["esml"] =
-                $"<speak><anim cat='news' meta='news-stinger' nonBlocking='true' /><break size='0.35'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeForEsml(spokenBriefing)}</es></speak>"
+                $"<speak><anim cat='news' meta='news-stinger' nonBlocking='true' /><break size='0.35'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeForEsml(speakableBriefing)}</es></speak>"
         };
 
         if (!string.IsNullOrWhiteSpace(sourceName))
@@ -1060,12 +1093,21 @@ public sealed class JiboInteractionService(
             payload["news_categories"] = categories.ToArray();
         }
 
+        if (providerDiagnostics is not null)
+        {
+            foreach (var (key, value) in providerDiagnostics)
+            {
+                payload[key] = value;
+            }
+        }
+
         return new JiboInteractionDecision("news", spokenBriefing, "news", payload);
     }
 
     private static JiboInteractionDecision BuildProviderNewsDecision(
         NewsBriefingSnapshot snapshot,
-        IReadOnlyList<string> preferredCategories)
+        IReadOnlyList<string> preferredCategories,
+        int requestedHeadlineCount)
     {
         var headlines = snapshot.Headlines
             .Where(headline => !string.IsNullOrWhiteSpace(headline.Title))
@@ -1077,7 +1119,12 @@ public sealed class JiboInteractionService(
                 "I couldn't load fresh headlines right now.",
                 snapshot.SourceName,
                 preferredCategories,
-                headlineCount: 0);
+                headlineCount: 0,
+                providerDiagnostics: BuildNewsProviderDiagnostics(
+                    "provider_empty",
+                    preferredCategories,
+                    requestedHeadlineCount,
+                    0));
         }
 
         var leadIn = BuildNewsLeadIn(snapshot.SourceName, preferredCategories);
@@ -1087,7 +1134,35 @@ public sealed class JiboInteractionService(
             spokenBriefing,
             snapshot.SourceName,
             preferredCategories,
-            headlines.Length);
+            headlines.Length,
+            providerDiagnostics: BuildNewsProviderDiagnostics(
+                "provider_success",
+                preferredCategories,
+                requestedHeadlineCount,
+                headlines.Length));
+    }
+
+    private static IReadOnlyDictionary<string, object?> BuildNewsProviderDiagnostics(
+        string status,
+        IReadOnlyList<string> preferredCategories,
+        int requestedHeadlineCount,
+        int? resolvedHeadlineCount = null)
+    {
+        var diagnostics = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["news_provider_status"] = status,
+            ["news_provider_requested_headlines"] = requestedHeadlineCount,
+            ["news_provider_preferred_categories"] = preferredCategories.Count > 0
+                ? preferredCategories.ToArray()
+                : Array.Empty<string>()
+        };
+
+        if (resolvedHeadlineCount is not null)
+        {
+            diagnostics["news_provider_resolved_headlines"] = resolvedHeadlineCount.Value;
+        }
+
+        return diagnostics;
     }
 
     private static string BuildNewsLeadIn(string? sourceName, IReadOnlyList<string> preferredCategories)
@@ -1102,6 +1177,21 @@ public sealed class JiboInteractionService(
         return string.IsNullOrWhiteSpace(sourceName)
             ? categoryLeadIn
             : $"{categoryLeadIn} Source: {sourceName}.";
+    }
+
+    private static string NormalizeNewsSpeechText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        // Expand "AI" so Nimbus TTS does not collapse it to a single "aye" sound.
+        return Regex.Replace(
+            text,
+            @"\bA\.?\s*I\.?\b",
+            "artificial intelligence",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
     private List<string> ResolvePreferredNewsCategories(TurnContext turn, string transcript)
@@ -1340,6 +1430,19 @@ public sealed class JiboInteractionService(
             if (IsNegativeReply(loweredTranscript))
             {
                 return "proactive_offer_declined";
+            }
+        }
+
+        if (isYesNoTurn)
+        {
+            if (IsAffirmativeReply(loweredTranscript))
+            {
+                return "yes";
+            }
+
+            if (IsNegativeReply(loweredTranscript))
+            {
+                return "no";
             }
         }
 
@@ -1777,14 +1880,6 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "hello", "hi", "hey"))
         {
             return "hello";
-        }
-
-        switch (isYesNoTurn)
-        {
-            case true when IsAffirmativeReply(loweredTranscript):
-                return "yes";
-            case true when IsNegativeReply(loweredTranscript):
-                return "no";
         }
 
         if (IsTimeRequest(loweredTranscript))
@@ -2252,15 +2347,99 @@ public sealed class JiboInteractionService(
     private static bool IsAffirmativeReply(string loweredTranscript)
     {
         var normalized = NormalizeCommandPhrase(loweredTranscript);
-        return normalized is "yes" or "yeah" or "yep" or "yup" or "sure" or "ok" or "okay" or "absolutely" or "please do" or "why not" ||
-               MatchesAny(normalized, "uh huh", "sounds good");
+        return TryClassifyYesNoReply(normalized) == YesNoReply.Affirmative;
     }
 
     private static bool IsNegativeReply(string loweredTranscript)
     {
         var normalized = NormalizeCommandPhrase(loweredTranscript);
-        return normalized is "no" or "nope" or "nah" or "not now" or "no thanks" or "not today" ||
-               MatchesAny(normalized, "no thank you", "maybe later");
+        return TryClassifyYesNoReply(normalized) == YesNoReply.Negative;
+    }
+
+    private static YesNoReply TryClassifyYesNoReply(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return YesNoReply.None;
+        }
+
+        var normalized = normalizedTranscript;
+        while (TryTrimLeadingAcknowledgement(normalized, out var trimmed))
+        {
+            normalized = trimmed;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return YesNoReply.None;
+        }
+
+        var tokens = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (tokens.Length == 0)
+        {
+            return YesNoReply.None;
+        }
+
+        if (YesNoNegativeLeadTokens.Contains(tokens[0]))
+        {
+            return YesNoReply.Negative;
+        }
+
+        if (YesNoAffirmativeLeadTokens.Contains(tokens[0]))
+        {
+            return YesNoReply.Affirmative;
+        }
+
+        var leadingTwo = tokens.Length >= 2 ? $"{tokens[0]} {tokens[1]}" : null;
+        if (leadingTwo is not null)
+        {
+            if (YesNoNegativeLeadPhrases.Contains(leadingTwo))
+            {
+                return YesNoReply.Negative;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(leadingTwo))
+            {
+                return YesNoReply.Affirmative;
+            }
+        }
+
+        var leadingThree = tokens.Length >= 3 ? $"{tokens[0]} {tokens[1]} {tokens[2]}" : null;
+        if (leadingThree is not null)
+        {
+            if (YesNoNegativeLeadPhrases.Contains(leadingThree))
+            {
+                return YesNoReply.Negative;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(leadingThree))
+            {
+                return YesNoReply.Affirmative;
+            }
+        }
+
+        return YesNoReply.None;
+    }
+
+    private static bool TryTrimLeadingAcknowledgement(string normalizedTranscript, out string trimmedTranscript)
+    {
+        foreach (var acknowledgement in YesNoAcknowledgementPrefixes)
+        {
+            if (string.Equals(normalizedTranscript, acknowledgement, StringComparison.Ordinal))
+            {
+                trimmedTranscript = string.Empty;
+                return true;
+            }
+
+            if (normalizedTranscript.StartsWith($"{acknowledgement} ", StringComparison.Ordinal))
+            {
+                trimmedTranscript = normalizedTranscript[(acknowledgement.Length + 1)..].TrimStart();
+                return true;
+            }
+        }
+
+        trimmedTranscript = normalizedTranscript;
+        return false;
     }
 
     private static bool IsTimeRequest(string loweredTranscript)
@@ -3983,6 +4162,13 @@ public sealed class JiboInteractionService(
         public static WeatherDateEntity None { get; } = new(null, 0, null);
     }
 
+    private enum YesNoReply
+    {
+        None = 0,
+        Affirmative = 1,
+        Negative = 2
+    }
+
     private static readonly Regex SplitAlarmPattern = new(
         @"\b(?<hour>\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)(?:[:\s,-]+(?<minute>\d{2}|[a-z\-]+(?:\s+[a-z\-]+)?))?\s*(?<ampm>a[\s\.]*m\.?|p[\s\.]*m\.?)?\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
@@ -4061,6 +4247,69 @@ public sealed class JiboInteractionService(
         "date_time",
         "day"
     ];
+
+    private static readonly string[] YesNoAcknowledgementPrefixes =
+    [
+        "uh",
+        "um",
+        "hmm",
+        "well",
+        "so",
+        "actually",
+        "honestly"
+    ];
+
+    private static readonly HashSet<string> YesNoAffirmativeLeadTokens = new(StringComparer.Ordinal)
+    {
+        "yes",
+        "yeah",
+        "yep",
+        "yup",
+        "sure",
+        "ok",
+        "okay",
+        "absolutely",
+        "affirmative",
+        "definitely",
+        "certainly",
+        "indeed"
+    };
+
+    private static readonly HashSet<string> YesNoNegativeLeadTokens = new(StringComparer.Ordinal)
+    {
+        "no",
+        "nope",
+        "nah",
+        "negative",
+        "never"
+    };
+
+    private static readonly HashSet<string> YesNoAffirmativeLeadPhrases = new(StringComparer.Ordinal)
+    {
+        "uh huh",
+        "sounds good",
+        "sure thing",
+        "why not",
+        "please do",
+        "go ahead",
+        "of course",
+        "i guess so",
+        "i think so"
+    };
+
+    private static readonly HashSet<string> YesNoNegativeLeadPhrases = new(StringComparer.Ordinal)
+    {
+        "not now",
+        "not today",
+        "not really",
+        "no thanks",
+        "no thank you",
+        "maybe later",
+        "i guess not",
+        "i do not",
+        "i dont",
+        "i don t"
+    };
 
     // Directly imported from Pegasus parser intent phrase families:
     // userLikesThing / userDislikesThing / doesUserLikeThing / doesUserDislikeThing.
