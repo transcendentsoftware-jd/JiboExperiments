@@ -220,7 +220,7 @@ static string ResolveSocketKind(string host, PathString path)
         return "openjibo";
     }
 
-    return "unknown";
+    return "neo-hub-listen"; // now it assumes all unknown requests are neo-hub. I did this so that people with custom listen servers (like myself) won't get a bunch of 404 messages when doing a HJ request. -ZaneDev (an awful programmer)
 }
 
 static string? ResolveToken(HttpRequest request)
