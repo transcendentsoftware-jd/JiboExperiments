@@ -1458,7 +1458,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("report-skill", decision.SkillName);
         Assert.NotNull(decision.SkillPayload);
         Assert.Contains("cat='weather'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("meta='rain'", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -1667,7 +1667,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(expectedLocationQuery, provider.LastRequest!.LocationQuery);
         Assert.Equal(expectedForecastOffset, provider.LastRequest.ForecastDayOffset);
         Assert.Equal(expectedIsTomorrow, provider.LastRequest.IsTomorrow);
-        Assert.Equal("chitchat-skill", decision.SkillName);
+        Assert.Equal("report-skill", decision.SkillName);
         Assert.Equal(true, decision.SkillPayload?["weather_view_enabled"]);
     }
 
@@ -1795,8 +1795,12 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
-        Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Later this week in Seattle, US, expect light rain with a high near 61 degrees Fahrenheit and a low around 52 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal(5, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal(5, provider.Requests.Count);
+        Assert.Contains("rest of this week's forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Tuesday: light rain, high 61, low 52.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Saturday: light rain, high 61, low 52.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -3024,6 +3028,7 @@ public sealed class JiboInteractionServiceTests
     private sealed class CapturingWeatherReportProvider : IWeatherReportProvider
     {
         public WeatherReportRequest? LastRequest { get; private set; }
+        public List<WeatherReportRequest> Requests { get; } = [];
 
         public WeatherReportSnapshot? Snapshot { get; init; }
 
@@ -3032,6 +3037,7 @@ public sealed class JiboInteractionServiceTests
             CancellationToken cancellationToken = default)
         {
             LastRequest = request;
+            Requests.Add(request);
             return Task.FromResult(Snapshot);
         }
     }

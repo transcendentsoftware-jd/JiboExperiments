@@ -8,6 +8,10 @@ public sealed class NewsApiOptions
 
     public string Country { get; set; } = "us";
 
+    public string Language { get; set; } = "en";
+
+    public string FallbackQuery { get; set; } = "robotics";
+
     public string[] DefaultCategories { get; set; } =
     [
         "general",

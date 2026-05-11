@@ -115,6 +115,40 @@ public sealed class ProviderCachingTests
         Assert.Equal(2, handler.GetCallCount("/v2/top-headlines"));
     }
 
+    [Fact]
+    public async Task NewsApiBriefingProvider_FallsBackToEverything_WhenTopHeadlinesAreEmpty()
+    {
+        var handler = new CountingHttpMessageHandler(message =>
+        {
+            var path = message.RequestUri?.AbsolutePath ?? string.Empty;
+            return path switch
+            {
+                "/v2/top-headlines" => JsonResponse("""{"status":"ok","articles":[]}"""),
+                "/v2/everything" => JsonResponse(
+                    """{"status":"ok","articles":[{"title":"Robotics breakthrough announced","description":"Lab unveils a new platform.","source":{"name":"Science Daily"},"url":"https://example.com/robotics"}]}"""),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound)
+            };
+        });
+        var provider = new NewsApiBriefingProvider(
+            new HttpClient(handler),
+            new NewsApiOptions
+            {
+                ApiKey = "test-key",
+                DefaultCategories = ["general"],
+                CacheTtlSeconds = 300,
+                FailureCacheTtlSeconds = 30
+            },
+            NullLogger<NewsApiBriefingProvider>.Instance);
+
+        var result = await provider.GetBriefingAsync(new NewsBriefingRequest([], 3));
+
+        Assert.NotNull(result);
+        Assert.Single(result!.Headlines);
+        Assert.Equal("Robotics breakthrough announced", result.Headlines[0].Title);
+        Assert.Equal(2, handler.GetCallCount("/v2/top-headlines"));
+        Assert.Equal(1, handler.GetCallCount("/v2/everything"));
+    }
+
     private static HttpResponseMessage JsonResponse(string body)
     {
         return new HttpResponseMessage(HttpStatusCode.OK)

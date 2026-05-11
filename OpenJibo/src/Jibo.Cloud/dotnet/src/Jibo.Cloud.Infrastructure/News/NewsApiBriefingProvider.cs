@@ -58,11 +58,13 @@ public sealed class NewsApiBriefingProvider(
                 using var response = await httpClient.GetAsync(uri, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
+                    var responseBody = await TryReadResponseBodySnippetAsync(response, cancellationToken);
                     logger.LogWarning(
-                            "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase}",
-                            category,
-                            (int)response.StatusCode,
-                            response.ReasonPhrase);
+                        "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
+                        category,
+                        (int)response.StatusCode,
+                        response.ReasonPhrase,
+                        responseBody ?? string.Empty);
                     continue;
                 }
 
@@ -160,10 +162,65 @@ public sealed class NewsApiBriefingProvider(
                 }
                 else
                 {
+                    var fallbackBody = await TryReadResponseBodySnippetAsync(broadResponse, cancellationToken);
                     logger.LogWarning(
-                        "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase}",
+                        "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
                         (int)broadResponse.StatusCode,
-                        broadResponse.ReasonPhrase);
+                        broadResponse.ReasonPhrase,
+                        fallbackBody ?? string.Empty);
+                }
+            }
+
+            if (headlines.Count == 0)
+            {
+                logger.LogInformation(
+                    "NewsAPI uncategorized headlines were empty. Falling back to everything query. Query={Query}",
+                    options.FallbackQuery);
+
+                var everythingUri = BuildEverythingUri(requestedHeadlineCount);
+                using var everythingResponse = await httpClient.GetAsync(everythingUri, cancellationToken);
+                if (everythingResponse.IsSuccessStatusCode)
+                {
+                    using var everythingStream = await everythingResponse.Content.ReadAsStreamAsync(cancellationToken);
+                    using var everythingDocument = await JsonDocument.ParseAsync(everythingStream, cancellationToken: cancellationToken);
+                    if (everythingDocument.RootElement.TryGetProperty("articles", out var everythingArticles) &&
+                        everythingArticles.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var article in everythingArticles.EnumerateArray())
+                        {
+                            var title = NormalizeHeadlineTitle(ReadString(article, "title"));
+                            if (string.IsNullOrWhiteSpace(title) || !seenTitles.Add(title))
+                            {
+                                continue;
+                            }
+
+                            var summary = ReadString(article, "description");
+                            var source = article.TryGetProperty("source", out var sourceNode) &&
+                                         sourceNode.ValueKind == JsonValueKind.Object
+                                ? ReadString(sourceNode, "name")
+                                : null;
+                            var url = ReadString(article, "url");
+                            headlines.Add(new NewsHeadline(title, summary, "general", source, url));
+
+                            if (headlines.Count >= requestedHeadlineCount)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("NewsAPI everything fallback response missing articles array.");
+                    }
+                }
+                else
+                {
+                    var everythingBody = await TryReadResponseBodySnippetAsync(everythingResponse, cancellationToken);
+                    logger.LogWarning(
+                        "NewsAPI everything fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
+                        (int)everythingResponse.StatusCode,
+                        everythingResponse.ReasonPhrase,
+                        everythingBody ?? string.Empty);
                 }
             }
 
@@ -238,6 +295,48 @@ public sealed class NewsApiBriefingProvider(
             queryParts.Select(part =>
                 $"{Uri.EscapeDataString(part.Key)}={Uri.EscapeDataString(part.Value)}"));
         return new Uri($"{baseUrl}/v2/top-headlines?{query}");
+    }
+
+    private Uri BuildEverythingUri(int headlineCount)
+    {
+        var baseUrl = options.BaseUrl.TrimEnd('/');
+        var queryParts = new List<(string Key, string Value)>
+        {
+            ("language", options.Language),
+            ("sortBy", "publishedAt"),
+            ("q", options.FallbackQuery),
+            ("pageSize", headlineCount.ToString()),
+            ("apiKey", options.ApiKey!)
+        };
+
+        var query = string.Join(
+            "&",
+            queryParts.Select(part =>
+                $"{Uri.EscapeDataString(part.Key)}={Uri.EscapeDataString(part.Value)}"));
+        return new Uri($"{baseUrl}/v2/everything?{query}");
+    }
+
+    private static async Task<string?> TryReadResponseBodySnippetAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return null;
+            }
+
+            const int maxLength = 400;
+            return body.Length <= maxLength
+                ? body
+                : body[..maxLength];
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string? ReadString(JsonElement source, string propertyName)

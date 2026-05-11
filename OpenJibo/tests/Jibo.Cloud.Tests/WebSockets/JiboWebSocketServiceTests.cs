@@ -2198,7 +2198,14 @@ public sealed class JiboWebSocketServiceTests
         Assert.True(replies.Count >= 3);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
+        Assert.Contains(replies, static reply => string.Equals(ReadReplyType(reply), "SKILL_REDIRECT", StringComparison.Ordinal));
         Assert.Contains(replies, static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        Assert.Equal(
+            "report-skill",
+            listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("skill").GetString());
+        Assert.Equal("weather", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("cloudSkill").GetString());
 
         var skillReply = replies.Last(static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
         using var skillPayload = JsonDocument.Parse(skillReply.Text!);

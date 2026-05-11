@@ -615,11 +615,16 @@ public sealed class JiboInteractionService(
             : null;
         var useCelsius = ShouldUseCelsius(turn, transcript);
         var isNextWeekForecast = IsNextWeekForecastRequest(normalizedTranscript, isRangeForecastRequest);
+        var isThisWeekForecast = IsThisWeekForecastRequest(normalizedTranscript, isRangeForecastRequest);
 
-        if (isNextWeekForecast)
+        if (isNextWeekForecast || isThisWeekForecast)
         {
+            var rangeStartOffset = 1;
+            var rangeEndOffset = isThisWeekForecast
+                ? ResolveThisWeekForecastEndOffset(referenceLocalTime)
+                : MaxWeatherForecastDayOffset;
             var weeklySnapshots = new List<(int DayOffset, WeatherReportSnapshot Snapshot)>();
-            for (var offset = 1; offset <= MaxWeatherForecastDayOffset; offset += 1)
+            for (var offset = rangeStartOffset; offset <= rangeEndOffset; offset += 1)
             {
                 WeatherReportSnapshot? weeklySnapshot;
                 try
@@ -652,12 +657,15 @@ public sealed class JiboInteractionService(
                     "I couldn't fetch the weather right now. Please try again.");
             }
 
-            var weeklySpokenReply = BuildNextWeekForecastSpokenReply(weeklySnapshots, referenceLocalTime);
+            var weeklySpokenReply = BuildWeeklyForecastSpokenReply(
+                weeklySnapshots,
+                referenceLocalTime,
+                isThisWeekForecast);
             var weeklyWeatherPayload = BuildWeatherSkillPayload(weeklySpokenReply, weeklySnapshots[0].Snapshot, referenceLocalTime);
             return new JiboInteractionDecision(
                 "weather",
                 weeklySpokenReply,
-                "chitchat-skill",
+                "report-skill",
                 SkillPayload: weeklyWeatherPayload);
         }
 
@@ -697,7 +705,7 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "weather",
             spokenReply,
-            "chitchat-skill",
+            "report-skill",
             SkillPayload: weatherPayload);
     }
 
@@ -735,9 +743,10 @@ public sealed class JiboInteractionService(
         return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
     }
 
-    private static string BuildNextWeekForecastSpokenReply(
+    private static string BuildWeeklyForecastSpokenReply(
         IReadOnlyList<(int DayOffset, WeatherReportSnapshot Snapshot)> snapshots,
-        DateTimeOffset? referenceLocalTime)
+        DateTimeOffset? referenceLocalTime,
+        bool isThisWeekForecast)
     {
         if (snapshots.Count == 0)
         {
@@ -766,7 +775,10 @@ public sealed class JiboInteractionService(
                 return $"{dayName}: {summary}, high {high}, low {low}.";
             });
 
-        return $"I can share the next five-day forecast in {location}. {string.Join(" ", segments)} Temperatures are in {unit}.";
+        var leadIn = isThisWeekForecast
+            ? $"Here's the rest of this week's forecast in {location}."
+            : $"I can share the next five-day forecast in {location}.";
+        return $"{leadIn} {string.Join(" ", segments)} Temperatures are in {unit}.";
     }
 
     private static bool IsNextWeekForecastRequest(string normalizedTranscript, bool isRangeForecastRequest)
@@ -806,6 +818,22 @@ public sealed class JiboInteractionService(
 
         return normalizedTranscript.Contains("forecast next", StringComparison.Ordinal) ||
                normalizedTranscript.Contains("forecast for next", StringComparison.Ordinal);
+    }
+
+    private static bool IsThisWeekForecastRequest(string normalizedTranscript, bool isRangeForecastRequest)
+    {
+        return isRangeForecastRequest &&
+               !string.IsNullOrWhiteSpace(normalizedTranscript) &&
+               normalizedTranscript.Contains("this week", StringComparison.Ordinal) &&
+               !normalizedTranscript.Contains("weekend", StringComparison.Ordinal);
+    }
+
+    private static int ResolveThisWeekForecastEndOffset(DateTimeOffset? referenceLocalTime)
+    {
+        var resolvedReference = referenceLocalTime ?? DateTimeOffset.UtcNow;
+        var daysUntilSunday = ((int)DayOfWeek.Sunday - (int)resolvedReference.DayOfWeek + 7) % 7;
+        var endOffset = Math.Min(MaxWeatherForecastDayOffset, daysUntilSunday);
+        return Math.Max(1, endOffset);
     }
 
     private static bool ShouldDefaultForecastToTomorrow(
