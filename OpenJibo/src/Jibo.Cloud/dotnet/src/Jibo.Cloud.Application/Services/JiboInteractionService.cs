@@ -596,7 +596,8 @@ public sealed class JiboInteractionService(
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
         var weatherDate = ResolveWeatherDateEntity(turn, transcript, referenceLocalTime);
         var normalizedTranscript = NormalizeCommandPhrase(transcript);
-        if (ShouldDefaultForecastToTomorrow(normalizedTranscript, weatherDate))
+        var isRangeForecastRequest = IsRangeForecastRequest(normalizedTranscript);
+        if (ShouldDefaultForecastToTomorrow(normalizedTranscript, weatherDate, isRangeForecastRequest))
         {
             weatherDate = new WeatherDateEntity("tomorrow", 1, "Tomorrow");
         }
@@ -613,7 +614,7 @@ public sealed class JiboInteractionService(
             ? TryResolveWeatherCoordinates(turn)
             : null;
         var useCelsius = ShouldUseCelsius(turn, transcript);
-        var isNextWeekForecast = IsNextWeekForecastRequest(normalizedTranscript);
+        var isNextWeekForecast = IsNextWeekForecastRequest(normalizedTranscript, isRangeForecastRequest);
 
         if (isNextWeekForecast)
         {
@@ -768,21 +769,52 @@ public sealed class JiboInteractionService(
         return $"I can share the next five-day forecast in {location}. {string.Join(" ", segments)} Temperatures are in {unit}.";
     }
 
-    private static bool IsNextWeekForecastRequest(string normalizedTranscript)
+    private static bool IsNextWeekForecastRequest(string normalizedTranscript, bool isRangeForecastRequest)
     {
-        if (string.IsNullOrWhiteSpace(normalizedTranscript) ||
-            !normalizedTranscript.Contains("next week", StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(normalizedTranscript) || !isRangeForecastRequest)
         {
             return false;
         }
 
-        return normalizedTranscript.Contains("forecast", StringComparison.Ordinal) ||
-               normalizedTranscript.Contains("weather", StringComparison.Ordinal);
+        if (normalizedTranscript.Contains("next week", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (!normalizedTranscript.Contains("next", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return normalizedTranscript.Contains("forecast next", StringComparison.Ordinal) ||
+               normalizedTranscript.Contains("forecast for next", StringComparison.Ordinal);
     }
 
-    private static bool ShouldDefaultForecastToTomorrow(string normalizedTranscript, WeatherDateEntity weatherDate)
+    private static bool IsRangeForecastRequest(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return false;
+        }
+
+        if (normalizedTranscript.Contains("next week", StringComparison.Ordinal) ||
+            normalizedTranscript.Contains("this week", StringComparison.Ordinal) ||
+            normalizedTranscript.Contains("weekend", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return normalizedTranscript.Contains("forecast next", StringComparison.Ordinal) ||
+               normalizedTranscript.Contains("forecast for next", StringComparison.Ordinal);
+    }
+
+    private static bool ShouldDefaultForecastToTomorrow(
+        string normalizedTranscript,
+        WeatherDateEntity weatherDate,
+        bool isRangeForecastRequest)
     {
         if (weatherDate.ForecastDayOffset > 0 ||
+            isRangeForecastRequest ||
             string.IsNullOrWhiteSpace(normalizedTranscript) ||
             !normalizedTranscript.Contains("forecast", StringComparison.Ordinal))
         {
@@ -814,6 +846,8 @@ public sealed class JiboInteractionService(
 
         return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
+            ["skillId"] = "report-skill",
+            ["cloudSkill"] = "weather",
             ["esml"] =
                 $"<speak><anim cat='weather' meta='{weatherIcon}' nonBlocking='true' /><break size='0.35'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeForEsml(spokenReply)}</es></speak>",
             ["mim_id"] = $"WeatherComment{promptToken}",

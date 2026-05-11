@@ -1462,6 +1462,7 @@ public sealed class JiboInteractionServiceTests
         Assert.NotNull(decision.SkillPayload);
         Assert.Contains("cat='weather'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("meta='rain'", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("report-skill", decision.SkillPayload["skillId"]);
         Assert.Equal("WeatherCommentRain", decision.SkillPayload["mim_id"]);
         Assert.Equal(true, decision.SkillPayload["weather_view_enabled"]);
         Assert.Equal("weatherHiLo", decision.SkillPayload["weather_view_kind"]);
@@ -1823,6 +1824,34 @@ public sealed class JiboInteractionServiceTests
         Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(provider.LastRequest);
         Assert.Equal("Seattle", provider.LastRequest!.LocationQuery);
+        Assert.Equal(5, provider.LastRequest.ForecastDayOffset);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WeatherForecastNextPhrase_WithContext_ReturnsFiveDaySummary()
+    {
+        var provider = new CapturingWeatherReportProvider
+        {
+            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+        };
+        var service = CreateService(weatherReportProvider: provider);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "what's the forecast next",
+            NormalizedTranscript = "what's the forecast next",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("weather", decision.IntentName);
+        Assert.Contains("next five-day forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Seattle, US", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(provider.LastRequest);
+        Assert.Null(provider.LastRequest!.LocationQuery);
         Assert.Equal(5, provider.LastRequest.ForecastDayOffset);
     }
 

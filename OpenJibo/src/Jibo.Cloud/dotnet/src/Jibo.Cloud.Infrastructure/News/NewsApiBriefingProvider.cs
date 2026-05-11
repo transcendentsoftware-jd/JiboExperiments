@@ -59,10 +59,10 @@ public sealed class NewsApiBriefingProvider(
                 if (!response.IsSuccessStatusCode)
                 {
                     logger.LogWarning(
-                        "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase}",
-                        category,
-                        (int)response.StatusCode,
-                        response.ReasonPhrase);
+                            "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase}",
+                            category,
+                            (int)response.StatusCode,
+                            response.ReasonPhrase);
                     continue;
                 }
 
@@ -118,6 +118,57 @@ public sealed class NewsApiBriefingProvider(
 
             if (headlines.Count == 0)
             {
+                logger.LogInformation(
+                    "NewsAPI category lookup produced no headlines. Falling back to uncategorized top headlines. Categories={Categories}",
+                    string.Join(",", categories));
+
+                var broadUri = BuildTopHeadlinesUri(category: null, requestedHeadlineCount);
+                using var broadResponse = await httpClient.GetAsync(broadUri, cancellationToken);
+                if (broadResponse.IsSuccessStatusCode)
+                {
+                    using var broadStream = await broadResponse.Content.ReadAsStreamAsync(cancellationToken);
+                    using var broadDocument = await JsonDocument.ParseAsync(broadStream, cancellationToken: cancellationToken);
+                    if (broadDocument.RootElement.TryGetProperty("articles", out var broadArticles) &&
+                        broadArticles.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var article in broadArticles.EnumerateArray())
+                        {
+                            var title = NormalizeHeadlineTitle(ReadString(article, "title"));
+                            if (string.IsNullOrWhiteSpace(title) || !seenTitles.Add(title))
+                            {
+                                continue;
+                            }
+
+                            var summary = ReadString(article, "description");
+                            var source = article.TryGetProperty("source", out var sourceNode) &&
+                                         sourceNode.ValueKind == JsonValueKind.Object
+                                ? ReadString(sourceNode, "name")
+                                : null;
+                            var url = ReadString(article, "url");
+                            headlines.Add(new NewsHeadline(title, summary, "general", source, url));
+
+                            if (headlines.Count >= requestedHeadlineCount)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("NewsAPI uncategorized fallback response missing articles array.");
+                    }
+                }
+                else
+                {
+                    logger.LogWarning(
+                        "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase}",
+                        (int)broadResponse.StatusCode,
+                        broadResponse.ReasonPhrase);
+                }
+            }
+
+            if (headlines.Count == 0)
+            {
                 SetCachedValue(briefingCache, cacheKey, null, options.FailureCacheTtlSeconds);
                 logger.LogWarning(
                     "NewsAPI returned no usable headlines. Categories={Categories} RequestedHeadlineCount={RequestedHeadlineCount}",
@@ -168,16 +219,20 @@ public sealed class NewsApiBriefingProvider(
             .Take(MaxCategories);
     }
 
-    private Uri BuildTopHeadlinesUri(string category, int headlineCount)
+    private Uri BuildTopHeadlinesUri(string? category, int headlineCount)
     {
         var baseUrl = options.BaseUrl.TrimEnd('/');
-        var queryParts = new (string Key, string Value)[]
+        var queryParts = new List<(string Key, string Value)>
         {
             ("country", options.Country),
-            ("category", category),
             ("pageSize", headlineCount.ToString()),
             ("apiKey", options.ApiKey!)
         };
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            queryParts.Add(("category", category));
+        }
+
         var query = string.Join(
             "&",
             queryParts.Select(part =>

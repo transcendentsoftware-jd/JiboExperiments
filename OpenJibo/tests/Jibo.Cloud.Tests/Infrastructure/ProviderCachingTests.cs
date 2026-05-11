@@ -77,6 +77,44 @@ public sealed class ProviderCachingTests
         Assert.Equal(1, handler.GetCallCount("/v2/top-headlines"));
     }
 
+    [Fact]
+    public async Task NewsApiBriefingProvider_FallsBackToUncategorizedHeadlines_WhenCategoryReturnsEmpty()
+    {
+        var handler = new CountingHttpMessageHandler(message =>
+        {
+            var path = message.RequestUri?.AbsolutePath ?? string.Empty;
+            if (!string.Equals(path, "/v2/top-headlines", StringComparison.OrdinalIgnoreCase))
+            {
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }
+
+            var query = message.RequestUri?.Query ?? string.Empty;
+            if (query.Contains("category=sports", StringComparison.OrdinalIgnoreCase))
+            {
+                return JsonResponse("""{"status":"ok","articles":[]}""");
+            }
+
+            return JsonResponse(
+                """{"status":"ok","articles":[{"title":"General robotics update","description":"Top story","source":{"name":"AP News"},"url":"https://example.com/general"}]}""");
+        });
+        var provider = new NewsApiBriefingProvider(
+            new HttpClient(handler),
+            new NewsApiOptions
+            {
+                ApiKey = "test-key",
+                CacheTtlSeconds = 300,
+                FailureCacheTtlSeconds = 30
+            },
+            NullLogger<NewsApiBriefingProvider>.Instance);
+
+        var result = await provider.GetBriefingAsync(new NewsBriefingRequest(["sports"], 3));
+
+        Assert.NotNull(result);
+        Assert.Single(result!.Headlines);
+        Assert.Equal("General robotics update", result.Headlines[0].Title);
+        Assert.Equal(2, handler.GetCallCount("/v2/top-headlines"));
+    }
+
     private static HttpResponseMessage JsonResponse(string body)
     {
         return new HttpResponseMessage(HttpStatusCode.OK)

@@ -2202,6 +2202,9 @@ public sealed class JiboWebSocketServiceTests
 
         var skillReply = replies.Last(static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
         using var skillPayload = JsonDocument.Parse(skillReply.Text!);
+        Assert.Equal(
+            "report-skill",
+            skillPayload.RootElement.GetProperty("data").GetProperty("skill").GetProperty("id").GetString());
         var jcpConfig = skillPayload.RootElement
             .GetProperty("data")
             .GetProperty("action")
