@@ -1458,7 +1458,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("report-skill", decision.SkillName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.NotNull(decision.SkillPayload);
         Assert.Contains("cat='weather'", decision.SkillPayload!["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
         Assert.Contains("meta='rain'", decision.SkillPayload["esml"]?.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -1667,7 +1667,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(expectedLocationQuery, provider.LastRequest!.LocationQuery);
         Assert.Equal(expectedForecastOffset, provider.LastRequest.ForecastDayOffset);
         Assert.Equal(expectedIsTomorrow, provider.LastRequest.IsTomorrow);
-        Assert.Equal("report-skill", decision.SkillName);
+        Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.Equal(true, decision.SkillPayload?["weather_view_enabled"]);
     }
 

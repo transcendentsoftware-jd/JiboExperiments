@@ -300,22 +300,6 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 DelayMs: 125));
         }
 
-        if (isReportSkillLaunch)
-        {
-            messages.Add(new SocketReplyPlan(
-                JsonSerializer.Serialize(BuildSkillRedirectPayload(
-                    transId,
-                    "report-skill",
-                    outboundIntent,
-                    outboundAsrText,
-                    outboundRules,
-                    entities)),
-                DelayMs: 75));
-            messages.Add(new SocketReplyPlan(
-                JsonSerializer.Serialize(BuildCompletionOnlySkillPayload(transId, "report-skill")),
-                DelayMs: 125));
-        }
-
         if (emitSkillActions && speak is not null)
         {
             messages.Add(new SocketReplyPlan(

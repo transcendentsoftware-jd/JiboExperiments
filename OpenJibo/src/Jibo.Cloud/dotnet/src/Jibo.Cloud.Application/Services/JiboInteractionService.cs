@@ -665,7 +665,7 @@ public sealed class JiboInteractionService(
             return new JiboInteractionDecision(
                 "weather",
                 weeklySpokenReply,
-                "report-skill",
+                "chitchat-skill",
                 SkillPayload: weeklyWeatherPayload);
         }
 
@@ -705,7 +705,7 @@ public sealed class JiboInteractionService(
         return new JiboInteractionDecision(
             "weather",
             spokenReply,
-            "report-skill",
+            "chitchat-skill",
             SkillPayload: weatherPayload);
     }
 
