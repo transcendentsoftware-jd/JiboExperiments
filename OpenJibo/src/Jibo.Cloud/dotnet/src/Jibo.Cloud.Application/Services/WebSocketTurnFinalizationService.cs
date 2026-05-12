@@ -679,6 +679,7 @@ public sealed partial class WebSocketTurnFinalizationService(
                 {
                     ["intent"] = plan.IntentName,
                     ["skillName"] = invokedSkillAction.SkillName,
+                    ["transcript"] = finalizedTurn.NormalizedTranscript ?? finalizedTurn.RawTranscript,
                     ["payload"] = invokedSkillAction.Payload
                 }),
                 cancellationToken);

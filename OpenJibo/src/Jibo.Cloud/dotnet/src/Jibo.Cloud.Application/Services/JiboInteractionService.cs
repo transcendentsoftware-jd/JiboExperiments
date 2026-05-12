@@ -594,8 +594,8 @@ public sealed class JiboInteractionService(
         CancellationToken cancellationToken)
     {
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
-        var weatherDate = ResolveWeatherDateEntity(turn, transcript, referenceLocalTime);
         var normalizedTranscript = NormalizeCommandPhrase(transcript);
+        var weatherDate = ResolveWeatherDateEntity(turn, transcript, normalizedTranscript, referenceLocalTime);
         var isRangeForecastRequest = IsRangeForecastRequest(normalizedTranscript);
         if (ShouldDefaultForecastToTomorrow(normalizedTranscript, weatherDate, isRangeForecastRequest))
         {
@@ -668,6 +668,15 @@ public sealed class JiboInteractionService(
                 weeklySnapshots[0].Snapshot,
                 weeklySegments,
                 referenceLocalTime);
+            AddWeatherRequestDiagnostics(
+                weeklyWeatherPayload,
+                transcript,
+                normalizedTranscript,
+                locationQuery,
+                weatherDate,
+                isRangeForecastRequest,
+                isThisWeekForecast,
+                isNextWeekForecast);
             return new JiboInteractionDecision(
                 "weather",
                 weeklySpokenReply,
@@ -708,6 +717,15 @@ public sealed class JiboInteractionService(
 
         var spokenReply = BuildWeatherSpokenReply(snapshot, weatherDate);
         var weatherPayload = BuildWeatherSkillPayload(spokenReply, snapshot, referenceLocalTime);
+        AddWeatherRequestDiagnostics(
+            weatherPayload,
+            transcript,
+            normalizedTranscript,
+            locationQuery,
+            weatherDate,
+            isRangeForecastRequest,
+            isThisWeekForecast,
+            isNextWeekForecast);
         return new JiboInteractionDecision(
             "weather",
             spokenReply,
@@ -833,6 +851,26 @@ public sealed class JiboInteractionService(
             })
             .ToArray();
         return payload;
+    }
+
+    private static void AddWeatherRequestDiagnostics(
+        IDictionary<string, object?> payload,
+        string transcript,
+        string normalizedTranscript,
+        string? locationQuery,
+        WeatherDateEntity weatherDate,
+        bool isRangeForecastRequest,
+        bool isThisWeekForecast,
+        bool isNextWeekForecast)
+    {
+        payload["weather_request_transcript"] = transcript;
+        payload["weather_request_normalized"] = normalizedTranscript;
+        payload["weather_request_location_query"] = locationQuery;
+        payload["weather_request_date_entity"] = weatherDate.DateEntity;
+        payload["weather_request_forecast_day_offset"] = weatherDate.ForecastDayOffset;
+        payload["weather_request_range"] = isRangeForecastRequest;
+        payload["weather_request_this_week"] = isThisWeekForecast;
+        payload["weather_request_next_week"] = isNextWeekForecast;
     }
 
     private static bool IsNextWeekForecastRequest(string normalizedTranscript, bool isRangeForecastRequest)
@@ -2987,45 +3025,133 @@ public sealed class JiboInteractionService(
     private static WeatherDateEntity ResolveWeatherDateEntity(
         TurnContext turn,
         string transcript,
+        string normalizedTranscript,
         DateTimeOffset? referenceLocalTime)
     {
+        normalizedTranscript = string.IsNullOrWhiteSpace(normalizedTranscript)
+            ? NormalizeCommandPhrase(transcript)
+            : normalizedTranscript;
+
+        if (TryResolveWeatherDateEntityFromTranscript(normalizedTranscript, referenceLocalTime, out var entityFromTranscript))
+        {
+            return entityFromTranscript;
+        }
+
         var entities = ReadEntities(turn);
-        if (TryResolveWeatherDateEntityFromClientEntities(entities, referenceLocalTime, out var entityFromClient))
+        if (TryResolveWeatherDateEntityFromClientEntities(entities, referenceLocalTime, out var entityFromClient) &&
+            ShouldAcceptClientWeatherDateEntity(normalizedTranscript))
         {
             return entityFromClient;
         }
 
-        var normalized = NormalizeCommandPhrase(transcript);
-        if (string.IsNullOrWhiteSpace(normalized))
+        return WeatherDateEntity.None;
+    }
+
+    private static bool TryResolveWeatherDateEntityFromTranscript(
+        string normalizedTranscript,
+        DateTimeOffset? referenceLocalTime,
+        out WeatherDateEntity weatherDate)
+    {
+        weatherDate = WeatherDateEntity.None;
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
         {
-            return WeatherDateEntity.None;
+            return false;
         }
 
-        if (normalized.Contains("day after tomorrow", StringComparison.Ordinal))
+        if (normalizedTranscript.Contains("day after tomorrow", StringComparison.Ordinal))
         {
-            return new WeatherDateEntity("day_after_tomorrow", 2, "The day after tomorrow");
+            weatherDate = new WeatherDateEntity("day_after_tomorrow", 2, "The day after tomorrow");
+            return true;
         }
 
-        if (MatchesAny(normalized, "tomorrow", "tomorrow s", "tomorrow's"))
+        if (MatchesAny(normalizedTranscript, "tomorrow", "tomorrow s", "tomorrow's"))
         {
-            return new WeatherDateEntity("tomorrow", 1, "Tomorrow");
+            weatherDate = new WeatherDateEntity("tomorrow", 1, "Tomorrow");
+            return true;
         }
 
         if (referenceLocalTime is not null &&
-            TryResolveWeatherTimeRangeOffset(normalized, referenceLocalTime.Value, out var rangeOffset, out var rangeLeadIn) &&
+            TryResolveWeatherTimeRangeOffset(normalizedTranscript, referenceLocalTime.Value, out var rangeOffset, out var rangeLeadIn) &&
             rangeOffset > 0)
         {
-            return new WeatherDateEntity("range", rangeOffset, rangeLeadIn);
+            weatherDate = new WeatherDateEntity("range", rangeOffset, rangeLeadIn);
+            return true;
         }
 
         if (referenceLocalTime is not null &&
-            TryResolveWeatherDayOfWeekOffset(normalized, referenceLocalTime.Value, out var dayOffset, out var dayName) &&
+            TryResolveWeatherDayOfWeekOffset(normalizedTranscript, referenceLocalTime.Value, out var dayOffset, out var dayName) &&
             dayOffset > 0)
         {
-            return new WeatherDateEntity("weekday", dayOffset, $"On {dayName}");
+            weatherDate = new WeatherDateEntity("weekday", dayOffset, $"On {dayName}");
+            return true;
         }
 
-        return WeatherDateEntity.None;
+        return false;
+    }
+
+    private static bool ShouldAcceptClientWeatherDateEntity(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return true;
+        }
+
+        if (HasExplicitWeatherDateCue(normalizedTranscript))
+        {
+            return false;
+        }
+
+        if (HasWeatherLocationClause(normalizedTranscript))
+        {
+            return false;
+        }
+
+        return !normalizedTranscript.Contains("forecast", StringComparison.Ordinal);
+    }
+
+    private static bool HasExplicitWeatherDateCue(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return false;
+        }
+
+        if (MatchesAny(
+                normalizedTranscript,
+                "today",
+                "today s",
+                "today's",
+                "tonight",
+                "tomorrow",
+                "tomorrow s",
+                "tomorrow's",
+                "day after tomorrow",
+                "this week",
+                "next week",
+                "weekend",
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"))
+        {
+            return true;
+        }
+
+        return WeatherDayOfWeekPattern.IsMatch(normalizedTranscript);
+    }
+
+    private static bool HasWeatherLocationClause(string normalizedTranscript)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript))
+        {
+            return false;
+        }
+
+        return WeatherTopicLocationPattern.IsMatch(normalizedTranscript) ||
+               WeatherLocationPattern.IsMatch(normalizedTranscript);
     }
 
     private static bool TryResolveWeatherDateEntityFromClientEntities(
