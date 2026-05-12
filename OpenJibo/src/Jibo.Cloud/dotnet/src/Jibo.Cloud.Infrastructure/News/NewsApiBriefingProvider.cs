@@ -51,6 +51,30 @@ public sealed class NewsApiBriefingProvider(
 
             var headlines = new List<NewsHeadline>(requestedHeadlineCount);
             var seenTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string? failureStatus = null;
+            string? failureMessage = null;
+            int? failureStatusCode = null;
+            string? failureEndpoint = null;
+            string? failureErrorCode = null;
+
+            void CaptureFailure(
+                string status,
+                string? message,
+                int? statusCode,
+                Uri? endpoint,
+                string? errorCode = null)
+            {
+                if (!string.IsNullOrWhiteSpace(failureStatus))
+                {
+                    return;
+                }
+
+                failureStatus = status;
+                failureMessage = message;
+                failureStatusCode = statusCode;
+                failureEndpoint = endpoint is null ? null : SanitizeEndpoint(endpoint);
+                failureErrorCode = errorCode;
+            }
 
             foreach (var category in categories)
             {
@@ -59,6 +83,11 @@ public sealed class NewsApiBriefingProvider(
                 if (!response.IsSuccessStatusCode)
                 {
                     var responseBody = await TryReadResponseBodySnippetAsync(response, cancellationToken);
+                    CaptureFailure(
+                        "http_error",
+                        $"Category '{category}' returned {(int)response.StatusCode} {response.ReasonPhrase}.",
+                        (int)response.StatusCode,
+                        uri);
                     logger.LogWarning(
                         "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
                         category,
@@ -74,6 +103,12 @@ public sealed class NewsApiBriefingProvider(
                     statusNode.ValueKind == JsonValueKind.String &&
                     !string.Equals(statusNode.GetString(), "ok", StringComparison.OrdinalIgnoreCase))
                 {
+                    CaptureFailure(
+                        "api_error",
+                        ReadString(document.RootElement, "message"),
+                        null,
+                        uri,
+                        ReadString(document.RootElement, "code"));
                     logger.LogWarning(
                         "NewsAPI returned non-ok status for category {Category}. Status={Status} Code={Code} Message={Message}",
                         category,
@@ -85,6 +120,11 @@ public sealed class NewsApiBriefingProvider(
                 if (!document.RootElement.TryGetProperty("articles", out var articles) ||
                     articles.ValueKind != JsonValueKind.Array)
                 {
+                    CaptureFailure(
+                        "schema_error",
+                        $"Category '{category}' response did not include an articles array.",
+                        null,
+                        uri);
                     logger.LogWarning("NewsAPI response missing articles array for category {Category}.", category);
                     continue;
                 }
@@ -107,7 +147,10 @@ public sealed class NewsApiBriefingProvider(
 
                     if (headlines.Count >= requestedHeadlineCount)
                     {
-                        var snapshot = new NewsBriefingSnapshot(headlines, "NewsAPI");
+                        var snapshot = new NewsBriefingSnapshot(
+                            headlines,
+                            "NewsAPI",
+                            ProviderStatus: "success");
                         SetCachedValue(briefingCache, cacheKey, snapshot, options.CacheTtlSeconds);
                         logger.LogInformation(
                             "NewsAPI request succeeded. Categories={Categories} HeadlineCount={HeadlineCount}",
@@ -157,12 +200,22 @@ public sealed class NewsApiBriefingProvider(
                     }
                     else
                     {
+                        CaptureFailure(
+                            "schema_error",
+                            "Uncategorized fallback response did not include an articles array.",
+                            null,
+                            broadUri);
                         logger.LogWarning("NewsAPI uncategorized fallback response missing articles array.");
                     }
                 }
                 else
                 {
                     var fallbackBody = await TryReadResponseBodySnippetAsync(broadResponse, cancellationToken);
+                    CaptureFailure(
+                        "http_error",
+                        $"Uncategorized fallback returned {(int)broadResponse.StatusCode} {broadResponse.ReasonPhrase}.",
+                        (int)broadResponse.StatusCode,
+                        broadUri);
                     logger.LogWarning(
                         "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
                         (int)broadResponse.StatusCode,
@@ -210,12 +263,22 @@ public sealed class NewsApiBriefingProvider(
                     }
                     else
                     {
+                        CaptureFailure(
+                            "schema_error",
+                            "Everything fallback response did not include an articles array.",
+                            null,
+                            everythingUri);
                         logger.LogWarning("NewsAPI everything fallback response missing articles array.");
                     }
                 }
                 else
                 {
                     var everythingBody = await TryReadResponseBodySnippetAsync(everythingResponse, cancellationToken);
+                    CaptureFailure(
+                        "http_error",
+                        $"Everything fallback returned {(int)everythingResponse.StatusCode} {everythingResponse.ReasonPhrase}.",
+                        (int)everythingResponse.StatusCode,
+                        everythingUri);
                     logger.LogWarning(
                         "NewsAPI everything fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
                         (int)everythingResponse.StatusCode,
@@ -226,15 +289,26 @@ public sealed class NewsApiBriefingProvider(
 
             if (headlines.Count == 0)
             {
-                SetCachedValue(briefingCache, cacheKey, null, options.FailureCacheTtlSeconds);
+                var emptySnapshot = new NewsBriefingSnapshot(
+                    Array.Empty<NewsHeadline>(),
+                    "NewsAPI",
+                    ProviderStatus: failureStatus ?? "empty",
+                    ProviderMessage: failureMessage ?? "NewsAPI returned no usable headlines.",
+                    ProviderHttpStatusCode: failureStatusCode,
+                    ProviderEndpoint: failureEndpoint,
+                    ProviderErrorCode: failureErrorCode);
+                SetCachedValue(briefingCache, cacheKey, emptySnapshot, options.FailureCacheTtlSeconds);
                 logger.LogWarning(
                     "NewsAPI returned no usable headlines. Categories={Categories} RequestedHeadlineCount={RequestedHeadlineCount}",
                     string.Join(",", categories),
                     requestedHeadlineCount);
-                return null;
+                return emptySnapshot;
             }
 
-            var populatedSnapshot = new NewsBriefingSnapshot(headlines, "NewsAPI");
+            var populatedSnapshot = new NewsBriefingSnapshot(
+                headlines,
+                "NewsAPI",
+                ProviderStatus: "success");
             SetCachedValue(briefingCache, cacheKey, populatedSnapshot, options.CacheTtlSeconds);
             logger.LogInformation(
                 "NewsAPI request partially filled headlines. Categories={Categories} HeadlineCount={HeadlineCount} RequestedHeadlineCount={RequestedHeadlineCount}",
@@ -246,11 +320,16 @@ public sealed class NewsApiBriefingProvider(
         catch (Exception exception)
         {
             logger.LogWarning(exception, "NewsAPI lookup failed.");
+            var exceptionSnapshot = new NewsBriefingSnapshot(
+                Array.Empty<NewsHeadline>(),
+                "NewsAPI",
+                ProviderStatus: "exception",
+                ProviderMessage: exception.Message);
             if (!string.IsNullOrWhiteSpace(cacheKey))
             {
-                SetCachedValue(briefingCache, cacheKey, null, options.FailureCacheTtlSeconds);
+                SetCachedValue(briefingCache, cacheKey, exceptionSnapshot, options.FailureCacheTtlSeconds);
             }
-            return null;
+            return exceptionSnapshot;
         }
     }
 
@@ -363,6 +442,26 @@ public sealed class NewsApiBriefingProvider(
         }
 
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+    }
+
+    private static string SanitizeEndpoint(Uri uri)
+    {
+        var path = uri.GetLeftPart(UriPartial.Path);
+        if (string.IsNullOrWhiteSpace(uri.Query))
+        {
+            return path;
+        }
+
+        var filtered = uri.Query
+            .TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Where(static pair =>
+            {
+                var key = pair.Split('=', 2)[0];
+                return !string.Equals(key, "apiKey", StringComparison.OrdinalIgnoreCase);
+            });
+        var safeQuery = string.Join("&", filtered);
+        return string.IsNullOrWhiteSpace(safeQuery) ? path : $"{path}?{safeQuery}";
     }
 
     private string BuildCacheKey(IReadOnlyList<string> categories, int requestedHeadlineCount)

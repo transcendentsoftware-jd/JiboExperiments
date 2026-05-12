@@ -690,6 +690,10 @@ public sealed partial class WebSocketTurnFinalizationService(
                 invokedSkillAction.Payload.TryGetValue("news_provider_resolved_headlines", out var resolvedHeadlines);
                 invokedSkillAction.Payload.TryGetValue("news_provider_preferred_categories", out var preferredCategories);
                 invokedSkillAction.Payload.TryGetValue("news_source", out var newsSource);
+                invokedSkillAction.Payload.TryGetValue("news_provider_message", out var providerMessage);
+                invokedSkillAction.Payload.TryGetValue("news_provider_http_status", out var providerHttpStatus);
+                invokedSkillAction.Payload.TryGetValue("news_provider_endpoint", out var providerEndpoint);
+                invokedSkillAction.Payload.TryGetValue("news_provider_error_code", out var providerErrorCode);
 
                 await sink.RecordTurnDiagnosticAsync(
                     "news_provider_trace",
@@ -701,7 +705,11 @@ public sealed partial class WebSocketTurnFinalizationService(
                         ["requestedHeadlines"] = requestedHeadlines,
                         ["resolvedHeadlines"] = resolvedHeadlines,
                         ["preferredCategories"] = preferredCategories,
-                        ["source"] = newsSource
+                        ["source"] = newsSource,
+                        ["providerMessage"] = providerMessage,
+                        ["providerHttpStatus"] = providerHttpStatus,
+                        ["providerEndpoint"] = providerEndpoint,
+                        ["providerErrorCode"] = providerErrorCode
                     }),
                     cancellationToken);
             }

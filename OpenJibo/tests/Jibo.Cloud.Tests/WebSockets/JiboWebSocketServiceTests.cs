@@ -2232,6 +2232,9 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(
             "weatherTempView",
             display.GetProperty("view").GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
+        Assert.Equal(
+            "weatherTempView",
+            display.GetProperty("view").GetProperty("context").GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
 
         Assert.True(jcpConfig.TryGetProperty("views", out var views));
         var weatherHiLo = views.GetProperty("weatherHiLo");

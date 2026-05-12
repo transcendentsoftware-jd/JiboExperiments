@@ -719,7 +719,7 @@ public sealed class JiboInteractionService(
             : snapshot.Summary.Trim().TrimEnd('.');
         var location = string.IsNullOrWhiteSpace(snapshot.LocationName)
             ? "your area"
-            : snapshot.LocationName;
+            : NormalizeLocationForSpeech(snapshot.LocationName);
 
         if (weatherDate.ForecastDayOffset > 0)
         {
@@ -757,6 +757,10 @@ public sealed class JiboInteractionService(
         if (string.IsNullOrWhiteSpace(location))
         {
             location = "your area";
+        }
+        else
+        {
+            location = NormalizeLocationForSpeech(location);
         }
 
         var unit = snapshots[0].Snapshot.UseCelsius ? "Celsius" : "Fahrenheit";
@@ -1076,6 +1080,12 @@ public sealed class JiboInteractionService(
                     return BuildProviderNewsDecision(snapshot, preferredCategories, requestedHeadlineCount);
                 }
 
+                var providerStatus = ResolveNewsProviderStatus(snapshot);
+                var providerMessage = snapshot?.ProviderMessage;
+                var providerEndpoint = snapshot?.ProviderEndpoint;
+                var providerHttpStatusCode = snapshot?.ProviderHttpStatusCode;
+                var providerErrorCode = snapshot?.ProviderErrorCode;
+
                 var fallbackBriefingWhenEmpty = randomizer.Choose(catalog.NewsBriefings);
                 return BuildNewsDecision(
                     fallbackBriefingWhenEmpty,
@@ -1083,10 +1093,14 @@ public sealed class JiboInteractionService(
                     preferredCategories.Count > 0 ? preferredCategories : null,
                     headlineCount: null,
                     providerDiagnostics: BuildNewsProviderDiagnostics(
-                        "provider_empty",
+                        providerStatus,
                         preferredCategories,
                         requestedHeadlineCount,
-                        snapshot?.Headlines.Count ?? 0));
+                        snapshot?.Headlines.Count ?? 0,
+                        providerMessage,
+                        providerHttpStatusCode,
+                        providerEndpoint,
+                        providerErrorCode));
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -1208,7 +1222,11 @@ public sealed class JiboInteractionService(
         string status,
         IReadOnlyList<string> preferredCategories,
         int requestedHeadlineCount,
-        int? resolvedHeadlineCount = null)
+        int? resolvedHeadlineCount = null,
+        string? providerMessage = null,
+        int? providerHttpStatusCode = null,
+        string? providerEndpoint = null,
+        string? providerErrorCode = null)
     {
         var diagnostics = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
         {
@@ -1224,7 +1242,39 @@ public sealed class JiboInteractionService(
             diagnostics["news_provider_resolved_headlines"] = resolvedHeadlineCount.Value;
         }
 
+        if (!string.IsNullOrWhiteSpace(providerMessage))
+        {
+            diagnostics["news_provider_message"] = providerMessage;
+        }
+
+        if (providerHttpStatusCode is not null)
+        {
+            diagnostics["news_provider_http_status"] = providerHttpStatusCode.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(providerEndpoint))
+        {
+            diagnostics["news_provider_endpoint"] = providerEndpoint;
+        }
+
+        if (!string.IsNullOrWhiteSpace(providerErrorCode))
+        {
+            diagnostics["news_provider_error_code"] = providerErrorCode;
+        }
+
         return diagnostics;
+    }
+
+    private static string ResolveNewsProviderStatus(NewsBriefingSnapshot? snapshot)
+    {
+        var providerStatus = snapshot?.ProviderStatus?.Trim().ToLowerInvariant();
+        return providerStatus switch
+        {
+            "success" => "provider_success",
+            "exception" => "provider_exception",
+            "http_error" or "api_error" or "schema_error" => "provider_error",
+            _ => "provider_empty"
+        };
     }
 
     private static string BuildNewsLeadIn(string? sourceName, IReadOnlyList<string> preferredCategories)
@@ -1249,11 +1299,35 @@ public sealed class JiboInteractionService(
         }
 
         // Expand "AI" so Nimbus TTS does not collapse it to a single "aye" sound.
-        return Regex.Replace(
+        var normalized = Regex.Replace(
             text,
             @"\bA\.?\s*I\.?\b",
             "artificial intelligence",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        return NormalizeLocationForSpeech(normalized);
+    }
+
+    private static string NormalizeLocationForSpeech(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        return Regex.Replace(
+            text,
+            @"\b(?<token>[A-Z]{2,3})\b",
+            static match =>
+            {
+                var token = match.Groups["token"].Value;
+                if (!SpokenAbbreviationTokens.Contains(token))
+                {
+                    return token;
+                }
+
+                return string.Join(".", token.ToCharArray()) + ".";
+            },
+            RegexOptions.CultureInvariant);
     }
 
     private List<string> ResolvePreferredNewsCategories(TurnContext turn, string transcript)
@@ -4484,6 +4558,66 @@ public sealed class JiboInteractionService(
         "this neighbourhood",
         "our neighborhood",
         "our neighbourhood"
+    };
+
+    private static readonly HashSet<string> SpokenAbbreviationTokens = new(StringComparer.Ordinal)
+    {
+        "US",
+        "USA",
+        "UK",
+        "UAE",
+        "EU",
+        "DC",
+        "AL",
+        "AK",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "ID",
+        "IL",
+        "IN",
+        "IA",
+        "KS",
+        "KY",
+        "LA",
+        "ME",
+        "MD",
+        "MA",
+        "MI",
+        "MN",
+        "MS",
+        "MO",
+        "MT",
+        "NE",
+        "NV",
+        "NH",
+        "NJ",
+        "NM",
+        "NY",
+        "NC",
+        "ND",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VT",
+        "VA",
+        "WA",
+        "WV",
+        "WI",
+        "WY"
     };
 
     private const string GreetingRouteMetadataKey = "greetingsRoute";

@@ -1267,7 +1267,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Boston, US", "light rain", 61, 65, 54, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Boston, U.S.", "light rain", 61, 65, 54, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1284,7 +1284,7 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("personal_report_delivered", decision.IntentName);
         Assert.Contains("Great, alex. Here is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Right now in Boston, U.S., it is light rain and 61 degrees Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("That is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(decision.ContextUpdates);
         Assert.Equal("idle", decision.ContextUpdates![PersonalReportStateKey]);
@@ -1447,7 +1447,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Boston, US", "light rain", 61, 65, 54, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Boston, U.S.", "light rain", 61, 65, 54, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1471,7 +1471,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(54, decision.SkillPayload["weather_low"]);
         Assert.Equal("F", decision.SkillPayload["weather_unit"]);
         Assert.Equal("Normal", decision.SkillPayload["weather_theme"]);
-        Assert.Equal("Right now in Boston, US, it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Right now in Boston, U.S., it is light rain and 61 degrees Fahrenheit.", decision.ReplyText);
         Assert.NotNull(provider.LastRequest);
         Assert.False(provider.LastRequest!.IsTomorrow);
         Assert.Equal(0, provider.LastRequest.ForecastDayOffset);
@@ -1482,7 +1482,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Chicago, US", "mostly cloudy", 72, 74, 60, "cloudy", false)
+            Snapshot = new WeatherReportSnapshot("Chicago, U.S.", "mostly cloudy", 72, 74, 60, "cloudy", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1496,7 +1496,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Tomorrow in Chicago, U.S., expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1504,7 +1504,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Seattle, U.S.", "light rain", 58, 61, 52, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1518,7 +1518,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Right now in Seattle, US, it is light rain and 58 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Right now in Seattle, U.S., it is light rain and 58 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1548,7 +1548,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Redmond, US", "clear sky", 63, 66, 52, "sunny", false)
+            Snapshot = new WeatherReportSnapshot("Redmond, U.S.", "clear sky", 63, 66, 52, "sunny", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1562,7 +1562,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Redmond Oregon", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Right now in Redmond, US, it is clear sky and 63 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Right now in Redmond, U.S., it is clear sky and 63 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1570,7 +1570,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("New York, US", "partly cloudy", 71, 76, 61, "cloudy", false)
+            Snapshot = new WeatherReportSnapshot("New York, U.S.", "partly cloudy", 71, 76, 61, "cloudy", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1584,7 +1584,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("New York City", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in New York, US, expect partly cloudy with a high near 76 degrees Fahrenheit and a low around 61 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Tomorrow in New York, U.S., expect partly cloudy with a high near 76 degrees Fahrenheit and a low around 61 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1592,7 +1592,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Kansas City, US", "clear sky", 72, 79, 63, "sunny", false)
+            Snapshot = new WeatherReportSnapshot("Kansas City, U.S.", "clear sky", 72, 79, 63, "sunny", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1606,7 +1606,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Null(provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in Kansas City, US, expect clear sky with a high near 79 degrees Fahrenheit and a low around 63 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Tomorrow in Kansas City, U.S., expect clear sky with a high near 79 degrees Fahrenheit and a low around 63 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1614,7 +1614,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Chicago, US", "mostly cloudy", 70, 75, 62, "cloudy", false)
+            Snapshot = new WeatherReportSnapshot("Chicago, U.S.", "mostly cloudy", 70, 75, 62, "cloudy", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1632,7 +1632,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Null(provider.LastRequest?.Latitude);
         Assert.Null(provider.LastRequest?.Longitude);
-        Assert.Equal("Right now in Chicago, US, it is mostly cloudy and 70 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Right now in Chicago, U.S., it is mostly cloudy and 70 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Theory]
@@ -1652,7 +1652,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Test City, US", "light rain", 62, 66, 55, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Test City, U.S.", "light rain", 62, 66, 55, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1676,7 +1676,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Portland, US", "scattered clouds", 64, 68, 53, "cloudy", false)
+            Snapshot = new WeatherReportSnapshot("Portland, U.S.", "scattered clouds", 64, 68, 53, "cloudy", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1697,7 +1697,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
         Assert.False(provider.LastRequest?.IsTomorrow);
-        Assert.Equal("On Monday in Portland, US, expect scattered clouds with a high near 68 degrees Fahrenheit and a low around 53 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("On Monday in Portland, U.S., expect scattered clouds with a high near 68 degrees Fahrenheit and a low around 53 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1705,7 +1705,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Chicago, US", "light rain", 59, 63, 51, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Chicago, U.S.", "light rain", 59, 63, 51, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1722,7 +1722,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("On Tuesday in Chicago, US, expect light rain with a high near 63 degrees Fahrenheit and a low around 51 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("On Tuesday in Chicago, U.S., expect light rain with a high near 63 degrees Fahrenheit and a low around 51 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -1730,7 +1730,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Chicago, US", "light rain", 59, 63, 51, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Chicago, U.S.", "light rain", 59, 63, 51, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1779,7 +1779,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Seattle, U.S.", "light rain", 58, 61, 52, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1808,7 +1808,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Seattle, U.S.", "light rain", 58, 61, 52, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1824,7 +1824,7 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("weather", decision.IntentName);
         Assert.Contains("next five-day forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Seattle, US", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Seattle, U.S.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(provider.LastRequest);
         Assert.Equal("Seattle", provider.LastRequest!.LocationQuery);
@@ -1836,7 +1836,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)
+            Snapshot = new WeatherReportSnapshot("Seattle, U.S.", "light rain", 58, 61, 52, "rain", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1852,7 +1852,7 @@ public sealed class JiboInteractionServiceTests
 
         Assert.Equal("weather", decision.IntentName);
         Assert.Contains("next five-day forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Seattle, US", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Seattle, U.S.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(provider.LastRequest);
         Assert.Null(provider.LastRequest!.LocationQuery);
@@ -1864,7 +1864,7 @@ public sealed class JiboInteractionServiceTests
     {
         var provider = new CapturingWeatherReportProvider
         {
-            Snapshot = new WeatherReportSnapshot("Chicago, US", "mostly cloudy", 72, 74, 60, "cloudy", false)
+            Snapshot = new WeatherReportSnapshot("Chicago, U.S.", "mostly cloudy", 72, 74, 60, "cloudy", false)
         };
         var service = CreateService(weatherReportProvider: provider);
 
@@ -1881,7 +1881,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("The day after tomorrow in Chicago, US, expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("The day after tomorrow in Chicago, U.S., expect mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]

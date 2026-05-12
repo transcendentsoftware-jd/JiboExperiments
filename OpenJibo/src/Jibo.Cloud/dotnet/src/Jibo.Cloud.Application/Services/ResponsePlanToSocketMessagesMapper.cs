@@ -808,7 +808,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var weatherHiLoView = BuildWeatherHiLoView(skillPayload);
         if (weatherHiLoView is not null)
         {
-            var resolvedGuiConfig = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            var resolvedGuiContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
                 ["type"] = "Javascript",
                 ["data"] = weatherHiLoView,
@@ -825,7 +825,15 @@ public sealed class ResponsePlanToSocketMessagesMapper
             jcpConfig["gui"] = legacyGuiConfig;
             jcpConfig["display"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
             {
-                ["view"] = resolvedGuiConfig
+                ["view"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                {
+                    // Legacy fields used by existing tests and tooling.
+                    ["type"] = "Javascript",
+                    ["data"] = weatherHiLoView,
+                    ["pause"] = true,
+                    // Pegasus-style view context used by on-robot weather cards.
+                    ["context"] = resolvedGuiContext
+                }
             };
 
             jcpConfig["timeout"] = 6;
@@ -1182,7 +1190,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     id = "hiNumLabel",
                     type = "Label",
-                    text = high.Value.ToString(),
+                    text = $"{high.Value}°",
                     style = new
                     {
                         fontSize = "160",
@@ -1214,7 +1222,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     id = "loNumLabel",
                     type = "Label",
-                    text = low.Value.ToString(),
+                    text = $"{low.Value}°",
                     style = new
                     {
                         fontSize = "160",

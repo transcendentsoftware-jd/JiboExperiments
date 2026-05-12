@@ -20,4 +20,9 @@ public sealed record NewsHeadline(
 
 public sealed record NewsBriefingSnapshot(
     IReadOnlyList<NewsHeadline> Headlines,
-    string? SourceName = null);
+    string? SourceName = null,
+    string? ProviderStatus = null,
+    string? ProviderMessage = null,
+    int? ProviderHttpStatusCode = null,
+    string? ProviderEndpoint = null,
+    string? ProviderErrorCode = null);
