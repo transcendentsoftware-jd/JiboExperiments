@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Runtime.Abstractions;
 
@@ -805,7 +806,14 @@ public sealed class ResponsePlanToSocketMessagesMapper
             };
         }
 
-        var weatherHiLoView = BuildWeatherHiLoView(skillPayload);
+        object? weatherHiLoView = BuildWeatherHiLoView(skillPayload);
+        var weeklyWeatherCards = BuildWeatherHiLoSequenceCards(skillPayload);
+        if (weatherHiLoView is null && weeklyWeatherCards.Count > 0)
+        {
+            weatherHiLoView = weeklyWeatherCards[0].View;
+        }
+
+        var useWeatherSequence = false;
         if (weatherHiLoView is not null)
         {
             var resolvedGuiContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
@@ -853,6 +861,30 @@ public sealed class ResponsePlanToSocketMessagesMapper
             {
                 ["views"] = weatherViews
             };
+
+            if (weeklyWeatherCards.Count > 1)
+            {
+                useWeatherSequence = true;
+                jcpConfig["children"] = BuildWeatherHiLoSequenceChildren(
+                    weeklyWeatherCards,
+                    promptSubCategory,
+                    mimId,
+                    mimType);
+            }
+        }
+
+        var jcp = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["type"] = "SLIM",
+            ["config"] = jcpConfig
+        };
+        if (useWeatherSequence &&
+            jcpConfig.TryGetValue("children", out var sequenceChildren) &&
+            sequenceChildren is not null)
+        {
+            jcp["type"] = "SEQUENCE";
+            jcp.Remove("config");
+            jcp["children"] = sequenceChildren;
         }
 
         return new
@@ -871,11 +903,7 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 {
                     config = new
                     {
-                        jcp = new
-                        {
-                            type = "SLIM",
-                            config = jcpConfig
-                        }
+                        jcp
                     }
                 },
                 analytics = new Dictionary<string, object?>(),
@@ -1103,6 +1131,184 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 .Select(static context => context!)],
             _ => string.IsNullOrWhiteSpace(value.ToString()) ? [] : [value.ToString()!]
         };
+    }
+
+    private static IReadOnlyList<WeatherHiLoSequenceCard> BuildWeatherHiLoSequenceCards(IDictionary<string, object?>? payload)
+    {
+        if (payload is null ||
+            !payload.TryGetValue("weather_weekly_cards", out var rawCards) ||
+            rawCards is null)
+        {
+            return [];
+        }
+
+        var cards = ReadPayloadObjectArray(rawCards);
+        if (cards.Count == 0)
+        {
+            return [];
+        }
+
+        var sequenceCards = new List<WeatherHiLoSequenceCard>(cards.Count);
+        foreach (var card in cards)
+        {
+            var weatherCardPayload = new Dictionary<string, object?>(card, StringComparer.OrdinalIgnoreCase)
+            {
+                ["weather_view_enabled"] = true,
+                ["weather_view_kind"] = "weatherHiLo"
+            };
+            var view = BuildWeatherHiLoView(weatherCardPayload);
+            if (view is null)
+            {
+                continue;
+            }
+
+            sequenceCards.Add(new WeatherHiLoSequenceCard(
+                view,
+                ReadPayloadString(weatherCardPayload, "weather_day"),
+                ReadPayloadString(weatherCardPayload, "weather_icon"),
+                ReadPayloadString(weatherCardPayload, "weather_spoken_line")));
+        }
+
+        return sequenceCards;
+    }
+
+    private static IReadOnlyList<object> BuildWeatherHiLoSequenceChildren(
+        IReadOnlyList<WeatherHiLoSequenceCard> cards,
+        string promptSubCategory,
+        string mimId,
+        string mimType)
+    {
+        var children = new List<object>(cards.Count);
+        for (var index = 0; index < cards.Count; index += 1)
+        {
+            var card = cards[index];
+            var promptLabel = string.IsNullOrWhiteSpace(card.DayName)
+                ? $"Day{index + 1}"
+                : Regex.Replace(card.DayName, "[^A-Za-z0-9]", string.Empty, RegexOptions.CultureInvariant);
+            var promptId = $"WeatherForecast{promptLabel}_AN_13";
+            var spokenLine = string.IsNullOrWhiteSpace(card.SpokenLine)
+                ? "Here is another day's forecast."
+                : card.SpokenLine!;
+            var icon = string.IsNullOrWhiteSpace(card.Icon)
+                ? "cloudy"
+                : card.Icon!;
+            var esml =
+                $"<speak><anim cat='weather' meta='{icon}' nonBlocking='true' /><break size='0.2'/><es cat='neutral' filter='!ssa-only, !sfx-only' endNeutral='true'>{EscapeXml(spokenLine)}</es></speak>";
+            var resolvedGuiContext = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["type"] = "Javascript",
+                ["data"] = card.View,
+                ["pause"] = true
+            };
+
+            children.Add(new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["type"] = "SLIM",
+                ["config"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["play"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["esml"] = esml,
+                        ["meta"] = new
+                        {
+                            prompt_id = promptId,
+                            prompt_sub_category = promptSubCategory,
+                            mim_id = mimId,
+                            mim_type = mimType
+                        }
+                    },
+                    ["gui"] = new
+                    {
+                        type = "Javascript",
+                        data = "views.weatherHiLo",
+                        pause = true
+                    },
+                    ["display"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["view"] = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["type"] = "Javascript",
+                            ["data"] = card.View,
+                            ["pause"] = true,
+                            ["context"] = resolvedGuiContext
+                        }
+                    },
+                    ["timeout"] = 6,
+                    ["barge_in"] = true,
+                    ["no_matches_for_gui"] = 0,
+                    ["no_inputs_for_gui"] = 0
+                }
+            });
+        }
+
+        return children;
+    }
+
+    private static IReadOnlyList<IDictionary<string, object?>> ReadPayloadObjectArray(object rawValue)
+    {
+        if (rawValue is JsonElement jsonArray && jsonArray.ValueKind == JsonValueKind.Array)
+        {
+            return jsonArray
+                .EnumerateArray()
+                .Select(ConvertJsonObjectToDictionary)
+                .Where(static item => item is not null)
+                .Cast<IDictionary<string, object?>>()
+                .ToArray();
+        }
+
+        if (rawValue is IEnumerable<object?> rawObjects)
+        {
+            return rawObjects
+                .Select(ConvertObjectToDictionary)
+                .Where(static item => item is not null)
+                .Cast<IDictionary<string, object?>>()
+                .ToArray();
+        }
+
+        return [];
+    }
+
+    private static IDictionary<string, object?>? ConvertObjectToDictionary(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (value is IDictionary<string, object?> dictionary)
+        {
+            return new Dictionary<string, object?>(dictionary, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return value is JsonElement jsonValue
+            ? ConvertJsonObjectToDictionary(jsonValue)
+            : null;
+    }
+
+    private static IDictionary<string, object?>? ConvertJsonObjectToDictionary(JsonElement value)
+    {
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var dictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var property in value.EnumerateObject())
+        {
+            dictionary[property.Name] = property.Value.ValueKind switch
+            {
+                JsonValueKind.String => property.Value.GetString(),
+                JsonValueKind.Number when property.Value.TryGetInt32(out var intValue) => intValue,
+                JsonValueKind.Number when property.Value.TryGetDouble(out var doubleValue) => doubleValue,
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Object => ConvertJsonObjectToDictionary(property.Value),
+                JsonValueKind.Array => property.Value,
+                _ => null
+            };
+        }
+
+        return dictionary;
     }
 
     private static object? BuildWeatherHiLoView(IDictionary<string, object?>? payload)
@@ -1346,6 +1552,12 @@ public sealed class ResponsePlanToSocketMessagesMapper
     {
         return Guid.NewGuid().ToString("N");
     }
+
+    private sealed record WeatherHiLoSequenceCard(
+        object View,
+        string? DayName,
+        string? Icon,
+        string? SpokenLine);
 
     public sealed record SocketReplyPlan(string Text, int DelayMs = 0);
 }

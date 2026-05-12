@@ -83,16 +83,20 @@ public sealed class NewsApiBriefingProvider(
                 if (!response.IsSuccessStatusCode)
                 {
                     var responseBody = await TryReadResponseBodySnippetAsync(response, cancellationToken);
+                    var apiError = TryParseApiError(responseBody);
                     CaptureFailure(
                         "http_error",
-                        $"Category '{category}' returned {(int)response.StatusCode} {response.ReasonPhrase}.",
+                        apiError?.Message ?? $"Category '{category}' returned {(int)response.StatusCode} {response.ReasonPhrase}.",
                         (int)response.StatusCode,
-                        uri);
+                        uri,
+                        apiError?.Code);
                     logger.LogWarning(
-                        "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
+                        "NewsAPI request failed for category {Category}. StatusCode={StatusCode} Reason={ReasonPhrase} ErrorCode={ErrorCode} ErrorMessage={ErrorMessage} Body={Body}",
                         category,
                         (int)response.StatusCode,
                         response.ReasonPhrase,
+                        apiError?.Code ?? string.Empty,
+                        apiError?.Message ?? string.Empty,
                         responseBody ?? string.Empty);
                     continue;
                 }
@@ -211,15 +215,19 @@ public sealed class NewsApiBriefingProvider(
                 else
                 {
                     var fallbackBody = await TryReadResponseBodySnippetAsync(broadResponse, cancellationToken);
+                    var apiError = TryParseApiError(fallbackBody);
                     CaptureFailure(
                         "http_error",
-                        $"Uncategorized fallback returned {(int)broadResponse.StatusCode} {broadResponse.ReasonPhrase}.",
+                        apiError?.Message ?? $"Uncategorized fallback returned {(int)broadResponse.StatusCode} {broadResponse.ReasonPhrase}.",
                         (int)broadResponse.StatusCode,
-                        broadUri);
+                        broadUri,
+                        apiError?.Code);
                     logger.LogWarning(
-                        "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
+                        "NewsAPI uncategorized fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} ErrorCode={ErrorCode} ErrorMessage={ErrorMessage} Body={Body}",
                         (int)broadResponse.StatusCode,
                         broadResponse.ReasonPhrase,
+                        apiError?.Code ?? string.Empty,
+                        apiError?.Message ?? string.Empty,
                         fallbackBody ?? string.Empty);
                 }
             }
@@ -274,15 +282,19 @@ public sealed class NewsApiBriefingProvider(
                 else
                 {
                     var everythingBody = await TryReadResponseBodySnippetAsync(everythingResponse, cancellationToken);
+                    var apiError = TryParseApiError(everythingBody);
                     CaptureFailure(
                         "http_error",
-                        $"Everything fallback returned {(int)everythingResponse.StatusCode} {everythingResponse.ReasonPhrase}.",
+                        apiError?.Message ?? $"Everything fallback returned {(int)everythingResponse.StatusCode} {everythingResponse.ReasonPhrase}.",
                         (int)everythingResponse.StatusCode,
-                        everythingUri);
+                        everythingUri,
+                        apiError?.Code);
                     logger.LogWarning(
-                        "NewsAPI everything fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} Body={Body}",
+                        "NewsAPI everything fallback failed. StatusCode={StatusCode} Reason={ReasonPhrase} ErrorCode={ErrorCode} ErrorMessage={ErrorMessage} Body={Body}",
                         (int)everythingResponse.StatusCode,
                         everythingResponse.ReasonPhrase,
+                        apiError?.Code ?? string.Empty,
+                        apiError?.Message ?? string.Empty,
                         everythingBody ?? string.Empty);
                 }
             }
@@ -444,6 +456,36 @@ public sealed class NewsApiBriefingProvider(
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 
+    private static ApiError? TryParseApiError(string? responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var code = ReadString(document.RootElement, "code");
+            var message = ReadString(document.RootElement, "message");
+            if (string.IsNullOrWhiteSpace(code) && string.IsNullOrWhiteSpace(message))
+            {
+                return null;
+            }
+
+            return new ApiError(code, message);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string SanitizeEndpoint(Uri uri)
     {
         var path = uri.GetLeftPart(UriPartial.Path);
@@ -516,5 +558,6 @@ public sealed class NewsApiBriefingProvider(
     private const int MaxHeadlines = 5;
     private const int MaxCategories = 2;
 
+    private sealed record ApiError(string? Code, string? Message);
     private sealed record CacheEntry<T>(T Value, DateTimeOffset ExpiresUtc);
 }

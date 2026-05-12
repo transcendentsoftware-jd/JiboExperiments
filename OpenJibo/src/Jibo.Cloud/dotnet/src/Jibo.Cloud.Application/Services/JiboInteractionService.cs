@@ -657,11 +657,17 @@ public sealed class JiboInteractionService(
                     "I couldn't fetch the weather right now. Please try again.");
             }
 
+            var weeklySegments = BuildWeeklyForecastCardSegments(weeklySnapshots, referenceLocalTime);
             var weeklySpokenReply = BuildWeeklyForecastSpokenReply(
-                weeklySnapshots,
-                referenceLocalTime,
+                weeklySegments,
+                weeklySnapshots[0].Snapshot.LocationName,
+                weeklySnapshots[0].Snapshot.UseCelsius,
                 isThisWeekForecast);
-            var weeklyWeatherPayload = BuildWeatherSkillPayload(weeklySpokenReply, weeklySnapshots[0].Snapshot, referenceLocalTime);
+            var weeklyWeatherPayload = BuildWeeklyWeatherSkillPayload(
+                weeklySpokenReply,
+                weeklySnapshots[0].Snapshot,
+                weeklySegments,
+                referenceLocalTime);
             return new JiboInteractionDecision(
                 "weather",
                 weeklySpokenReply,
@@ -744,28 +750,38 @@ public sealed class JiboInteractionService(
     }
 
     private static string BuildWeeklyForecastSpokenReply(
-        IReadOnlyList<(int DayOffset, WeatherReportSnapshot Snapshot)> snapshots,
-        DateTimeOffset? referenceLocalTime,
+        IReadOnlyList<WeatherForecastCardSegment> segments,
+        string? locationName,
+        bool useCelsius,
         bool isThisWeekForecast)
     {
-        if (snapshots.Count == 0)
+        if (segments.Count == 0)
         {
             return "I couldn't build a forecast right now.";
         }
 
-        var location = snapshots[0].Snapshot.LocationName;
-        if (string.IsNullOrWhiteSpace(location))
+        var location = string.IsNullOrWhiteSpace(locationName)
+            ? "your area"
+            : NormalizeLocationForSpeech(locationName);
+        var unit = useCelsius ? "Celsius" : "Fahrenheit";
+        var leadIn = isThisWeekForecast
+            ? $"Here's the rest of this week's forecast in {location}."
+            : $"I can share the next five-day forecast in {location}.";
+        return $"{leadIn} {string.Join(" ", segments.Select(static segment => segment.SpokenLine))} Temperatures are in {unit}.";
+    }
+
+    private static IReadOnlyList<WeatherForecastCardSegment> BuildWeeklyForecastCardSegments(
+        IReadOnlyList<(int DayOffset, WeatherReportSnapshot Snapshot)> snapshots,
+        DateTimeOffset? referenceLocalTime)
+    {
+        if (snapshots.Count == 0)
         {
-            location = "your area";
-        }
-        else
-        {
-            location = NormalizeLocationForSpeech(location);
+            return [];
         }
 
-        var unit = snapshots[0].Snapshot.UseCelsius ? "Celsius" : "Fahrenheit";
-        var referenceDate = (referenceLocalTime ?? DateTimeOffset.UtcNow).Date;
-        var segments = snapshots
+        var resolvedReference = referenceLocalTime ?? DateTimeOffset.UtcNow;
+        var referenceDate = resolvedReference.Date;
+        return snapshots
             .OrderBy(static item => item.DayOffset)
             .Take(MaxWeatherForecastDayOffset)
             .Select(item =>
@@ -776,13 +792,47 @@ public sealed class JiboInteractionService(
                     : item.Snapshot.Summary.Trim().TrimEnd('.');
                 var high = item.Snapshot.HighTemperature ?? item.Snapshot.Temperature;
                 var low = item.Snapshot.LowTemperature ?? item.Snapshot.Temperature;
-                return $"{dayName}: {summary}, high {high}, low {low}.";
-            });
+                var iconReference = new DateTimeOffset(
+                    resolvedReference.Date.AddDays(item.DayOffset).AddHours(12),
+                    resolvedReference.Offset);
+                var icon = ResolveWeatherAnimationIcon(item.Snapshot, iconReference);
+                var unit = item.Snapshot.UseCelsius ? "C" : "F";
+                var temperatureBand = ResolveWeatherTemperatureBand(high, item.Snapshot.UseCelsius);
+                var spokenLine = $"{dayName}: {summary}, high {high}, low {low}.";
+                return new WeatherForecastCardSegment(
+                    dayName,
+                    summary,
+                    high,
+                    low,
+                    icon,
+                    unit,
+                    temperatureBand,
+                    spokenLine);
+            })
+            .ToArray();
+    }
 
-        var leadIn = isThisWeekForecast
-            ? $"Here's the rest of this week's forecast in {location}."
-            : $"I can share the next five-day forecast in {location}.";
-        return $"{leadIn} {string.Join(" ", segments)} Temperatures are in {unit}.";
+    private static IDictionary<string, object?> BuildWeeklyWeatherSkillPayload(
+        string spokenReply,
+        WeatherReportSnapshot snapshot,
+        IReadOnlyList<WeatherForecastCardSegment> segments,
+        DateTimeOffset? referenceLocalTime)
+    {
+        var payload = BuildWeatherSkillPayload(spokenReply, snapshot, referenceLocalTime);
+        payload["weather_weekly_cards"] = segments
+            .Select(static segment => new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["weather_day"] = segment.DayName,
+                ["weather_summary"] = segment.Summary,
+                ["weather_icon"] = segment.Icon,
+                ["weather_high"] = segment.High,
+                ["weather_low"] = segment.Low,
+                ["weather_unit"] = segment.Unit,
+                ["weather_theme"] = segment.Theme,
+                ["weather_spoken_line"] = segment.SpokenLine
+            })
+            .ToArray();
+        return payload;
     }
 
     private static bool IsNextWeekForecastRequest(string normalizedTranscript, bool isRangeForecastRequest)
@@ -4619,6 +4669,16 @@ public sealed class JiboInteractionService(
         "WI",
         "WY"
     };
+
+    private sealed record WeatherForecastCardSegment(
+        string DayName,
+        string Summary,
+        int High,
+        int Low,
+        string Icon,
+        string Unit,
+        string Theme,
+        string SpokenLine);
 
     private const string GreetingRouteMetadataKey = "greetingsRoute";
     private const string GreetingSpeakerMetadataKey = "greetingsSpeaker";

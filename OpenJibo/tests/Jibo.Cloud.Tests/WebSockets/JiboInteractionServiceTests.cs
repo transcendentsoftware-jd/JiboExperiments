@@ -1801,6 +1801,14 @@ public sealed class JiboInteractionServiceTests
         Assert.Contains("Tuesday: light rain, high 61, low 52.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Saturday: light rain, high 61, low 52.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Temperatures are in Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(decision.SkillPayload);
+        Assert.True(decision.SkillPayload!.TryGetValue("weather_weekly_cards", out var weeklyCardsValue));
+        var weeklyCards = Assert.IsAssignableFrom<IReadOnlyList<IDictionary<string, object?>>>(weeklyCardsValue);
+        Assert.Equal(5, weeklyCards.Count);
+        var firstCard = weeklyCards[0];
+        Assert.Equal("Tuesday", firstCard["weather_day"]);
+        Assert.Equal(61, firstCard["weather_high"]);
+        Assert.Equal(52, firstCard["weather_low"]);
     }
 
     [Fact]
@@ -1829,6 +1837,10 @@ public sealed class JiboInteractionServiceTests
         Assert.NotNull(provider.LastRequest);
         Assert.Equal("Seattle", provider.LastRequest!.LocationQuery);
         Assert.Equal(5, provider.LastRequest.ForecastDayOffset);
+        Assert.NotNull(decision.SkillPayload);
+        Assert.True(decision.SkillPayload!.TryGetValue("weather_weekly_cards", out var weeklyCardsValue));
+        var weeklyCards = Assert.IsAssignableFrom<IReadOnlyList<IDictionary<string, object?>>>(weeklyCardsValue);
+        Assert.Equal(5, weeklyCards.Count);
     }
 
     [Fact]

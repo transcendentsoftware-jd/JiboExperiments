@@ -2251,6 +2251,53 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task ClientAsr_WeatherNextWeek_WithProvider_EmitsWeatherHiLoSequenceCards()
+    {
+        var customStore = new InMemoryCloudStateStore();
+        var customService = CreateService(
+            customStore,
+            new StubWeatherReportProvider(
+                new WeatherReportSnapshot("Seattle, US", "light rain", 58, 61, 52, "rain", false)));
+
+        await customService.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-next-week-token",
+            Text = """{"type":"LISTEN","transID":"trans-weather-next-week","data":{"hotphrase":true,"rules":["launch","globals/global_commands_launch"]}}"""
+        });
+
+        var replies = await customService.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-weather-next-week-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-weather-next-week","data":{"text":"forecast for seattle next week"}}"""
+        });
+
+        Assert.True(replies.Count >= 3);
+        var skillReply = replies.Last(static reply => string.Equals(ReadReplyType(reply), "SKILL_ACTION", StringComparison.Ordinal));
+        using var skillPayload = JsonDocument.Parse(skillReply.Text!);
+        var jcp = skillPayload.RootElement
+            .GetProperty("data")
+            .GetProperty("action")
+            .GetProperty("config")
+            .GetProperty("jcp");
+
+        Assert.Equal("SEQUENCE", jcp.GetProperty("type").GetString());
+        var children = jcp.GetProperty("children");
+        Assert.Equal(5, children.GetArrayLength());
+
+        var firstChildConfig = children[0].GetProperty("config");
+        Assert.True(firstChildConfig.TryGetProperty("display", out var firstDisplay));
+        Assert.Equal(
+            "weatherTempView",
+            firstDisplay.GetProperty("view").GetProperty("data").GetProperty("viewConfig").GetProperty("id").GetString());
+    }
+
+    [Fact]
     public async Task ClientAsr_OpenTheRadio_EmitsRadioRedirectAndSilentCompletion()
     {
         await _service.HandleMessageAsync(new WebSocketMessageEnvelope
