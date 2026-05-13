@@ -173,6 +173,26 @@ public sealed class OpenWeatherReportProvider(
         var temperature = TryReadInt(main, "temp");
         var high = TryReadInt(main, "temp_max");
         var low = TryReadInt(main, "temp_min");
+        if (ShouldEnrichCurrentDayHighLow(temperature, high, low))
+        {
+            try
+            {
+                var enrichedBand = await TryResolveCurrentDayHighLowFromForecastAsync(
+                    location,
+                    useCelsius,
+                    cancellationToken);
+                if (enrichedBand is not null)
+                {
+                    high = enrichedBand.Value.High ?? high;
+                    low = enrichedBand.Value.Low ?? low;
+                }
+            }
+            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                logger.LogDebug(exception, "OpenWeather forecast enrichment failed for current-day Hi/Lo.");
+            }
+        }
+
         if (temperature is null && high is null && low is null)
         {
             return null;
@@ -187,6 +207,70 @@ public sealed class OpenWeatherReportProvider(
             low,
             condition,
             useCelsius);
+    }
+
+    private async Task<(int? High, int? Low)?> TryResolveCurrentDayHighLowFromForecastAsync(
+        LocationPoint location,
+        bool useCelsius,
+        CancellationToken cancellationToken)
+    {
+        var forecastUri = BuildRequestUri(
+            "/data/2.5/forecast",
+            ("lat", location.Latitude.ToString(CultureInfo.InvariantCulture)),
+            ("lon", location.Longitude.ToString(CultureInfo.InvariantCulture)),
+            ("units", useCelsius ? "metric" : "imperial"),
+            ("appid", options.ApiKey!));
+        using var response = await httpClient.GetAsync(forecastUri, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("list", out var list) || list.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var offset = TryReadForecastOffset(root);
+        var targetDate = DateOnly.FromDateTime(DateTimeOffset.UtcNow.ToOffset(offset).DateTime);
+        var highs = new List<int>();
+        var lows = new List<int>();
+        foreach (var item in list.EnumerateArray())
+        {
+            if (!TryReadLong(item, "dt", out var unixSeconds))
+            {
+                continue;
+            }
+
+            var localTimestamp = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).ToOffset(offset);
+            if (DateOnly.FromDateTime(localTimestamp.DateTime) != targetDate ||
+                !item.TryGetProperty("main", out var main))
+            {
+                continue;
+            }
+
+            var high = TryReadInt(main, "temp_max");
+            if (high is not null)
+            {
+                highs.Add(high.Value);
+            }
+
+            var low = TryReadInt(main, "temp_min");
+            if (low is not null)
+            {
+                lows.Add(low.Value);
+            }
+        }
+
+        if (highs.Count == 0 && lows.Count == 0)
+        {
+            return null;
+        }
+
+        return (highs.Count == 0 ? null : highs.Max(), lows.Count == 0 ? null : lows.Min());
     }
 
     private async Task<WeatherReportSnapshot?> GetForecastForDayOffsetAsync(
@@ -406,6 +490,21 @@ public sealed class OpenWeatherReportProvider(
         }
 
         return null;
+    }
+
+    private static bool ShouldEnrichCurrentDayHighLow(int? temperature, int? high, int? low)
+    {
+        if (high is null || low is null)
+        {
+            return true;
+        }
+
+        if (high.Value != low.Value)
+        {
+            return false;
+        }
+
+        return temperature is null || high.Value == temperature.Value;
     }
 
     private static string BuildWeatherCacheKey(LocationPoint location, bool useCelsius, int forecastDayOffset)

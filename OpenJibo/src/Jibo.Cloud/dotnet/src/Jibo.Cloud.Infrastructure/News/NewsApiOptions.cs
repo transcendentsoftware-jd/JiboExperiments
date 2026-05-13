@@ -6,6 +6,8 @@ public sealed class NewsApiOptions
 
     public string? ApiKey { get; set; }
 
+    public string UserAgent { get; set; } = "OpenJiboCloud/1.0";
+
     public string Country { get; set; } = "us";
 
     public string Language { get; set; } = "en";

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Linq;
 using System.Text;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Infrastructure.News;
@@ -43,13 +44,65 @@ public sealed class ProviderCachingTests
         Assert.NotNull(second);
         Assert.Equal(1, handler.GetCallCount("/geo/1.0/direct"));
         Assert.Equal(1, handler.GetCallCount("/data/2.5/weather"));
+        Assert.Equal(0, handler.GetCallCount("/data/2.5/forecast"));
+    }
+
+    [Fact]
+    public async Task OpenWeatherReportProvider_EnrichesCurrentHiLoFromForecast_WhenCurrentBandIsFlat()
+    {
+        var utcStart = DateTimeOffset.UtcNow.UtcDateTime.Date;
+        var forecastWindowStart = new DateTimeOffset(utcStart, TimeSpan.Zero).ToUnixTimeSeconds();
+        var forecastWindowMid = new DateTimeOffset(utcStart.AddHours(3), TimeSpan.Zero).ToUnixTimeSeconds();
+        var forecastWindowLate = new DateTimeOffset(utcStart.AddHours(6), TimeSpan.Zero).ToUnixTimeSeconds();
+
+        var handler = new CountingHttpMessageHandler(message =>
+        {
+            var path = message.RequestUri?.AbsolutePath ?? string.Empty;
+            return path switch
+            {
+                "/geo/1.0/direct" => JsonResponse(
+                    """[{"name":"Lone Jack","country":"US","lat":38.8708,"lon":-94.1733}]"""),
+                "/data/2.5/weather" => JsonResponse(
+                    """{"name":"Lone Jack","weather":[{"main":"Clouds","description":"overcast clouds"}],"main":{"temp":77.0,"temp_max":77.0,"temp_min":77.0}}"""),
+                "/data/2.5/forecast" => JsonResponse(
+                    $"{{\"city\":{{\"timezone\":0}},\"list\":[{{\"dt\":{forecastWindowStart},\"main\":{{\"temp\":76.0,\"temp_max\":81.0,\"temp_min\":70.0}}}},{{\"dt\":{forecastWindowMid},\"main\":{{\"temp\":80.0,\"temp_max\":84.0,\"temp_min\":69.0}}}},{{\"dt\":{forecastWindowLate},\"main\":{{\"temp\":78.0,\"temp_max\":79.0,\"temp_min\":67.0}}}}]}}"),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound)
+            };
+        });
+        var provider = new OpenWeatherReportProvider(
+            new HttpClient(handler),
+            new OpenWeatherOptions
+            {
+                ApiKey = "test-key",
+                CurrentCacheTtlSeconds = 300,
+                ForecastCacheTtlSeconds = 300,
+                GeocodeCacheTtlSeconds = 300,
+                FailureCacheTtlSeconds = 30
+            },
+            NullLogger<OpenWeatherReportProvider>.Instance);
+
+        var report = await provider.GetReportAsync(new WeatherReportRequest("Lone Jack,US", null, null, false, false, 0));
+
+        Assert.NotNull(report);
+        Assert.Equal(77, report!.Temperature);
+        Assert.Equal(84, report.HighTemperature);
+        Assert.Equal(67, report.LowTemperature);
+        Assert.Equal(1, handler.GetCallCount("/data/2.5/weather"));
+        Assert.Equal(1, handler.GetCallCount("/data/2.5/forecast"));
     }
 
     [Fact]
     public async Task NewsApiBriefingProvider_ReusesCachedHeadlinesForIdenticalRequests()
     {
+        var missingUserAgentRequestCount = 0;
         var handler = new CountingHttpMessageHandler(message =>
         {
+            if (!message.Headers.TryGetValues("User-Agent", out var userAgents) ||
+                !userAgents.Any())
+            {
+                missingUserAgentRequestCount += 1;
+            }
+
             var path = message.RequestUri?.AbsolutePath ?? string.Empty;
             return path switch
             {
@@ -75,6 +128,7 @@ public sealed class ProviderCachingTests
         Assert.NotNull(first);
         Assert.NotNull(second);
         Assert.Equal(1, handler.GetCallCount("/v2/top-headlines"));
+        Assert.Equal(0, missingUserAgentRequestCount);
     }
 
     [Fact]

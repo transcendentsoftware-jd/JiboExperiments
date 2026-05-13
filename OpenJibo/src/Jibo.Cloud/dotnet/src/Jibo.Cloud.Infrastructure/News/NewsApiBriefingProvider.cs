@@ -79,7 +79,7 @@ public sealed class NewsApiBriefingProvider(
             foreach (var category in categories)
             {
                 var uri = BuildTopHeadlinesUri(category, requestedHeadlineCount);
-                using var response = await httpClient.GetAsync(uri, cancellationToken);
+                using var response = await SendGetAsync(uri, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                 {
                     var responseBody = await TryReadResponseBodySnippetAsync(response, cancellationToken);
@@ -172,7 +172,7 @@ public sealed class NewsApiBriefingProvider(
                     string.Join(",", categories));
 
                 var broadUri = BuildTopHeadlinesUri(category: null, requestedHeadlineCount);
-                using var broadResponse = await httpClient.GetAsync(broadUri, cancellationToken);
+                using var broadResponse = await SendGetAsync(broadUri, cancellationToken);
                 if (broadResponse.IsSuccessStatusCode)
                 {
                     using var broadStream = await broadResponse.Content.ReadAsStreamAsync(cancellationToken);
@@ -239,7 +239,7 @@ public sealed class NewsApiBriefingProvider(
                     options.FallbackQuery);
 
                 var everythingUri = BuildEverythingUri(requestedHeadlineCount);
-                using var everythingResponse = await httpClient.GetAsync(everythingUri, cancellationToken);
+                using var everythingResponse = await SendGetAsync(everythingUri, cancellationToken);
                 if (everythingResponse.IsSuccessStatusCode)
                 {
                     using var everythingStream = await everythingResponse.Content.ReadAsStreamAsync(cancellationToken);
@@ -343,6 +343,20 @@ public sealed class NewsApiBriefingProvider(
             }
             return exceptionSnapshot;
         }
+    }
+
+    private async Task<HttpResponseMessage> SendGetAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        request.Headers.TryAddWithoutValidation("User-Agent", ResolveUserAgent());
+        return await httpClient.SendAsync(request, cancellationToken);
+    }
+
+    private string ResolveUserAgent()
+    {
+        return string.IsNullOrWhiteSpace(options.UserAgent)
+            ? DefaultUserAgent
+            : options.UserAgent.Trim();
     }
 
     private IEnumerable<string> ResolveCategories(IReadOnlyList<string> preferredCategories)
@@ -557,6 +571,7 @@ public sealed class NewsApiBriefingProvider(
 
     private const int MaxHeadlines = 5;
     private const int MaxCategories = 2;
+    private const string DefaultUserAgent = "OpenJiboCloud/1.0";
 
     private sealed record ApiError(string? Code, string? Message);
     private sealed record CacheEntry<T>(T Value, DateTimeOffset ExpiresUtc);

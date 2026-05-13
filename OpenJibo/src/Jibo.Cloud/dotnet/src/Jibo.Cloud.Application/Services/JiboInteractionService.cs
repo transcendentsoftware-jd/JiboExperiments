@@ -595,9 +595,19 @@ public sealed class JiboInteractionService(
     {
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
         var normalizedTranscript = NormalizeCommandPhrase(transcript);
+        var locationQuery = TryResolveWeatherLocationQuery(transcript);
         var weatherDate = ResolveWeatherDateEntity(turn, transcript, normalizedTranscript, referenceLocalTime);
         var isRangeForecastRequest = IsRangeForecastRequest(normalizedTranscript);
-        if (ShouldDefaultForecastToTomorrow(normalizedTranscript, weatherDate, isRangeForecastRequest))
+        var isOpenEndedForecastRequest = IsOpenEndedForecastRequest(
+            normalizedTranscript,
+            weatherDate,
+            isRangeForecastRequest,
+            locationQuery);
+        if (ShouldDefaultForecastToTomorrow(
+                normalizedTranscript,
+                weatherDate,
+                isRangeForecastRequest,
+                isOpenEndedForecastRequest))
         {
             weatherDate = new WeatherDateEntity("tomorrow", 1, "Tomorrow");
         }
@@ -609,7 +619,6 @@ public sealed class JiboInteractionService(
                 "I can check weather once my weather service is connected.");
         }
 
-        var locationQuery = TryResolveWeatherLocationQuery(transcript);
         var weatherCoordinates = string.IsNullOrWhiteSpace(locationQuery)
             ? TryResolveWeatherCoordinates(turn)
             : null;
@@ -617,7 +626,7 @@ public sealed class JiboInteractionService(
         var isNextWeekForecast = IsNextWeekForecastRequest(normalizedTranscript, isRangeForecastRequest);
         var isThisWeekForecast = IsThisWeekForecastRequest(normalizedTranscript, isRangeForecastRequest);
 
-        if (isNextWeekForecast || isThisWeekForecast)
+        if (isNextWeekForecast || isThisWeekForecast || isOpenEndedForecastRequest)
         {
             var rangeStartOffset = 1;
             var rangeEndOffset = isThisWeekForecast
@@ -920,6 +929,32 @@ public sealed class JiboInteractionService(
                !normalizedTranscript.Contains("weekend", StringComparison.Ordinal);
     }
 
+    private static bool IsOpenEndedForecastRequest(
+        string normalizedTranscript,
+        WeatherDateEntity weatherDate,
+        bool isRangeForecastRequest,
+        string? locationQuery)
+    {
+        if (string.IsNullOrWhiteSpace(normalizedTranscript) ||
+            !string.IsNullOrWhiteSpace(locationQuery) ||
+            isRangeForecastRequest ||
+            weatherDate.ForecastDayOffset > 0 ||
+            !normalizedTranscript.Contains("forecast", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return !MatchesAny(
+            normalizedTranscript,
+            "today",
+            "today s",
+            "today's",
+            "tonight",
+            "right now",
+            "current weather",
+            "currently");
+    }
+
     private static int ResolveThisWeekForecastEndOffset(DateTimeOffset? referenceLocalTime)
     {
         var resolvedReference = referenceLocalTime ?? DateTimeOffset.UtcNow;
@@ -931,9 +966,11 @@ public sealed class JiboInteractionService(
     private static bool ShouldDefaultForecastToTomorrow(
         string normalizedTranscript,
         WeatherDateEntity weatherDate,
-        bool isRangeForecastRequest)
+        bool isRangeForecastRequest,
+        bool isOpenEndedForecastRequest)
     {
         if (weatherDate.ForecastDayOffset > 0 ||
+            isOpenEndedForecastRequest ||
             isRangeForecastRequest ||
             string.IsNullOrWhiteSpace(normalizedTranscript) ||
             !normalizedTranscript.Contains("forecast", StringComparison.Ordinal))
@@ -1643,6 +1680,7 @@ public sealed class JiboInteractionService(
             };
         }
 
+        var yesNoRule = ReadPrimaryYesNoRule(clientRules, listenRules);
         if (!string.IsNullOrWhiteSpace(pendingProactivityOffer) &&
             string.Equals(pendingProactivityOffer, "pizza_fact", StringComparison.OrdinalIgnoreCase))
         {
@@ -1659,14 +1697,15 @@ public sealed class JiboInteractionService(
 
         if (isYesNoTurn)
         {
-            if (IsAffirmativeReply(loweredTranscript))
+            var yesNoReply = TryClassifyYesNoReply(NormalizeCommandPhrase(loweredTranscript));
+            if (yesNoReply == YesNoReply.Affirmative)
             {
-                return "yes";
+                return ResolveAffirmativeYesNoIntent(yesNoRule);
             }
 
-            if (IsNegativeReply(loweredTranscript))
+            if (yesNoReply == YesNoReply.Negative)
             {
-                return "no";
+                return ResolveNegativeYesNoIntent(yesNoRule);
             }
         }
 
@@ -2369,15 +2408,55 @@ public sealed class JiboInteractionService(
         return ReadRules(turn, "listenRules")
             .Concat(ReadRules(turn, "clientRules"))
             .Concat(ReadRules(turn, "listenAsrHints"))
-            .Any(static rule =>
-                string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase));
+            .Any(IsYesNoRule);
+    }
+
+    private static string? ReadPrimaryYesNoRule(
+        IReadOnlyList<string> clientRules,
+        IReadOnlyList<string> listenRules)
+    {
+        return listenRules
+            .Concat(clientRules)
+            .FirstOrDefault(IsConstrainedYesNoRule);
+    }
+
+    private static bool IsYesNoRule(string rule)
+    {
+        return string.Equals(rule, "$YESNO", StringComparison.OrdinalIgnoreCase) ||
+               IsConstrainedYesNoRule(rule);
+    }
+
+    private static bool IsConstrainedYesNoRule(string rule)
+    {
+        return string.Equals(rule, "clock/alarm_timer_change", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "clock/alarm_timer_none_set", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "create/is_it_a_keeper", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "word-of-the-day/surprise", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ResolveAffirmativeYesNoIntent(string? yesNoRule)
+    {
+        if (string.Equals(yesNoRule, "word-of-the-day/surprise", StringComparison.OrdinalIgnoreCase))
+        {
+            return "word_of_the_day";
+        }
+
+        if (string.Equals(yesNoRule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase))
+        {
+            return "surprise";
+        }
+
+        return "yes";
+    }
+
+    private static string ResolveNegativeYesNoIntent(string? yesNoRule)
+    {
+        _ = yesNoRule;
+        return "no";
     }
 
     private static string? FindClosestHint(string normalizedTranscript, IReadOnlyList<string> hints)
@@ -2642,7 +2721,7 @@ public sealed class JiboInteractionService(
             }
         }
 
-        return YesNoReply.None;
+        return TryClassifyTrailingYesNoReply(tokens);
     }
 
     private static bool TryTrimLeadingAcknowledgement(string normalizedTranscript, out string trimmedTranscript)
@@ -2664,6 +2743,70 @@ public sealed class JiboInteractionService(
 
         trimmedTranscript = normalizedTranscript;
         return false;
+    }
+
+    private static YesNoReply TryClassifyTrailingYesNoReply(IReadOnlyList<string> tokens)
+    {
+        var selectedReply = YesNoReply.None;
+        var selectedIndex = -1;
+
+        void Consider(YesNoReply candidateReply, int candidateIndex)
+        {
+            if (candidateIndex < 0 || candidateIndex < selectedIndex)
+            {
+                return;
+            }
+
+            selectedReply = candidateReply;
+            selectedIndex = candidateIndex;
+        }
+
+        for (var index = 0; index < tokens.Count; index += 1)
+        {
+            var token = tokens[index];
+            if (YesNoNegativeLeadTokens.Contains(token))
+            {
+                Consider(YesNoReply.Negative, index);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadTokens.Contains(token))
+            {
+                Consider(YesNoReply.Affirmative, index);
+            }
+        }
+
+        for (var index = 0; index + 1 < tokens.Count; index += 1)
+        {
+            var phrase = $"{tokens[index]} {tokens[index + 1]}";
+            if (YesNoNegativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Negative, index + 1);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Affirmative, index + 1);
+            }
+        }
+
+        for (var index = 0; index + 2 < tokens.Count; index += 1)
+        {
+            var phrase = $"{tokens[index]} {tokens[index + 1]} {tokens[index + 2]}";
+            if (YesNoNegativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Negative, index + 2);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Affirmative, index + 2);
+            }
+        }
+
+        return selectedReply;
     }
 
     private static bool IsTimeRequest(string loweredTranscript)
@@ -4568,7 +4711,9 @@ public sealed class JiboInteractionService(
         "well",
         "so",
         "actually",
-        "honestly"
+        "honestly",
+        "thanks",
+        "thank you"
     ];
 
     private static readonly HashSet<string> YesNoAffirmativeLeadTokens = new(StringComparer.Ordinal)

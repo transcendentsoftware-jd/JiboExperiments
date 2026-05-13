@@ -1217,7 +1217,8 @@ public sealed partial class WebSocketTurnFinalizationService(
                string.Equals(rule, "shared/yes_no", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "settings/download_now_later", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(rule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
-               string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase);
+               string.Equals(rule, "surprises-ota/want_to_download_now", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(rule, "word-of-the-day/surprise", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsYesNoReplyTranscript(string normalizedTranscript)
@@ -1287,7 +1288,7 @@ public sealed partial class WebSocketTurnFinalizationService(
             }
         }
 
-        return YesNoReply.None;
+        return TryClassifyTrailingYesNoReply(tokens);
     }
 
     private static bool TryTrimLeadingAcknowledgement(string normalizedTranscript, out string trimmedTranscript)
@@ -1309,6 +1310,70 @@ public sealed partial class WebSocketTurnFinalizationService(
 
         trimmedTranscript = normalizedTranscript;
         return false;
+    }
+
+    private static YesNoReply TryClassifyTrailingYesNoReply(IReadOnlyList<string> tokens)
+    {
+        var selectedReply = YesNoReply.None;
+        var selectedIndex = -1;
+
+        void Consider(YesNoReply candidateReply, int candidateIndex)
+        {
+            if (candidateIndex < 0 || candidateIndex < selectedIndex)
+            {
+                return;
+            }
+
+            selectedReply = candidateReply;
+            selectedIndex = candidateIndex;
+        }
+
+        for (var index = 0; index < tokens.Count; index += 1)
+        {
+            var token = tokens[index];
+            if (YesNoNegativeLeadTokens.Contains(token))
+            {
+                Consider(YesNoReply.Negative, index);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadTokens.Contains(token))
+            {
+                Consider(YesNoReply.Affirmative, index);
+            }
+        }
+
+        for (var index = 0; index + 1 < tokens.Count; index += 1)
+        {
+            var phrase = $"{tokens[index]} {tokens[index + 1]}";
+            if (YesNoNegativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Negative, index + 1);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Affirmative, index + 1);
+            }
+        }
+
+        for (var index = 0; index + 2 < tokens.Count; index += 1)
+        {
+            var phrase = $"{tokens[index]} {tokens[index + 1]} {tokens[index + 2]}";
+            if (YesNoNegativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Negative, index + 2);
+                continue;
+            }
+
+            if (YesNoAffirmativeLeadPhrases.Contains(phrase))
+            {
+                Consider(YesNoReply.Affirmative, index + 2);
+            }
+        }
+
+        return selectedReply;
     }
 
     private async Task ApplyContextUpdatesAsync(
@@ -1910,7 +1975,9 @@ public sealed partial class WebSocketTurnFinalizationService(
         "well",
         "so",
         "actually",
-        "honestly"
+        "honestly",
+        "thanks",
+        "thank you"
     ];
 
     private static readonly HashSet<string> YesNoAffirmativeLeadTokens = new(StringComparer.Ordinal)

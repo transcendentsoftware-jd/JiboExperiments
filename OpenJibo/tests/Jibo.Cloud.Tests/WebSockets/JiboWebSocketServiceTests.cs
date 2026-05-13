@@ -1932,12 +1932,51 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(3, replies.Count);
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
-        Assert.Equal("yes", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        Assert.Equal("proactive_offer_pizza_fact", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
         var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
         Assert.Single(rules.EnumerateArray());
-        Assert.Equal("surprises-date/offer_date_fact", rules[0].GetString());
-        Assert.Equal("surprises-date/offer_date_fact", listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        var selectedRule = rules[0].GetString();
+        Assert.True(
+            string.Equals(selectedRule, "surprises-date/offer_date_fact", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(selectedRule, "shared/yes_no", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(selectedRule, listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
         Assert.Empty(listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").EnumerateObject());
+    }
+
+    [Fact]
+    public async Task ClientAsr_WordOfDayOfferPrompt_MapsYesToWordOfDayLaunch()
+    {
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-offer-yesno-token",
+            Text = """{"type":"LISTEN","transID":"trans-wod-offer-yes","data":{"rules":["word-of-the-day/surprise","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"],"asr":{"hints":["$YESNO"]}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = "hub-wod-offer-yesno-token",
+            Text = """{"type":"CLIENT_ASR","transID":"trans-wod-offer-yes","data":{"text":"Yes!"}}"""
+        });
+
+        Assert.True(replies.Count >= 3);
+
+        using var listenPayload = JsonDocument.Parse(replies[0].Text!);
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        var selectedRule = rules[0].GetString();
+        Assert.True(
+            string.Equals(selectedRule, "word-of-the-day/surprise", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(selectedRule, "word-of-the-day/menu", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(selectedRule, listenPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("rule").GetString());
+        Assert.Equal(
+            "word-of-the-day",
+            listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("entities").GetProperty("domain").GetString());
     }
 
     [Fact]

@@ -1588,7 +1588,7 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_ForecastWithoutDate_WithProvider_DefaultsToTomorrow()
+    public async Task BuildDecisionAsync_ForecastWithoutDate_WithProvider_ReturnsFiveDaySummary()
     {
         var provider = new CapturingWeatherReportProvider
         {
@@ -1599,14 +1599,21 @@ public sealed class JiboInteractionServiceTests
         var decision = await service.BuildDecisionAsync(new TurnContext
         {
             RawTranscript = "what's the forecast",
-            NormalizedTranscript = "what's the forecast"
+            NormalizedTranscript = "what's the forecast",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
         });
 
         Assert.Equal("weather", decision.IntentName);
         Assert.Null(provider.LastRequest?.LocationQuery);
-        Assert.True(provider.LastRequest?.IsTomorrow);
-        Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in Kansas City, U.S., expect clear sky with a high near 79 degrees Fahrenheit and a low around 63 degrees Fahrenheit.", decision.ReplyText);
+        Assert.False(provider.LastRequest?.IsTomorrow);
+        Assert.Equal(5, provider.LastRequest?.ForecastDayOffset);
+        Assert.Equal(5, provider.Requests.Count);
+        Assert.Contains("next five-day forecast", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Tuesday: clear sky, high 79, low 63.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Saturday: clear sky, high 79, low 63.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -1697,7 +1704,7 @@ public sealed class JiboInteractionServiceTests
 
     [Theory]
     [InlineData("how is the weather", null, 0, false)]
-    [InlineData("what's the forecast", null, 1, true)]
+    [InlineData("what's the forecast", null, 5, false)]
     [InlineData("forecast for new york city", "New York City", 1, true)]
     [InlineData("what's today's forecast", null, 0, false)]
     [InlineData("what's the weather in chicago", "Chicago", 0, false)]
@@ -1729,6 +1736,11 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(expectedIsTomorrow, provider.LastRequest.IsTomorrow);
         Assert.Equal("chitchat-skill", decision.SkillName);
         Assert.Equal(true, decision.SkillPayload?["weather_view_enabled"]);
+
+        if (string.Equals(transcript, "what's the forecast", StringComparison.Ordinal))
+        {
+            Assert.Equal(5, provider.Requests.Count);
+        }
     }
 
     [Fact]
@@ -2152,6 +2164,48 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_SurprisesDateOfferPrompt_WithNoisyAffirmation_MapsToSurpriseIntent()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "- Thank you. - Yes.",
+            NormalizedTranscript = "- Thank you. - Yes.",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = (string[])["surprises-date/offer_date_fact", "globals/gui_nav", "globals/global_commands_launch"],
+                ["listenAsrHints"] = (string[])["$YESNO"],
+                ["context"] = """{"runtime":{"location":{"iso":"2026-04-20T08:00:00-05:00"}}}"""
+            }
+        });
+
+        Assert.Equal("proactive_offer_pizza_fact", decision.IntentName);
+        Assert.Equal("Do you want to hear a fun pizza fact?", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WordOfDayOfferPrompt_WithNoisyAffirmation_MapsToWordOfDayLaunch()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "- Me. - Yes.",
+            NormalizedTranscript = "- Me. - Yes.",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["listenRules"] = (string[])["word-of-the-day/surprise", "globals/gui_nav", "globals/global_commands_launch"],
+                ["listenAsrHints"] = (string[])["$YESNO"]
+            }
+        });
+
+        Assert.Equal("word_of_the_day", decision.IntentName);
+        Assert.Equal("Starting word of the day.", decision.ReplyText);
+        Assert.Equal("@be/word-of-the-day", decision.SkillName);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_SettingsDownloadPrompt_MapsShortDenialToNoIntent()
     {
         var service = CreateService();
@@ -2171,7 +2225,7 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
-    public async Task BuildDecisionAsync_SurprisesDateOfferPrompt_MapsShortAffirmationToYesIntent()
+    public async Task BuildDecisionAsync_SurprisesDateOfferPrompt_MapsShortAffirmationToSurpriseFlow()
     {
         var service = CreateService();
 
@@ -2186,8 +2240,8 @@ public sealed class JiboInteractionServiceTests
             }
         });
 
-        Assert.Equal("yes", decision.IntentName);
-        Assert.Equal("Yes.", decision.ReplyText);
+        Assert.Equal("proactive_offer_pizza_fact", decision.IntentName);
+        Assert.Equal("Do you want to hear a fun pizza fact?", decision.ReplyText);
     }
 
     [Fact]
