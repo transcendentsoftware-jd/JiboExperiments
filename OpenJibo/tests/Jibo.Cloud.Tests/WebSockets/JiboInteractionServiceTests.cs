@@ -346,6 +346,33 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
     }
 
+    [Theory]
+    [InlineData("joyful", "Yes indeed. Never been better.")]
+    [InlineData("pleased", "You know it. Life is good.")]
+    [InlineData("determined", "You're right. I am feeling pretty good at the moment.")]
+    [InlineData("confident", "All systems are go.")]
+    [InlineData("insecure", "Yes. Not too shabby.")]
+    [InlineData("neutral", "All systems are go.")]
+    public async Task BuildDecisionAsync_EmotionQuery_UsesStateDrivenLegacyReplies(
+        string emotion,
+        string expectedReply)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "how are you",
+            NormalizedTranscript = "how are you",
+            Attributes = new Dictionary<string, object?>
+            {
+                [ChitchatEmotionKey] = emotion
+            }
+        });
+
+        Assert.Equal("how_are_you", decision.IntentName);
+        Assert.Equal(expectedReply, decision.ReplyText);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_Smile_RoutesThroughEmotionCommandSplit()
     {
