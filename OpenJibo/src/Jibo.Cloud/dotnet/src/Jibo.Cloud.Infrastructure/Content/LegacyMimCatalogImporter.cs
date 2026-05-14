@@ -122,7 +122,8 @@ public static class LegacyMimCatalogImporter
             return LegacyMimBucket.Personality;
         }
 
-        if (normalizedPath.Contains("/emotion-responses/", StringComparison.OrdinalIgnoreCase))
+        if (normalizedPath.Contains("/emotion-responses/", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.Contains("/gqa-responses/", StringComparison.OrdinalIgnoreCase))
         {
             return LegacyMimBucket.Emotion;
         }
@@ -152,7 +153,7 @@ public static class LegacyMimCatalogImporter
             fileName.StartsWith("RI_JBO_Is", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("RN_WhatAreYouFeeling", StringComparison.OrdinalIgnoreCase))
         {
-            return LegacyMimBucket.HowAreYou;
+            return LegacyMimBucket.Emotion;
         }
 
         if (fileName.Contains("Greeting", StringComparison.OrdinalIgnoreCase) ||

@@ -13,6 +13,9 @@ public interface IPersonalMemoryStore
     void SetAffinity(PersonalMemoryTenantScope tenantScope, string item, PersonalAffinity affinity);
     PersonalAffinity? GetAffinity(PersonalMemoryTenantScope tenantScope, string item);
     IReadOnlyDictionary<string, PersonalAffinity> GetAffinities(PersonalMemoryTenantScope tenantScope);
+    void AddListItem(PersonalMemoryTenantScope tenantScope, string listName, string item);
+    IReadOnlyList<string> GetListItems(PersonalMemoryTenantScope tenantScope, string listName);
+    void ClearListItems(PersonalMemoryTenantScope tenantScope, string listName);
 }
 
 public sealed record PersonalMemoryTenantScope(string AccountId, string LoopId, string DeviceId);

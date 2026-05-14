@@ -85,6 +85,19 @@ public sealed class JiboInteractionService(
             return personalReportDecision;
         }
 
+        var householdListDecision = await HouseholdListOrchestrator.TryBuildDecisionAsync(
+            turn,
+            semanticIntent,
+            transcript,
+            lowered,
+            randomizer,
+            personalMemoryStore,
+            ResolveTenantScope);
+        if (householdListDecision is not null)
+        {
+            return householdListDecision;
+        }
+
         var chitchatDecision = ChitchatStateMachine.TryBuildDecision(
             semanticIntent,
             transcript,
@@ -2194,6 +2207,30 @@ public sealed class JiboInteractionService(
         if (MatchesAny(loweredTranscript, "personal report", "my report", "daily report", "my update"))
         {
             return "personal_report";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "shopping list",
+                "grocery list",
+                "to do list",
+                "todo list",
+                "add to my shopping list",
+                "add to my to do list",
+                "add to my todo list",
+                "what's on my shopping list",
+                "what is on my shopping list",
+                "what's on my to do list",
+                "what is on my to do list",
+                "what are my tasks",
+                "what do i need to buy",
+                "what do i need to do"))
+        {
+            return loweredTranscript.Contains("to do", StringComparison.OrdinalIgnoreCase) ||
+                   loweredTranscript.Contains("todo", StringComparison.OrdinalIgnoreCase) ||
+                   loweredTranscript.Contains("task", StringComparison.OrdinalIgnoreCase)
+                ? "todo_list"
+                : "shopping_list";
         }
 
         if (IsWeatherRequest(loweredTranscript))

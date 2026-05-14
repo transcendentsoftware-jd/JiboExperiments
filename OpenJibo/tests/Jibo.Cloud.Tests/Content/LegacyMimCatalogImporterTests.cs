@@ -32,6 +32,49 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_MapsGqaResponsesIntoEmotionBucket()
+    {
+        var rootDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(rootDirectory, "gqa-responses"));
+
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(rootDirectory, "gqa-responses", "GQA_JBO_IsHappy.mim"),
+                """
+                {
+                  "mim_type": "announcement",
+                  "prompts": [
+                    {
+                      "condition": "jibo.emotion==\"JOYFUL\"",
+                      "prompt": "GQA joyful reply.",
+                      "prompt_id": "GQA_JBO_IsHappy_AN_01"
+                    },
+                    {
+                      "condition": "!jibo.emotion || jibo.emotion==\"NEUTRAL\"",
+                      "prompt": "GQA neutral reply.",
+                      "prompt_id": "GQA_JBO_IsHappy_AN_02"
+                    }
+                  ]
+                }
+                """);
+
+            var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+            Assert.Contains(catalog.EmotionReplies, reply =>
+                string.Equals(reply.Reply, "GQA joyful reply.", StringComparison.Ordinal));
+            Assert.Contains(catalog.EmotionReplies, reply =>
+                string.Equals(reply.Reply, "GQA neutral reply.", StringComparison.Ordinal));
+            Assert.DoesNotContain(catalog.HowAreYouReplies, reply =>
+                reply.Contains("GQA", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Directory.Delete(rootDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();

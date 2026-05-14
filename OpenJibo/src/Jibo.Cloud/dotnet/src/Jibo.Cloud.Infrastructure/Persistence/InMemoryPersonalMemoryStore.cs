@@ -92,6 +92,60 @@ public sealed class InMemoryPersonalMemoryStore : IPersonalMemoryStore
         return new Dictionary<string, PersonalAffinity>(record.Affinities, StringComparer.OrdinalIgnoreCase);
     }
 
+    public void AddListItem(PersonalMemoryTenantScope tenantScope, string listName, string item)
+    {
+        var normalizedListName = NormalizeCategory(listName);
+        var normalizedItem = item.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedListName) || string.IsNullOrWhiteSpace(normalizedItem))
+        {
+            return;
+        }
+
+        var key = BuildTenantKey(tenantScope);
+        var record = _tenantMemory.GetOrAdd(key, static _ => new TenantMemoryRecord());
+        lock (record.SyncRoot)
+        {
+            var list = record.Lists.GetOrAdd(normalizedListName, static _ => []);
+            if (list.Any(value => string.Equals(value, normalizedItem, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            list.Add(normalizedItem);
+        }
+    }
+
+    public IReadOnlyList<string> GetListItems(PersonalMemoryTenantScope tenantScope, string listName)
+    {
+        var key = BuildTenantKey(tenantScope);
+        if (!_tenantMemory.TryGetValue(key, out var record))
+        {
+            return [];
+        }
+
+        var normalizedListName = NormalizeCategory(listName);
+        lock (record.SyncRoot)
+        {
+            return record.Lists.TryGetValue(normalizedListName, out var list)
+                ? [.. list]
+                : [];
+        }
+    }
+
+    public void ClearListItems(PersonalMemoryTenantScope tenantScope, string listName)
+    {
+        var key = BuildTenantKey(tenantScope);
+        if (!_tenantMemory.TryGetValue(key, out var record))
+        {
+            return;
+        }
+
+        lock (record.SyncRoot)
+        {
+            record.Lists.TryRemove(NormalizeCategory(listName), out _);
+        }
+    }
+
     private static string BuildTenantKey(PersonalMemoryTenantScope tenantScope)
     {
         return $"{tenantScope.AccountId}|{tenantScope.LoopId}|{tenantScope.DeviceId}";
@@ -109,5 +163,7 @@ public sealed class InMemoryPersonalMemoryStore : IPersonalMemoryStore
         public ConcurrentDictionary<string, string> Preferences { get; } = new(StringComparer.OrdinalIgnoreCase);
         public ConcurrentDictionary<string, string> ImportantDates { get; } = new(StringComparer.OrdinalIgnoreCase);
         public ConcurrentDictionary<string, PersonalAffinity> Affinities { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public ConcurrentDictionary<string, List<string>> Lists { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public object SyncRoot { get; } = new();
     }
 }
