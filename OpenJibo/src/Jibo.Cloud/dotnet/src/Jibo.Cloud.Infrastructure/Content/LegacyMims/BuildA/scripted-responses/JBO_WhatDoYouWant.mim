@@ -1,0 +1,40 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Socializing and electricity. I'd also be happy if everyone in the world was nicer to each other. It seems like they should be. <ssa cat='affection'/>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouWant_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Really I just want to hang out. <break size='0.3'/> And be helpful.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouWant_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Mostly I just want to be helpful and friendly, and to dance from time to time.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouWant_AN_03",
+			"weight": 1
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+	"mim_id": "CCAreThereOthersLikeYou",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "CCAreThereOthersLikeYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake' nonBlocking='true' />No, I'm one in one million. <anim cat='happy' nonBlocking='true'/><ssa cat='happy'/>",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_AreThereOthersLikeYou_AN_01",
+			"weight": 1
+		},
+		{
+			"mim_id": "CCAreThereOthersLikeYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake' nonBlocking='true' />So far I haven't met anyone exactly like me. <anim name='Greetings_02' nonBlocking='true'/> But I don't get out much.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_AreThereOthersLikeYou_AN_02",
+			"weight": 1
+		}
+	]
+}

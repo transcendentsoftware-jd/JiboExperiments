@@ -122,6 +122,11 @@ public static class LegacyMimCatalogImporter
             return LegacyMimBucket.Personality;
         }
 
+        if (normalizedPath.Contains("/scripted-responses/", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.Personality;
+        }
+
         if (fileName.StartsWith("JBO_DoYouLikeBeingJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhatIsJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhoAreYou", StringComparison.OrdinalIgnoreCase) ||

@@ -1,0 +1,19 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I don't. I'm just Jibo. For now at least.",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouHaveNickname_AN_01"
+		}
+	]
+}

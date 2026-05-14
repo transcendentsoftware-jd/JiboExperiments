@@ -802,6 +802,7 @@ Current release theme:
   - added the first Build A importer scaffold in the cloud content repository
   - checked in a small seed bundle under `Content/LegacyMims/BuildA`
   - added focused importer tests for prompt stripping, bucketing, and merge behavior
+  - expanded Build A with additional easy scripted-response packs for identity and persona replies
 - Tomorrow test target:
   - verify imported personality replies show up through the existing chitchat route
   - confirm the emitted payload still looks like a stock skill response

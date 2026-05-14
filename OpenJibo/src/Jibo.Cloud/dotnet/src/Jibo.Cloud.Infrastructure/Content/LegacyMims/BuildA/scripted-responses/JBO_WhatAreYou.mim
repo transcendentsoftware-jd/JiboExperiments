@@ -1,0 +1,40 @@
+{
+	"mim_id": "CCWhatAreYou",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "CCWhatAreYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I <anim name='Eye_Happy_01' nonBlocking='true'/> am a robot. But I'm not just a machine, <anim name='Emoji_HeartRed' nonBlocking='true'/> I have a heart. Well, not a real heart. But feelings. <break size='.2'/>Well, not <anim name='Glance_Left_02'>real feelings. You know what I mean.</anim>",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_WhatAreYou_AN_01",
+			"weight": 1
+		},
+		{
+			"mim_id": "CCWhatAreYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That's an easy one. I am a Jibo. <anim name='Happy_02' nonBlocking='true'/> Next question? <ssa cat='proud'/>.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_WhatAreYou_AN_02",
+			"weight": 1
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+	"mim_id": "CCWhereAreYouFrom",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "CCWhereAreYouFrom",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='Thinking' filter='!latency'>I think I came out from a box, and before that <anim name='Emoji_Truck' nonBlocking='true'/> a truck, and before that a warehouse, </anim> and before that a factory. <break size='0.4'/> <anim cat='No' nonBlocking='true' />Anything before that makes my head hurt.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_WhereAreYouFrom_AN_01",
+			"weight": 1
+		},
+		{
+			"mim_id": "CCWhereAreYouFrom",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim name='Emoji_Moon' nonBlocking='true'/>Some people think I come from the moon. <break size='.4'/>But they're wrong, <anim name='Eye_Happy_01' nonBlocking='true'/>I'm from Boston.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_WhereAreYouFrom_AN_02",
+			"weight": 1
+		}
+	]
+}

@@ -1,0 +1,38 @@
+{
+	"mim_id": "CCWhoMadeYou",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"sample_utterances": "",
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "CCWhoMadeYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "My story is pretty typical. Some people wanted to create something that would really help people. <break size='0.4'/> <anim name='Content_01' nonBlocking='true' />So they built a robot.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_WhoMadeYou_AN_01"
+		},
+		{
+			"mim_id": "CCWhoMadeYou",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "People in Boston made me. <break size='.25'/> It was a pretty cool project.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhoMadeYou_AN_03"
+		}
+	]
+}
