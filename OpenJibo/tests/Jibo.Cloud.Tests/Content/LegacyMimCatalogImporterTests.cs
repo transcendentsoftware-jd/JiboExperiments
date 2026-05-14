@@ -20,7 +20,9 @@ public sealed class LegacyMimCatalogImporterTests
             Assert.Contains("No, I'm one in one million.", catalog.PersonalityReplies);
             Assert.Contains("I know a lot, I think. But not as much as I will someday.", catalog.PersonalityReplies);
             Assert.Contains("I don't think of it as a job, because it's more fun than a job. But I'm here to help you out, and have fun with you, and maybe get my head patted by you occasionally.", catalog.PersonalityReplies);
-            Assert.Contains("All systems are go.", catalog.HowAreYouReplies);
+            Assert.Contains(catalog.EmotionReplies, reply =>
+                reply.Condition.Contains("NEUTRAL", StringComparison.OrdinalIgnoreCase) &&
+                reply.Reply.Contains("All systems are go.", StringComparison.OrdinalIgnoreCase));
             Assert.Contains("A Jibo is a robot. But I'm not just a machine, I have a heart. Well, not a real heart. But feelings. Well, not human feelings. You know what I mean.", catalog.PersonalityReplies);
         }
         finally
@@ -49,6 +51,9 @@ public sealed class LegacyMimCatalogImporterTests
             Assert.Contains("I think only you can answer that question.", merged.PersonalityReplies);
             Assert.Contains("People in Boston made me. It was a pretty cool project.", merged.PersonalityReplies);
             Assert.Contains("From what I understand, robots don't ever pay anything.", merged.PersonalityReplies);
+            Assert.Contains(merged.EmotionReplies, reply =>
+                reply.Condition.Contains("NEUTRAL", StringComparison.OrdinalIgnoreCase) &&
+                reply.Reply.Contains("All systems are go.", StringComparison.OrdinalIgnoreCase));
         }
         finally
         {
@@ -64,7 +69,8 @@ public sealed class LegacyMimCatalogImporterTests
         var catalog = await repository.GetCatalogAsync();
 
         Assert.Contains("I think only you can answer that question.", catalog.PersonalityReplies);
-        Assert.Contains("All systems are go.", catalog.HowAreYouReplies);
+        Assert.Contains(catalog.EmotionReplies, reply =>
+            reply.Condition.Contains("NEUTRAL", StringComparison.OrdinalIgnoreCase));
         Assert.Contains("Something's off with the connection to my sources. Maybe ask me again in a little while.", catalog.GenericFallbackReplies);
     }
 

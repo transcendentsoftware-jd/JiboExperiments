@@ -152,6 +152,7 @@ internal static class ChitchatStateMachine
         string loweredTranscript,
         JiboExperienceCatalog catalog,
         IJiboRandomizer randomizer,
+        string? currentEmotion,
         Func<string> buildErrorResponse)
     {
         var normalizedLoweredTranscript = NormalizeForPhraseMatching(loweredTranscript);
@@ -164,17 +165,82 @@ internal static class ChitchatStateMachine
             case "robot_personality":
                 return BuildScriptedResponseDecision(
                     "robot_personality",
-                    randomizer.Choose(catalog.PersonalityReplies));
+                    SelectLegacyPersonalityReply(catalog, randomizer, "curious, playful", "friendly", "personality"));
+            case "robot_taxes":
+                return BuildScriptedResponseDecision(
+                    "robot_taxes",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "pay anything", "pay taxes", "tax"));
             case "how_are_you":
                 return BuildEmotionQueryDecision(
                     "how_are_you",
-                    randomizer.Choose(catalog.HowAreYouReplies));
+                    SelectEmotionQueryReply(catalog, randomizer, currentEmotion));
+            case "robot_desire":
+                return BuildScriptedResponseDecision(
+                    "robot_desire",
+                    SelectLegacyPersonalityReply(
+                        catalog,
+                        randomizer,
+                        "socializing and electricity",
+                        "want to hang out",
+                        "be helpful",
+                        "dance from time to time"));
+            case "robot_job":
+                return BuildScriptedResponseDecision(
+                    "robot_job",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "more fun than a job", "here to help you out"));
+            case "robot_origin_created":
+                return BuildScriptedResponseDecision(
+                    "robot_origin_created",
+                    SelectLegacyPersonalityReply(
+                        catalog,
+                        randomizer,
+                        "create something",
+                        "some people wanted to create something",
+                        "wanted to create something",
+                        "built a robot",
+                        "came out from a box"));
+            case "robot_origin_from":
+                return BuildScriptedResponseDecision(
+                    "robot_origin_from",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "boston", "came out from a box"));
+            case "robot_identity":
+                return BuildScriptedResponseDecision(
+                    "robot_identity",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "am a robot", "i'm either jibo", "i am just jibo"));
+            case "robot_likes_being_jibo":
+                return BuildScriptedResponseDecision(
+                    "robot_likes_being_jibo",
+                    SelectLegacyPersonalityReply(
+                        catalog,
+                        randomizer,
+                        "nothing i'd rather be",
+                        "love it",
+                        "being a human seems so complicated",
+                        "especially yours",
+                        "steady flow of electricity",
+                        "you bet i do"));
+            case "robot_nickname":
+                return BuildScriptedResponseDecision(
+                    "robot_nickname",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "just jibo", "nickname"));
+            case "robot_name":
+                return BuildScriptedResponseDecision(
+                    "robot_name",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "no last name", "like Bono", "Jibo."));
+            case "robot_peers":
+                return BuildScriptedResponseDecision(
+                    "robot_peers",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "one in one million", "others like you"));
+            case "robot_knowledge":
+                return BuildScriptedResponseDecision(
+                    "robot_knowledge",
+                    SelectLegacyPersonalityReply(catalog, randomizer, "know a lot", "not as much as i will someday"));
             case "chat":
                 if (IsEmotionQuery(normalizedLoweredTranscript))
                 {
                     return BuildEmotionQueryDecision(
                         "emotion_query",
-                        randomizer.Choose(catalog.HowAreYouReplies));
+                        SelectEmotionQueryReply(catalog, randomizer, currentEmotion));
                 }
 
                 if (TryResolveEmotionCommand(normalizedLoweredTranscript, out var emotion))
@@ -272,8 +338,122 @@ internal static class ChitchatStateMachine
             [EmotionMetadataKey] = emotion ?? string.Empty,
             ["chitchatLastState"] = IntentSplitState,
             ["chitchatProcessState"] = ProcessQueryState,
-            ["chitchatRawTranscript"] = rawTranscript ?? string.Empty
+                ["chitchatRawTranscript"] = rawTranscript ?? string.Empty
         };
+    }
+
+    private static string SelectEmotionQueryReply(
+        JiboExperienceCatalog catalog,
+        IJiboRandomizer randomizer,
+        string? currentEmotion)
+    {
+        if (catalog.EmotionReplies.Count == 0)
+        {
+            return randomizer.Choose(catalog.HowAreYouReplies);
+        }
+
+        var emotionVariants = ResolveEmotionVariants(currentEmotion);
+        foreach (var reply in catalog.EmotionReplies)
+        {
+            if (ConditionMatches(reply.Condition, emotionVariants))
+            {
+                return reply.Reply;
+            }
+        }
+
+        return randomizer.Choose(catalog.HowAreYouReplies);
+    }
+
+    private static bool ConditionMatches(string? condition, IReadOnlyList<string> emotionVariants)
+    {
+        var normalizedCondition = NormalizeCondition(condition);
+        if (string.IsNullOrWhiteSpace(normalizedCondition))
+        {
+            return false;
+        }
+
+        var clauses = normalizedCondition.Split(new[] { "||" }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var clause in clauses)
+        {
+            if (MatchesConditionClause(clause, emotionVariants))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MatchesConditionClause(string clause, IReadOnlyList<string> emotionVariants)
+    {
+        var normalizedClause = NormalizeCondition(clause).ToUpperInvariant();
+        if (normalizedClause == "!JIBO.EMOTION")
+        {
+            return emotionVariants.Contains(string.Empty, StringComparer.OrdinalIgnoreCase) ||
+                   emotionVariants.Contains("NEUTRAL", StringComparer.OrdinalIgnoreCase);
+        }
+
+        var equalityIndex = normalizedClause.IndexOf("==", StringComparison.Ordinal);
+        if (equalityIndex < 0)
+        {
+            return false;
+        }
+
+        var rightSide = normalizedClause[(equalityIndex + 2)..].Trim();
+        var candidate = rightSide.Trim('"', '\'');
+        return emotionVariants.Any(variant => string.Equals(variant, candidate, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IReadOnlyList<string> ResolveEmotionVariants(string? currentEmotion)
+    {
+        if (string.IsNullOrWhiteSpace(currentEmotion))
+        {
+            return ["", "NEUTRAL"];
+        }
+
+        var normalizedEmotion = NormalizeCondition(currentEmotion).Trim('"', '\'').ToUpperInvariant();
+        return normalizedEmotion switch
+        {
+            "HAPPY" => ["JOYFUL", "PLEASED", "CONFIDENT", "DETERMINED", "HAPPY"],
+            "SAD" => ["INSECURE", "SAD"],
+            "CALM" => ["NEUTRAL", "INSECURE", "CALM"],
+            "NEUTRAL" => ["NEUTRAL"],
+            "JOYFUL" or "PLEASED" or "CONFIDENT" or "DETERMINED" or "INSECURE" => [normalizedEmotion],
+            _ => [normalizedEmotion]
+        };
+    }
+
+    private static string SelectLegacyPersonalityReply(
+        JiboExperienceCatalog catalog,
+        IJiboRandomizer randomizer,
+        params string[] preferredSnippets)
+    {
+        foreach (var snippet in preferredSnippets)
+        {
+            if (string.IsNullOrWhiteSpace(snippet))
+            {
+                continue;
+            }
+
+            var match = catalog.PersonalityReplies.FirstOrDefault(reply =>
+                reply.Contains(snippet, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(match))
+            {
+                return match;
+            }
+        }
+
+        return randomizer.Choose(catalog.PersonalityReplies);
+    }
+
+    private static string NormalizeCondition(string? condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition))
+        {
+            return string.Empty;
+        }
+
+        return PhraseWhitespacePattern.Replace(condition.Trim(), " ");
     }
 
     private static bool IsEmotionQuery(string loweredTranscript)

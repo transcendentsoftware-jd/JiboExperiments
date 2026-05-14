@@ -77,7 +77,7 @@ public static class LegacyMimCatalogImporter
                     continue;
                 }
 
-                builder.Add(bucket.Value, text);
+                builder.Add(bucket.Value, prompt.Condition, text);
             }
         }
 
@@ -120,6 +120,11 @@ public static class LegacyMimCatalogImporter
             fileName.Contains("Deflector", StringComparison.OrdinalIgnoreCase))
         {
             return LegacyMimBucket.Personality;
+        }
+
+        if (normalizedPath.Contains("/emotion-responses/", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.Emotion;
         }
 
         if (normalizedPath.Contains("/scripted-responses/", StringComparison.OrdinalIgnoreCase))
@@ -186,6 +191,7 @@ public static class LegacyMimCatalogImporter
             DanceAnimations = Merge(baseCatalog.DanceAnimations, importedCatalog.DanceAnimations),
             GreetingReplies = Merge(baseCatalog.GreetingReplies, importedCatalog.GreetingReplies),
             HowAreYouReplies = Merge(baseCatalog.HowAreYouReplies, importedCatalog.HowAreYouReplies),
+            EmotionReplies = Merge(baseCatalog.EmotionReplies, importedCatalog.EmotionReplies),
             PersonalityReplies = Merge(baseCatalog.PersonalityReplies, importedCatalog.PersonalityReplies),
             PizzaReplies = Merge(baseCatalog.PizzaReplies, importedCatalog.PizzaReplies),
             SurpriseReplies = Merge(baseCatalog.SurpriseReplies, importedCatalog.SurpriseReplies),
@@ -225,11 +231,44 @@ public static class LegacyMimCatalogImporter
         return merged;
     }
 
+    private static IReadOnlyList<JiboConditionedReply> Merge(
+        IReadOnlyList<JiboConditionedReply> baseList,
+        IReadOnlyList<JiboConditionedReply> importedList)
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var merged = new List<JiboConditionedReply>();
+
+        foreach (var value in baseList.Concat(importedList))
+        {
+            if (string.IsNullOrWhiteSpace(value.Reply))
+            {
+                continue;
+            }
+
+            var normalizedCondition = NormalizeCondition(value.Condition);
+            var normalizedReply = value.Reply.Trim();
+            var key = $"{normalizedCondition}::{normalizedReply}";
+            if (!seen.Add(key))
+            {
+                continue;
+            }
+
+            merged.Add(new JiboConditionedReply
+            {
+                Condition = normalizedCondition,
+                Reply = normalizedReply
+            });
+        }
+
+        return merged;
+    }
+
     private enum LegacyMimBucket
     {
         GenericFallback,
         Greeting,
         HowAreYou,
+        Emotion,
         Personality
     }
 
@@ -237,26 +276,64 @@ public static class LegacyMimCatalogImporter
     {
         private readonly List<string> _greetings = [];
         private readonly List<string> _howAreYous = [];
+        private readonly List<JiboConditionedReply> _emotionReplies = [];
         private readonly List<string> _personalities = [];
         private readonly List<string> _fallbacks = [];
 
-        public void Add(LegacyMimBucket bucket, string text)
+        public void Add(LegacyMimBucket bucket, string? condition, string text)
         {
-            var target = bucket switch
+            switch (bucket)
             {
-                LegacyMimBucket.GenericFallback => _fallbacks,
-                LegacyMimBucket.Greeting => _greetings,
-                LegacyMimBucket.HowAreYou => _howAreYous,
-                LegacyMimBucket.Personality => _personalities,
-                _ => throw new ArgumentOutOfRangeException(nameof(bucket), bucket, null)
-            };
+                case LegacyMimBucket.GenericFallback:
+                    if (_fallbacks.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return;
+                    }
 
-            if (target.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
-            {
-                return;
+                    _fallbacks.Add(text);
+                    return;
+                case LegacyMimBucket.Greeting:
+                    if (_greetings.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return;
+                    }
+
+                    _greetings.Add(text);
+                    return;
+                case LegacyMimBucket.HowAreYou:
+                    if (_howAreYous.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return;
+                    }
+
+                    _howAreYous.Add(text);
+                    return;
+                case LegacyMimBucket.Emotion:
+                    var normalizedCondition = NormalizeCondition(condition);
+                    if (_emotionReplies.Any(value =>
+                            string.Equals(NormalizeCondition(value.Condition), normalizedCondition, StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(value.Reply, text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return;
+                    }
+
+                    _emotionReplies.Add(new JiboConditionedReply
+                    {
+                        Condition = normalizedCondition,
+                        Reply = text
+                    });
+                    return;
+                case LegacyMimBucket.Personality:
+                    if (_personalities.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return;
+                    }
+
+                    _personalities.Add(text);
+                    return;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(bucket), bucket, null);
             }
-
-            target.Add(text);
         }
 
         public JiboExperienceCatalog Build()
@@ -265,6 +342,7 @@ public static class LegacyMimCatalogImporter
             {
                 GreetingReplies = [.. _greetings],
                 HowAreYouReplies = [.. _howAreYous],
+                EmotionReplies = [.. _emotionReplies],
                 PersonalityReplies = [.. _personalities],
                 GenericFallbackReplies = [.. _fallbacks]
             };
@@ -308,5 +386,15 @@ public static class LegacyMimCatalogImporter
 
         [JsonPropertyName("weight")]
         public int? Weight { get; init; }
+    }
+
+    private static string NormalizeCondition(string? condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition))
+        {
+            return string.Empty;
+        }
+
+        return WhitespacePattern.Replace(condition.Trim(), " ");
     }
 }

@@ -1,0 +1,6070 @@
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:05:42.3415+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4291,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8572,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12879,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17173,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 21451,
+    "bufferedAudioChunks": 6,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "skill_payload_summary",
+  "details": {
+    "intent": "weather",
+    "skillName": "chitchat-skill",
+    "transcript": "What\u0027s the weather?",
+    "payload": {
+      "skillId": "report-skill",
+      "cloudSkill": "weather",
+      "esml": "\u003Cspeak\u003E\u003Canim cat=\u0027weather\u0027 meta=\u0027clear-night\u0027 nonBlocking=\u0027true\u0027 /\u003E\u003Cbreak size=\u00270.35\u0027/\u003E\u003Ces cat=\u0027neutral\u0027 filter=\u0027!ssa-only, !sfx-only\u0027 endNeutral=\u0027true\u0027\u003ERight now in Lone Jack, it is clear sky and 70 degrees Fahrenheit.\u003C/es\u003E\u003C/speak\u003E",
+      "mim_id": "WeatherCommentClearNight",
+      "mim_type": "announcement",
+      "prompt_id": "WeatherCommentClearNight_AN_13",
+      "prompt_sub_category": "AN",
+      "weather_view_enabled": true,
+      "weather_view_kind": "weatherHiLo",
+      "weather_icon": "clear-night",
+      "weather_summary": "clear sky",
+      "weather_location": "Lone Jack",
+      "weather_high": 69,
+      "weather_low": 67,
+      "weather_unit": "F",
+      "weather_theme": "Normal",
+      "weather_request_transcript": "What\u0027s the weather?",
+      "weather_request_normalized": "what s the weather",
+      "weather_request_location_query": null,
+      "weather_request_date_entity": null,
+      "weather_request_forecast_day_offset": 0,
+      "weather_request_range": false,
+      "weather_request_this_week": false,
+      "weather_request_next_week": false
+    },
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 21451,
+    "bufferedAudioChunks": 6,
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-07536fa4-4f31-11f1-be16-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:07:50.3876319+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12811,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_received",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "word-of-the-day/surprise",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "sawListen": true,
+    "sawContext": true,
+    "followUpOpen": false,
+    "followUpExpiresUtc": "2026-05-14T01:06:00.3839283+00:00",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_resolved",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "transcript": "Yes!",
+    "intent": "word_of_the_day",
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "followUpOpen": false,
+    "followUpExpiresUtc": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "PROCESS_LISTENER_QUEUE",
+    "listenOpenedUtc": null,
+    "followUpOpen": false,
+    "listenRules": [
+      "word-of-the-day/surprise",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-534cf970-4f31-11f1-8ec5-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "univocal",
+      "monotonic",
+      "supernumerary"
+    ],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:08:15.490089+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "univocal",
+      "monotonic",
+      "supernumerary"
+    ],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "univocal",
+      "monotonic",
+      "supernumerary"
+    ],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12806,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "univocal",
+      "monotonic",
+      "supernumerary"
+    ],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "univocal",
+      "monotonic",
+      "supernumerary"
+    ],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "PROCESS_LISTENER_QUEUE",
+    "listenOpenedUtc": null,
+    "followUpOpen": false,
+    "listenRules": [
+      "word-of-the-day/puzzle",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6262c1f6-4f31-11f1-934a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6b83d126-4f31-11f1-93aa-5cf821ea55ae",
+    "lastMessageType": "LISTEN",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:08:35.5490802+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12811,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17074,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "PROCESS_LISTENER_QUEUE",
+    "listenOpenedUtc": null,
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ebde07a-4f31-11f1-bec0-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:08:55.5946604+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8572,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12810,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17051,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_received",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "create/is_it_a_keeper",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 17051,
+    "bufferedAudioChunks": 5,
+    "sawListen": true,
+    "sawContext": true,
+    "followUpOpen": false,
+    "followUpExpiresUtc": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_resolved",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "transcript": "Yes.",
+    "intent": "yes",
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 17051,
+    "bufferedAudioChunks": 5,
+    "followUpOpen": true,
+    "followUpExpiresUtc": "2026-05-14T01:09:12.3574371+00:00",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "create/is_it_a_keeper",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7a2de31a-4f31-11f1-bff9-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:09:11.7114019+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4204,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8408,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12647,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16884,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "PROCESS_LISTENER_QUEUE",
+    "listenOpenedUtc": null,
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": true,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8441cc9a-4f31-11f1-bf13-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:09:20.7340429+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12811,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_received",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "yesNoRule": "shared/yes_no",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "sawListen": true,
+    "sawContext": true,
+    "followUpOpen": false,
+    "followUpExpiresUtc": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "yes_no_turn_resolved",
+  "details": {
+    "messageType": "AUTO_FINALIZE",
+    "transcript": "- No. - No.",
+    "intent": "no",
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "clientRules": [],
+    "listenAsrHints": [
+      "$YESNO"
+    ],
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "followUpOpen": true,
+    "followUpExpiresUtc": "2026-05-14T01:09:37.2797979+00:00",
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "shared/yes_no",
+      "globals/gui_nav",
+      "globals/mim_repeat",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-89854146-4f31-11f1-9ce3-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T01:13:36.142198+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8572,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12788,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 21289,
+    "bufferedAudioChunks": 6,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-21a55f92-4f32-11f1-919a-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:TRIGGER",
+    "previousState": "DISPATCH_DIALOG",
+    "state": "PROCESS_LISTENER_QUEUE",
+    "listenOpenedUtc": null,
+    "followUpOpen": false,
+    "listenRules": [],
+    "sessionToken": "hub-usr_openjibo_owner-1778720742163",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/proactive",
+    "kind": "neo-hub-proactive",
+    "transID": "tid-6b8d1afa-4f32-11f1-a74a-5cf821ea55ae",
+    "lastMessageType": "TRIGGER",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "PROCESS_LISTENER_QUEUE"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:24:10.0898041+00:00",
+    "followUpOpen": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12794,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 21289,
+    "bufferedAudioChunks": 6,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "chitchat_state_transition",
+  "details": {
+    "previousState": null,
+    "state": "complete",
+    "intent": "emotion_query",
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 21289,
+    "bufferedAudioChunks": 6,
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "chitchat_route_selected",
+  "details": {
+    "route": "EmotionQuery",
+    "previousRoute": null,
+    "emotion": null,
+    "previousEmotion": null,
+    "intent": "emotion_query",
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 21289,
+    "bufferedAudioChunks": 6,
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-6ce2b356-4f87-11f1-b348-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7428a2ba-4f87-11f1-aa77-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:24:21.9348875+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7428a2ba-4f87-11f1-aa77-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4333,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7428a2ba-4f87-11f1-aa77-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7428a2ba-4f87-11f1-aa77-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12809,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7428a2ba-4f87-11f1-aa77-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:24:23.9456813+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4315,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12809,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "chitchat_route_selected",
+  "details": {
+    "route": "ScriptedResponse",
+    "previousRoute": "EmotionQuery",
+    "emotion": null,
+    "previousEmotion": null,
+    "intent": "hello",
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-754934ca-4f87-11f1-8b06-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:24:34.0280351+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4199,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8408,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12647,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16960,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "chitchat_route_selected",
+  "details": {
+    "route": "ErrorResponse",
+    "previousRoute": "ScriptedResponse",
+    "emotion": null,
+    "previousEmotion": null,
+    "intent": "chat",
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 16960,
+    "bufferedAudioChunks": 5,
+    "sawListen": true,
+    "sawContext": true,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-7b18d446-4f87-11f1-8896-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:24:45.9949773+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4284,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8493,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12671,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16914,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-82a44600-4f87-11f1-8b3d-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:25:00.0903509+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4244,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8408,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12690,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16888,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-8b30c136-4f87-11f1-8c23-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:25:11.0680245+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4216,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8408,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12573,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16726,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-91820c52-4f87-11f1-b0a6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:25:26.1643227+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4344,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12811,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17053,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-99f9aeda-4f87-11f1-ba82-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:25:36.7625368+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4205,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8422,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12661,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16934,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a0ea4e16-4f87-11f1-b41c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:25:50.1334615+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4232,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8399,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12649,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 16888,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-a8b28ffa-4f87-11f1-947c-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:26:02.176952+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4346,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8570,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12780,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17069,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b02d6ed0-4f87-11f1-ae31-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": false,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "binary_audio",
+    "previousState": "HJ_LISTENING",
+    "state": "WAIT_LISTEN_FINISHED",
+    "listenOpenedUtc": "2026-05-14T11:26:15.2276599+00:00",
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": true,
+    "bufferedAudioBytes": 47,
+    "bufferedAudioChunks": 1,
+    "sawListen": true,
+    "sawContext": false,
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 4331,
+    "bufferedAudioChunks": 2,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 8590,
+    "bufferedAudioChunks": 3,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 12877,
+    "bufferedAudioChunks": 4,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "binary_audio_received",
+  "details": {
+    "bufferedAudioBytes": 17050,
+    "bufferedAudioChunks": 5,
+    "awaitingTurnCompletion": true,
+    "sawListen": true,
+    "sawContext": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "listenAsrHints": [],
+    "yesNoRule": null,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "WAIT_LISTEN_FINISHED"
+  }
+}
+{
+  "type": "glsm_phase_transition",
+  "details": {
+    "trigger": "finalize:AUTO_FINALIZE",
+    "previousState": "WAIT_LISTEN_FINISHED",
+    "state": "DISPATCH_DIALOG",
+    "listenOpenedUtc": null,
+    "followUpOpen": true,
+    "listenRules": [
+      "launch",
+      "globals/global_commands_launch"
+    ],
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}
+{
+  "type": "binary_audio_ignored",
+  "details": {
+    "ignored": true,
+    "ignoreLateAudio": false,
+    "ignoreAudioWithoutListen": true,
+    "awaitingTurnCompletion": false,
+    "bufferedAudioBytes": 0,
+    "bufferedAudioChunks": 0,
+    "sawListen": false,
+    "sawContext": false,
+    "sessionToken": "hub-usr_openjibo_owner-1778757849911",
+    "hostName": "neo-hub.jibo.com",
+    "path": "/v1/listen",
+    "kind": "neo-hub-listen",
+    "transID": "tid-b7fc26e2-4f87-11f1-9af6-5cf821ea55ae",
+    "lastMessageType": "BINARY_AUDIO",
+    "glsmState": "DISPATCH_DIALOG"
+  }
+}

@@ -38,6 +38,9 @@ public sealed class JiboInteractionService(
         var pendingProactivityOffer = turn.Attributes.TryGetValue("pendingProactivityOffer", out var rawPendingProactivityOffer)
             ? rawPendingProactivityOffer?.ToString()
             : null;
+        var chitchatEmotion = turn.Attributes.TryGetValue(ChitchatStateMachine.EmotionMetadataKey, out var rawChitchatEmotion)
+            ? rawChitchatEmotion?.ToString()
+            : null;
         var isYesNoTurn = IsYesNoTurn(turn);
         var greetingPresence = ResolveGreetingPresenceProfile(turn);
 
@@ -88,6 +91,7 @@ public sealed class JiboInteractionService(
             lowered,
             catalog,
             randomizer,
+            chitchatEmotion,
             () => BuildGenericReply(catalog, transcript, lowered));
         if (chitchatDecision is not null)
         {
@@ -2049,6 +2053,108 @@ public sealed class JiboInteractionService(
                 "describe your personality"))
         {
             return "robot_personality";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you pay taxes",
+                "do you pay tax",
+                "are you tax exempt"))
+        {
+            return "robot_taxes";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what do you want",
+                "what is it you want",
+                "what do you really want"))
+        {
+            return "robot_desire";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what is your job",
+                "what's your job",
+                "what do you do",
+                "what is your work",
+                "what's your work"))
+        {
+            return "robot_job";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "who made you",
+                "who created you",
+                "who built you",
+                "who developed you"))
+        {
+            return "robot_origin_created";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what are you",
+                "what is jibo",
+                "who are you",
+                "what kind of robot are you"))
+        {
+            return "robot_identity";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "where are you from",
+                "where did you come from",
+                "where were you made"))
+        {
+            return "robot_origin_from";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what's your name",
+                "what is your name"))
+        {
+            return "robot_name";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you have a nickname",
+                "what is your nickname",
+                "what's your nickname"))
+        {
+            return "robot_nickname";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you like being jibo",
+                "do you like being yourself",
+                "are you happy being jibo"))
+        {
+            return "robot_likes_being_jibo";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are there others like you",
+                "are there any others like you",
+                "is there another jibo"))
+        {
+            return "robot_peers";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "how much do you know",
+                "what do you know",
+                "how smart are you"))
+        {
+            return "robot_knowledge";
         }
 
         if (MatchesAny(

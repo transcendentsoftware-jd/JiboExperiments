@@ -266,6 +266,31 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("I do. I am curious, playful, and always up for a new experiment.", decision.ReplyText);
     }
 
+    [Theory]
+    [InlineData("do you pay taxes", "robot_taxes", "From what I understand, robots don't ever pay anything.")]
+    [InlineData("what do you want", "robot_desire", "Socializing and electricity. I'd also be happy if everyone in the world was nicer to each other. It seems like they should be.")]
+    [InlineData("what's your name", "robot_name", "Jibo. Just Jibo, no last name. Like Bono")]
+    [InlineData("who made you", "robot_origin_created", "My story is pretty typical. Some people wanted to create something that would really help people. So they built a robot.")]
+    [InlineData("where are you from", "robot_origin_from", "Some people think I come from the moon. But they're wrong, I'm from Boston.")]
+    public async Task BuildDecisionAsync_LegacyBuildAQuestions_UseImportedScriptedReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReply)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Equal(expectedReply, decision.ReplyText);
+        Assert.Null(decision.SkillName);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_Hello_RoutesThroughChitchatScriptedResponse()
     {
@@ -298,6 +323,27 @@ public sealed class JiboInteractionServiceTests
         Assert.NotNull(decision.ContextUpdates);
         Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
         Assert.Equal(string.Empty, decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_AreYouHappy_UsesLegacyEmotionResponseWhenEmotionIsKnown()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "are you happy",
+            NormalizedTranscript = "are you happy",
+            Attributes = new Dictionary<string, object?>
+            {
+                [ChitchatEmotionKey] = "happy"
+            }
+        });
+
+        Assert.Equal("emotion_query", decision.IntentName);
+        Assert.Equal("Yes indeed. Never been better.", decision.ReplyText);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
     }
 
     [Fact]
