@@ -105,6 +105,78 @@ The fifth delivered slice adds provider-backed weather content while preserving 
 - simple location extraction is supported for phrasing like `what's the weather in Chicago tomorrow`
 - provider config supports appsettings and `OPENWEATHER_API_KEY` environment fallback for deployment
 
+## Personality Import Ladder
+
+This is the practical plan for importing legacy Jibo `mims` into OpenJibo without pretending we already have a full Pegasus runtime.
+
+### What Is Possible Today
+
+OpenJibo can already host a meaningful subset of legacy personality content because it has:
+
+- a shared catalog for content-driven replies
+- chitchat state-machine routing with route metadata
+- outbound payload support for `skillId`, `mim_id`, `mim_type`, `prompt_id`, `prompt_sub_category`, and ESML
+- existing examples that already behave like legacy MIMs for pizza, dance, news, weather, and generic chat
+
+### What We Need To Build
+
+To move from hand-wired examples to broader imports, we need three small platform pieces:
+
+1. a MIM inventory importer that can scan the legacy tree and produce a normalized catalog
+2. a prompt-selection layer that can choose by `skill_id`, `mim_id`, prompt category, and condition metadata
+3. a safe ESML/prompt renderer that preserves existing stock-compatible payload shapes
+
+### What Can Be Ported With Each Build
+
+#### Build A: Declarative Prompt Packs
+
+Port immediately:
+
+- `core-responses`
+- `deflector`
+- the simplest `emotion-responses`
+- any `scripted-responses` that are just direct prompt lists with no special state machine
+
+Why these first:
+
+- they are already close to the current `JiboExperienceCatalog` model
+- they give us user-visible personality quickly
+- they are the best fit for low-risk testing tomorrow
+
+#### Build B: Conditioned Prompt Packs
+
+Port after the importer and renderer are in place:
+
+- `gqa-responses`
+- structured emotion responses with `condition` gates
+- prompt sets that select different replies by user state or Jibo state
+
+Why these next:
+
+- they are still mostly declarative
+- they need a small amount of condition evaluation, but not a new conversation engine
+
+#### Build C: Conversation Families
+
+Port after Build B:
+
+- richer `scripted-responses` families that depend on follow-up state
+- special-date / holiday personality sets
+- more nuanced chitchat branches that need context-aware routing
+
+Why these later:
+
+- they need state and follow-up behavior, not just prompt selection
+- they are where personality feels most alive, but they are also where bugs will be easiest to introduce
+
+#### Build D: Full Parity Cleanup
+
+Port after the core ladder is stable:
+
+- large cross-skill collections
+- any MIMs that depend on Pegasus-only parser assumptions
+- any files that need a dedicated runtime abstraction instead of catalog lookup
+
 ## System Diagram Alignment Snapshot (`2026-05-06`)
 
 Legacy architecture (`system_diagram.png`) has been mapped to current OpenJibo cloud services so release execution stays anchored to:
@@ -196,17 +268,19 @@ First completed slice in this personal-report parity track:
 
 ## Next Slices
 
-1. Dialog parsing expansion (queued next as of `2026-05-06`; more phrase variants, ambiguity handling, and transcript-to-intent guardrails)
-2. Presence-aware greetings and identity-triggered proactivity (reactive/proactive split, cooldowns, person-aware greeting hooks)
-3. Personal report parity slices (weather visual layer, live news path, commute path, calendar parity matrix)
-4. Holidays and seasonal personality slice beyond pizza day (time-scoped content backed by memory/proactivity path)
-5. Durable memory persistence path (swap in provider-backed multi-tenant storage while preserving behavior contracts)
-6. Update/backup/restore end-to-end proof (operator-run and documented)
-7. STT noise-screening and short-utterance reliability pass
-8. Provider-backed news expansion and deeper weather parity using Pegasus-backed contracts
-9. Capture indexing and retention boundary for group testing
+1. MIM import foundation for personality expansion
+2. Dialog parsing expansion
+3. Presence-aware greetings and identity-triggered proactivity
+4. Personal report parity slices
+5. Holidays and seasonal personality slice beyond pizza day
+6. Durable memory persistence path
+7. Update/backup/restore end-to-end proof
+8. STT noise-screening and short-utterance reliability pass
+9. Provider-backed news expansion and deeper weather parity
+10. Capture indexing and retention boundary for group testing
 
-For slices 1-5, use Pegasus phrase lists, MIM IDs, and behavior patterns as the source anchor before broadening into OpenJibo-native improvements.
+For slice 1, use the new import ladder above to keep the work grounded in what OpenJibo can already render today versus what needs new scaffolding.
+For slices 2-5, use Pegasus phrase lists, MIM IDs, and behavior patterns as the source anchor before broadening into OpenJibo-native improvements.
 
 ## Definition Of Done
 

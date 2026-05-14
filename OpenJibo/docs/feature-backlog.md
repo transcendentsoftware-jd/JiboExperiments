@@ -760,6 +760,57 @@ Current release theme:
   - first schema for list items + ownership scope
   - initial voice flows and follow-up intent handling defined
 
+### 29. Legacy MIM Personality Import Ladder
+
+- Status: `in_progress`
+- Tags: `content`, `protocol`, `docs`
+- Why now:
+  - we already have a chitchat/content scaffold that can render stock-compatible personality replies
+  - the legacy `chitchat-mims` tree is mostly declarative content, so a phased import can add visible charm fast
+  - this is the best near-term path to get Jibo feeling more interactive without needing a full Pegasus runtime clone
+- What is possible today:
+  - direct scripted replies through the existing content catalog
+  - stock-compatible payloads with `skillId`, `mim_id`, `mim_type`, `prompt_id`, and ESML
+  - current examples already prove the shape for pizza, dance, weather, news, and generic chat
+- What we need to build:
+  1. a MIM inventory importer that can scan the legacy tree and normalize `skill_id`, `mim_id`, prompt text, and metadata
+  2. a prompt-selection layer that can choose by category and condition metadata
+  3. a safe ESML/prompt renderer for imported content
+- What can be ported with each build:
+  - Build A: declarative prompt packs
+    - `core-responses`
+    - `deflector`
+    - the simplest `emotion-responses`
+    - direct `scripted-responses` that are just prompt lists
+  - Build B: conditioned prompt packs
+    - `gqa-responses`
+    - structured emotion prompts with `condition` gates
+    - any response families that only need simple state or Jibo-emotion checks
+  - Build C: conversation families
+    - richer `scripted-responses` that need follow-up state
+    - holiday / special-date personality sets
+    - more nuanced chitchat branches that depend on context-aware routing
+  - Build D: full parity cleanup
+    - larger cross-skill collections
+    - any MIMs that depend on Pegasus-only parser assumptions
+    - any files that need dedicated runtime abstraction instead of catalog lookup
+- Low-hanging fruit for tonight:
+  - import the smallest declarative packs first so we can test something tomorrow
+  - prioritize anything that is pure prompt text with no complex branching
+  - keep the first pass limited to content that maps cleanly onto the current catalog shape
+- Progress update (`2026-05-13`):
+  - added the first Build A importer scaffold in the cloud content repository
+  - checked in a small seed bundle under `Content/LegacyMims/BuildA`
+  - added focused importer tests for prompt stripping, bucketing, and merge behavior
+- Tomorrow test target:
+  - verify imported personality replies show up through the existing chitchat route
+  - confirm the emitted payload still looks like a stock skill response
+  - confirm the imported content does not disturb existing weather/news/pizza flows
+- Exit criteria:
+  - a first importer path exists for the simplest legacy MIM files
+  - at least one legacy prompt pack is running through OpenJibo content instead of hand-authored fallback text
+  - we have a clear second-wave list for the more conditional MIM families
+
 ## Suggested Order
 
 Before closing `1.0.18`:
@@ -790,6 +841,7 @@ For `1.0.19`:
 14. Provider-backed news and weather parity polish
 15. Grocery list capability discovery and MVP selection
 16. Lasso, identity, and onboarding as larger discovery-driven tracks
+17. Legacy MIM personality import ladder and first declarative prompt packs
 
 For `1.0.20` and beyond:
 

@@ -1,0 +1,83 @@
+{
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"timeout": 3,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-Ignore",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<ssa cat='oops'/>. Something's off with the connection to my sources. Maybe ask me again in a little while.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "CC_Error_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<ssa cat='oops'/>. It seems I can't connect to my favorite info sources at the moment. Maybe you can try again a little later.",
+			"media": "TTS",
+			"prompt_id": "CC_Error_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<ssa cat='oops'/>. My info sources seem to be down at the moment. Maybe try again a little later.",
+			"media": "TTS",
+			"prompt_id": "CC_Error_AN_03",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<ssa cat='oops'/>. The place where I get info like that isn't responding to me. Maybe you can try again a little later.",
+			"media": "TTS",
+			"prompt_id": "CC_Error_AN_04",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Huh, it seems like my info sources are down. Try asking me again a little later.",
+			"media": "TTS",
+			"prompt_id": "CC_Error_AN_05",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It looks like my info sources aren't answering me. How bout you try again in a little while.",
+			"media": "TTS",
+			"prompt_id": "CC_Error_AN_06",
+			"weight": 1
+		}
+	],
+	"es_auto_tagging": true,
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"ignore_no_match": false,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore"
+}

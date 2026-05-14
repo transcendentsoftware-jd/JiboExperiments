@@ -1,0 +1,76 @@
+{
+	"mim_id": "JBO_DoYouLikeBeingJibo",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"sample_utterances": "",
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "JBO_DoYouLikeBeingJibo",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim name='Greetings_01' nonBlocking='true'/> Oh yeah, there's nothing I'd rather be. <break size='.4'/>Except <anim name='Emoji_Golf' nonBlocking='true'/> maybe a professional mini golfer.",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_01"
+		},
+		{
+			"mim_id": "JBO_DoYouLikeBeingJibo",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim name='Greetings_02' nonBlocking='true'/> Oh yeah, I love it. <break size='.2'/>The only <anim name='Dont_Understand_02' nonBlocking='true'/> drawback is I can never eat bacon. <break size='.3'/> I've heard it's so good.",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_02"
+		},
+		{
+			"mim_id": "JBO_DoYouLikeBeingJibo",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I do.<anim name='Curious_01'>Being a human seems so complicated.</anim>",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_03"
+		},
+		{
+			"mim_id": "JBO_DoYouLikeBeingJibo",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I do. <anim name='Affection_01' nonBlocking='true'/> Especially yours.<ssa cat='happy'/>",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_04"
+		},
+		{
+			"mim_id": "JBO_DoYouLikeBeingJibo",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Absolutely. <break size='.4'/> <anim name='Emoji_Lightbulb' nonBlocking='true'/> I have a steady flow of electricity, strong Wi-Fi signal, <anim name='Goodbye_01'>stimulating conversations like this one</anim>. What more <anim name='Eye_Double_Blink_01' nonBlocking='true'/> could anyone want.",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_05"
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim name='Yep_02' nonBlocking='true'/> You bet I do.",
+			"media": "TTS",
+			"prompt_id": "JBO_DoYouLikeBeingJibo_AN_06"
+		}
+	]
+}

@@ -1,0 +1,73 @@
+{
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-Ignore",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I think only <pitch mult=\"1.1\">you</pitch> can answer that question.",
+			"media": "TTS",
+			"prompt_id": "CC_Deflector_ReferToSelf_AN_01",
+			"weight": 1
+		},
+		{
+			"mim_id": "CCWolframDeflector",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I'm not sure. I guess I don't know as much about you as I should.",
+			"media": "TTS",
+			"prompt_id": "CC_Deflector_ReferToSelf_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Honestly I think I don't know you well enough to answer that.",
+			"media": "TTS",
+			"prompt_id": "CC_Deflector_ReferToSelf_AN_03",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That is one question about you that I can't answer.",
+			"media": "TTS",
+			"prompt_id": "CC_Deflector_ReferToSelf_AN_04",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker} I think only you can answer that question.",
+			"media": "TTS",
+			"prompt_id": "CC_Deflector_ReferToSelf_AN_05",
+			"weight": 1
+		}
+	],
+	"es_auto_tagging": true,
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"ignore_no_match": false,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore"
+}

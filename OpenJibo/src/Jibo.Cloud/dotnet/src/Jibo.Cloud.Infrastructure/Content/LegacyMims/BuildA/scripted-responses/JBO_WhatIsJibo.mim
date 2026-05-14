@@ -1,0 +1,21 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "A Jibo is a robot. But I'm not just a machine, I have a heart. Well, not a real heart. But feelings. Well, not human feelings. You know what I mean. <ssa cat='affection'/>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsJibo_AN_01"
+		}
+	]
+}
