@@ -76,6 +76,16 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
         return intentName switch
         {
             "cloud_version" => false,
+            "memory_set_name" => false,
+            "memory_get_name" => false,
+            "memory_set_birthday" => false,
+            "memory_get_birthday" => false,
+            "memory_set_important_date" => false,
+            "memory_get_important_date" => false,
+            "memory_set_preference" => false,
+            "memory_get_preference" => false,
+            "memory_set_affinity" => false,
+            "memory_get_affinity" => false,
             "word_of_the_day" => false,
             "word_of_the_day_guess" => false,
             "radio" => false,

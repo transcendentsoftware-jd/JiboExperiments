@@ -3956,6 +3956,50 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Fact]
+    public async Task WhoAmI_DoesNotLeaveFollowUpOpen()
+    {
+        var token = _store.IssueRobotToken("identity-close-token");
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"LISTEN","transID":"trans-identity-close","data":{"rules":["launch"]}}"""
+        });
+
+        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CONTEXT","transID":"trans-identity-close","data":{"runtime":{"perception":{"speaker":"person-1"},"loop":{"users":[{"id":"person-1","firstName":"erin"}]}}}}"""
+        });
+
+        var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        {
+            HostName = "neo-hub.jibo.com",
+            Path = "/listen",
+            Kind = "neo-hub-listen",
+            Token = token,
+            Text = """{"type":"CLIENT_ASR","transID":"trans-identity-close","data":{"text":"who am i"}}"""
+        });
+
+        Assert.Equal(3, replies.Count);
+        using (var listenPayload = JsonDocument.Parse(replies[0].Text!))
+        {
+            Assert.Equal("memory_get_name", listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("intent").GetString());
+        }
+
+        var session = _store.FindSessionByToken(token);
+        Assert.NotNull(session);
+        Assert.False(session.FollowUpOpen);
+        Assert.False(session.TurnState.AwaitingTurnCompletion);
+    }
+
+    [Fact]
     public async Task ClientAsrPersonalReport_StateMachinePersistsAcrossTurns()
     {
         const string stateKey = "personalReportState";
