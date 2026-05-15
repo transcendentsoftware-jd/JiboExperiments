@@ -31,6 +31,7 @@ Keep a running checklist of the legacy persona questions and identity surfaces w
 - affect and mood: `how are you`, `are you happy`, `are you sad`, `are you angry`
 - memory and identity recall: `who am i`, `what is my name`, `when is my birthday`, `what is my favorite music`
 - greeting and presence charm: `good morning`, `welcome back`, `who is this`, person-aware greeting follow-ups
+- recognition follow-ups: `do you know me`, `do you remember me`, `can you recognize me`
 - seasonal and contextual charm: holiday prompts, pizza day, surprise offers, personal report personality hooks
 - conversational follow-ups that should stay local and warm instead of falling into generic chat
 

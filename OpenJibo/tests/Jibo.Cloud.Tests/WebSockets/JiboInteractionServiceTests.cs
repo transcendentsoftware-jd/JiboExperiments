@@ -231,6 +231,49 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("I think you are Sam.", decision.ReplyText);
     }
 
+    [Theory]
+    [InlineData("do you know me")]
+    [InlineData("do you remember me")]
+    [InlineData("who is this")]
+    [InlineData("can you recognize me")]
+    public async Task BuildDecisionAsync_IdentityFollowUp_UsesPersonScopedNameWhenSpeakerIsKnown(string transcript)
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        memoryStore.SetName(new PersonalMemoryTenantScope("acct-c", "loop-c", "device-c", "person-3"), "taylor");
+        var service = CreateService(memoryStore);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript,
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-c",
+                ["loopId"] = "loop-c",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-3"},"loop":{"users":[{"id":"person-3","firstName":"taylor"}]}}}"""
+            },
+            DeviceId = "device-c"
+        });
+
+        Assert.Equal("memory_get_name", decision.IntentName);
+        Assert.Equal("I think you are Taylor.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_IdentityFollowUp_RequestsNameWhenSpeakerIsUnknown()
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "do you know me",
+            NormalizedTranscript = "do you know me"
+        });
+
+        Assert.Equal("memory_get_name", decision.IntentName);
+        Assert.Equal("I do not know your name yet. You can say, my name is Alex.", decision.ReplyText);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_TriggerWithKnownIdentity_BuildsProactiveGreetingAndContext()
     {

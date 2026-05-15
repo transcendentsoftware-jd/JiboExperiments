@@ -3822,7 +3822,11 @@ public sealed class JiboInteractionService(
             "what s my name",
             "what's my name",
             "who am i",
-            "do you remember my name");
+            "do you remember my name",
+            "do you know me",
+            "do you remember me",
+            "who is this",
+            "can you recognize me");
     }
 
     private static string? TryExtractNameFact(string transcript)

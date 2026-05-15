@@ -830,6 +830,7 @@ Current release theme:
   - personality and capability questions
   - favorite-style prompts like `what is your favorite color`
   - mood / affect questions
+  - recognition follow-ups like `do you know me`
   - follow-up state prompts that should stay warm and locally grounded
 - Next pass targets:
   - document the remaining persona inventory so we keep a clean checklist for the next passes
