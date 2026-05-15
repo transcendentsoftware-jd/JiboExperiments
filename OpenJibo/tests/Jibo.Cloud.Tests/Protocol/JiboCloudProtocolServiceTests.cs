@@ -216,4 +216,17 @@ public sealed class JiboCloudProtocolServiceTests
         using var payload = JsonDocument.Parse(result.BodyText);
         Assert.Single(payload.RootElement.EnumerateArray());
     }
+
+    [Fact]
+    public void InMemoryCloudStateStore_SeedsPeopleForTheDefaultAccountLoop()
+    {
+        var store = new InMemoryCloudStateStore();
+
+        var people = store.GetPeople();
+
+        Assert.NotEmpty(people);
+        Assert.Contains(people, person => person.IsPrimary);
+        Assert.Contains(people, person => string.Equals(person.AccountId, store.GetAccount().AccountId, StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(people, person => string.Equals(person.LoopId, store.GetLoops()[0].LoopId, StringComparison.OrdinalIgnoreCase));
+    }
 }

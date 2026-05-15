@@ -78,7 +78,7 @@ public sealed class JiboInteractionService(
             randomizer,
             personalMemoryStore,
             BuildWeatherReportDecisionAsync,
-            ResolveTenantScope,
+            turnContext => ResolveTenantScope(turnContext),
             cancellationToken);
         if (personalReportDecision is not null)
         {
@@ -92,7 +92,7 @@ public sealed class JiboInteractionService(
             lowered,
             randomizer,
             personalMemoryStore,
-            ResolveTenantScope);
+            turnContext => ResolveTenantScope(turnContext));
         if (householdListDecision is not null)
         {
             return householdListDecision;
@@ -151,7 +151,7 @@ public sealed class JiboInteractionService(
             "good_night" => BuildReactiveGreetingDecision(turn, "good_night", referenceLocalTime),
             "welcome_back" => BuildReactiveGreetingDecision(turn, "welcome_back", referenceLocalTime),
             "memory_set_name" => BuildRememberNameDecision(turn, transcript),
-            "memory_get_name" => BuildRecallNameDecision(turn),
+            "memory_get_name" => BuildRecallNameDecision(turn, greetingPresence),
             "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),
             "memory_get_birthday" => BuildRecallBirthdayDecision(turn),
             "memory_set_important_date" => BuildRememberImportantDateDecision(turn, transcript),
@@ -270,10 +270,16 @@ public sealed class JiboInteractionService(
 
     private string? ResolvePreferredGreetingName(TurnContext turn, GreetingPresenceProfile presence)
     {
-        var rememberedName = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        var rememberedName = personalMemoryStore.GetName(ResolveTenantScope(turn, presence.PrimaryPersonId));
         if (!string.IsNullOrWhiteSpace(rememberedName))
         {
             return ToDisplayName(rememberedName);
+        }
+
+        var tenantRememberedName = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        if (!string.IsNullOrWhiteSpace(tenantRememberedName))
+        {
+            return ToDisplayName(tenantRememberedName);
         }
 
         if (!string.IsNullOrWhiteSpace(presence.PrimaryPersonId) &&
@@ -372,16 +378,35 @@ public sealed class JiboInteractionService(
             $"Nice to meet you, {name}. I will remember your name.");
     }
 
-    private JiboInteractionDecision BuildRecallNameDecision(TurnContext turn)
+    private JiboInteractionDecision BuildRecallNameDecision(TurnContext turn, GreetingPresenceProfile? presence = null)
     {
-        var name = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        var personScope = ResolveTenantScope(turn, presence?.PrimaryPersonId);
+        var name = personalMemoryStore.GetName(personScope);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            name = personalMemoryStore.GetName(ResolveTenantScope(turn));
+        }
+
+        if (string.IsNullOrWhiteSpace(name) &&
+            presence is not null &&
+            !string.IsNullOrWhiteSpace(presence.PrimaryPersonId) &&
+            presence.LoopUserFirstNames.TryGetValue(presence.PrimaryPersonId, out var firstName) &&
+            !string.IsNullOrWhiteSpace(firstName))
+        {
+            name = ToDisplayName(firstName);
+        }
+
+        name = ToDisplayName(name ?? string.Empty);
+
         return string.IsNullOrWhiteSpace(name)
             ? new JiboInteractionDecision(
                 "memory_get_name",
                 "I do not know your name yet. You can say, my name is Alex.")
             : new JiboInteractionDecision(
                 "memory_get_name",
-                $"You told me your name is {name}.");
+                presence is not null && !string.IsNullOrWhiteSpace(presence.PrimaryPersonId)
+                    ? $"I think you are {name}."
+                    : $"You told me your name is {name}.");
     }
 
     private JiboInteractionDecision BuildRememberBirthdayDecision(TurnContext turn, string transcript)
@@ -4137,12 +4162,15 @@ public sealed class JiboInteractionService(
         };
     }
 
-    private static PersonalMemoryTenantScope ResolveTenantScope(TurnContext turn)
+    private static PersonalMemoryTenantScope ResolveTenantScope(TurnContext turn, string? personId = null)
     {
         var accountId = ReadTenantAttribute(turn, "accountId") ?? "usr_openjibo_owner";
         var loopId = ReadTenantAttribute(turn, "loopId") ?? "openjibo-default-loop";
         var deviceId = turn.DeviceId ?? ReadTenantAttribute(turn, "deviceId") ?? "unknown-device";
-        return new PersonalMemoryTenantScope(accountId, loopId, deviceId);
+        var resolvedPersonId = !string.IsNullOrWhiteSpace(personId)
+            ? personId
+            : ReadTenantAttribute(turn, "personId") ?? ReadTenantAttribute(turn, "speakerId");
+        return new PersonalMemoryTenantScope(accountId, loopId, deviceId, resolvedPersonId);
     }
 
     private static string? ReadTenantAttribute(TurnContext turn, string key)

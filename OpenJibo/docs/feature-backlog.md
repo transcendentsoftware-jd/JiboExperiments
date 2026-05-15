@@ -654,6 +654,8 @@ Current release theme:
 - Follow-up:
   - add durable persistence path for personal facts
   - broaden fact categories further (multi-person household memory, relationship cues, and corrective updates)
+  - add explicit person-scoped state so future interactions can distinguish household members inside the same loop
+  - define the first server-to-server sync envelope for durable state before we need it in production
 
 ### 24. Memory-Triggered Proactivity Baseline
 
@@ -669,6 +671,7 @@ Current release theme:
   - expand proactivity beyond pizza to additional Pegasus-backed categories
   - add cooldown/throttle policy and observability around proactive offer frequency
   - connect memory store to durable multi-tenant persistence
+  - keep the sync story visible so stateful offers can survive a multi-server deployment later
 
 ### 25. Weather Report-Skill Launch Compatibility
 

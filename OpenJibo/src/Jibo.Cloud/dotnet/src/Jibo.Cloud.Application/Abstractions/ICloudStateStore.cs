@@ -13,6 +13,7 @@ public interface ICloudStateStore
     CloudSession OpenSession(string kind, string? deviceId, string? token, string? hostName, string? path);
     CloudSession? FindSessionByToken(string token);
     IReadOnlyList<LoopRecord> GetLoops();
+    IReadOnlyList<PersonRecord> GetPeople();
     IReadOnlyList<UpdateManifest> ListUpdates(string? subsystem = null, string? filter = null);
     UpdateManifest? GetUpdateFrom(string? subsystem, string? fromVersion, string? filter);
     UpdateManifest CreateUpdate(string? fromVersion, string? toVersion, string? changes, string? shaHash, long? length, string? subsystem, string? filter, IDictionary<string, object?>? dependencies);

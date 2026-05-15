@@ -23,6 +23,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     private readonly List<MediaRecord> _media = [];
     private readonly List<BackupRecord> _backups = [];
     private readonly List<LoopRecord> _loops;
+    private readonly List<PersonRecord> _people;
     private DeviceRegistration _robot;
     private RobotProfile _robotProfile;
 
@@ -58,6 +59,29 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
                 OwnerAccountId = _account.AccountId,
                 RobotId = _robot.RobotId,
                 RobotFriendlyId = _robot.DeviceId
+            }
+        ];
+        _people =
+        [
+            new PersonRecord
+            {
+                PersonId = "person-openjibo-owner",
+                AccountId = _account.AccountId,
+                LoopId = _loops[0].LoopId,
+                RobotId = _robot.RobotId,
+                DisplayName = $"{_account.FirstName} {_account.LastName}",
+                Alias = _account.FirstName,
+                IsPrimary = true
+            },
+            new PersonRecord
+            {
+                PersonId = "person-openjibo-household-member",
+                AccountId = _account.AccountId,
+                LoopId = _loops[0].LoopId,
+                RobotId = _robot.RobotId,
+                DisplayName = "OpenJibo Household Member",
+                Alias = "Household Member",
+                IsPrimary = false
             }
         ];
 
@@ -153,6 +177,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     }
 
     public IReadOnlyList<LoopRecord> GetLoops() => _loops.ToArray();
+
+    public IReadOnlyList<PersonRecord> GetPeople() => _people.ToArray();
 
     public IReadOnlyList<UpdateManifest> ListUpdates(string? subsystem = null, string? filter = null)
     {

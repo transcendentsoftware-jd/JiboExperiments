@@ -148,7 +148,9 @@ public sealed class InMemoryPersonalMemoryStore : IPersonalMemoryStore
 
     private static string BuildTenantKey(PersonalMemoryTenantScope tenantScope)
     {
-        return $"{tenantScope.AccountId}|{tenantScope.LoopId}|{tenantScope.DeviceId}";
+        return string.IsNullOrWhiteSpace(tenantScope.PersonId)
+            ? $"{tenantScope.AccountId}|{tenantScope.LoopId}|{tenantScope.DeviceId}"
+            : $"{tenantScope.AccountId}|{tenantScope.LoopId}|{tenantScope.DeviceId}|{tenantScope.PersonId}";
     }
 
     private static string NormalizeCategory(string category)

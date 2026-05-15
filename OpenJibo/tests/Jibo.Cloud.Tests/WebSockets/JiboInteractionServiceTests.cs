@@ -184,6 +184,54 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Fact]
+    public async Task BuildDecisionAsync_GoodMorning_UsesPersonScopedNameWhenSpeakerIsKnown()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        memoryStore.SetName(new PersonalMemoryTenantScope("acct-a", "loop-a", "device-a", "person-1"), "alex");
+        var service = CreateService(memoryStore);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "good morning",
+            NormalizedTranscript = "good morning",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-a",
+                ["loopId"] = "loop-a",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-1"},"loop":{"users":[{"id":"person-1","firstName":"jake"}]}}}"""
+            },
+            DeviceId = "device-a"
+        });
+
+        Assert.Equal("good_morning", decision.IntentName);
+        Assert.Equal("Good morning, Alex. It is great to see you.", decision.ReplyText);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_WhoAmI_UsesPersonScopedNameWhenSpeakerIsKnown()
+    {
+        var memoryStore = new InMemoryPersonalMemoryStore();
+        memoryStore.SetName(new PersonalMemoryTenantScope("acct-b", "loop-b", "device-b", "person-2"), "sam");
+        var service = CreateService(memoryStore);
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "who am i",
+            NormalizedTranscript = "who am i",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "acct-b",
+                ["loopId"] = "loop-b",
+                ["context"] = """{"runtime":{"perception":{"speaker":"person-2"},"loop":{"users":[{"id":"person-2","firstName":"sam"}]}}}"""
+            },
+            DeviceId = "device-b"
+        });
+
+        Assert.Equal("memory_get_name", decision.IntentName);
+        Assert.Equal("I think you are Sam.", decision.ReplyText);
+    }
+
+    [Fact]
     public async Task BuildDecisionAsync_TriggerWithKnownIdentity_BuildsProactiveGreetingAndContext()
     {
         var service = CreateService();
@@ -803,7 +851,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("memory_get_name", recallDecision.IntentName);
-        Assert.Equal("You told me your name is alex.", recallDecision.ReplyText);
+        Assert.Equal("You told me your name is Alex.", recallDecision.ReplyText);
     }
 
     [Fact]

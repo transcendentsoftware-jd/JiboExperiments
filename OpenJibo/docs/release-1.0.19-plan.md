@@ -43,6 +43,15 @@ The goal is to keep compatibility work steady while shipping personality and cap
 - define tenant boundaries across account, loop, device, and person-memory records
 - add storage abstractions that can move from in-memory/local JSON to hosted SQL/Blob without reworking behavior layers
 - implement memory-ready schemas and repository contracts for user facts (names, birthdays, personal dates, preferences) with strict tenant scoping
+- seed person-aware state keys now so future interactions can scope to account + loop + device + person without another shape change
+- keep stateful interaction flows repository-backed instead of embedding more ad hoc metadata in the websocket layer
+
+### 6. Multi-Server Sync Path
+
+- document the eventual sync boundary for stateful data that should move between servers
+- treat the first pass as repository-local durability, then layer replication and conflict handling on top
+- prefer explicit change records or versioned state snapshots over implicit last-writer wins when we outgrow a single node
+- keep cross-server reconciliation out of the hot path until the single-server semantics are stable
 
 ## First Implemented Slice In `1.0.19`
 

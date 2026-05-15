@@ -18,7 +18,7 @@ public interface IPersonalMemoryStore
     void ClearListItems(PersonalMemoryTenantScope tenantScope, string listName);
 }
 
-public sealed record PersonalMemoryTenantScope(string AccountId, string LoopId, string DeviceId);
+public sealed record PersonalMemoryTenantScope(string AccountId, string LoopId, string DeviceId, string? PersonId = null);
 
 public enum PersonalAffinity
 {
