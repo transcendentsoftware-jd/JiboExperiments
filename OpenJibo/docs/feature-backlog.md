@@ -832,7 +832,8 @@ Current release theme:
   - mood / affect questions
   - follow-up state prompts that should stay warm and locally grounded
 - Next pass targets:
-  - port a small favorites family, starting with `favorite color`
+  - document the remaining persona inventory so we keep a clean checklist for the next passes
+  - keep the favorites family moving with source-backed imports where available, and temporary runtime replies only when the source is missing
   - keep adding 1-3 persona prompts per pass with tests
   - prefer source-backed MIM imports when the legacy text is available, and use a temporary runtime reply only when needed to unblock user value
 - Exit criteria:
