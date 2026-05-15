@@ -4,6 +4,8 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class DemoConversationBroker(JiboInteractionService interactionService) : IConversationBroker
 {
+    private readonly TimeSpan _followUpTimeout = TimeSpan.FromSeconds(6);
+
     public async Task<ResponsePlan> HandleTurnAsync(TurnContext turn, CancellationToken cancellationToken = default)
     {
         var decision = await interactionService.BuildDecisionAsync(turn, cancellationToken);
@@ -31,7 +33,7 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
                 ? new FollowUpPolicy
                 {
                     KeepMicOpen = true,
-                    Timeout = TimeSpan.FromSeconds(12),
+                    Timeout = _followUpTimeout,
                     ExpectedTopic = "conversation"
                 }
                 : FollowUpPolicy.None,
@@ -51,7 +53,7 @@ public sealed class DemoConversationBroker(JiboInteractionService interactionSer
             plan.Actions.Add(new ListenAction
             {
                 Sequence = 1,
-                Timeout = TimeSpan.FromSeconds(12),
+                Timeout = _followUpTimeout,
                 Mode = "follow-up"
             });
         }
