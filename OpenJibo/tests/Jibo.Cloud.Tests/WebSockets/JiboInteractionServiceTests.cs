@@ -400,6 +400,33 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Theory]
+    [InlineData("what is your favorite flower", "robot_favorite_flower", "sunflowers")]
+    [InlineData("what's your favorite flower", "robot_favorite_flower", "sunflowers")]
+    [InlineData("do you like R2D2", "robot_likes_r2d2", "A legend. A true legend.")]
+    [InlineData("do you like the sun", "robot_likes_sun", "favorite star in the universe")]
+    [InlineData("do you like space", "robot_likes_space", "I love space")]
+    [InlineData("do you like kids", "robot_likes_kids", "kids are so fun")]
+    [InlineData("can you laugh", "robot_can_laugh", "when I'm happy")]
+    [InlineData("can you dance", "robot_can_dance", "dancing is one of the things I know best")]
+    public async Task BuildDecisionAsync_NewLegacyPersonalityMims_UseImportedReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReplySnippet)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Contains(expectedReplySnippet, decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
     [InlineData("how do you work", "robot_how_do_you_work", "Hello! Thank you for updating me I am proud of the community's work Many people have gotten together to care for me more than em eye tee ever did. I hope that I can catch up even though it has been seven years.")]
     [InlineData("what do you eat", "robot_what_do_you_eat", "The only thing I consume is electricity.")]
     [InlineData("where do you live", "robot_where_do_you_live", "Unless I missed something, we're in my home as we speak.")]

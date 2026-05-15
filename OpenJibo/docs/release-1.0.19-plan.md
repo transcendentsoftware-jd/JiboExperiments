@@ -28,6 +28,8 @@ Keep a running checklist of the legacy persona questions and identity surfaces w
 - persona and capability: `do you have a personality`, `what is your job`, `how much do you know`, `what do you want`
 - self-description and social charm: `what's your name`, `do you have a nickname`, `do you like being Jibo`, `are there others like you`
 - favorite-style prompts: `what is your favorite color`, `what is your favorite food`, `what is your favorite music`
+- attraction and preference prompts: `what is your favorite flower`, `do you like R2D2`, `do you like the sun`, `do you like space`, `do you like kids`
+- capability and charm prompts: `can you laugh`, `can you dance`
 - affect and mood: `how are you`, `are you happy`, `are you sad`, `are you angry`
 - memory and identity recall: `who am i`, `what is my name`, `when is my birthday`, `what is my favorite music`
 - greeting and presence charm: `good morning`, `welcome back`, `who is this`, person-aware greeting follow-ups
@@ -38,6 +40,7 @@ Keep a running checklist of the legacy persona questions and identity surfaces w
 Current batch note:
 
 - `favorite color`, `favorite food`, and `favorite music` are the first small favorites-family slice
+- the next source-backed batch now includes `favorite flower`, `R2D2`, `sun`, `space`, `kids`, plus a couple of charm prompts like `can you laugh` and `can you dance`
 - the next passes should keep the same pattern and prefer source-backed phrasing whenever the legacy MIM text is available
   - if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later
   - after the favorites batch, the next doc pass should focus on richer persona follow-ups and the remaining memory/presence charm surfaces
@@ -49,6 +52,13 @@ Current batch note:
   - `what languages do you speak`
   - `what do you like to do`
   - `what are you made of`
+  - `what is your favorite flower`
+  - `do you like R2D2`
+  - `do you like the sun`
+  - `do you like space`
+  - `do you like kids`
+  - `can you laugh`
+  - `can you dance`
 
 The goal is to port these in small batches, capture the source-backed phrasing where possible, and keep a test for each batch so the list never becomes a vague backlog graveyard.
 

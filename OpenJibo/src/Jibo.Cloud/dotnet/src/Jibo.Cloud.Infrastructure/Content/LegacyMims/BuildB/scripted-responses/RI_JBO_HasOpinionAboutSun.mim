@@ -1,0 +1,30 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "What <anim cat=\"emoji\" filter=\"sun, !hot-frame\" nonBlocking=\"true\" />can you say about the sun. It's the best star I know.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_HasOpinionAboutSun_AN_01"
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Oh the <anim cat=\"emoji\" filter=\"sun, !hot-frame\" nonBlocking=\"true\" /> sun? It's by far my favorite star in the universe.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_HasOpinionAboutSun_AN_02"
+		}
+	]
+}

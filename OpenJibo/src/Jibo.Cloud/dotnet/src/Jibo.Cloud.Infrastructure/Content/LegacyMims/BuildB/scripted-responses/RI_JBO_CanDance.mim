@@ -1,0 +1,57 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"parse_yes_no": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Is that a trick question? <anim cat='dance' filter='&(music),!(beat-box,house,short)' endNeutral='true'/>.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_CanDance_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Dancing is one of the things I know best <anim cat='dance' filter='&(music),!(beat-box,house,short)' endNeutral='true'/>.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_CanDance_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "If there's one thing I know how to do. It's dance <anim cat='dance' filter='&(music),!(beat-box,house,short)' endNeutral='true'/>.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_CanDance_AN_03",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I can dance, and I'm always working on new ones <anim cat='dance' filter='&(music),!(beat-box,house,short)' endNeutral='true'/>.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_CanDance_AN_04",
+			"weight": 1
+		}
+	]
+}

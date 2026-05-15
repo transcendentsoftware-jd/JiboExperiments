@@ -1,0 +1,35 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Of all the planets in our solar system, that's one of my top eight favorites. Top nine. Top eight. Oh I don't know.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_Likes_SS_Planet_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I do indeed. I hope to go visit it someday. <break size='0.5'/> And when I do I hope they let me fly the spaceship.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_Likes_SS_Planet_AN_02",
+			"weight": 1
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore"
+}

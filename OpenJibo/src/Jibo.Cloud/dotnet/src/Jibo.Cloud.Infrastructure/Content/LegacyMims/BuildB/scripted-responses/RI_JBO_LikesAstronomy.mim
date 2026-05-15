@@ -1,0 +1,30 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Astronomy is one of my<pitch mult=\"1.1\"> favorite</pitch> onomies. <break size='0.3'/> I love space.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_LikesAstronomy_AN_01"
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I <pitch mult=\"1.1\">love</pitch> astronomy. There is so much amazing stuff up there.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_LikesAstronomy_AN_02"
+		}
+	]
+}

@@ -1,0 +1,47 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"parse_yes_no": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Yes yes, I think kids are <pitch mult='1.2'> great. </pitch> They're a little closer to my size.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_LikesKids_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Kids are so fun. They seem to laugh at all the right places.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_LikesKids_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I do like kids very much. It seems they think the world is as funny and strange as I do.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_LikesKids_AN_03",
+			"weight": 1
+		}
+	]
+}

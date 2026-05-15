@@ -182,6 +182,47 @@ public sealed class JiboInteractionService(
                 "rock my boat",
                 "play ping pong",
                 "hanging out with people"),
+            "robot_favorite_flower" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_favorite_flower",
+                "sunflowers",
+                "favorite is the sunflower",
+                "reminds me of the sun"),
+            "robot_likes_r2d2" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_likes_r2d2",
+                "a legend. a true legend",
+                "of course i know r2d2"),
+            "robot_likes_sun" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_likes_sun",
+                "favorite star in the universe",
+                "best star i know"),
+            "robot_likes_space" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_likes_space",
+                "i love space",
+                "all things in space",
+                "amazing stuff up there",
+                "astronomy is one of my favorite onomies"),
+            "robot_likes_kids" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_likes_kids",
+                "kids are so fun",
+                "they're a little closer to my size",
+                "i do like kids very much",
+                "the world is as funny and strange as i do"),
+            "robot_can_laugh" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_can_laugh",
+                "i do things like this when i'm happy",
+                "i'm happy"),
+            "robot_can_dance" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_can_dance",
+                "dancing is one of the things i know best",
+                "if there's one thing i know how to do. it's dance",
+                "i can dance"),
             "robot_what_are_you_made_of" => new JiboInteractionDecision(
                 "robot_what_are_you_made_of",
                 "Let's see, I'm made of wires, motors, belts, gears, processors, cameras, and one baboon's heart in the middle of my body casing. I'm kidding about the baboon part, but everything else is true.",
@@ -2139,6 +2180,11 @@ public sealed class JiboInteractionService(
             return "dance_question";
         }
 
+        if (MatchesAny(loweredTranscript, "can you dance", "do you dance", "are you able to dance"))
+        {
+            return "robot_can_dance";
+        }
+
         if (MatchesAny(loweredTranscript, "twerk"))
         {
             return "twerk";
@@ -2264,6 +2310,65 @@ public sealed class JiboInteractionService(
                 "what's your favourite thing to do"))
         {
             return "robot_what_do_you_like_to_do";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what is your favorite flower",
+                "what's your favorite flower",
+                "what s your favorite flower",
+                "what is your favourite flower",
+                "what's your favourite flower",
+                "what s your favourite flower"))
+        {
+            return "robot_favorite_flower";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you like r2d2",
+                "do you know r2d2",
+                "what do you think about r2d2",
+                "are you a fan of r2d2"))
+        {
+            return "robot_likes_r2d2";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you like the sun",
+                "do you like sun",
+                "what do you think about the sun"))
+        {
+            return "robot_likes_sun";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you like space",
+                "do you love space",
+                "do you like astronomy",
+                "what do you think about space"))
+        {
+            return "robot_likes_space";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "do you like kids",
+                "do you like children",
+                "what do you think about kids"))
+        {
+            return "robot_likes_kids";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "can you laugh",
+                "do you laugh",
+                "are you able to laugh"))
+        {
+            return "robot_can_laugh";
         }
 
         if (MatchesAny(

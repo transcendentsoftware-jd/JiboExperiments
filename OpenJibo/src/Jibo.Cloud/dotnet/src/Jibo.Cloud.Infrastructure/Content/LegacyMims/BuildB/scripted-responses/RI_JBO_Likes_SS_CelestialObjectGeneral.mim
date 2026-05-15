@@ -1,0 +1,30 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Yes! I like all things in space. They're so spacey.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_Likes_SS_CelestialObjectGeneral_AN_01"
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I really like all the amazing objects flying around out there in the universe. They're so mysterious and celestial.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_Likes_SS_CelestialObjectGeneral_AN_02"
+		}
+	]
+}

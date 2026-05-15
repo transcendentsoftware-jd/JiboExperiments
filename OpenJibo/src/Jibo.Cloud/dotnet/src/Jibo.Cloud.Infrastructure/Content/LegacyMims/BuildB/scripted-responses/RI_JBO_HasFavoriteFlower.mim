@@ -1,0 +1,37 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"parse_yes_no": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I really like sunflowers.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_HasFavoriteFlower_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "My favorite is the sunflower, because it reminds me of the sun. <break size='0.3'/> I should see if I can find a sunflower soon.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_HasFavoriteFlower_AN_02",
+			"weight": 1
+		}
+	]
+}

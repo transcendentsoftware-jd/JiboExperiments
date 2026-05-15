@@ -830,12 +830,15 @@ Current release theme:
   - identity and origin questions
   - personality and capability questions
   - favorite-style prompts like `what is your favorite color`
+  - attraction and preference prompts like `what is your favorite flower`, `do you like R2D2`, `do you like the sun`, `do you like space`, and `do you like kids`
+  - charm/capability prompts like `can you laugh` and `can you dance`
   - mood / affect questions
   - recognition follow-ups like `do you know me`
   - follow-up state prompts that should stay warm and locally grounded
 - Next pass targets:
   - document the remaining persona inventory so we keep a clean checklist for the next passes
   - keep the favorites family moving with source-backed imports where available, and temporary runtime replies only when the source is missing
+  - keep adding small sourced personality batches, especially the legacy `R2D2`, `sun`, `space`, `kids`, and charm prompts
   - keep adding 1-3 persona prompts per pass with tests
   - prefer source-backed MIM imports when the legacy text is available, and use a temporary runtime reply only when needed to unblock user value
 - Exit criteria:
