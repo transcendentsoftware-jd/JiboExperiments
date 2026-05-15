@@ -39,8 +39,16 @@ Current batch note:
 
 - `favorite color`, `favorite food`, and `favorite music` are the first small favorites-family slice
 - the next passes should keep the same pattern and prefer source-backed phrasing whenever the legacy MIM text is available
-- if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later
-- after the favorites batch, the next doc pass should focus on richer persona follow-ups and the remaining memory/presence charm surfaces
+  - if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later
+  - after the favorites batch, the next doc pass should focus on richer persona follow-ups and the remaining memory/presence charm surfaces
+- Build B is now reserved for the next source-backed scripted-response batch:
+  - `how do you work`
+  - `what do you eat`
+  - `where do you live`
+  - `where were you born`
+  - `what languages do you speak`
+  - `what do you like to do`
+  - `what are you made of`
 
 The goal is to port these in small batches, capture the source-backed phrasing where possible, and keep a test for each batch so the list never becomes a vague backlog graveyard.
 

@@ -801,11 +801,12 @@ Current release theme:
   - import the smallest declarative packs first so we can test something tomorrow
   - prioritize anything that is pure prompt text with no complex branching
   - keep the first pass limited to content that maps cleanly onto the current catalog shape
-- Progress update (`2026-05-13`):
-  - added the first Build A importer scaffold in the cloud content repository
-  - checked in a small seed bundle under `Content/LegacyMims/BuildA`
-  - added focused importer tests for prompt stripping, bucketing, and merge behavior
-  - expanded Build A with additional easy scripted-response packs for identity and persona replies
+  - Progress update (`2026-05-13`):
+    - added the first Build A importer scaffold in the cloud content repository
+    - checked in a small seed bundle under `Content/LegacyMims/BuildA`
+    - added focused importer tests for prompt stripping, bucketing, and merge behavior
+    - expanded Build A with additional easy scripted-response packs for identity and persona replies
+    - started Build B with source-backed scripted-response packs for work, food, home, birthplace, language, hobby, and material questions
 - Tomorrow test target:
   - verify imported personality replies show up through the existing chitchat route
   - confirm the emitted payload still looks like a stock skill response

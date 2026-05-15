@@ -108,15 +108,20 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
             ]
         };
 
-        var seedDirectory = ResolveSeedDirectory();
-        return LegacyMimCatalogImporter.MergeInto(catalog, seedDirectory);
+        foreach (var seedDirectory in ResolveSeedDirectories())
+        {
+            catalog = LegacyMimCatalogImporter.MergeInto(catalog, seedDirectory);
+        }
+
+        return catalog;
     }
 
-    private static string? ResolveSeedDirectory()
+    private static IReadOnlyList<string> ResolveSeedDirectories()
     {
         var candidates = new[]
         {
             Path.Combine(AppContext.BaseDirectory, "Content", "LegacyMims", "BuildA"),
+            Path.Combine(AppContext.BaseDirectory, "Content", "LegacyMims", "BuildB"),
             Path.GetFullPath(Path.Combine(
                 AppContext.BaseDirectory,
                 "..",
@@ -131,10 +136,25 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
                 "Jibo.Cloud.Infrastructure",
                 "Content",
                 "LegacyMims",
-                "BuildA"))
+                "BuildA")),
+            Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "..",
+                "..",
+                "..",
+                "..",
+                "src",
+                "Jibo.Cloud",
+                "dotnet",
+                "src",
+                "Jibo.Cloud.Infrastructure",
+                "Content",
+                "LegacyMims",
+                "BuildB"))
         };
 
-        return candidates.FirstOrDefault(Directory.Exists);
+        return candidates.Where(Directory.Exists).ToArray();
     }
 
     public Task<JiboExperienceCatalog> GetCatalogAsync(CancellationToken cancellationToken = default)

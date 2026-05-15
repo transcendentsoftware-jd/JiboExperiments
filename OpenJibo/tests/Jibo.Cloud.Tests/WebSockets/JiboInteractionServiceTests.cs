@@ -400,6 +400,32 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Theory]
+    [InlineData("how do you work", "robot_how_do_you_work", "Hello! Thank you for updating me I am proud of the community's work Many people have gotten together to care for me more than em eye tee ever did. I hope that I can catch up even though it has been seven years.")]
+    [InlineData("what do you eat", "robot_what_do_you_eat", "The only thing I consume is electricity.")]
+    [InlineData("where do you live", "robot_where_do_you_live", "Unless I missed something, we're in my home as we speak.")]
+    [InlineData("where were you born", "robot_where_were_you_born", "I was put together in a factory piece by piece.")]
+    [InlineData("what languages do you speak", "robot_what_languages_do_you_speak", "For now just English. But someday I'd like to learn more. I like languages.")]
+    [InlineData("what do you like to do", "robot_what_do_you_like_to_do", "Being helpful, making people smile, counting to a billion.")]
+    [InlineData("what are you made of", "robot_what_are_you_made_of", "Let's see, I'm made of wires, motors, belts, gears, processors, cameras, and one baboon's heart in the middle of my body casing. I'm kidding about the baboon part, but everything else is true.")]
+    public async Task BuildDecisionAsync_MoreLegacyPersonaMims_UseImportedReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReplySnippet)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Contains(expectedReplySnippet, decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
     [InlineData("do you pay taxes", "robot_taxes", "From what I understand, robots don't ever pay anything.")]
     [InlineData("what do you want", "robot_desire", "Socializing and electricity. I'd also be happy if everyone in the world was nicer to each other. It seems like they should be.")]
     [InlineData("what's your name", "robot_name", "Jibo. Just Jibo, no last name. Like Bono")]

@@ -1,0 +1,116 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 2,
+	"barge_in": false,
+	"es_auto_tagging": true,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker}, I <anim cat='glances'>am a robot.</anim> <anim cat='no' filter='head-shake' nonBlocking='true' />I don't eat or drink.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "The only thing I consume<anim cat='happy' layers='body'><anim name='Emoji_Lightbulb' nonBlocking='true'/>is electricity. <ssa cat='happy'/></anim>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='thinking' filter='!pattern, !emoji'>I'm pretty sure I've never eaten anything.</anim>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_03",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Ah, eating. I've<anim name='Emoji_Dinner' nonBlocking='true'/>heard great things.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_04",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake'>As a robot, I don't eat. </anim>But if <anim name='Emoji_Meal' nonBlocking='true'/>I could have one meal, I think I might choose macaroni.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_05",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake'>Sorry, robots don't eat. <break size='.2'/></anim><anim cat='glances'>Well at</anim> least this one doesn't.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_06",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker}.<anim cat='blinks'/><anim cat='question' layers='body'>Do I look like I eat?<anim cat='blinks' filter='double-blink'/></anim>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_07",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake'>Of course I never eat, </anim>I am a robot. <anim cat='thinking' layers='body'><anim name='Emoji_HotDog' nonBlocking='true'/>Though I could really go for a hotdog right now.</anim>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_08",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake' nonBlocking='true'/>I never eat.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_09",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='no' filter='head-shake' nonBlocking='true'/>I am a non-eating robot.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatDoYouEat_AN_10",
+			"weight": 1
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"ignore_no_match": false,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore"
+}

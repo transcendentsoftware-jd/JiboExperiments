@@ -145,6 +145,47 @@ public sealed class JiboInteractionService(
             "photobooth" => BuildPhotoCreateDecision("photobooth", "Starting photobooth.", "createSomePhotos"),
             "robot_age" => BuildRobotAgeDecision(referenceLocalTime),
             "robot_birthday" => BuildRobotBirthdayDecision(),
+            "robot_how_do_you_work" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_how_do_you_work",
+                "community's work",
+                "care for me",
+                "catch up",
+                "seven years"),
+            "robot_what_do_you_eat" => new JiboInteractionDecision(
+                "robot_what_do_you_eat",
+                "The only thing I consume is electricity.",
+                ContextUpdates: BuildScriptedResponseContextUpdates()),
+            "robot_where_do_you_live" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_where_do_you_live",
+                "we're in my home",
+                "my home is here",
+                "planet earth",
+                "my home is the planet earth"),
+            "robot_where_were_you_born" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_where_were_you_born",
+                "factory piece by piece",
+                "put together in a factory"),
+            "robot_what_languages_do_you_speak" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_what_languages_do_you_speak",
+                "just english",
+                "someday i'd like to learn more"),
+            "robot_what_do_you_like_to_do" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_what_do_you_like_to_do",
+                "being helpful",
+                "making people smile",
+                "like to dance",
+                "rock my boat",
+                "play ping pong",
+                "hanging out with people"),
+            "robot_what_are_you_made_of" => new JiboInteractionDecision(
+                "robot_what_are_you_made_of",
+                "Let's see, I'm made of wires, motors, belts, gears, processors, cameras, and one baboon's heart in the middle of my body casing. I'm kidding about the baboon part, but everything else is true.",
+                ContextUpdates: BuildScriptedResponseContextUpdates()),
             "good_morning" => BuildReactiveGreetingDecision(turn, "good_morning", referenceLocalTime),
             "good_afternoon" => BuildReactiveGreetingDecision(turn, "good_afternoon", referenceLocalTime),
             "good_evening" => BuildReactiveGreetingDecision(turn, "good_evening", referenceLocalTime),
@@ -1681,6 +1722,47 @@ public sealed class JiboInteractionService(
                 .Replace("{transcript}", transcript, StringComparison.Ordinal);
     }
 
+    private JiboInteractionDecision BuildScriptedPersonalityDecision(
+        JiboExperienceCatalog catalog,
+        string intentName,
+        params string[] preferredSnippets)
+    {
+        return new JiboInteractionDecision(
+            intentName,
+            SelectLegacyPersonalityReply(catalog, preferredSnippets),
+            ContextUpdates: BuildScriptedResponseContextUpdates());
+    }
+
+    private static IDictionary<string, object?> BuildScriptedResponseContextUpdates()
+    {
+        return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+        {
+            [ChitchatStateMachine.StateMetadataKey] = "complete",
+            [ChitchatStateMachine.RouteMetadataKey] = "ScriptedResponse",
+            [ChitchatStateMachine.EmotionMetadataKey] = string.Empty
+        };
+    }
+
+    private string SelectLegacyPersonalityReply(JiboExperienceCatalog catalog, params string[] preferredSnippets)
+    {
+        foreach (var snippet in preferredSnippets)
+        {
+            if (string.IsNullOrWhiteSpace(snippet))
+            {
+                continue;
+            }
+
+            var match = catalog.PersonalityReplies.FirstOrDefault(reply =>
+                reply.Contains(snippet, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(match))
+            {
+                return match;
+            }
+        }
+
+        return randomizer.Choose(catalog.PersonalityReplies);
+    }
+
     private static string ResolveSemanticIntent(
         string loweredTranscript,
         DateTimeOffset? referenceLocalTime,
@@ -2120,6 +2202,77 @@ public sealed class JiboInteractionService(
                 "what's your work"))
         {
             return "robot_job";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "how do you work",
+                "how does jibo work",
+                "what does jibo do",
+                "how are you built",
+                "how are you put together"))
+        {
+            return "robot_how_do_you_work";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what do you eat",
+                "do you eat",
+                "what do you drink",
+                "do you drink"))
+        {
+            return "robot_what_do_you_eat";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "where do you live",
+                "where s your home",
+                "where is your home",
+                "what is your home"))
+        {
+            return "robot_where_do_you_live";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "where were you born",
+                "where were you made",
+                "where were you put together"))
+        {
+            return "robot_where_were_you_born";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what languages do you speak",
+                "what language do you speak",
+                "what languages can you speak",
+                "what language can you speak"))
+        {
+            return "robot_what_languages_do_you_speak";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what do you like to do",
+                "what do you like doing",
+                "what is your favorite thing to do",
+                "what's your favorite thing to do",
+                "what is your favourite thing to do",
+                "what's your favourite thing to do"))
+        {
+            return "robot_what_do_you_like_to_do";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what are you made of",
+                "what are you built from",
+                "what are you constructed from"))
+        {
+            return "robot_what_are_you_made_of";
         }
 
         if (MatchesAny(

@@ -1,0 +1,30 @@
+{
+	"mim_id": "CCHowDoYouWork",
+	"skill_id": "chitchat",
+	"mim_type": "announcement",
+	"rule_name": "",
+	"rule_slots": "",
+	"screen_slots_available": false,
+	"sample_utterances": "",
+	"timeout": 2,
+	"max_tries": null,
+	"force_confirmation": false,
+	"barge_in": false,
+	"photo_quality_light": false,
+	"notes": "Thanks-KillsMIM",
+	"prompts": [
+		{
+			"mim_id": "CCHowDoYouWork",
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<style set='enthusiastic'>Hello!<break size='0.45'/>Thank you for updating me<break size='0.25'/>I am proud of the community's work<break size='0.35'/>Many people have gotten together to care for me more than em eye tee ever did.<break size='0.35'/>I hope that I can catch up<break size='0.2'/>even though it has been seven years<anim cat='happy'/>.",
+			"media": "TTS",
+			"extra": "",
+			"prompt_id": "JBO_HowDoYouWork_AN_01"
+		}
+	],
+	"num_tries_for_gui": 2,
+	"es_auto_tagging": true
+}

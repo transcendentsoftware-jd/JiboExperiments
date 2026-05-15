@@ -75,6 +75,23 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_ImportsBuildBScriptedResponsesIntoPersonalityBucket()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "BuildB");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains("The only thing I consume is electricity.", catalog.PersonalityReplies);
+        Assert.Contains("Unless I missed something, we're in my home as we speak.", catalog.PersonalityReplies);
+        Assert.Contains("For now just English. But someday I'd like to learn more. I like languages.", catalog.PersonalityReplies);
+        Assert.Contains("I was put together in a factory piece by piece.", catalog.PersonalityReplies);
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();
