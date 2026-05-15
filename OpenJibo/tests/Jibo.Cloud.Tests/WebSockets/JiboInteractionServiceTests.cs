@@ -317,6 +317,46 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Theory]
+    [InlineData("what is your favorite color")]
+    [InlineData("what's your favorite color")]
+    [InlineData("what color do you like")]
+    public async Task BuildDecisionAsync_FavoriteColor_UsesPersonalityReply(string transcript)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal("robot_favorite_color", decision.IntentName);
+        Assert.Equal("Blue.", decision.ReplyText);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
+    [InlineData("what is your favorite food", "robot_favorite_food", "Pizza. It is hard to argue with pizza.")]
+    [InlineData("what is your favorite music", "robot_favorite_music", "Something upbeat with a good rhythm.")]
+    public async Task BuildDecisionAsync_FavoritesFamily_UsesPersonalityReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReply)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Equal(expectedReply, decision.ReplyText);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
     [InlineData("do you pay taxes", "robot_taxes", "From what I understand, robots don't ever pay anything.")]
     [InlineData("what do you want", "robot_desire", "Socializing and electricity. I'd also be happy if everyone in the world was nicer to each other. It seems like they should be.")]
     [InlineData("what's your name", "robot_name", "Jibo. Just Jibo, no last name. Like Bono")]

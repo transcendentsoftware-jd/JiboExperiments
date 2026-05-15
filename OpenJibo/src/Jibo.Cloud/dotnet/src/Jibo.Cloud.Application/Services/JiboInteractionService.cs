@@ -2179,6 +2179,48 @@ public sealed class JiboInteractionService(
 
         if (MatchesAny(
                 loweredTranscript,
+                "what is your favorite color",
+                "what's your favorite color",
+                "what s your favorite color",
+                "what is your favourite color",
+                "what's your favourite color",
+                "what s your favourite color",
+                "what color do you like",
+                "what colour do you like"))
+        {
+            return "robot_favorite_color";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what is your favorite food",
+                "what's your favorite food",
+                "what s your favorite food",
+                "what is your favourite food",
+                "what's your favourite food",
+                "what s your favourite food",
+                "what food do you like",
+                "what kind of food do you like"))
+        {
+            return "robot_favorite_food";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what is your favorite music",
+                "what's your favorite music",
+                "what s your favorite music",
+                "what is your favourite music",
+                "what's your favourite music",
+                "what s your favourite music",
+                "what music do you like",
+                "what kind of music do you like"))
+        {
+            return "robot_favorite_music";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
                 "are there others like you",
                 "are there any others like you",
                 "is there another jibo"))

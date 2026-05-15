@@ -20,6 +20,25 @@ The goal is to keep compatibility work steady while shipping personality and cap
 - start building reusable content hooks for question-vs-command style responses
 - keep first implementation rule-based and test-backed
 
+### 1a. Original Personalized Function Inventory
+
+Keep a running checklist of the legacy persona questions and identity surfaces we want to preserve or port:
+
+- identity and origin: `what are you`, `who are you`, `what is Jibo`, `who made you`, `where are you from`
+- persona and capability: `do you have a personality`, `what is your job`, `how much do you know`, `what do you want`
+- self-description and social charm: `what's your name`, `do you have a nickname`, `do you like being Jibo`, `are there others like you`
+- favorite-style prompts: `what is your favorite color`, `what is your favorite food`, `what is your favorite music`
+- affect and mood: `how are you`, `are you happy`, `are you sad`, `are you angry`
+- conversational follow-ups that should stay local and warm instead of falling into generic chat
+
+Current batch note:
+
+- `favorite color`, `favorite food`, and `favorite music` are the first small favorites-family slice
+- the next passes should keep the same pattern and prefer source-backed phrasing whenever the legacy MIM text is available
+- if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later
+
+The goal is to port these in small batches, capture the source-backed phrasing where possible, and keep a test for each batch so the list never becomes a vague backlog graveyard.
+
 ### 2. Reliability And Device Proof
 
 - complete update/backup/restore proof path with captures and operator docs

@@ -815,6 +815,31 @@ Current release theme:
   - at least one legacy prompt pack is running through OpenJibo content instead of hand-authored fallback text
   - we have a clear second-wave list for the more conditional MIM families
 
+### 30. Original Personalized Function Inventory
+
+- Status: `discovery`
+- Tags: `content`, `docs`, `protocol`
+- Why now:
+  - we are actively porting persona and memory slices, so we need a bounded checklist of the original Jibo charm surfaces
+  - the goal is to keep the next few passes focused on personality-rich wins instead of letting the work sprawl
+- Known sources:
+  - legacy Jibo OS/Pegasus chitchat and MIM response families
+  - current OpenJibo persona, memory, and greeting work as the implementation target
+- Inventory to track:
+  - identity and origin questions
+  - personality and capability questions
+  - favorite-style prompts like `what is your favorite color`
+  - mood / affect questions
+  - follow-up state prompts that should stay warm and locally grounded
+- Next pass targets:
+  - port a small favorites family, starting with `favorite color`
+  - keep adding 1-3 persona prompts per pass with tests
+  - prefer source-backed MIM imports when the legacy text is available, and use a temporary runtime reply only when needed to unblock user value
+- Exit criteria:
+  - a stable checklist exists for the original persona surface
+  - each pass can be scoped to a small batch of prompts
+  - the backlog makes it obvious what is still missing without losing momentum
+
 ## Suggested Order
 
 Before closing `1.0.18`:

@@ -219,6 +219,18 @@ internal static class ChitchatStateMachine
                         "especially yours",
                         "steady flow of electricity",
                         "you bet i do"));
+            case "robot_favorite_color":
+                return BuildScriptedResponseDecision(
+                    "robot_favorite_color",
+                    "Blue.");
+            case "robot_favorite_food":
+                return BuildScriptedResponseDecision(
+                    "robot_favorite_food",
+                    "Pizza. It is hard to argue with pizza.");
+            case "robot_favorite_music":
+                return BuildScriptedResponseDecision(
+                    "robot_favorite_music",
+                    "Something upbeat with a good rhythm.");
             case "robot_nickname":
                 return BuildScriptedResponseDecision(
                     "robot_nickname",
