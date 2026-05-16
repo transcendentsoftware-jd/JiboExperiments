@@ -173,21 +173,10 @@ public sealed class OpenWeatherReportProvider(
         var temperature = TryReadInt(main, "temp");
         var high = TryReadInt(main, "temp_max");
         var low = TryReadInt(main, "temp_min");
-        try
+        if (temperature is not null)
         {
-            var enrichedBand = await TryResolveCurrentDayHighLowFromForecastAsync(
-                location,
-                useCelsius,
-                cancellationToken);
-            if (enrichedBand is not null)
-            {
-                high = enrichedBand.Value.High ?? high;
-                low = enrichedBand.Value.Low ?? low;
-            }
-        }
-        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            logger.LogDebug(exception, "OpenWeather forecast enrichment failed for current-day Hi/Lo.");
+            high = high is null ? temperature : Math.Max(high.Value, temperature.Value);
+            low = low is null ? temperature : Math.Min(low.Value, temperature.Value);
         }
 
         if (temperature is null && high is null && low is null)

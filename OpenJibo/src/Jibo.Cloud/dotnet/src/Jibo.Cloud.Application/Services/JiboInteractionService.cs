@@ -988,10 +988,10 @@ public sealed class JiboInteractionService(
             var forecastLeadIn = string.IsNullOrWhiteSpace(weatherDate.ForecastLeadIn)
                 ? "Tomorrow"
                 : weatherDate.ForecastLeadIn;
-            return $"{forecastLeadIn} in {location}, expect {summary}{tempRange}.";
+            return $"{forecastLeadIn} in {location}, it looks {summary}{tempRange}.";
         }
 
-        return $"Right now in {location}, it is {summary} and {snapshot.Temperature} degrees {unit}.";
+        return $"Right now in {location}, it's {summary}, around {snapshot.Temperature} degrees {unit}.";
     }
 
     private static string BuildWeeklyForecastSpokenReply(
