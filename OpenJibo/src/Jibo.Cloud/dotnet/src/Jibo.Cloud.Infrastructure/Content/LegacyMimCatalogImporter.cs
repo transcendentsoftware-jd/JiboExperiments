@@ -10,7 +10,8 @@ public static class LegacyMimCatalogImporter
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true
     };
 
     private static readonly Regex LegacyMarkupPattern = new(
@@ -128,11 +129,6 @@ public static class LegacyMimCatalogImporter
             return LegacyMimBucket.Emotion;
         }
 
-        if (normalizedPath.Contains("/scripted-responses/", StringComparison.OrdinalIgnoreCase))
-        {
-            return LegacyMimBucket.Personality;
-        }
-
         if (fileName.StartsWith("JBO_DoYouLikeBeingJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhatIsJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhoAreYou", StringComparison.OrdinalIgnoreCase) ||
@@ -150,16 +146,24 @@ public static class LegacyMimCatalogImporter
 
         if (fileName.StartsWith("OI_JBO_Is", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("OI_JBO_Seems", StringComparison.OrdinalIgnoreCase) ||
-            fileName.StartsWith("RI_JBO_Is", StringComparison.OrdinalIgnoreCase) ||
+            fileName.StartsWith("RI_JBO_IsHappy", StringComparison.OrdinalIgnoreCase) ||
+            fileName.StartsWith("RI_JBO_IsSad", StringComparison.OrdinalIgnoreCase) ||
+            fileName.StartsWith("RI_JBO_IsAngry", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("RN_WhatAreYouFeeling", StringComparison.OrdinalIgnoreCase))
         {
             return LegacyMimBucket.Emotion;
         }
 
         if (fileName.Contains("Greeting", StringComparison.OrdinalIgnoreCase) ||
+            fileName.StartsWith("RN_", StringComparison.OrdinalIgnoreCase) ||
             fileName.Contains("Welcome", StringComparison.OrdinalIgnoreCase))
         {
             return LegacyMimBucket.Greeting;
+        }
+
+        if (normalizedPath.Contains("/scripted-responses/", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.Personality;
         }
 
         return null;
@@ -386,7 +390,7 @@ public static class LegacyMimCatalogImporter
         public string? PromptId { get; init; }
 
         [JsonPropertyName("weight")]
-        public int? Weight { get; init; }
+        public double? Weight { get; init; }
     }
 
     private static string NormalizeCondition(string? condition)

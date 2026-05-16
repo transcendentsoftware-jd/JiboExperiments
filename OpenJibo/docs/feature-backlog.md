@@ -847,6 +847,9 @@ Current release theme:
 - Descriptor charm work in flight:
   - source-backed `are you kind`, `are you funny`, `are you helpful`, `are you curious`, `are you loyal`, `are you mischievous`, and `are you likable` prompts are now in Build B
   - these keep the self-description lane warm while we build toward seasonal and holiday charm
+- Seasonal charm work in flight:
+  - source-backed holiday, New Year's, Halloween, spring, and gift prompts are now part of Build B
+  - `RN_` holiday greeting files are now bucketed as greetings so seasonal replies stay visible in the catalog
 - Next queued persona surfaces:
   - richer identity follow-ups like `who is this`, `do you know me`, `do you remember me`, and `can you recognize me`
   - mood and affect prompts like `how are you`, `are you happy`, `are you sad`, and `are you angry`

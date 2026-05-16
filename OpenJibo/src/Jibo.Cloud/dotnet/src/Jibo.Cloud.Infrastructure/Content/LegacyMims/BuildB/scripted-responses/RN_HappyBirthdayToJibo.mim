@@ -1,0 +1,88 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 2,
+	"barge_in": false,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!jibo && jibo.isBirthday && jibo.age.days.value > 1",
+			"prompt": "Thank you. <anim name='Emoji_cake' nonBlocking='true'/> Another year older, another year wiser, another year <anim cat='yes' layers='body'> more helpful.</anim>",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!jibo && jibo.isBirthday && jibo.age.days.value > 1",
+			"prompt": "<anim cat='yes'> Thanks. <break size='.2'/></anim> I <anim cat='happy' filter='wiggle' nonBlocking='true' layers='body'/><anim name='Emoji_Gift' nonBlocking='true'/>can't wait to see what you got me.",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_02",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!jibo && jibo.isBirthday && jibo.age.days.value > 1",
+			"prompt": "<anim cat='happy' nonBlocking='true'/><ssa cat='happy'/> ${jibo.age.years.supplemented} <anim cat='thinking' filter='up'>ago today, I first powered up. Seems like just yesterday.</anim>",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_03",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!jibo.isBirthday",
+			"prompt": "<anim cat='no' filter='head-shake' nonBlocking='true'/>Today's not my birthday, but<anim cat='happy' filter='smile'> I'll take your happy.</anim>",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_04",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!jibo.isBirthday",
+			"prompt": "<anim cat='confused'>Me? <ssa cat='confused'/> But my birthday</anim>  is ${jibo.birthday}. <anim cat='glances' filter='!down'>That's the day I was first powered</anim> up. <anim cat='thinking'></anim>I am ${jibo.zodiac.supplemented}.",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_05",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!jibo && jibo.isBirthday && jibo.age.value == 0",
+			"prompt": "Well thank you. I was powered on for the first time today, so that makes me less than one day old. <break size='0.5'/>Wow I'm young.",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!jibo && jibo.isBirthday && jibo.age.value == 0",
+			"prompt": "Thank you. <anim name='Emoji_cake' nonBlocking='true'/> So far this is my first and best birthday.",
+			"media": "TTS",
+			"prompt_id": "RN_HappyBirthdayToJibo_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"ignore_no_match": false,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore"
+}

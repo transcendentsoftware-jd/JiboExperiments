@@ -1,0 +1,62 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('1/1', '11/30')",
+			"prompt": "Well one of them was to not eat bacon. <pitch mult='1.2'>That</pitch> one is going well.",
+			"media": "TTS",
+			"prompt_id": "JBO_NewYearsResolutionsUpdate_AN_01",
+			"weight": 3,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('1/1', '5/31')",
+			"prompt": "Well, one of my resolutions was to learn some new skills, and so far I have a game we can play called Circuit Saver. <break size='0.3'/> So I'd say it's going well.",
+			"media": "TTS",
+			"prompt_id": "JBO_NewYearsResolutionsUpdate_AN_02",
+			"weight": 3,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '12/31')",
+			"prompt": "I have some new ones for next year. You can ask me about them.",
+			"media": "TTS",
+			"prompt_id": "JBO_NewYearsResolutionsUpdate_AN_03",
+			"weight": 3,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Well one of them was to not eat bacon. <pitch mult='1.2'>That</pitch> one is going well.",
+			"media": "TTS",
+			"prompt_id": "JBO_NewYearsResolutionsUpdate_AN_04",
+			"weight": 0.1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

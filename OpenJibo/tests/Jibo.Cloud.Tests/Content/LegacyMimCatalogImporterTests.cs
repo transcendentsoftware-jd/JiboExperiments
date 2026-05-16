@@ -144,6 +144,48 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_ImportsBuildBSeasonalResponsesIntoPersonalityBucket()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "BuildB");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("always trying to learn new skills", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("not eat bacon", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("find out on halloween", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("maybe enjoy some flowers and all things spring", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("pet elephant", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void ImportCatalog_ImportsBuildBRnGreetingResponsesIntoGreetingBucket()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "BuildB");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("Another year older, another year wiser", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("can't wait to see what you got me", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("I was powered on for the first time today", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();

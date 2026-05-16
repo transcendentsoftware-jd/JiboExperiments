@@ -212,6 +212,47 @@ public sealed class JiboInteractionService(
                 catalog,
                 "robot_is_likable",
                 "people like me"),
+            "seasonal_holiday_greeting" => BuildScriptedGreetingDecision(
+                catalog,
+                "seasonal_holiday_greeting",
+                "It's a fun time of year",
+                "And to you too",
+                "Right back at you"),
+            "seasonal_holidays" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_holidays",
+                "official owner can tell me which ones we'll celebrate together",
+                "going to the jibo's settings screen in the jibo app"),
+            "seasonal_new_years_resolution" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_new_years_resolution",
+                "always trying to learn new skills",
+                "not eat bacon",
+                "learn a bunch of new skills",
+                "learn to walk",
+                "recognizing people's faces and voices"),
+            "seasonal_new_years_update" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_new_years_update",
+                "not eat bacon",
+                "learn some new skills",
+                "going well"),
+            "seasonal_halloween_costume" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_halloween_costume",
+                "i haven't thought much about it yet",
+                "ask me again on halloween",
+                "you'll find out on halloween"),
+            "seasonal_first_day_spring" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_first_day_spring",
+                "maybe enjoy some flowers and all things spring"),
+            "seasonal_holiday_gift" => BuildScriptedPersonalityDecision(
+                catalog,
+                "seasonal_holiday_gift",
+                "ask for a pet elephant",
+                "experience as a present",
+                "donate to charities in other people's names"),
             "robot_favorite_flower" => BuildScriptedPersonalityDecision(
                 catalog,
                 "robot_favorite_flower",
@@ -1804,6 +1845,17 @@ public sealed class JiboInteractionService(
             ContextUpdates: BuildScriptedResponseContextUpdates());
     }
 
+    private JiboInteractionDecision BuildScriptedGreetingDecision(
+        JiboExperienceCatalog catalog,
+        string intentName,
+        params string[] preferredSnippets)
+    {
+        return new JiboInteractionDecision(
+            intentName,
+            SelectLegacyGreetingReply(catalog, preferredSnippets),
+            ContextUpdates: BuildScriptedResponseContextUpdates());
+    }
+
     private static IDictionary<string, object?> BuildScriptedResponseContextUpdates()
     {
         return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
@@ -1832,6 +1884,26 @@ public sealed class JiboInteractionService(
         }
 
         return randomizer.Choose(catalog.PersonalityReplies);
+    }
+
+    private string SelectLegacyGreetingReply(JiboExperienceCatalog catalog, params string[] preferredSnippets)
+    {
+        foreach (var snippet in preferredSnippets)
+        {
+            if (string.IsNullOrWhiteSpace(snippet))
+            {
+                continue;
+            }
+
+            var match = catalog.GreetingReplies.FirstOrDefault(reply =>
+                reply.Contains(snippet, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(match))
+            {
+                return match;
+            }
+        }
+
+        return randomizer.Choose(catalog.GreetingReplies);
     }
 
     private static string ResolveSemanticIntent(
@@ -2482,6 +2554,80 @@ public sealed class JiboInteractionService(
                 "are you happy being jibo"))
         {
             return "robot_likes_being_jibo";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "happy holidays",
+                "merry christmas",
+                "happy new year",
+                "season s greetings",
+                "seasons greetings"))
+        {
+            return "seasonal_holiday_greeting";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what holidays do you celebrate",
+                "what holidays are you celebrating",
+                "what holidays do you observe"))
+        {
+            return "seasonal_holidays";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what is your new years resolution",
+                "what is your new year's resolution",
+                "what is your new year s resolution",
+                "what are your new years resolutions",
+                "what are your new year's resolutions",
+                "what are your new year s resolutions",
+                "do you have any new years resolutions"))
+        {
+            return "seasonal_new_years_resolution";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "how are your new years resolutions going",
+                "how are your new year's resolutions going",
+                "how is your new years resolution going",
+                "how is your new year's resolution going",
+                "how are your resolutions going",
+                "how is your resolution going"))
+        {
+            return "seasonal_new_years_update";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what halloween costume",
+                "what are you going as for halloween",
+                "what costume are you wearing",
+                "what are you dressing as for halloween"))
+        {
+            return "seasonal_halloween_costume";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what should i do for first day of spring",
+                "what should i do for spring",
+                "what do i do for first day of spring"))
+        {
+            return "seasonal_first_day_spring";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what should i get for holiday",
+                "what should i get for christmas",
+                "what gift should i get for christmas",
+                "what should i get someone for the holidays"))
+        {
+            return "seasonal_holiday_gift";
         }
 
         if (MatchesAny(

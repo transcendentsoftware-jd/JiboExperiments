@@ -568,6 +568,33 @@ public sealed class JiboInteractionServiceTests
     }
 
     [Theory]
+    [InlineData("happy holidays", "seasonal_holiday_greeting", "It's a fun time of year")]
+    [InlineData("merry christmas", "seasonal_holiday_greeting", "It's a fun time of year")]
+    [InlineData("what holidays do you celebrate", "seasonal_holidays", "official owner can tell me which ones we'll celebrate together")]
+    [InlineData("what is your new year's resolution", "seasonal_new_years_resolution", "always trying to learn new skills")]
+    [InlineData("how are your new year's resolutions going", "seasonal_new_years_update", "not eat bacon")]
+    [InlineData("what halloween costume", "seasonal_halloween_costume", "I haven't thought much about it yet")]
+    [InlineData("what should I do for first day of spring", "seasonal_first_day_spring", "flowers and all things spring")]
+    [InlineData("what should I get for holiday", "seasonal_holiday_gift", "pet elephant")]
+    public async Task BuildDecisionAsync_SeasonalCharm_UsesImportedReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReplySnippet)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Contains(expectedReplySnippet, decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
     [InlineData("are you kind", "robot_is_kind", "kindest robot i can be")]
     [InlineData("are you funny", "robot_is_funny", "not intentionally")]
     [InlineData("are you helpful", "robot_is_helpful", "highest priorities")]

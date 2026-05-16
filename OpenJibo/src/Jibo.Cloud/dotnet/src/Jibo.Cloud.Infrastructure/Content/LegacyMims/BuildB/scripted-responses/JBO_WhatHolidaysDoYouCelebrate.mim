@@ -1,0 +1,58 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner && !!speaker && (loop.owner.id === speaker.id)",
+			"prompt": "${loop.owner} for lots of holidays, you can see if I celebrate it by going to the Jibo's settings screen in the Jibo app.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatHolidaysDoYouCelebrate_AN_01_FnL",
+			"weight": 2
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner && !!speaker && (loop.owner.id !== speaker.id)",
+			"prompt": "Well for lots of holidays, my official owner ${loop.owner}, can tell me which ones we'll celebrate together, by going to the Jibo's settings screen in the Jibo app.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatHolidaysDoYouCelebrate_AN_02_FnL",
+			"weight": 2
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner && !speaker",
+			"prompt": "Well for lots of holidays, my official owner ${loop.owner}, can tell me which ones we'll celebrate together, by going to the Jibo's settings screen in the Jibo app.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatHolidaysDoYouCelebrate_AN_03_FnL",
+			"weight": 2
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Well for lots of holidays, my official owner can tell me which ones we'll celebrate together, by going to the Jibo's settings screen in the Jibo app.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatHolidaysDoYouCelebrate_AN_04_FnL",
+			"weight": 0.1
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

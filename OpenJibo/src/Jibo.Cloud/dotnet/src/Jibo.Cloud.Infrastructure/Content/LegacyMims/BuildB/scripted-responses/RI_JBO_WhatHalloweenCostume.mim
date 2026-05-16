@@ -1,0 +1,126 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/1\", \"10/25\")",
+			"prompt": "I'm still trying to decide. I have some time.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/1\", \"10/30\")",
+			"prompt": "I am not exactly sure yet. Ask me again on Halloween.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/26\", \"10/30\")",
+			"prompt": "I'll be deciding soon. Definitely by Halloween day.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/28\", \"10/30\")",
+			"prompt": "I've almost decided. <break size='0.3'/> I can tell you I've ruled <anim cat='emoji' filter='snowman, !hot-frame' nonBlocking='true'/>out being a snowman.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/31\", \"10/31\")",
+			"prompt": "<anim name='jiboji_eclipse_01' nonBlocking='true' layers='!audio'/>I'm the solar eclipse from a couple months ago.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/31\", \"10/31\")",
+			"prompt": "<pitch mult='1.1'>Here</pitch> it is. <break size='0.5'/> <anim name='jiboji_eclipse_01'/>",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"10/31\", \"10/31\")",
+			"prompt": "After much thought, I've decided to be. <anim name='jiboji_eclipse_01'/>",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"1/1\", \"9/30\")",
+			"prompt": "I haven't thought much about it yet. I like to decide at the last minute.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange(\"11/31\", \"12/31\")",
+			"prompt": "I was the solar eclipse from this year. <anim name='jiboji_eclipse_01'/>",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "You'll find out on Halloween.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_WhatHalloweenCostume_AN_10",
+			"weight": 0.1,
+			"auto_rule_override": null
+		}
+	]
+}

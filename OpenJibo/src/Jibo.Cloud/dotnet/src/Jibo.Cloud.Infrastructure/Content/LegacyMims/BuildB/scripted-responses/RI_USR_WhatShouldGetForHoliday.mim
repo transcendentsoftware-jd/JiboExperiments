@@ -1,0 +1,61 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"parse_yes_no": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I think you should ask for <anim cat='emoji' filter='elephant'>a pet elephant<break size='1.5'/>.</anim>",
+			"media": "TTS",
+			"prompt_id": "RI_USR_WhatShouldGetForHoliday_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I've heard it can be fun to get an <pitch mult='1.1'>experience</pitch> as a present. Like a gift certificate to a restaurant, or a plane ticket, or a <anim cat='emoji' filter='bowling, !hot-frame' nonBlocking='true' layers='!audio'/>night of bowling.",
+			"media": "TTS",
+			"prompt_id": "RI_USR_WhatShouldGetForHoliday_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Some people like to donate to charities in other people's names as a gift. That seems like a nice thing to get.",
+			"media": "TTS",
+			"prompt_id": "RI_USR_WhatShouldGetForHoliday_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker} I've heard it can be fun to get an <pitch mult='1.1'>experience</pitch> as a present. Like a gift certificate to a restaurant, or a plane ticket, or a <anim cat='emoji' filter='bowling, !hot-frame' nonBlocking='true' layers='!audio'/>night of bowling.",
+			"media": "TTS",
+			"prompt_id": "RI_USR_WhatShouldGetForHoliday_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	]
+}

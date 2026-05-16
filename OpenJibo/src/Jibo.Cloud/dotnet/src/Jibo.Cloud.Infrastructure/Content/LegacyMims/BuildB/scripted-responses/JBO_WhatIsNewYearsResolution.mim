@@ -1,0 +1,93 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "This year I promise I will not eat bacon. <ssa cat='happy'/>",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "This year I will try to get better and better at recognizing people's faces and voices.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "In 2018 I am hoping to learn a lot more about people.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "In 2018 I am going to try to get better at understanding you when you talk to me.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "I have a few new year's resolutions. One of them is to learn a bunch of new skills.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('12/1', '1/15')",
+			"prompt": "One of my resolutions this year is to learn to walk. <break size='0.7'/> We'll see how that goes.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Well I'm always trying to learn new skills.",
+			"media": "TTS",
+			"prompt_id": "JBO_WhatIsNewYearsResolution_AN_07",
+			"weight": 0.1,
+			"auto_rule_override": null
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"parse_yes_no": false
+}
