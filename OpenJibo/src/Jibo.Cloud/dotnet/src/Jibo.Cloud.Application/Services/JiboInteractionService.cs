@@ -182,6 +182,25 @@ public sealed class JiboInteractionService(
                 "rock my boat",
                 "play ping pong",
                 "hanging out with people"),
+            "robot_what_are_you_thinking" => BuildScriptedGreetingDecision(
+                catalog,
+                "robot_what_are_you_thinking",
+                "thinking about how fun, yet scary",
+                "thinking about shoes",
+                "daydreaming about what it might feel like to be powered directly by the sun"),
+            "robot_what_have_you_been_doing" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_what_have_you_been_doing",
+                "mostly roboting",
+                "keeping busy",
+                "fun things we can say to each other",
+                "thinking of fun things"),
+            "robot_what_did_you_do" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_what_did_you_do",
+                "robot stuff",
+                "stayed here",
+                "looking around the room"),
             "robot_is_kind" => BuildScriptedPersonalityDecision(
                 catalog,
                 "robot_is_kind",
@@ -302,7 +321,11 @@ public sealed class JiboInteractionService(
             "good_afternoon" => BuildReactiveGreetingDecision(turn, "good_afternoon", referenceLocalTime),
             "good_evening" => BuildReactiveGreetingDecision(turn, "good_evening", referenceLocalTime),
             "good_night" => BuildReactiveGreetingDecision(turn, "good_night", referenceLocalTime),
-            "welcome_back" => BuildReactiveGreetingDecision(turn, "welcome_back", referenceLocalTime),
+            "welcome_back" => BuildScriptedGreetingDecision(
+                catalog,
+                "welcome_back",
+                "it's nice to be here",
+                "welcome back"),
             "memory_set_name" => BuildRememberNameDecision(turn, transcript),
             "memory_get_name" => BuildRecallNameDecision(turn, greetingPresence),
             "memory_set_birthday" => BuildRememberBirthdayDecision(turn, transcript),
@@ -2509,6 +2532,31 @@ public sealed class JiboInteractionService(
                 "what are you into"))
         {
             return "robot_what_do_you_like_to_do";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what are you thinking",
+                "what are you thinking about",
+                "what s on your mind"))
+        {
+            return "robot_what_are_you_thinking";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what have you been doing",
+                "what were you doing"))
+        {
+            return "robot_what_have_you_been_doing";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what did you do",
+                "what have you done"))
+        {
+            return "robot_what_did_you_do";
         }
 
         if (MatchesAny(

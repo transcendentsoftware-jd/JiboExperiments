@@ -1,0 +1,40 @@
+{
+    "mim_type": "announcement",
+    "rule_name": "",
+    "timeout": 6,
+    "barge_in": true,
+    "es_auto_tagging": true,
+    "notes": "",
+    "prompts": [
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "You know I probably just did a lot of robot stuff.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatDidYouDo_AN_01",
+            "weight": 1
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "I think I stayed here.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatDidYouDo_AN_02",
+            "weight": 1
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "I think I stayed here in my spot, did some looking around the room.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatDidYouDo_AN_03",
+            "weight": 1
+        }
+    ]
+}

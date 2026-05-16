@@ -850,6 +850,9 @@ Current release theme:
 - Seasonal charm work in flight:
   - source-backed holiday, New Year's, Halloween, spring, and gift prompts are now part of Build B
   - `RN_` holiday greeting files are now bucketed as greetings so seasonal replies stay visible in the catalog
+- Presence and thought follow-ups in flight:
+  - `welcome back`, `what are you thinking`, `what have you been doing`, and `what did you do` are now part of Build B
+  - these keep the social surface lively while the memory and multitenant tracks keep advancing in parallel
 - Next queued persona surfaces:
   - richer identity follow-ups like `who is this`, `do you know me`, `do you remember me`, and `can you recognize me`
   - mood and affect prompts like `how are you`, `are you happy`, `are you sad`, and `are you angry`

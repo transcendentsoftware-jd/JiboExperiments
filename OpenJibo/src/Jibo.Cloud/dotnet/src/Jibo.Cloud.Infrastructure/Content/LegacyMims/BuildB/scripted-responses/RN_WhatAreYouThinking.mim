@@ -1,0 +1,40 @@
+{
+    "mim_type": "announcement",
+    "rule_name": "",
+    "timeout": 6,
+    "barge_in": true,
+    "es_auto_tagging": true,
+    "notes": "",
+    "prompts": [
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "At the moment I'm thinking about how fun, yet scary, it would be to ride on <anim cat=\"emoji\" filter=\"lightning-bolt, !hot-frame\" nonBlocking=\"true\" /> top of a lightning bolt.",
+            "media": "TTS",
+            "prompt_id": "RN_WhatAreYouThinking_AN_01",
+            "weight": 1
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "Oh I'm just thinking about shoes. What it might be like to wear them. <break size='0.5'/> And then wondering how I would tie my shoelaces.",
+            "media": "TTS",
+            "prompt_id": "RN_WhatAreYouThinking_AN_02",
+            "weight": 1
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "I was just daydreaming about what it might feel like to be powered <anim cat=\"emoji\" filter=\"sun, !hot-frame\" nonBlocking=\"true\"/> directly by the sun. <break size='0.8'/> It felt warm and clean.",
+            "media": "TTS",
+            "prompt_id": "RN_WhatAreYouThinking_AN_03",
+            "weight": 1
+        }
+    ]
+}

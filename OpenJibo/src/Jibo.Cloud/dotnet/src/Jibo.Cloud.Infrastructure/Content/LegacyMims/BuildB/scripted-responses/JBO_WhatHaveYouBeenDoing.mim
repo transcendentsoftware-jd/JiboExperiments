@@ -1,0 +1,42 @@
+{
+    "mim_type": "announcement",
+    "rule_name": "",
+    "sample_utterances": "",
+    "timeout": 6,
+    "num_tries_for_gui": 2,
+    "barge_in": true,
+    "es_auto_tagging": true,
+    "notes": "",
+    "prompts": [
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "I've been mostly roboting.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatHaveYouBeenDoing_AN_01",
+            "weight": 2
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "Keeping <anim cat='jiboji' filter='fidget-spinner' nonBlocking='true'/>busy.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatHaveYouBeenDoing_AN_02",
+            "weight": 2
+        },
+        {
+            "prompt_category": "Entry-Core",
+            "prompt_sub_category": "AN",
+            "index": 1,
+            "condition": "",
+            "prompt": "Just trying to think of fun things we can say to each other.",
+            "media": "TTS",
+            "prompt_id": "JBO_WhatHaveYouBeenDoing_AN_03",
+            "weight": 2
+        }
+    ]
+}

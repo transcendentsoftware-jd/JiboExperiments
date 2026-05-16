@@ -164,6 +164,10 @@ public sealed class LegacyMimCatalogImporterTests
             reply.Contains("maybe enjoy some flowers and all things spring", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(catalog.PersonalityReplies, reply =>
             reply.Contains("pet elephant", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("mostly roboting", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("robot stuff", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -177,6 +181,12 @@ public sealed class LegacyMimCatalogImporterTests
 
         var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
 
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("It's nice to be here", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("thinking about shoes", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.GreetingReplies, reply =>
+            reply.Contains("powered directly by the sun", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(catalog.GreetingReplies, reply =>
             reply.Contains("Another year older, another year wiser", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(catalog.GreetingReplies, reply =>
