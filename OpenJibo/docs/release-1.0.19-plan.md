@@ -43,6 +43,7 @@ Current batch note:
 - the next source-backed batch now includes `favorite flower`, `R2D2`, `sun`, `space`, `kids`, plus a couple of charm prompts like `can you laugh` and `can you dance`
 - the follow-up mood batch now includes `how are things`, `how is your day`, `are you sad`, and `are you angry`
 - the personality follow-up batch now includes `what are you up to` and `what are you doing` so small talk stays warm and local instead of falling into generic chat
+- the descriptor batch now includes `are you kind`, `are you funny`, `are you helpful`, `are you curious`, `are you loyal`, `are you mischievous`, and `are you likable`
 - this pass keeps Build B moving while still favoring source-backed phrasing and preserving the command-vs-question boundary
 - the next passes should keep the same pattern and prefer source-backed phrasing whenever the legacy MIM text is available
   - if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later

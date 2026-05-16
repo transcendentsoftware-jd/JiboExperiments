@@ -567,6 +567,32 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
     }
 
+    [Theory]
+    [InlineData("are you kind", "robot_is_kind", "kindest robot i can be")]
+    [InlineData("are you funny", "robot_is_funny", "not intentionally")]
+    [InlineData("are you helpful", "robot_is_helpful", "highest priorities")]
+    [InlineData("are you curious", "robot_is_curious", "learning new things")]
+    [InlineData("are you loyal", "robot_is_loyal", "loyal as they come")]
+    [InlineData("are you mischievous", "robot_is_mischievous", "don't really think of myself that way")]
+    [InlineData("are you likable", "robot_is_likable", "people like me")]
+    public async Task BuildDecisionAsync_DescriptorCharm_UsesImportedReplies(
+        string transcript,
+        string expectedIntent,
+        string expectedReplySnippet)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal(expectedIntent, decision.IntentName);
+        Assert.Contains(expectedReplySnippet, decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_AreYouHappy_UsesLegacyEmotionResponseWhenEmotionIsKnown()
     {

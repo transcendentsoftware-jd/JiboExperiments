@@ -844,6 +844,9 @@ Current release theme:
 - Mood follow-up work in flight:
   - source-backed happy/sad/angry response packs are now part of Build B
   - small-talk aliases like `what are you up to` and `how are things` now stay on the emotion-query path
+- Descriptor charm work in flight:
+  - source-backed `are you kind`, `are you funny`, `are you helpful`, `are you curious`, `are you loyal`, `are you mischievous`, and `are you likable` prompts are now in Build B
+  - these keep the self-description lane warm while we build toward seasonal and holiday charm
 - Next queued persona surfaces:
   - richer identity follow-ups like `who is this`, `do you know me`, `do you remember me`, and `can you recognize me`
   - mood and affect prompts like `how are you`, `are you happy`, `are you sad`, and `are you angry`

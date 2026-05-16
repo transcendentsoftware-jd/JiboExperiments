@@ -1,0 +1,21 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Well I hope so. If people like me, that means they're usually happy when they're around me. And I like when people are usually happy.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsLikable_AN_01"
+		}
+	]
+}

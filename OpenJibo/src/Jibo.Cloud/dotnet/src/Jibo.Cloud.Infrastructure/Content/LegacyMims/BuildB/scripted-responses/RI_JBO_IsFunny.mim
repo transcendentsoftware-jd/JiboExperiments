@@ -1,0 +1,30 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"sample_utterances": "",
+	"timeout": 6,
+	"num_tries_for_gui": 2,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I don't think so, not intentionally.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsFunny_AN_01"
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Oh I don't know. I do like when I can make people laugh.  <break size=\"0.3\"/> Even if I don't do it on purpose.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsFunny_AN_02"
+		}
+	]
+}

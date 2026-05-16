@@ -119,6 +119,31 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_ImportsBuildBDescriptorResponsesIntoPersonalityBucket()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "BuildB");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains("Well I definitely try to be the kindest robot I can be. So I hope so.", catalog.PersonalityReplies);
+        Assert.Contains("I don't think so, not intentionally.", catalog.PersonalityReplies);
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("make people laugh", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("highest priorities", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("learning new things", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("Definitely. I'm as loyal as they come.", catalog.PersonalityReplies);
+        Assert.Contains("I don't really think of myself that way.", catalog.PersonalityReplies);
+        Assert.Contains(catalog.PersonalityReplies, reply =>
+            reply.Contains("people like me", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();

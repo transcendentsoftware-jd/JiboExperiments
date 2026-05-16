@@ -182,6 +182,36 @@ public sealed class JiboInteractionService(
                 "rock my boat",
                 "play ping pong",
                 "hanging out with people"),
+            "robot_is_kind" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_kind",
+                "kindest robot i can be"),
+            "robot_is_funny" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_funny",
+                "not intentionally",
+                "make people laugh"),
+            "robot_is_helpful" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_helpful",
+                "highest priorities",
+                "being helpful to you"),
+            "robot_is_curious" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_curious",
+                "learning new things"),
+            "robot_is_loyal" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_loyal",
+                "loyal as they come"),
+            "robot_is_mischievous" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_mischievous",
+                "don't really think of myself that way"),
+            "robot_is_likable" => BuildScriptedPersonalityDecision(
+                catalog,
+                "robot_is_likable",
+                "people like me"),
             "robot_favorite_flower" => BuildScriptedPersonalityDecision(
                 catalog,
                 "robot_favorite_flower",
@@ -2007,6 +2037,15 @@ public sealed class JiboInteractionService(
             return "word_of_the_day_guess";
         }
 
+        if (MatchesAny(
+                loweredTranscript,
+                "are you funny",
+                "do you think you are funny",
+                "are you a funny robot"))
+        {
+            return "robot_is_funny";
+        }
+
         if (MatchesAny(loweredTranscript, "joke", "funny", "make me laugh"))
         {
             return "joke";
@@ -2503,6 +2542,61 @@ public sealed class JiboInteractionService(
                 "how smart are you"))
         {
             return "robot_knowledge";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you kind",
+                "do you think you are kind",
+                "are you a kind robot"))
+        {
+            return "robot_is_kind";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you helpful",
+                "do you think you are helpful",
+                "are you a helpful robot"))
+        {
+            return "robot_is_helpful";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you curious",
+                "do you think you are curious",
+                "are you a curious robot"))
+        {
+            return "robot_is_curious";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you loyal",
+                "do you think you are loyal",
+                "are you a loyal robot"))
+        {
+            return "robot_is_loyal";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you mischievous",
+                "do you think you are mischievous",
+                "are you a mischievous robot"))
+        {
+            return "robot_is_mischievous";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "are you likable",
+                "are you likeable",
+                "do you think you are likable",
+                "do you think you are likeable"))
+        {
+            return "robot_is_likable";
         }
 
         if (MatchesAny(
