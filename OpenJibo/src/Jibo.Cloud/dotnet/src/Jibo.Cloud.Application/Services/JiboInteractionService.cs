@@ -2392,6 +2392,16 @@ public sealed class JiboInteractionService(
 
         if (MatchesAny(
                 loweredTranscript,
+                "what are you up to",
+                "what are you doing",
+                "what have you been up to",
+                "what are you into"))
+        {
+            return "robot_what_do_you_like_to_do";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
                 "what are you",
                 "what is jibo",
                 "who are you",
@@ -2603,9 +2613,29 @@ public sealed class JiboInteractionService(
             return "good_night";
         }
 
-        if (MatchesAny(loweredTranscript, "how are you", "what's up", "what s up", "what up"))
+        if (MatchesAny(
+                loweredTranscript,
+                "how are you",
+                "what's up",
+                "what s up",
+                "what up",
+                "how are things",
+                "how's things",
+                "how is things",
+                "how is your day",
+                "how's your day"))
         {
             return "how_are_you";
+        }
+
+        if (MatchesAny(
+                loweredTranscript,
+                "what are you up to",
+                "what are you doing",
+                "what have you been up to",
+                "what are you into"))
+        {
+            return "robot_what_do_you_like_to_do";
         }
 
         if (MatchesAny(loweredTranscript, "hello", "hi", "hey"))

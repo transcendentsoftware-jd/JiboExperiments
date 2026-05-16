@@ -41,6 +41,9 @@ Current batch note:
 
 - `favorite color`, `favorite food`, and `favorite music` are the first small favorites-family slice
 - the next source-backed batch now includes `favorite flower`, `R2D2`, `sun`, `space`, `kids`, plus a couple of charm prompts like `can you laugh` and `can you dance`
+- the follow-up mood batch now includes `how are things`, `how is your day`, `are you sad`, and `are you angry`
+- the personality follow-up batch now includes `what are you up to` and `what are you doing` so small talk stays warm and local instead of falling into generic chat
+- this pass keeps Build B moving while still favoring source-backed phrasing and preserving the command-vs-question boundary
 - the next passes should keep the same pattern and prefer source-backed phrasing whenever the legacy MIM text is available
   - if a source-backed legacy line is missing, use a temporary direct reply only to keep the pass moving, then backfill source text later
   - after the favorites batch, the next doc pass should focus on richer persona follow-ups and the remaining memory/presence charm surfaces
@@ -73,6 +76,7 @@ The goal is to port these in small batches, capture the source-backed phrasing w
 - prioritize small source-backed slices from Pegasus/JiboOS that can be shipped safely
 - keep Nimbus and stock payload compatibility as the release guardrail
 - avoid broad subsystem rewrites without tests and live-capture evidence
+- keep the legacy prompt inventory visible in the backlog so porting stays paced and traceable
 
 ### 4. Holidays And Seasonal Personality
 

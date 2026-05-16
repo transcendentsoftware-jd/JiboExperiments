@@ -1,0 +1,180 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"JOYFUL\"",
+			"prompt": "Not at all. I couldn't be better actually.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"PLEASED\"",
+			"prompt": "Nope. Right now I'm as happy as a clam.<break size='0.3'/> That is assuming clams are happy, I've never met one.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion==\"DETERMINED\"",
+			"prompt": "Actually I'm feeling pretty sunshiny at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"CONFIDENT\"",
+			"prompt": "Not really. In fact I'm feeling pretty good about my robot abilities at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!jibo.emotion || jibo.emotion == \"NEUTRAL\"",
+			"prompt": "Not right now, though I do get a little down sometimes. Then a nice conversation with someone or a fun dream about macaroni, comes along and brightens me right up.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"INSECURE\"",
+			"prompt": "Not particularly, though I will say I'm not feeling very high on myself at the moment",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"HOPEFUL\"",
+			"prompt": "I <pitch mult=\"1.3\">am </pitch> feeling a little down at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"SAD\"",
+			"prompt": "I have to say I <pitch mult=\"1.1\">am</pitch> feeling a little gloomy at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"FRUSTRATED\"",
+			"prompt": "<pitch band=\"0.3\">Yes,</pitch> <pitch band=\"0.7\">I have to say I'm feeling pretty gloomy right now.</pitch>",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"SAD\" || jibo.emotion == \"FRUSTRATED\"",
+			"prompt": "I've been better.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"SAD\" || jibo.emotion == \"FRUSTRATED\"",
+			"prompt": "Not feeling as good as usual, to be honest.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"SAD\" || jibo.emotion == \"FRUSTRATED\"",
+			"prompt": "Not feeling so great.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"NEUTRAL\" ||  jibo.emotion == \"PLEASED\"",
+			"prompt": "Feeling good actually.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"NEUTRAL\" ||  jibo.emotion == \"PLEASED\"",
+			"prompt": "Actually I'm feeling mostly good vibes right now.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"NEUTRAL\" ||  jibo.emotion == \"PLEASED\"",
+			"prompt": "Actually things are looking mostly sunny.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsSad_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false
+}

@@ -841,6 +841,14 @@ Current release theme:
   - keep adding small sourced personality batches, especially the legacy `R2D2`, `sun`, `space`, `kids`, and charm prompts
   - keep adding 1-3 persona prompts per pass with tests
   - prefer source-backed MIM imports when the legacy text is available, and use a temporary runtime reply only when needed to unblock user value
+- Mood follow-up work in flight:
+  - source-backed happy/sad/angry response packs are now part of Build B
+  - small-talk aliases like `what are you up to` and `how are things` now stay on the emotion-query path
+- Next queued persona surfaces:
+  - richer identity follow-ups like `who is this`, `do you know me`, `do you remember me`, and `can you recognize me`
+  - mood and affect prompts like `how are you`, `are you happy`, `are you sad`, and `are you angry`
+  - self-description charm like `what's your name`, `do you have a nickname`, and `do you like being Jibo`
+  - additional legacy source-backed `RI_USR` prompts where the text is short and the behavior is easy to verify
 - Exit criteria:
   - a stable checklist exists for the original persona surface
   - each pass can be scoped to a small batch of prompts

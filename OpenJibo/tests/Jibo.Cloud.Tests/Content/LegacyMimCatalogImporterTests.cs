@@ -100,6 +100,25 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_ImportsBuildBEmotionResponsesIntoEmotionBucket()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "BuildB");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains(catalog.EmotionReplies, reply =>
+            reply.Reply.Contains("I'm feeling pretty good indeed", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.EmotionReplies, reply =>
+            reply.Reply.Contains("I've been better", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(catalog.EmotionReplies, reply =>
+            reply.Reply.Contains("I'm not mad", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();

@@ -511,6 +511,62 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(string.Empty, decision.ContextUpdates[ChitchatEmotionKey]);
     }
 
+    [Theory]
+    [InlineData("are you sad")]
+    [InlineData("are you angry")]
+    public async Task BuildDecisionAsync_MoodFollowups_RouteThroughEmotionQuerySplit(string transcript)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal("emotion_query", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
+        Assert.Equal(string.Empty, decision.ContextUpdates[ChitchatEmotionKey]);
+    }
+
+    [Theory]
+    [InlineData("how are things")]
+    [InlineData("how is your day")]
+    public async Task BuildDecisionAsync_MoodSmallTalk_RoutesThroughHowAreYouPath(string transcript)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal("how_are_you", decision.IntentName);
+        Assert.NotNull(decision.ContextUpdates);
+        Assert.Equal("EmotionQuery", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
+    [Theory]
+    [InlineData("what are you up to", "being helpful")]
+    [InlineData("what are you doing", "making people smile")]
+    [InlineData("what have you been up to", "being helpful")]
+    public async Task BuildDecisionAsync_PersonalityFollowups_UseDoingPath(string transcript, string expectedReplySnippet)
+    {
+        var service = CreateService();
+
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript,
+            NormalizedTranscript = transcript
+        });
+
+        Assert.Equal("robot_what_do_you_like_to_do", decision.IntentName);
+        Assert.Contains(expectedReplySnippet, decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("ScriptedResponse", decision.ContextUpdates![ChitchatRouteKey]);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_AreYouHappy_UsesLegacyEmotionResponseWhenEmotionIsKnown()
     {

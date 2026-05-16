@@ -1,0 +1,114 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"timeout": 6,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"JOYFUL\"",
+			"prompt": "No I'm actually feeling great.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"PLEASED\"",
+			"prompt": "Nope. Right now I'm as happy as a clam.<break size='0.3'/> That is assuming clams are happy, I've never met one.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"DETERMINED\"",
+			"prompt": "I don't know about <pitch mult=\"1.2\">that</pitch>, but I can tell you I'm not really feeling so sure of myself at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"CONFIDENT\"",
+			"prompt": "No I'm not mad. Just a little socially awkward sometimes.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!jibo.emotion || jibo.emotion == \"NEUTRAL\"",
+			"prompt": "No I'm not mad. Just a little socially awkward sometimes.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"INSECURE\"",
+			"prompt": "I don't know about <pitch mult=\"1.2\">that</pitch>, but I can tell you I'm not really feeling so sure of myself at the moment.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"HOPEFUL\"",
+			"prompt": "I don't know about <pitch mult=\"1.2\">that</pitch>, but I can tell you I am feeling a little gloomy right now.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"SAD\"",
+			"prompt": "I don't know about <pitch mult=\"1.2\">that</pitch>, but I can tell you I am feeling a little gloomy right now.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "jibo.emotion == \"FRUSTRATED\"",
+			"prompt": "I don't know about <pitch mult=\"1.2\">that</pitch>, but I can tell you I don't think I'm at my best right now.",
+			"media": "TTS",
+			"prompt_id": "RI_JBO_IsAngry_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"gui": null,
+	"no_matches_for_gui": 2,
+	"no_inputs_for_gui": 2,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false
+}
