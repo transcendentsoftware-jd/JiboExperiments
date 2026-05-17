@@ -812,6 +812,7 @@ public sealed class JiboInteractionService(
         CancellationToken cancellationToken)
     {
         var referenceLocalTime = TryResolveReferenceLocalTime(turn);
+        var catalog = await contentCache.GetCatalogAsync(cancellationToken);
         var normalizedTranscript = NormalizeCommandPhrase(transcript);
         var locationQuery = TryResolveWeatherLocationQuery(transcript);
         var weatherDate = ResolveWeatherDateEntity(turn, transcript, normalizedTranscript, referenceLocalTime);
@@ -834,7 +835,7 @@ public sealed class JiboInteractionService(
         {
             return new JiboInteractionDecision(
                 "weather",
-                "I can check weather once my weather service is connected.");
+                ChooseWeatherServiceDownReply(catalog));
         }
 
         var weatherCoordinates = string.IsNullOrWhiteSpace(locationQuery)
@@ -939,10 +940,10 @@ public sealed class JiboInteractionService(
         {
             return new JiboInteractionDecision(
                 "weather",
-                "I couldn't fetch the weather right now. Please try again.");
+                ChooseWeatherServiceDownReply(catalog));
         }
 
-        var spokenReply = BuildWeatherSpokenReply(snapshot, weatherDate);
+        var spokenReply = BuildWeatherSpokenReply(snapshot, weatherDate, catalog);
         var weatherPayload = BuildWeatherSkillPayload(spokenReply, snapshot, referenceLocalTime);
         AddWeatherRequestDiagnostics(
             weatherPayload,
@@ -962,7 +963,8 @@ public sealed class JiboInteractionService(
 
     private static string BuildWeatherSpokenReply(
         WeatherReportSnapshot snapshot,
-        WeatherDateEntity weatherDate)
+        WeatherDateEntity weatherDate,
+        JiboExperienceCatalog catalog)
     {
         var unit = snapshot.UseCelsius ? "Celsius" : "Fahrenheit";
         var summary = string.IsNullOrWhiteSpace(snapshot.Summary)
@@ -974,24 +976,74 @@ public sealed class JiboInteractionService(
 
         if (weatherDate.ForecastDayOffset > 0)
         {
-            var highText = snapshot.HighTemperature is null
-                ? null
-                : $"a high near {snapshot.HighTemperature.Value} degrees {unit}";
-            var lowText = snapshot.LowTemperature is null
-                ? null
-                : $"a low around {snapshot.LowTemperature.Value} degrees {unit}";
-            var tempRange = highText is null && lowText is null
-                ? string.Empty
-                : highText is not null && lowText is not null
-                    ? $" with {highText} and {lowText}"
-                    : $" with {highText ?? lowText}";
-            var forecastLeadIn = string.IsNullOrWhiteSpace(weatherDate.ForecastLeadIn)
+            if (weatherDate.ForecastDayOffset != 1)
+            {
+                var highText = snapshot.HighTemperature is null
+                    ? null
+                    : $"a high near {snapshot.HighTemperature.Value} degrees {unit}";
+                var lowText = snapshot.LowTemperature is null
+                    ? null
+                    : $"a low around {snapshot.LowTemperature.Value} degrees {unit}";
+                var tempRange = highText is null && lowText is null
+                    ? string.Empty
+                    : highText is not null && lowText is not null
+                        ? $" with {highText} and {lowText}"
+                        : $" with {highText ?? lowText}";
+                var forecastLeadIn = string.IsNullOrWhiteSpace(weatherDate.ForecastLeadIn)
+                    ? "Tomorrow"
+                    : weatherDate.ForecastLeadIn;
+                return $"Let's look at the weather. {forecastLeadIn} in {location}, it looks {summary}{tempRange}.";
+            }
+
+            var highValue = snapshot.HighTemperature ?? snapshot.Temperature;
+            var lowValue = snapshot.LowTemperature ?? snapshot.Temperature;
+            var introTemplate = ChooseWeatherTemplate(
+                catalog.WeatherTomorrowIntroReplies,
+                "Let's look at the weather.");
+            var highLowTemplate = ChooseWeatherTemplate(
+                catalog.WeatherTomorrowHighLowReplies,
+                "Tomorrow's high will be ${skill.weather.tomorrow.highTemp} and the low will be ${skill.weather.tomorrow.lowTemp}.");
+            var intro = RenderWeatherTemplate(
+                introTemplate,
+                location,
+                summary,
+                highValue,
+                lowValue,
+                unit,
+                forecastLeadIn: weatherDate.ForecastLeadIn ?? string.Empty);
+            var highLow = RenderWeatherTemplate(
+                highLowTemplate,
+                location,
+                summary,
+                highValue,
+                lowValue,
+                unit,
+                forecastLeadIn: weatherDate.ForecastLeadIn ?? string.Empty);
+            var forecastSentenceLeadIn = string.IsNullOrWhiteSpace(weatherDate.ForecastLeadIn)
                 ? "Tomorrow"
                 : weatherDate.ForecastLeadIn;
-            return $"{forecastLeadIn} in {location}, it looks {summary}{tempRange}.";
+            return $"{intro} {forecastSentenceLeadIn} in {location}, it looks {summary}. {highLow}";
         }
 
-        return $"Right now in {location}, it's {summary}, around {snapshot.Temperature} degrees {unit}.";
+        var currentIntro = RenderWeatherTemplate(
+            ChooseWeatherTemplate(catalog.WeatherIntroReplies, "For your weather."),
+            location,
+            summary,
+            snapshot.Temperature,
+            snapshot.Temperature,
+            unit,
+            forecastLeadIn: string.Empty);
+        var currentHighLow = RenderWeatherTemplate(
+            ChooseWeatherTemplate(
+                catalog.WeatherTodayHighLowReplies,
+                "Today's high is ${skill.weather.today.highTemp}, and the low is ${skill.weather.today.lowTemp}."),
+            location,
+            summary,
+            snapshot.HighTemperature ?? snapshot.Temperature,
+            snapshot.LowTemperature ?? snapshot.Temperature,
+            unit,
+            forecastLeadIn: string.Empty);
+        return $"{currentIntro} In {location}, it's {summary} and {snapshot.Temperature} degrees {unit}. {currentHighLow}";
     }
 
     private static string BuildWeeklyForecastSpokenReply(
@@ -1336,6 +1388,50 @@ public sealed class JiboInteractionService(
         }
 
         return "Normal";
+    }
+
+    private static string ChooseWeatherTemplate(IReadOnlyList<string> templates, string fallback)
+    {
+        var usableTemplates = templates.Where(static template => !string.IsNullOrWhiteSpace(template)).ToArray();
+        if (usableTemplates.Length == 0)
+        {
+            return fallback;
+        }
+
+        return usableTemplates[0];
+    }
+
+    private static string RenderWeatherTemplate(
+        string template,
+        string location,
+        string summary,
+        int? highTemperature,
+        int? lowTemperature,
+        string unit,
+        string forecastLeadIn)
+    {
+        var rendered = template
+            .Replace("${skill.weather.today.highTemp}", highTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.today.lowTemp}", lowTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.tomorrow.highTemp}", highTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.tomorrow.lowTemp}", lowTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.summary}", summary, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.location}", location, StringComparison.OrdinalIgnoreCase)
+            .Replace("${skill.weather.prefix}", string.IsNullOrWhiteSpace(forecastLeadIn) ? string.Empty : forecastLeadIn, StringComparison.OrdinalIgnoreCase)
+            .Replace("{high}", highTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("{low}", lowTemperature?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("{unit}", unit, StringComparison.OrdinalIgnoreCase)
+            .Trim();
+
+        return rendered;
+    }
+
+    private string ChooseWeatherServiceDownReply(JiboExperienceCatalog catalog)
+    {
+        var template = ChooseWeatherTemplate(
+            catalog.WeatherServiceDownReplies,
+            "I can't access weather info right now, sorry.");
+        return template.Trim();
     }
 
     private static string EscapeForEsml(string value)

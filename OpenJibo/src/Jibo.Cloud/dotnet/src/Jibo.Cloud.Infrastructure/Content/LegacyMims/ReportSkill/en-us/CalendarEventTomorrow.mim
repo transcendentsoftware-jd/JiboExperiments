@@ -1,0 +1,104 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.calendarEvents.shift()",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, there's nothing scheduled for the rest of the day. But tomorrow, your first item is called ${skill.calendar.events[0].summary}, and it starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have nothing for the rest of today, but tomorrow your first thing is ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see nothing for the rest of today. Tomorrow your first thing is called ${skill.calendar.events[0].summary}, at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar, I'm seeing no more things today, but tomorrow your first item is called ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}. ",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see the rest of today is clear, and tomorrow your first thing scheduled is called ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, you have nothing on there for the rest of today. Tomorrow your first thing is called ${skill.calendar.events[0].summary}, and it starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, there's nothing scheduled for the rest of the day. But your first item tomorrow starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrow_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

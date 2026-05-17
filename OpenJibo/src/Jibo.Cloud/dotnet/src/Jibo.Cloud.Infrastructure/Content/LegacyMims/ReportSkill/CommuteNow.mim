@@ -1,0 +1,128 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.modeIsDriving",
+			"prompt": "If you drive to work now, it should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.modeIsDriving",
+			"prompt": "Looking at traffic right now, your drive to work should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.modeIsDriving",
+			"prompt": "For your commute, with traffic right now, it'd take about ${skill.commute.durationMins} minutes to drive to work.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.modeIsDriving",
+			"prompt": "For commute time, it would take you about ${skill.commute.durationMins} minutes to drive to work with current traffic.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "It should take about ${skill.commute.durationMins} minutes to walk to work if you leave now.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "For your commute, if you left right now it'd take about ${skill.commute.durationMins} minutes to walk to work.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "For your commute, if you left right now it'd take about ${skill.commute.durationMins} minutes to get to work on public transportation.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "If you left this very instant, it should take about ${skill.commute.durationMins} minutes to get to work by public transportation.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "For your commute, if you left right now it'd take about ${skill.commute.durationMins} minutes to ride your bike to work.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "It should take about ${skill.commute.durationMins} minutes to ride your bike to work if you leave now.",
+			"media": "TTS",
+			"prompt_id": "CommuteNow_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

@@ -1,0 +1,111 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like a rainy day. <break size='0.7'/>Bring your umbrella and rain boots!",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like it's going to be a rainy day.<break size='0.7'/> Great news for umbrella enthusiasts.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It looks like rain. <break size='0.7'/> <style set='sheepish'>Don't eat cotton candy outside.</style>",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_03",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It's supposed to be a rainy day.<break size='0.7'/> Unless you specifically want to get wet for some reason, I'd bring your umbrella.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're predicting rain. <break size='0.7'/>It might be good to bring an umbrella or two.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're saying it's going to be a rainy day.<break size='0.7'/> Be sure to keep your feet dry.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> We can expect rain. <break size='0.7'/> I'll be sure to stay inside.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> All signs point to rain. <break size='0.7'/>Not a great day to play miniature golf.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicRain_AN_08",
+			"weight": 0.2,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

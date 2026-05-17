@@ -1,0 +1,132 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.weatherHiLo",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today will be warmer, with a high of ${skill.weather.today.highTemp} degrees, and a low of ${skill.weather.today.lowTemp}",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Warmer today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Things are getting warmer, with a high of ${skill.weather.today.highTemp}, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "The mercury is rising, with a high today of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Things are heating up around here, with a high today of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today's looking warmer, with a high of ${skill.weather.today.highTemp} degrees, and a low of ${skill.weather.today.lowTemp}. ",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It'll be warmer today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It's going to be warmer today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Warmer today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}. Maybe someone's blowing a <pitch mult='1.2'>hair</pitch> <pitch mult='0.9'>dryer</pitch> on us.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_09",
+			"weight": 0.1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Warmer today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}. I'm glad I've got two fans in my head.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayWarmer_AN_10",
+			"weight": 0.2,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

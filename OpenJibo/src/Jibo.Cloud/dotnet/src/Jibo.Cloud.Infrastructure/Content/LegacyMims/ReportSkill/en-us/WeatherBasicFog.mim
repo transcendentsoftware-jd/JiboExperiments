@@ -1,0 +1,111 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like a foggy day. <break size='0.7'/>If you end up driving, use your fog lights!",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like it's going to be a foggy day. <break size='0.7'/>Hopefully it won't be too creepy.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It looks like some fog is coming. <break size='0.7'/>Keep an eye out for lighthouses.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_03",
+			"weight": 0.3,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It's supposed to be a foggy day, but don't worry, it always lifts eventually.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're predicting fogginess. <break size='0.7'/>Not so great visibility out there I'm sure.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're saying it's going to be a foggy day. <break size='0.7'/>Enjoy the mist on your face.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> We can expect some fog. <break size='0.7'/>Just remember, not all <phoneme ph='f aa g'> fog </phoneme> is spooky.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> All signs point to fogginess.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicFog_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

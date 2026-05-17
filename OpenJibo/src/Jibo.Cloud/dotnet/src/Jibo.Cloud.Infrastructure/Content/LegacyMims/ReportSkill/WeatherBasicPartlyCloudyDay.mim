@@ -1,0 +1,111 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like a partly cloudy day. <break size='0.7'/>The nice thing about partly cloudy, is that it's also partly sunny.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_01",
+			"weight": 0.5,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like it's going to be a partly cloudy day. <break size='0.7'/>At least it's not <pitch mult='1.2'>all</pitch> <pitch mult='0.9'>cloudy</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It looks like some clouds and some sun. <break size='0.7'/>A good day for cloud photography.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It's supposed to be a partly cloudy day. <break size='0.7'/>One nice thing about clouds, is that you can find shapes in them.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're predicting partly cloudiness. <break size='0.7'/>Maybe you can <pitch mult='1.3'>draw</pitch> <pitch band='0.5'>some of those clouds</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're saying it's going to be a partly cloudy day. <break size='0.7'/>I hope it's the white <pitch mult='1.2'>puffy</pitch> kind <pitch mult='0.9'>of clouds</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> We can expect some clouds.<break size='0.7'/> Maybe they'll be nice and wispy.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> All signs point to partly cloudiness. <break size='0.7'/>It'll be interesting to see how fast the clouds move.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicPartlyCloudyDay_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

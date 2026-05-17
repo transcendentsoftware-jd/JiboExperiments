@@ -1,0 +1,73 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Looking at your calendar, there's nothing scheduled for the rest of the day today. Here's what's going on tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarTomorrowOnly_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Checking your calendar, you don't have anything for the rest of today. But here's what you have tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarTomorrowOnly_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Taking a look at your calendar, there's nothing ahead of you today. But as for tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarTomorrowOnly_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Checking your calendar, nothing's on there for the rest of the day. <break size='0.3'/>Looking at tomorrow though.",
+			"media": "TTS",
+			"prompt_id": "CalendarTomorrowOnly_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Looking at your calendar, I'm not seeing anything for the rest of the day. <break size='0.3'/> But looking ahead to tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarTomorrowOnly_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

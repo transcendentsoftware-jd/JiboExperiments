@@ -1,0 +1,161 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft > 1",
+			"prompt": "That's in about ${skill.commute.minsLeft} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft > 1",
+			"prompt": "That's about ${skill.commute.minsLeft} minutes from now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft > 1",
+			"prompt": "That's in around ${skill.commute.minsLeft} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft === 1",
+			"prompt": "That's in one minute.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft === 1",
+			"prompt": "That's one minute from now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft === 1",
+			"prompt": "That's just one minute from now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft === 1",
+			"prompt": "That's in just one minute.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "That's basically right now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "Whoa that's in less than a minute.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "That's less than a minute from now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "That's in less than one minute.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "That's not even a minute from now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.commute.minsLeft < 1",
+			"prompt": "That's basically now.",
+			"media": "TTS",
+			"prompt_id": "CommuteMinutesLeft_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

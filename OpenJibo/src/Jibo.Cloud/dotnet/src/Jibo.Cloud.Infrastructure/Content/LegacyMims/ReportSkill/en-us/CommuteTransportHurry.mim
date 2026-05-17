@@ -1,0 +1,106 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Looking at your commute time, you <pitch mult='1.1'>should've </pitch>left a few minutes ago! <style set='enthusiastic'><duration stretch='0.9'>${speaker} get a move on!</duration></style><break size='0.3'/> <style set='sheepish'>If you want to.</style>",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Checking your commute times, you should have left a <pitch mult='1.2'>few minutes</pitch> ago! <pitch mult='1.4'>Go</pitch> ${speaker} <pitch mult='1.4'>go</pitch>!",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Commute-wise, looking at the time right now, you should've left a <pitch mult='1.2'>few minutes</pitch> ago. <break size='0.3'/><style set='enthusiastic'>Get on out there ${speaker}!</style>",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "For your commute, seeing that it's already ${dt.now}, you really should've left a <pitch mult='1.1'>few minutes</pitch> ago.<break size='0.3'/><style set='enthusiastic'><pitch mult='1.4'>Go</pitch> ${speaker}!",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Oh, looking at the time right now, you're going to be a few minutes late for work, even if you left now.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "For your commute. With the time already ${dt.now}, I think you're going to be a few minutes late, even if you left now.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "For your commute. Looking at the time, you should've left a <pitch mult='1.2'>few minutes</pitch> ago. <style set='enthusiastic'>I'd leave now, or invent a time machine.</style>",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_07",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Looking at your commute. Seeing that it's already ${dt.now}, you're probably going to be a little late for work, even if you left now.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportHurry_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

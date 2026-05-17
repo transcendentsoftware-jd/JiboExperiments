@@ -75,6 +75,45 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
                 "I heard your personal report request. That cloud path is still being mapped.",
                 "Personal report is recognized, but I am not ready to deliver the real report yet."
             ],
+            PersonalReportKickOffReplies =
+            [
+                "Okay. Here's your personal report.",
+                "Sure. Here it is."
+            ],
+            PersonalReportOutroReplies =
+            [
+                "And that's your report for the day. I hope you had as much fun as I did.",
+                "That wraps up your report for the day. Hope you have a good one."
+            ],
+            ReportSkillTemplates =
+            [
+                "The report-skill templates are loaded and waiting to be rendered."
+            ],
+            WeatherIntroReplies =
+            [
+                "For your weather.",
+                "Let's look at the weather."
+            ],
+            WeatherTomorrowIntroReplies =
+            [
+                "First, the weather tomorrow.",
+                "Looking at tomorrow's weather."
+            ],
+            WeatherTodayHighLowReplies =
+            [
+                "Today's high is {high}, and the low is {low}.",
+                "It'll be a high today of {high}, and a low of {low}."
+            ],
+            WeatherTomorrowHighLowReplies =
+            [
+                "Tomorrow's high will be {high} and the low will be {low}.",
+                "It'll be a high tomorrow of {high} and a low of {low}."
+            ],
+            WeatherServiceDownReplies =
+            [
+                "Looks like our weather service is offline. Sorry.",
+                "Looks like I can't access weather info right now, sorry."
+            ],
             WeatherReplies =
             [
                 "I heard your weather request. We still need to wire the real provider behind it.",
@@ -122,6 +161,7 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
         {
             Path.Combine(AppContext.BaseDirectory, "Content", "LegacyMims", "BuildA"),
             Path.Combine(AppContext.BaseDirectory, "Content", "LegacyMims", "BuildB"),
+            Path.Combine(AppContext.BaseDirectory, "Content", "LegacyMims", "ReportSkill"),
             Path.GetFullPath(Path.Combine(
                 AppContext.BaseDirectory,
                 "..",
@@ -151,7 +191,22 @@ public sealed class InMemoryJiboExperienceContentRepository : IJiboExperienceCon
                 "Jibo.Cloud.Infrastructure",
                 "Content",
                 "LegacyMims",
-                "BuildB"))
+                "BuildB")),
+            Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "..",
+                "..",
+                "..",
+                "..",
+                "src",
+                "Jibo.Cloud",
+                "dotnet",
+                "src",
+                "Jibo.Cloud.Infrastructure",
+                "Content",
+                "LegacyMims",
+                "ReportSkill"))
         };
 
         return candidates.Where(Directory.Exists).ToArray();

@@ -1,0 +1,77 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.weatherHiLo",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today's high is ${skill.weather.today.highTemp}, and the low is ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHighLow_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It'll be a high temperature today of ${skill.weather.today.highTemp}, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHighLow_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "We'll see a high of ${skill.weather.today.highTemp} today and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHighLow_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It'll be a high today of ${skill.weather.today.highTemp}, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHighLow_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "We'll see a high temp of ${skill.weather.today.highTemp} today, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHighLow_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

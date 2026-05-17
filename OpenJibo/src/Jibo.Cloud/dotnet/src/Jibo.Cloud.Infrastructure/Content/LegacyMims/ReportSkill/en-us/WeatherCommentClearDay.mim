@@ -1,0 +1,166 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I'm always up for a clear day.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> The kind of day that makes you love planet earth.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Weather at its nicest.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Days like this really make you love weather.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> My compliments to the weather <phoneme ph='sh e f f'> chef </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_05",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Sounds like <pitch mult='1.2'>smiling</pitch> <pitch mult='0.9'>weather</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Can't complain about that.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> A nice gift from the meteorology community.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> A great day for people who like blue skies.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> <duration stretch='1.2'>Hello</duration> sunshine.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Bring out the sunglasses.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> A good day to bask in our sun's rays.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary}",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentClearDay_AN_13",
+			"weight": 24,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

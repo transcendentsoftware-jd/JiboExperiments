@@ -1,0 +1,38 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.newsImages.shift()",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": false
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='news' meta='news-stinger' nonBlocking='true' /><break size='0.75'/><pitch band='0.9'><pitch mult='0.95'>${skill.news.headlines.shift()}</pitch></pitch>",
+			"media": "TTS",
+			"prompt_id": "NewsHeadline_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

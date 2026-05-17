@@ -734,6 +734,7 @@ Current release theme:
   - added memory/transcript category hint plumbing for provider requests (sports/technology/business/general)
   - fallback synthetic news behavior remains active when no provider key is configured
   - added TTL caching for weather/news provider calls to reduce repeated external requests
+  - vendored Pegasus `report-skill` templates for weather and personal-report phrasing so the next pass can focus on renderer coverage for calendar, commute, and news templates instead of rediscovering source text
 - Source anchors:
   - `C:\Projects\jibo\pegasus\packages\report-skill\src\subskills\weather\WeatherMimLogic.ts`
   - `C:\Projects\jibo\pegasus\packages\report-skill\resources\views\weatherHiLo.json`

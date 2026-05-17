@@ -196,6 +196,28 @@ public sealed class LegacyMimCatalogImporterTests
     }
 
     [Fact]
+    public void ImportCatalog_ImportsReportSkillTemplatesWithPlaceholdersPreserved()
+    {
+        var rootDirectory = Path.Combine(
+            AppContext.BaseDirectory,
+            "Content",
+            "LegacyMims",
+            "ReportSkill");
+
+        var catalog = LegacyMimCatalogImporter.ImportCatalog(rootDirectory);
+
+        Assert.Contains("First let's check in with the meteorology department.", catalog.WeatherIntroReplies);
+        Assert.Contains("First, the weather tomorrow.", catalog.WeatherTomorrowIntroReplies);
+        Assert.Contains("Today's high is ${skill.weather.today.highTemp}, and the low is ${skill.weather.today.lowTemp}.", catalog.WeatherTodayHighLowReplies);
+        Assert.Contains("Tomorrow's high will be ${skill.weather.tomorrow.highTemp} and the low will be ${skill.weather.tomorrow.lowTemp}.", catalog.WeatherTomorrowHighLowReplies);
+        Assert.Contains("Looks like our weather service is offline. Sorry.", catalog.WeatherServiceDownReplies);
+        Assert.Contains("Sure ${speaker}. Here it is.", catalog.PersonalReportKickOffReplies);
+        Assert.Contains("And that's your report for the day. I hope you had as much fun as I did.", catalog.PersonalReportOutroReplies);
+        Assert.Contains(catalog.ReportSkillTemplates, reply =>
+            reply.Contains("Checking your calendar, I see ${skill.calendar.numEventsToday} items today.", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void MergeInto_PreservesExistingCatalogAndAddsImportedContent()
     {
         var rootDirectory = CreateSeedDirectory();
@@ -236,6 +258,8 @@ public sealed class LegacyMimCatalogImporterTests
         Assert.Contains(catalog.EmotionReplies, reply =>
             reply.Condition.Contains("NEUTRAL", StringComparison.OrdinalIgnoreCase));
         Assert.Contains("Something's off with the connection to my sources. Maybe ask me again in a little while.", catalog.GenericFallbackReplies);
+        Assert.Contains("For your weather.", catalog.WeatherIntroReplies);
+        Assert.Contains("Today's high is {high}, and the low is {low}.", catalog.WeatherTodayHighLowReplies);
     }
 
     private static string CreateSeedDirectory()

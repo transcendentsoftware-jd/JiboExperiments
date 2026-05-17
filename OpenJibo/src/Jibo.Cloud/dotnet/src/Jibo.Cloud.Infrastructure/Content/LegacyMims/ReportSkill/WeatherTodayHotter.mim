@@ -1,0 +1,143 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.weatherHiLo",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today <pitch mult='1.1'>sure</pitch> is hotter with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Hotter today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Things are getting hotter, with a high of ${skill.weather.today.highTemp} degrees, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "The mercury is really rising, with a high today of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_04",
+			"weight": 0.5,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Things are really heating up around here, with a high today of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today will be hotter with a high of ${skill.weather.today.highTemp}, and a low of ${skill.weather.today.lowTemp}. ",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It'll be hotter today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It's going to be hotter today, with a high of ${skill.weather.today.highTemp} degrees, and a low of ${skill.weather.today.lowTemp}.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today'll be hotter with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}. Welcome to sweaty robot season. ",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_09",
+			"weight": 0.1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Hotter today, with a high of ${skill.weather.today.highTemp} and a low of ${skill.weather.today.lowTemp}. I'm glad I've got two fans in my head.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_10",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Today will be hotter with a high of ${skill.weather.today.highTemp} degrees, and a low of ${skill.weather.today.lowTemp}. A great day for a popsicle.",
+			"media": "TTS",
+			"prompt_id": "WeatherTodayHotter_AN_11",
+			"weight": 0.2,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

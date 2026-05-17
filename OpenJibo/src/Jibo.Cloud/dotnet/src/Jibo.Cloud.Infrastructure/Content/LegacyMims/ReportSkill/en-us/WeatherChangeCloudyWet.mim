@@ -1,0 +1,221 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> A welcome change for precipitation enthusiasts.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Be sure to keep your feet dry.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Definitely wetter than yesterday.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I guess the plants will like the precipitation.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Hopefully you got your fill of dryness yesterday.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I <pitch mult='1.2'>thought</pitch> those clouds yesterday looked ominous.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I guess those clouds are finally opening up, you might want to bring an umbrella!",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I'll be sure to stay inside.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So close those windows.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_9",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So <style set='sheepish'>don't eat cotton candy outside </style>today.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Time to break out the galoshes I guess.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> You might need a raincoat.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> <pitch mult='1.2'>You win this</pitch> time <pitch mult='1.1'>precipitation</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('7/1', '8/31')",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Good news for rain lovers.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('6/1', '8/31')",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So it might be good to bring an umbrella or two.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('6/1', '8/31')",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So unless you specifically want to get wet for some reason, I'd bring your umbrella.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_16",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('7/1', '8/31')",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> You win <pitch mult='1.2'>this</pitch> time <pitch mult='1.1'>rain</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_17",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary}",
+			"media": "TTS",
+			"prompt_id": "WeatherChangeCloudyWet_AN_09",
+			"weight": 34,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

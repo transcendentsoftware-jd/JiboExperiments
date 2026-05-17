@@ -22,6 +22,14 @@ public sealed class JiboExperienceCatalog
     public IReadOnlyList<string> PizzaReplies { get; init; } = [];
     public IReadOnlyList<string> SurpriseReplies { get; init; } = [];
     public IReadOnlyList<string> PersonalReportReplies { get; init; } = [];
+    public IReadOnlyList<string> PersonalReportKickOffReplies { get; init; } = [];
+    public IReadOnlyList<string> PersonalReportOutroReplies { get; init; } = [];
+    public IReadOnlyList<string> ReportSkillTemplates { get; init; } = [];
+    public IReadOnlyList<string> WeatherIntroReplies { get; init; } = [];
+    public IReadOnlyList<string> WeatherTomorrowIntroReplies { get; init; } = [];
+    public IReadOnlyList<string> WeatherTodayHighLowReplies { get; init; } = [];
+    public IReadOnlyList<string> WeatherTomorrowHighLowReplies { get; init; } = [];
+    public IReadOnlyList<string> WeatherServiceDownReplies { get; init; } = [];
     public IReadOnlyList<string> WeatherReplies { get; init; } = [];
     public IReadOnlyList<string> CalendarReplies { get; init; } = [];
     public IReadOnlyList<string> CommuteReplies { get; init; } = [];

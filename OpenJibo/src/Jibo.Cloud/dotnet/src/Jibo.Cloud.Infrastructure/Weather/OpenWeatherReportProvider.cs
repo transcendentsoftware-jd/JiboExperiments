@@ -42,29 +42,26 @@ public sealed class OpenWeatherReportProvider(
             }
 
             WeatherReportSnapshot? snapshot;
-            if (forecastDayOffset <= 0)
-            {
-                snapshot = await GetCurrentWeatherAsync(location.Value, useCelsius, cancellationToken);
-                SetCachedValue(
-                    weatherCache,
-                    weatherCacheKey,
-                    snapshot,
-                    snapshot is null ? options.FailureCacheTtlSeconds : options.CurrentCacheTtlSeconds);
-                return snapshot;
-            }
-
             if (forecastDayOffset > MaxForecastDayOffset)
             {
                 SetCachedValue(weatherCache, weatherCacheKey, null, options.FailureCacheTtlSeconds);
                 return null;
             }
 
-            snapshot = await GetForecastForDayOffsetAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
+            snapshot = await GetOneCallWeatherAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
+            if (snapshot is null)
+            {
+                snapshot = await GetLegacyWeatherAsync(location.Value, useCelsius, forecastDayOffset, cancellationToken);
+            }
             SetCachedValue(
                 weatherCache,
                 weatherCacheKey,
                 snapshot,
-                snapshot is null ? options.FailureCacheTtlSeconds : options.ForecastCacheTtlSeconds);
+                snapshot is null
+                    ? options.FailureCacheTtlSeconds
+                    : forecastDayOffset <= 0
+                        ? options.CurrentCacheTtlSeconds
+                        : options.ForecastCacheTtlSeconds);
             return snapshot;
         }
         catch (Exception exception)
@@ -142,7 +139,102 @@ public sealed class OpenWeatherReportProvider(
         return resolvedLocation;
     }
 
-    private async Task<WeatherReportSnapshot?> GetCurrentWeatherAsync(
+    private async Task<WeatherReportSnapshot?> GetOneCallWeatherAsync(
+        LocationPoint location,
+        bool useCelsius,
+        int forecastDayOffset,
+        CancellationToken cancellationToken)
+    {
+        var weatherUri = BuildRequestUri(
+            "/data/3.0/onecall",
+            ("lat", location.Latitude.ToString(CultureInfo.InvariantCulture)),
+            ("lon", location.Longitude.ToString(CultureInfo.InvariantCulture)),
+            ("units", useCelsius ? "metric" : "imperial"),
+            ("exclude", "minutely,hourly,alerts"),
+            ("appid", options.ApiKey!));
+        using var response = await httpClient.GetAsync(weatherUri, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("current", out var current) ||
+            !root.TryGetProperty("daily", out var daily) ||
+            daily.ValueKind != JsonValueKind.Array ||
+            daily.GetArrayLength() == 0)
+        {
+            return null;
+        }
+
+        if (forecastDayOffset >= daily.GetArrayLength())
+        {
+            return null;
+        }
+
+        var selectedDay = daily[forecastDayOffset];
+        if (!selectedDay.TryGetProperty("temp", out var selectedDayTemp))
+        {
+            return null;
+        }
+
+        var locationName = location.DisplayName ?? options.DefaultLocation;
+        var summary = TryReadWeatherSummary(current)
+            ?? ReadNonEmptyString(selectedDay, "summary")
+            ?? TryReadWeatherSummary(selectedDay);
+        var condition = TryReadWeatherCondition(current) ?? TryReadWeatherCondition(selectedDay);
+        var temperature = forecastDayOffset <= 0
+            ? TryReadInt(current, "temp")
+            : TryReadInt(selectedDayTemp, "day")
+                ?? TryReadInt(selectedDayTemp, "night")
+                ?? TryReadInt(selectedDayTemp, "morn")
+                ?? TryReadInt(selectedDayTemp, "eve");
+        var high = TryReadInt(selectedDayTemp, "max");
+        var low = TryReadInt(selectedDayTemp, "min");
+        if (temperature is not null)
+        {
+            high = high is null ? temperature : Math.Max(high.Value, temperature.Value);
+            low = low is null ? temperature : Math.Min(low.Value, temperature.Value);
+        }
+
+        if (temperature is null && high is null && low is null)
+        {
+            return null;
+        }
+
+        var resolvedTemperature = temperature ?? high ?? low ?? 0;
+        return new WeatherReportSnapshot(
+            locationName,
+            summary ?? "partly cloudy",
+            resolvedTemperature,
+            high,
+            low,
+            condition,
+            useCelsius);
+    }
+
+    private async Task<WeatherReportSnapshot?> GetLegacyWeatherAsync(
+        LocationPoint location,
+        bool useCelsius,
+        int forecastDayOffset,
+        CancellationToken cancellationToken)
+    {
+        if (forecastDayOffset <= 0)
+        {
+            return await GetLegacyCurrentWeatherAsync(location, useCelsius, cancellationToken);
+        }
+
+        if (forecastDayOffset > MaxForecastDayOffset)
+        {
+            return null;
+        }
+
+        return await GetForecastForDayOffsetAsync(location, useCelsius, forecastDayOffset, cancellationToken);
+    }
+
+    private async Task<WeatherReportSnapshot?> GetLegacyCurrentWeatherAsync(
         LocationPoint location,
         bool useCelsius,
         CancellationToken cancellationToken)

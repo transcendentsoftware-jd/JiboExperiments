@@ -1,0 +1,198 @@
+{
+	"mim_type": "question",
+	"rule_name": "shared/wrong_id",
+	"gui": {
+        "type": "Javascript",
+        "data": {
+            "viewConfig": {
+                "category": "gui",
+                "showNotALoopMemberButton": true,
+                "type": "ContactsView",
+                "id": "whoIsThisMenu",
+                "title": "Who are you?",
+                "listDefault": {
+                    "willToggle": false,
+                    "action": {
+                        "type": "closeView"
+                    }
+                }
+            }
+        },
+        "pause": false
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "Sorry, <style set='sheepish'>I'm not exactly sure who this is. </style>Can you tell me?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NI",
+			"index": 1,
+			"condition": "",
+			"prompt": "<pitch mult=\"1.1\">Tap</pitch> my screen and let me know who you are.",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NI_1_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NM",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='DontKnow' filter='!(pose-only), &(shrug)' nonBlocking='true'/>Whatever you said went over my head. <pitch mult=\"1.1\">Tap </pitch>my screen and let me know who you are.",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NM_1_01",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NI",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='blinks' filter='double-blink' nonBlocking='true'/><pitch mult=\"1.1\">Which</pitch> one of these people is you. ",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NI_1_04",
+			"weight": 1
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NI",
+			"index": 1,
+			"condition": "",
+			"prompt": "I <pitch mult=\"1.1\">didn't</pitch> hear anything, but I'd <pitch mult=\"1.1\">really</pitch> like to know who you are.",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NI_1_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NM",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='DontKnow' filter='!(pose-only), &(head-shake)' nonBlocking='true'/>Sorry my hearing <pitch mult=\"1.1\">isn't</pitch> always perfect. <pitch mult=\"1.1\">Try </pitch>tapping my screen to tell me who you are.",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NM_1_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NM",
+			"index": 1,
+			"condition": "",
+			"prompt": "I <pitch mult=\"1.1\">had</pitch> some trouble understanding. <anim cat='no' filter='&(nope),?(small,medium)' nonBlocking='true'/>It doesn't hurt me when you tap my screen, so <pitch mult=\"1.1\">maybe</pitch> try that, to let me know who you are.",
+			"media": "TTS",
+			"prompt_id": "WhoAmI_CollectName_NM_1_03",
+			"weight": 0.25,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "Let's see. Can you tell me who <pitch band='0.7'>you <pitch mult='1.4'>are?</pitch></pitch>",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "So, I'm not exactly sure who I'm talking to here. Can you help me out and tell me?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "Can you say your name for me?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "Can you do me a favor and tell me who you are?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "I can't put my finger on who you are. Whose report did <pitch band='0.7'>you <pitch mult='1.5'>want</pitch></pitch>?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "I think I need a little help knowing who you are. Can you tell me?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "HoldReturn",
+			"index": 1,
+			"condition": "",
+			"prompt": "So, help me out, which one of these people is you.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_HR_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "",
+			"prompt": "<pitch mult=\"1.1\">Which</pitch> one of these great people is you.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportWhoIsThis_QN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

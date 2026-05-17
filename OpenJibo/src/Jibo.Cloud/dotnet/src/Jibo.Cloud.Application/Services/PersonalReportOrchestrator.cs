@@ -269,11 +269,19 @@ internal static class PersonalReportOrchestrator
         Func<TurnContext, string, CancellationToken, Task<JiboInteractionDecision>> buildWeatherDecisionAsync,
         CancellationToken cancellationToken)
     {
-        var reportSections = new List<string> { $"Great, {userName}. Here is your personal report." };
+        var reportSections = new List<string>
+        {
+            RenderPersonalReportTemplate(
+                ChoosePersonalReportTemplate(
+                    catalog.PersonalReportKickOffReplies,
+                    "Okay. Here's your personal report."),
+                userName)
+        };
         var serviceError = string.Empty;
 
         if (toggles.WeatherEnabled)
         {
+            reportSections.Add("First, your weather.");
             var weatherDecision = await buildWeatherDecisionAsync(turn, "weather", cancellationToken);
             reportSections.Add(weatherDecision.ReplyText);
             if (IsWeatherErrorReply(weatherDecision.ReplyText))
@@ -297,7 +305,12 @@ internal static class PersonalReportOrchestrator
             reportSections.Add(randomizer.Choose(catalog.NewsBriefings));
         }
 
-        reportSections.Add("That is your personal report.");
+        reportSections.Add(
+            RenderPersonalReportTemplate(
+                ChoosePersonalReportTemplate(
+                    catalog.PersonalReportOutroReplies,
+                    "And that's your report for the day. I hope you had as much fun as I did."),
+                userName));
 
         return new JiboInteractionDecision(
             "personal_report_delivered",
@@ -657,4 +670,31 @@ internal static class PersonalReportOrchestrator
         bool CalendarEnabled,
         bool CommuteEnabled,
         bool NewsEnabled);
+
+    private static string ChoosePersonalReportTemplate(
+        IReadOnlyList<string> templates,
+        string fallback)
+    {
+        var usableTemplates = templates
+            .Where(static template => !string.IsNullOrWhiteSpace(template) && !template.Contains("${dt.", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (usableTemplates.Length == 0)
+        {
+            return fallback;
+        }
+
+        var speakerAwareTemplate = usableTemplates.FirstOrDefault(static template =>
+            template.Contains("${speaker}", StringComparison.OrdinalIgnoreCase));
+        return speakerAwareTemplate ?? usableTemplates[0];
+    }
+
+    private static string RenderPersonalReportTemplate(string template, string userName)
+    {
+        return template
+            .Replace("${speaker}", userName, StringComparison.OrdinalIgnoreCase)
+            .Replace("${speaker}'s", $"{userName}'s", StringComparison.OrdinalIgnoreCase)
+            .Replace("  ", " ", StringComparison.Ordinal)
+            .Trim();
+    }
 }

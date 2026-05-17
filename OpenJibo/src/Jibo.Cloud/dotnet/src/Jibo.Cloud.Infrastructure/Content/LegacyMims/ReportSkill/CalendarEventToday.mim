@@ -1,0 +1,247 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.calendarEvents.shift()",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see ${skill.calendar.numEventsToday} items today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have ${skill.calendar.numEventsToday} things today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see ${skill.calendar.numEventsToday} things scheduled today. <break size='0.3'/>The first one is ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar for today, I'm seeing ${skill.calendar.numEventsToday} things. <break size='0.3'/>The first one is at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}, it's called ${skill.calendar.events[0].summary}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar today, I see you have ${skill.calendar.numEventsToday} things coming. <break size='0.3'/>The earliest one is called ${skill.calendar.events[0].summary}, it starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have ${skill.calendar.numEventsToday} things on the schedule today, starting with one called ${skill.calendar.events[0].summary}. It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "On your calendar today, I see one thing, it's called ${skill.calendar.events[0].summary}. <break size='0.3'/>It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have one thing coming up today, ${skill.calendar.events[0].summary}. <break size='0.3'/>It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see just one thing scheduled today. ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar for today, I'm seeing one thing. It's called ${skill.calendar.events[0].summary}, and it starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar today, I see you have just one thing coming, called ${skill.calendar.events[0].summary}. <break size='0.3'/>It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have one item on the docket today, it's called ${skill.calendar.events[0].summary}. <break size='0.3'/>That starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !skill.calendar.events[0].summary",
+			"prompt": "On your calendar, I see ${skill.calendar.numEventsToday} items today.<break size='0.3'/> The first one starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !skill.calendar.events[0].summary",
+			"prompt": "On your calendar today, I see one thing, which starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_19",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !skill.calendar.events[0].summary",
+			"prompt": "On your calendar, I see couple of items today.<break size='0.3'/> The first one starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see a couple of items today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have a couple of things today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_16",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see a couple of things scheduled today. <break size='0.3'/>The first one is ${skill.calendar.events[0].summary}, starting at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_17",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar for today, I'm seeing a couple of things. <break size='0.3'/>The first one is at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}, it's called ${skill.calendar.events[0].summary}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_18",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar today, I see you have a couple of things coming. <break size='0.3'/>The earliest one is called ${skill.calendar.events[0].summary}, it starts at ${skill.calendar.events[0].dateTime.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventToday_AN_20",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

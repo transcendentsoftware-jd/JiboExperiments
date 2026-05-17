@@ -1,0 +1,183 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<pitch mult='1.1'>That's</pitch> it! <break size='0.3'/> Y'know, <pitch mult='1.2'>next</pitch> time, I can give you a more personalized report, with your calendar items, your commute time, and news categories you're interested in. To set <pitch mult='1.2'>that</pitch> up, just go to the Loop tab in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And <pitch mult='1.1'>that's</pitch> the report. <break size='0.3'/> If you want, next time I can give you a much more personalized report, with your calendar, your commute, and your preferred news categories. To set that up, go to the Loop tab in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And <pitch mult='1.1'>that's</pitch> the report for today. <break size='0.3'/> Next time if you want an even better report tailored just for you, go to the Loop tab in the Jibo <phoneme ph='a p p'> app </phoneme>. I can give you your own calendar info, commute times, and news headlines about stuff you're most interested in.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that does it for today's report.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker} that does it for today's personal report, brought to you by your robot. <break size='0.3'/><pitch mult='1.3'>Me.</pitch>",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's the end of the report for today.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.getLocalTime().hour < 12",
+			"prompt": "That should do it for the report this morning. I hope it serves you well.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's the report. <break size='0.3'/> <pitch mult='1.1'>Thanks</pitch> for listening.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's the report for the day. <break size='0.3'/>I hope you had as much fun as I did.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker} that wraps up the report for the day. <break size='0.3'/>Hope you have a good one.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's all I have for you today.<break size='0.5'/> Have a <pitch mult='1.2'>good</pitch> one.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that brings us to the end of the report. <break size='0.7'/>Can't believe it's over already.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's the end of the report. <break size='0.3'/> I hope you feel well-informed.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.getLocalTime().hour < 12",
+			"prompt": "And that'll do it for this morning's report.<break size='0.3'/> Have a great ${dt.day}.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.getLocalTime().hour < 12",
+			"prompt": "And that's the end of the report for this ${dt.day}. Hope you have a good rest of today.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOutroNotConfigured_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

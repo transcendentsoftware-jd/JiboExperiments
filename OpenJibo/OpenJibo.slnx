@@ -3,12 +3,17 @@
     <File Path="docs/development-plan.md" />
     <File Path="docs/device-bootstrap.md" />
     <File Path="docs/feature-backlog.md" />
+    <File Path="docs/greetings-presence-plan.md" />
     <File Path="docs/live-jibo-capture.md" />
     <File Path="docs/live-jibo-test-runbook.md" />
+    <File Path="docs/personal-report-parity-plan.md" />
     <File Path="docs/protocol-inventory.md" />
     <File Path="docs/public-site-plan.md" />
     <File Path="docs/regression-test-plan.md" />
+    <File Path="docs/release-1.0.19-plan.md" />
+    <File Path="docs/roadmap.md" />
     <File Path="docs/support-tiers.md" />
+    <File Path="docs/system-diagram-alignment.md" />
   </Folder>
   <Folder Name="/docs/prompts/">
     <File Path="docs/prompts/cloud-deploy-and-jibo-rcm-path.md" />

@@ -1,0 +1,95 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Since work starts at ${skill.commute.arriveDT.toString({timeOnly: true})}, it's probably too late to get there on time, it's already ${dt.now}.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "For your trip to work today, it's already ${dt.now}, so it looks like you're going to be late, even if you left now.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Commute-wise, looking at the time right now you're probably going to be late for work. In case you want to let someone know.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Looking at your trip to work, seeing that it's already ${dt.now}, you're probably going to be late. Just letting you know.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Looking at your commute and the time right now, you're probably going to be late for work. Just so you know.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Oh, judging by your commute time, and it being ${dt.now} already, you're probably going to be late for work.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Checking your commute time today, it actually looks like you'll probably be late for work, since it's already ${dt.now}.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportLate_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

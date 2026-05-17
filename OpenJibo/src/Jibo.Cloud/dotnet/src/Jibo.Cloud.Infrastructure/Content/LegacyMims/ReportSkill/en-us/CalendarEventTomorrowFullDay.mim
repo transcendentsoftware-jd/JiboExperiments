@@ -1,0 +1,88 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.calendarEvents.shift()",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, there's nothing scheduled for the rest of the day. But tomorrow, your first item is called ${skill.calendar.events[0].summary}, and it goes all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar, I'm seeing no more things today, but tomorrow your first item is called ${skill.calendar.events[0].summary}. It's an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, there's nothing scheduled for the rest of the day. But tomorrow, your first item is called ${skill.calendar.events[0].summary}. It lasts all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have nothing for the rest of today, but tomorrow your first thing is ${skill.calendar.events[0].summary}. It goes all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see nothing for the rest of today. Tomorrow your first item is called ${skill.calendar.events[0].summary}. It's an all-day thing.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.calendar.events[0].summary",
+			"prompt": "As for your calendar, there's nothing scheduled for the rest of the day. But your first item tomorrow is an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTomorrowFullDay_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

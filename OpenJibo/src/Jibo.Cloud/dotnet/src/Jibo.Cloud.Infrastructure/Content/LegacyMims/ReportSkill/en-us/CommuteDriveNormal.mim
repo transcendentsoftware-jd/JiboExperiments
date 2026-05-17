@@ -1,0 +1,143 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.commuteTraffic",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Traffic looks about normal today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Traffic looks pretty normal today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Nothing unusual in the traffic today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Traffic today looks like business as usual.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your commute today looks pretty normal.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your traffic today looks like it usually does.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Checking the traffic at the moment, it looks like the same old same old.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Traffic looks pretty run-of-the-mill today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Nothing unusual in your traffic today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />The traffic out there is pretty normal.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Traffic to work looks like the usual.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveNormal_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

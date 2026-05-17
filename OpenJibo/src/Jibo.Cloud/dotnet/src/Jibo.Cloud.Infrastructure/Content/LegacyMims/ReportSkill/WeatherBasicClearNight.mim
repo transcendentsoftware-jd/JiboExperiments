@@ -1,0 +1,111 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like a clear night coming. I bet you'll be able to see <pitch mult='1.2'>stars</pitch> <pitch mult='0.9'>outside</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> Looks like it's going to be a clear night. <break size='0.7'/>Sounds like a good night for my telescope.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It looks like a clear night. <break size='0.7'/>Good stargazing weather.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> It's supposed to be a clear night. <break size='0.7'/>Good shooting <pitch mult='1.2'>star</pitch> weather.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're predicting clear night skies.<break size='0.7'/> A nice night for <pitch mult='1.2'>planet</pitch> <pitch mult='0.9'>spotting</pitch>.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> They're saying it's going to be a clear night. <break size='0.7'/>Sounds like it'll be a good night sky.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> We can expect clear night skies. <break size='0.7'/>Enjoy the view of outer space.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> All signs point to clear night skies. <break size='0.7'/> You can't beat a clear night.",
+			"media": "TTS",
+			"prompt_id": "WeatherBasicClearNight_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

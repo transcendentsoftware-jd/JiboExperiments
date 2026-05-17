@@ -72,7 +72,7 @@ public static class LegacyMimCatalogImporter
 
             foreach (var prompt in definition.Prompts)
             {
-                var text = NormalizePrompt(prompt.Prompt);
+                var text = NormalizePrompt(prompt.Prompt, preservePlaceholders: IsTemplateBucket(bucket.Value));
                 if (string.IsNullOrWhiteSpace(text))
                 {
                     continue;
@@ -129,6 +129,55 @@ public static class LegacyMimCatalogImporter
             return LegacyMimBucket.Emotion;
         }
 
+        if (fileName.StartsWith("WeatherIntroTomorrow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.WeatherTomorrowIntro;
+        }
+
+        if (fileName.StartsWith("WeatherIntro", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.WeatherIntro;
+        }
+
+        if (fileName.StartsWith("WeatherTomorrowHighLow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.WeatherTomorrowHighLow;
+        }
+
+        if (fileName.StartsWith("WeatherTodayHighLow", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.WeatherTodayHighLow;
+        }
+
+        if (fileName.StartsWith("WeatherServiceDown", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.WeatherServiceDown;
+        }
+
+        if (fileName.StartsWith("Weather", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(fileName, "WetNowDryLater", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.ReportSkillTemplate;
+        }
+
+        if (fileName.StartsWith("PersonalReportKickOff", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.PersonalReportKickOff;
+        }
+
+        if (fileName.StartsWith("PersonalReportOutro", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.PersonalReportOutro;
+        }
+
+        if (fileName.StartsWith("PersonalReport", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Contains("Calendar", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Contains("Commute", StringComparison.OrdinalIgnoreCase) ||
+            fileName.Contains("News", StringComparison.OrdinalIgnoreCase))
+        {
+            return LegacyMimBucket.ReportSkillTemplate;
+        }
+
         if (fileName.StartsWith("JBO_DoYouLikeBeingJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhatIsJibo", StringComparison.OrdinalIgnoreCase) ||
             fileName.StartsWith("JBO_WhoAreYou", StringComparison.OrdinalIgnoreCase) ||
@@ -171,13 +220,21 @@ public static class LegacyMimCatalogImporter
 
     private static string NormalizePrompt(string? prompt)
     {
+        return NormalizePrompt(prompt, preservePlaceholders: false);
+    }
+
+    private static string NormalizePrompt(string? prompt, bool preservePlaceholders)
+    {
         if (string.IsNullOrWhiteSpace(prompt))
         {
             return string.Empty;
         }
 
         var text = WebUtility.HtmlDecode(prompt);
-        text = PlaceholderPattern.Replace(text, " ");
+        if (!preservePlaceholders)
+        {
+            text = PlaceholderPattern.Replace(text, " ");
+        }
         text = LegacyMarkupPattern.Replace(text, " ");
         text = WhitespacePattern.Replace(text, " ").Trim();
         text = SpaceBeforePunctuationPattern.Replace(text, "$1");
@@ -201,6 +258,14 @@ public static class LegacyMimCatalogImporter
             PizzaReplies = Merge(baseCatalog.PizzaReplies, importedCatalog.PizzaReplies),
             SurpriseReplies = Merge(baseCatalog.SurpriseReplies, importedCatalog.SurpriseReplies),
             PersonalReportReplies = Merge(baseCatalog.PersonalReportReplies, importedCatalog.PersonalReportReplies),
+            PersonalReportKickOffReplies = Merge(baseCatalog.PersonalReportKickOffReplies, importedCatalog.PersonalReportKickOffReplies),
+            PersonalReportOutroReplies = Merge(baseCatalog.PersonalReportOutroReplies, importedCatalog.PersonalReportOutroReplies),
+            ReportSkillTemplates = Merge(baseCatalog.ReportSkillTemplates, importedCatalog.ReportSkillTemplates),
+            WeatherIntroReplies = Merge(baseCatalog.WeatherIntroReplies, importedCatalog.WeatherIntroReplies),
+            WeatherTomorrowIntroReplies = Merge(baseCatalog.WeatherTomorrowIntroReplies, importedCatalog.WeatherTomorrowIntroReplies),
+            WeatherTodayHighLowReplies = Merge(baseCatalog.WeatherTodayHighLowReplies, importedCatalog.WeatherTodayHighLowReplies),
+            WeatherTomorrowHighLowReplies = Merge(baseCatalog.WeatherTomorrowHighLowReplies, importedCatalog.WeatherTomorrowHighLowReplies),
+            WeatherServiceDownReplies = Merge(baseCatalog.WeatherServiceDownReplies, importedCatalog.WeatherServiceDownReplies),
             WeatherReplies = Merge(baseCatalog.WeatherReplies, importedCatalog.WeatherReplies),
             CalendarReplies = Merge(baseCatalog.CalendarReplies, importedCatalog.CalendarReplies),
             CommuteReplies = Merge(baseCatalog.CommuteReplies, importedCatalog.CommuteReplies),
@@ -274,7 +339,15 @@ public static class LegacyMimCatalogImporter
         Greeting,
         HowAreYou,
         Emotion,
-        Personality
+        Personality,
+        PersonalReportKickOff,
+        PersonalReportOutro,
+        WeatherIntro,
+        WeatherTomorrowIntro,
+        WeatherTodayHighLow,
+        WeatherTomorrowHighLow,
+        WeatherServiceDown,
+        ReportSkillTemplate
     }
 
     private sealed class LegacyMimCatalogBuilder
@@ -284,6 +357,14 @@ public static class LegacyMimCatalogImporter
         private readonly List<JiboConditionedReply> _emotionReplies = [];
         private readonly List<string> _personalities = [];
         private readonly List<string> _fallbacks = [];
+        private readonly List<string> _personalReportKickOffReplies = [];
+        private readonly List<string> _personalReportOutroReplies = [];
+        private readonly List<string> _reportSkillTemplates = [];
+        private readonly List<string> _weatherIntroReplies = [];
+        private readonly List<string> _weatherTomorrowIntroReplies = [];
+        private readonly List<string> _weatherTodayHighLowReplies = [];
+        private readonly List<string> _weatherTomorrowHighLowReplies = [];
+        private readonly List<string> _weatherServiceDownReplies = [];
 
         public void Add(LegacyMimBucket bucket, string? condition, string text)
         {
@@ -336,6 +417,30 @@ public static class LegacyMimCatalogImporter
 
                     _personalities.Add(text);
                     return;
+                case LegacyMimBucket.PersonalReportKickOff:
+                    AddDistinct(_personalReportKickOffReplies, text);
+                    return;
+                case LegacyMimBucket.PersonalReportOutro:
+                    AddDistinct(_personalReportOutroReplies, text);
+                    return;
+                case LegacyMimBucket.WeatherIntro:
+                    AddDistinct(_weatherIntroReplies, text);
+                    return;
+                case LegacyMimBucket.WeatherTomorrowIntro:
+                    AddDistinct(_weatherTomorrowIntroReplies, text);
+                    return;
+                case LegacyMimBucket.WeatherTodayHighLow:
+                    AddDistinct(_weatherTodayHighLowReplies, text);
+                    return;
+                case LegacyMimBucket.WeatherTomorrowHighLow:
+                    AddDistinct(_weatherTomorrowHighLowReplies, text);
+                    return;
+                case LegacyMimBucket.WeatherServiceDown:
+                    AddDistinct(_weatherServiceDownReplies, text);
+                    return;
+                case LegacyMimBucket.ReportSkillTemplate:
+                    AddDistinct(_reportSkillTemplates, text);
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(bucket), bucket, null);
             }
@@ -349,8 +454,26 @@ public static class LegacyMimCatalogImporter
                 HowAreYouReplies = [.. _howAreYous],
                 EmotionReplies = [.. _emotionReplies],
                 PersonalityReplies = [.. _personalities],
-                GenericFallbackReplies = [.. _fallbacks]
+                GenericFallbackReplies = [.. _fallbacks],
+                PersonalReportKickOffReplies = [.. _personalReportKickOffReplies],
+                PersonalReportOutroReplies = [.. _personalReportOutroReplies],
+                ReportSkillTemplates = [.. _reportSkillTemplates],
+                WeatherIntroReplies = [.. _weatherIntroReplies],
+                WeatherTomorrowIntroReplies = [.. _weatherTomorrowIntroReplies],
+                WeatherTodayHighLowReplies = [.. _weatherTodayHighLowReplies],
+                WeatherTomorrowHighLowReplies = [.. _weatherTomorrowHighLowReplies],
+                WeatherServiceDownReplies = [.. _weatherServiceDownReplies]
             };
+        }
+
+        private static void AddDistinct(List<string> target, string text)
+        {
+            if (target.Any(value => string.Equals(value, text, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            target.Add(text);
         }
     }
 
@@ -401,5 +524,17 @@ public static class LegacyMimCatalogImporter
         }
 
         return WhitespacePattern.Replace(condition.Trim(), " ");
+    }
+
+    private static bool IsTemplateBucket(LegacyMimBucket bucket)
+    {
+        return bucket is LegacyMimBucket.PersonalReportKickOff
+            or LegacyMimBucket.PersonalReportOutro
+            or LegacyMimBucket.WeatherIntro
+            or LegacyMimBucket.WeatherTomorrowIntro
+            or LegacyMimBucket.WeatherTodayHighLow
+            or LegacyMimBucket.WeatherTomorrowHighLow
+            or LegacyMimBucket.WeatherServiceDown
+            or LegacyMimBucket.ReportSkillTemplate;
     }
 }

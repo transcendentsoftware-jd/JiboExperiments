@@ -1,0 +1,166 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Bring your umbrella and rain boots!",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> <style set='sheepish'>So don't eat cotton candy outside</style>.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_02",
+			"weight": 0.7,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Great news for umbrella enthusiasts.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So unless you specifically want to get wet for some reason, I'd bring your umbrella.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> So it might be good to bring an umbrella or two.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Be sure to keep your feet dry.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I'll be sure to stay inside.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Not a great day to fly a kite.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Stay dry out there.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Umbrella time.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "dt.now.isInRange('6/1', '9/30')",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Sounds like not a tank top kind of day.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Be sure your windows are closed.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary}",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentRain_AN_13",
+			"weight": 24,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

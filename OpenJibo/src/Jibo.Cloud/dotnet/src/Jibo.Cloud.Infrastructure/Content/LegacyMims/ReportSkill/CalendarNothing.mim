@@ -1,0 +1,183 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "I'm looking at your calendar, and I don't see anything scheduled for the rest of the day or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Checking your calendar, it looks like there's nothing the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Taking a look at your calendar, I don't see anything scheduled today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Checking your calendar, I don't see anything on it for the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Looking at your calendar, looks like it's blank for the rest of today and tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Checking your calendar, I'm not seeing anything at all for the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "I'm looking at your calendar, and I don't see anything at all for the rest of the day or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Checking your calendar, it looks like you have nothing scheduled for the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Taking a look at your calendar for the rest of today and tomorrow, it looks wide open, nothing at all.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "Taking a look at your calendar for the rest of the day and tomorrow, I don't see anything scheduled, you're all clear.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "${speaker} taking a look at your calendar for the rest of the day and tomorrow, I don't see anything scheduled, you're all clear.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "${speaker} taking a look at your calendar for the rest of today and tomorrow, it looks wide open, nothing at all.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "Checking your calendar ${speaker}, it looks like you have nothing scheduled for the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "I'm looking at your calendar ${speaker}, and I don't see anything at all for the rest of the day or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "${speaker} checking your calendar, I'm not seeing anything at all for the rest of today or tomorrow.",
+			"media": "TTS",
+			"prompt_id": "CalendarNothing_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

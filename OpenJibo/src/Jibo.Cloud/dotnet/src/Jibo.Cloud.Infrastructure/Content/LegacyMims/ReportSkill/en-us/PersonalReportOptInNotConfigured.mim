@@ -1,0 +1,150 @@
+{
+	"mim_type": "question",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "By the way ${speaker}. I have a short daily report for you. Do you want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Incidentally ${speaker}, I've got a daily report here. Do you want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!speaker",
+			"prompt": "So, I've got a daily report for you. Want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "HoldReturn",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "So, ${speaker}, I've got a daily report for you. Want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_HR_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "HoldReturn",
+			"index": 1,
+			"condition": "!speaker",
+			"prompt": "So, I've got a daily report for you. Want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_HR_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NI",
+			"index": 1,
+			"condition": "",
+			"prompt": "So, would you like to hear this daily report?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_NI_1_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NM",
+			"index": 1,
+			"condition": "",
+			"prompt": "Sorry, what was that?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_NM_1_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Errors",
+			"prompt_sub_category": "NM",
+			"index": 1,
+			"condition": "",
+			"prompt": "Sorry, was that yes or no? Do you want to hear this daily report?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_NM_1_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Hey ${speaker}, I have this little daily report I can give you. Do you want to hear it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Oh hey ${speaker}. Do you want to hear this little daily report I can do?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "Oh, ${speaker}, I have a little daily report prepared. Do you want to see it?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "Q",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "${speaker} I have a little daily report ready to present. You interested in seeing it now?",
+			"media": "TTS",
+			"prompt_id": "PersonalReportOptInNotConfigured_QN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

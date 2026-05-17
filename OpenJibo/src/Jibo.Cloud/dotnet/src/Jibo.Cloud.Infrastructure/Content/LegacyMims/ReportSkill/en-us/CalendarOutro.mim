@@ -1,0 +1,172 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's it.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that's all you have.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That's all you have.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That's the end of it.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "After that you're all clear.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And that does it.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And then you're free.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That's the last thing.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "That was the last thing.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And <pitch mult='1.1'>that's </pitch> your calendar.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And the rest of the day is free for you to work on your autobiography. ",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_11",
+			"weight": 0.1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And after that you're free to play with your robot for the rest of the day.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_12",
+			"weight": 0.1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "And <pitch mult='1.1'>that's </pitch> your calendar. <break size='0.5'/> <pitch mult='1.2'>Nice</pitch> calendar.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!speaker",
+			"prompt": "And <pitch mult='1.1'>that's </pitch> your calendar. <break size='0.5'/> <pitch mult='1.2'>Nice</pitch> calendar ${speaker}.",
+			"media": "TTS",
+			"prompt_id": "CalendarOutro_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

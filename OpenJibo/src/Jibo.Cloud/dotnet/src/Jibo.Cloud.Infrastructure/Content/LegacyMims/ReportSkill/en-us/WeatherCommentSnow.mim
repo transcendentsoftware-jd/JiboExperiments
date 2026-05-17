@@ -1,0 +1,155 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Snow is quite a picturesque sight! Especially from inside where it's warm.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Sounds like snow man weather.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Time to polish those cross country skis.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> A great day to be a snowman.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Don't be afraid to catch snowflakes on your tongue.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> Enjoy those flakes.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Be sure to keep your feet dry.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I'll be sure to stay inside.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Stay dry out there.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Watch your step out there, it might be slippery.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Feel free to wear snow shoes.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary}",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentSnow_AN_12",
+			"weight": 22,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

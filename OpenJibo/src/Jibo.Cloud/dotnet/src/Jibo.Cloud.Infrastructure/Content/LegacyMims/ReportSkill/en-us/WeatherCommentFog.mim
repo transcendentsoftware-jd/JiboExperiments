@@ -1,0 +1,111 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": {
+		"hotWords": false,
+		"punctuation": true,
+		"voice": true,
+		"beat": true
+	},
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.5'/> If you're driving today, use your fog lights!",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Hopefully it won't be too creepy.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Keep an eye out for lighthouses.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> I'm sure that fog will lift eventually.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Not so great visibility out there I'm sure.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Enjoy the feeling of mist on your face.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary} <break size='0.7'/> Remember, not all <phoneme ph='f aa g'> fog </phoneme> is spooky.",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='weather' meta='${skill.weather.icon}' nonBlocking='true' /> <break size='0.5'/> ${skill.weather.prefix} ${skill.weather.summary}",
+			"media": "TTS",
+			"prompt_id": "WeatherCommentFog_AN_08",
+			"weight": 14,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

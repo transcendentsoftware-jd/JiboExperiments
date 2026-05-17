@@ -1,0 +1,198 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.commuteTraffic",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your walk should take about ${skill.commute.durationMins} minutes today.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />For your trip to work, the walk should take about ${skill.commute.durationMins} minutes today.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />For your walk to work today, it should take around ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Looking at your commute, the walk to work should take around ${skill.commute.durationMins} minutes, depending on your mood.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_04",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'walking'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your walk to work today should take around ${skill.commute.durationMins} minutes, depending on how long your legs are.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_05",
+			"weight": 0.1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your trip should take about ${skill.commute.durationMins} minutes today.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your trip to work today should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your commute today should take around ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Today's commute will take you about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'transit'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Looking at your commute, it should take you about ${skill.commute.durationMins} minutes to get to work today.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your ride should take about ${skill.commute.durationMins} minutes today.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Your ride to work today should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />For your commute, today's ride to work should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Checking today's commute info, your ride to work should take about ${skill.commute.durationMins} minutes.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Looking at today's commute, your ride should take about ${skill.commute.durationMins} minutes, depending on how fast you pedal.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_15",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.userPrefs.commute.mode === 'bicycling'",
+			"prompt": "<anim cat='commute' meta='commute-normal, no-eye-end' nonBlocking='true' />Taking a look at today's commute, your ride should take about ${skill.commute.durationMins} minutes, depending on how fast you feel like pedaling.",
+			"media": "TTS",
+			"prompt_id": "CommuteTransportNormal_AN_16",
+			"weight": 0.1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

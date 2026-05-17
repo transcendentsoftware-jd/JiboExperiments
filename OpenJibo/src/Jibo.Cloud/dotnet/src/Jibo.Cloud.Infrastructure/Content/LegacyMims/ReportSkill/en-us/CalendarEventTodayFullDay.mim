@@ -1,0 +1,154 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.calendarEvents.shift()",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see ${skill.calendar.numEventsToday} items today. <break size='0.3'/>The first one I'm seeing is ${skill.calendar.events[0].summary}. It goes all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have ${skill.calendar.numEventsToday} things today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It's an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see ${skill.calendar.numEventsToday} things scheduled today. <break size='0.3'/>The first one is ${skill.calendar.events[0].summary}. It lasts all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Taking a look at your calendar for today, I'm seeing one thing. It's called ${skill.calendar.events[0].summary}, and it lasts all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar today, I see you have just one thing, called ${skill.calendar.events[0].summary}. <break size='0.3'/>It's a full-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have one thing today, ${skill.calendar.events[0].summary}. <break size='0.3'/>It goes all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday >= 3 && !skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have ${skill.calendar.numEventsToday} things today. <break size='0.3'/>The first one is an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 1 && !skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar today, I see you have just one thing. <break size='0.3'/>It's a full-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have a couple of things today. <break size='0.3'/>The first one is an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Looking at your calendar, you have a couple of things today. <break size='0.3'/>The first one is called ${skill.calendar.events[0].summary}. It's an all-day event.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see a couple of things scheduled today. <break size='0.3'/>The first one is ${skill.calendar.events[0].summary}. It lasts all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.calendar.numEventsToday === 2 && !!skill.calendar.events[0].summary",
+			"prompt": "Checking your calendar, I see a couple of items today. <break size='0.3'/>The first one I'm seeing is ${skill.calendar.events[0].summary}. It goes all day.",
+			"media": "TTS",
+			"prompt_id": "CalendarEventTodayFullDay_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

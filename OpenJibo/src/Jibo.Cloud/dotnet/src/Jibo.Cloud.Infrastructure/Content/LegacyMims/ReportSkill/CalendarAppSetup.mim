@@ -1,0 +1,62 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "To hear what's on your calendar, you need to connect your calendar in the Jibo <phoneme ph='a p p'> app </phoneme>. It's in the personal report section.",
+			"media": "TTS",
+			"prompt_id": "CalendarAppSetup_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.singleSkill",
+			"prompt": "If you want to hear what's on your calendar, you need to set up at least one calendar in the Jibo <phoneme ph='a p p'> app </phoneme>, in the Personal Report settings.",
+			"media": "TTS",
+			"prompt_id": "CalendarAppSetup_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "${speaker} to hear what's on your calendar, you need to connect your calendar in the Jibo <phoneme ph='a p p'> app </phoneme>. It's in the personal report section.",
+			"media": "TTS",
+			"prompt_id": "CalendarAppSetup_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.singleSkill",
+			"prompt": "${speaker} if you want to hear what's on your calendar, you need to set up at least one calendar in the Jibo <phoneme ph='a p p'> app </phoneme>, in the Personal Report settings.",
+			"media": "TTS",
+			"prompt_id": "CalendarAppSetup_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

@@ -20,8 +20,18 @@ public sealed class ProviderCachingTests
             {
                 "/geo/1.0/direct" => JsonResponse(
                     """[{"name":"Boston","state":"Massachusetts","country":"US","lat":42.3601,"lon":-71.0589}]"""),
-                "/data/2.5/weather" => JsonResponse(
-                    """{"name":"Boston","weather":[{"main":"Clouds","description":"overcast clouds"}],"main":{"temp":70.2,"temp_max":72.9,"temp_min":66.1}}"""),
+                "/data/3.0/onecall" => JsonResponse(
+                    """
+                    {
+                        "lat":42.3601,
+                        "lon":-71.0589,
+                        "timezone":"America/New_York",
+                        "current":{"dt":1710000000,"temp":70.2,"weather":[{"main":"Clouds","description":"overcast clouds"}]},
+                        "daily":[
+                            {"dt":1710000000,"temp":{"day":70.2,"min":66.1,"max":72.9},"weather":[{"main":"Clouds","description":"overcast clouds"}]}
+                        ]
+                    }
+                    """),
                 _ => new HttpResponseMessage(HttpStatusCode.NotFound)
             };
         });
@@ -43,8 +53,7 @@ public sealed class ProviderCachingTests
         Assert.NotNull(first);
         Assert.NotNull(second);
         Assert.Equal(1, handler.GetCallCount("/geo/1.0/direct"));
-        Assert.Equal(1, handler.GetCallCount("/data/2.5/weather"));
-        Assert.Equal(0, handler.GetCallCount("/data/2.5/forecast"));
+        Assert.Equal(1, handler.GetCallCount("/data/3.0/onecall"));
     }
 
     [Fact]
@@ -57,8 +66,18 @@ public sealed class ProviderCachingTests
             {
                 "/geo/1.0/direct" => JsonResponse(
                     """[{"name":"Lone Jack","country":"US","lat":38.8708,"lon":-94.1733}]"""),
-                "/data/2.5/weather" => JsonResponse(
-                    """{"name":"Lone Jack","weather":[{"main":"Clouds","description":"overcast clouds"}],"main":{"temp":76.0,"temp_max":82.0,"temp_min":78.0}}"""),
+                "/data/3.0/onecall" => JsonResponse(
+                    """
+                    {
+                        "lat":38.8708,
+                        "lon":-94.1733,
+                        "timezone":"America/Chicago",
+                        "current":{"dt":1710000000,"temp":76.0,"weather":[{"main":"Clouds","description":"overcast clouds"}]},
+                        "daily":[
+                            {"dt":1710000000,"temp":{"day":76.0,"min":78.0,"max":82.0},"weather":[{"main":"Clouds","description":"overcast clouds"}]}
+                        ]
+                    }
+                    """),
                 _ => new HttpResponseMessage(HttpStatusCode.NotFound)
             };
         });
@@ -80,8 +99,99 @@ public sealed class ProviderCachingTests
         Assert.Equal(76, report!.Temperature);
         Assert.Equal(82, report.HighTemperature);
         Assert.Equal(76, report.LowTemperature);
+        Assert.Equal(1, handler.GetCallCount("/data/3.0/onecall"));
+    }
+
+    [Fact]
+    public async Task OpenWeatherReportProvider_UsesOneCallDailyForecastForTomorrow()
+    {
+        var handler = new CountingHttpMessageHandler(message =>
+        {
+            var path = message.RequestUri?.AbsolutePath ?? string.Empty;
+            return path switch
+            {
+                "/geo/1.0/direct" => JsonResponse(
+                    """[{"name":"Chicago","country":"US","lat":41.8781,"lon":-87.6298}]"""),
+                "/data/3.0/onecall" => JsonResponse(
+                    """
+                    {
+                        "lat":41.8781,
+                        "lon":-87.6298,
+                        "timezone":"America/Chicago",
+                        "current":{"dt":1710000000,"temp":61.0,"weather":[{"main":"Clouds","description":"scattered clouds"}]},
+                        "daily":[
+                            {"dt":1710000000,"temp":{"day":61.0,"min":55.0,"max":66.0},"weather":[{"main":"Clouds","description":"scattered clouds"}]},
+                            {"dt":1710086400,"temp":{"day":74.0,"min":60.0,"max":76.0},"summary":"A warmer day ahead","weather":[{"main":"Rain","description":"light rain"}]}
+                        ]
+                    }
+                    """),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound)
+            };
+        });
+        var provider = new OpenWeatherReportProvider(
+            new HttpClient(handler),
+            new OpenWeatherOptions
+            {
+                ApiKey = "test-key",
+                CurrentCacheTtlSeconds = 300,
+                ForecastCacheTtlSeconds = 300,
+                GeocodeCacheTtlSeconds = 300,
+                FailureCacheTtlSeconds = 30
+            },
+            NullLogger<OpenWeatherReportProvider>.Instance);
+
+        var report = await provider.GetReportAsync(new WeatherReportRequest("Chicago,US", null, null, true, false, 1));
+
+        Assert.NotNull(report);
+        Assert.Equal(74, report!.Temperature);
+        Assert.Equal(76, report.HighTemperature);
+        Assert.Equal(60, report.LowTemperature);
+        Assert.Equal(1, handler.GetCallCount("/geo/1.0/direct"));
+        Assert.Equal(1, handler.GetCallCount("/data/3.0/onecall"));
+    }
+
+    [Fact]
+    public async Task OpenWeatherReportProvider_FallsBackToLegacyWeatherWhenOneCallIsUnauthorized()
+    {
+        var handler = new CountingHttpMessageHandler(message =>
+        {
+            var path = message.RequestUri?.AbsolutePath ?? string.Empty;
+            return path switch
+            {
+                "/geo/1.0/direct" => JsonResponse(
+                    """[{"name":"Boston","state":"Massachusetts","country":"US","lat":42.3601,"lon":-71.0589}]"""),
+                "/data/3.0/onecall" => new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    Content = new StringContent(
+                        """{"cod":401,"message":"One Call 3.0 requires a subscription"}""",
+                        Encoding.UTF8,
+                        "application/json")
+                },
+                "/data/2.5/weather" => JsonResponse(
+                    """{"name":"Boston","weather":[{"main":"Clouds","description":"overcast clouds"}],"main":{"temp":70.0,"temp_max":72.0,"temp_min":66.0}}"""),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound)
+            };
+        });
+        var provider = new OpenWeatherReportProvider(
+            new HttpClient(handler),
+            new OpenWeatherOptions
+            {
+                ApiKey = "test-key",
+                CurrentCacheTtlSeconds = 300,
+                ForecastCacheTtlSeconds = 300,
+                GeocodeCacheTtlSeconds = 300,
+                FailureCacheTtlSeconds = 30
+            },
+            NullLogger<OpenWeatherReportProvider>.Instance);
+
+        var report = await provider.GetReportAsync(new WeatherReportRequest("Boston,US", null, null, false, false, 0));
+
+        Assert.NotNull(report);
+        Assert.Equal(70, report!.Temperature);
+        Assert.Equal(72, report.HighTemperature);
+        Assert.Equal(66, report.LowTemperature);
+        Assert.Equal(1, handler.GetCallCount("/data/3.0/onecall"));
         Assert.Equal(1, handler.GetCallCount("/data/2.5/weather"));
-        Assert.Equal(0, handler.GetCallCount("/data/2.5/forecast"));
     }
 
     [Fact]

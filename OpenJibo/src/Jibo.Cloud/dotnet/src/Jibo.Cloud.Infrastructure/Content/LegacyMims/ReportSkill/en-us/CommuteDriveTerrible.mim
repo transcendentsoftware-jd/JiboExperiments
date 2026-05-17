@@ -1,0 +1,143 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.commuteTraffic",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Traffic looks really bad right now, it'll probably take you about ${skill.commute.extraMins} extra minutes to get to work.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Traffic is a lot slower than normal right now.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />For your commute, looks like traffic is backed up much more than normal today.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Checking your commute, with traffic moving really really slow today, it looks like it might take ${skill.commute.extraMins} more minutes than usual.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Your commute is looking much slower than normal.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Traffic is looking much worse than normal right now.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Your commute time looks a lot longer than usual right now, with traffic as it is.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Traffic right now is a lot slower than usual.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Looking at your commute, traffic's moving much much slower than normal.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Looking at traffic, it looks much slower than usual.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "<anim cat='commute' meta='commute-terrible, no-eye-end' nonBlocking='true' />Taking a look at the traffic, it's moving a lot slower than your average day.",
+			"media": "TTS",
+			"prompt_id": "CommuteDriveTerrible_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

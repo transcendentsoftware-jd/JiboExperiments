@@ -2162,7 +2162,7 @@ public sealed class JiboWebSocketServiceTests
             .GetProperty("play")
             .GetProperty("esml")
             .GetString();
-        Assert.Contains("weather service is connected", esml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("weather service is offline", esml, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -2204,7 +2204,7 @@ public sealed class JiboWebSocketServiceTests
             .GetProperty("play")
             .GetProperty("esml")
             .GetString();
-        Assert.Contains("weather service is connected", esml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("weather service is offline", esml, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

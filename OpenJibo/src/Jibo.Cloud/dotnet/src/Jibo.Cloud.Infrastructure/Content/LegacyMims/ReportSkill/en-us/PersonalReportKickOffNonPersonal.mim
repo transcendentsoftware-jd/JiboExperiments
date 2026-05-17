@@ -1,0 +1,50 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I see you haven't set up your personal report in the Jibo app yet. After you do that, I can give you up to date info about your commute and your calendar. In the meantime, here's a non personal report.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportKickOffNonPersonal_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It looks like you haven't set up your personal report in the Jibo app yet. Once you've done that, I can tell you about your commute and your calendar. For now, here's a not very personal report.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportKickOffNonPersonal_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "It looks like you haven't configured your personal report in the Jibo app yet. After you've done that, I can give you a nice personalized update on your commute and your calendar. For now though, I can give you this less personal report.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportKickOffNonPersonal_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"parse_yes_no": false
+}

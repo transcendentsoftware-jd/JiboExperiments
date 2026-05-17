@@ -1,0 +1,242 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": {
+		"type": "Javascript",
+		"data": "views.commuteDepart",
+		"pause": true
+	},
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"hint_phrases": "",
+	"fast_eos_array": "",
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "I'd leave around ${skill.commute.departDT.toString({timeOnly: true})}, to get to work on time.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "To get to work on time, I'd leave no later than ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "You should head out by ${skill.commute.departDT.toString({timeOnly: true})}, if you want to be on time.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "You should leave by ${skill.commute.departDT.toString({timeOnly: true})} to get to work on time.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "I'd leave by ${skill.commute.departDT.toString({timeOnly: true})} to get to work on time.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "To be on time, you should leave by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!skill.commute.eventIsEarly",
+			"prompt": "If you want to be on time, you should leave by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If your early meeting is at work, I'd leave at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If your early meeting today is at work, I'd leave at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If that early meeting you have is at work, you should leave at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If that early meeting on your schedule is at work, you should leave at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If your early meeting today is at work, I'd head out of here by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If today's early meeting is at work, so you should leave here at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If that early meeting you have is at work, you should leave here no later than ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_14",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !skill.singleSkill",
+			"prompt": "If that early meeting on your calendar is at work, you should leave by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_15",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !!skill.singleSkill",
+			"prompt": "I saw an early meeting on your calendar. If it's at work, you should leave here at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_16",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !!skill.singleSkill",
+			"prompt": "I noticed you have an early meeting on your schedule. Assuming that's at work, I'd head out of here by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_17",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !!skill.singleSkill",
+			"prompt": "I saw you have an early meeting today. If that's at work, you should leave here at ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_18",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !!skill.singleSkill",
+			"prompt": "I noticed you have an early event on your calendar. If that's at work, you should leave here no later than ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_19",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!skill.commute.eventIsEarly && !!skill.singleSkill",
+			"prompt": "I saw you have an early meeting on your calendar. If it's at work, you should leave by ${skill.commute.departDT.toString({timeOnly: true})}.",
+			"media": "TTS",
+			"prompt_id": "CommuteDepartTimeNotNormal_AN_20",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	]
+}

@@ -1,0 +1,52 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"hint_phrases": "",
+	"fast_eos_array": "",
+	"parse_yes_no": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Sorry, for me to give you the news, you'll need to enable at least one news category in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "NewsAppSetup_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "Oh, to get the news, you just need to select at least one news category in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "NewsAppSetup_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "To get the news part of the personal report, you'll need to choose at least one news category in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "NewsAppSetup_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	]
+}

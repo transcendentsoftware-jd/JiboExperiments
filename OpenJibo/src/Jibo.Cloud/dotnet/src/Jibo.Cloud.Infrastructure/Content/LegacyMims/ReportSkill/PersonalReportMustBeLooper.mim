@@ -1,0 +1,62 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner",
+			"prompt": "To get personalized information like this, you'll need to become a member of my loop, and then set up your personal report preferences in the Jibo <phoneme ph='a p p'> app </phoneme>. <break size='0.3'/> My official owner ${loop.owner} can invite you to the loop.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportMustBeLooper_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner",
+			"prompt": "Oh to get this kind of personalized info, you need to be sure you're in my Loop, and then set your personal report preferences in the Jibo <phoneme ph='a p p'> app </phoneme>.<break size='0.3'/> My official owner ${loop.owner} can invite you to the loop.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportMustBeLooper_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "!!loop.owner",
+			"prompt": "So, to get personalized information like your calendar and commute, you'll need to make sure you're in my Loop, and then go to the Jibo <phoneme ph='a p p'> app </phoneme> to set your personal report preferences. <break size='0.3'/> My official owner ${loop.owner} can invite you to the loop.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportMustBeLooper_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "So, to get personalized information like your calendar and commute, you'll need to make sure you're in my Loop, and then go to the Jibo <phoneme ph='a p p'> app </phoneme> to set your personal report preferences.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportMustBeLooper_AN_04",
+			"weight": 0.1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

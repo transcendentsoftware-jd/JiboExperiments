@@ -1,0 +1,51 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "If you want your personal report, you'll need to turn on at least one category in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportNoneActive_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "I can give you a personal report if you activate at least one category in the Jibo <phoneme ph='a p p'> app </phoneme>.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportNoneActive_AN_02",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "",
+			"prompt": "If you want a personal report, just go to the personal report section in the Jibo <phoneme ph='a p p'> app </phoneme>, and choose at least one category.",
+			"media": "TTS",
+			"prompt_id": "PersonalReportNoneActive_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	],
+	"hint_phrases": "",
+	"fast_eos_array": ""
+}

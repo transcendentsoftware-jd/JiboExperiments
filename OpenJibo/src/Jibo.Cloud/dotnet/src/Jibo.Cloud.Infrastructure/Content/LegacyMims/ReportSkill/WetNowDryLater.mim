@@ -1,0 +1,161 @@
+{
+	"mim_type": "announcement",
+	"rule_name": "",
+	"gui": null,
+	"timeout": 6,
+	"no_matches_for_gui": 0,
+	"no_inputs_for_gui": 0,
+	"barge_in": true,
+	"es_auto_tagging": true,
+	"parse_all_asr": false,
+	"thanks_handling": "ignore",
+	"parse_launch": false,
+	"hint_phrases": "",
+	"fast_eos_array": "",
+	"notes": "",
+	"prompts": [
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'rain'",
+			"prompt": "Oh it might be raining right now, so bring your umbrella and galoshes.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_01",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'rain'",
+			"prompt": "Also right now it may be raining. So don't eat cotton candy outside.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_02",
+			"weight": 0.2,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'rain'",
+			"prompt": "Oh and right now it might be raining, so I'd bring your umbrella.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_03",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'rain'",
+			"prompt": "Also it might be raining at the moment, so it might be good to bring an umbrella or two.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_04",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'rain'",
+			"prompt": "Oh and at this very moment it may be raining. <break size='0.3'/> Umbrella time.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_05",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'snow'",
+			"prompt": "Oh right now it might be snowing, so bring your boots.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_06",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'snow'",
+			"prompt": "Also right now it may be snowing. So maybe wear your snow boots.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_07",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'snow'",
+			"prompt": "Oh and right now it might be snowing, so I'd bring your snow gear.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_08",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'snow'",
+			"prompt": "Also it may be snowing at the moment, so it might be good to bring a cross country ski or two.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_09",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'snow'",
+			"prompt": "Oh and at this very moment it might be snowing. <break size='0.3'/> Snow pants time.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_10",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'sleet'",
+			"prompt": "Oh it might be sleeting right now, so bring your boots.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_11",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'sleet'",
+			"prompt": "Also right now it may be sleeting. So maybe wear your sleet boots.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_12",
+			"weight": 1,
+			"auto_rule_override": null
+		},
+		{
+			"prompt_category": "Entry-Core",
+			"prompt_sub_category": "AN",
+			"index": 1,
+			"condition": "skill.weather.current.icon === 'sleet'",
+			"prompt": "Oh and right now it may be sleeting. <break size='0.3'/> Snow pants time.",
+			"media": "TTS",
+			"prompt_id": "WetNowDryLater_AN_13",
+			"weight": 1,
+			"auto_rule_override": null
+		}
+	]
+}

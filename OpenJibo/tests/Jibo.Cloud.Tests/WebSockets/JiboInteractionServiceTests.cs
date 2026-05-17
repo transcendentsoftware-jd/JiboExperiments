@@ -1724,9 +1724,10 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("personal_report_delivered", decision.IntentName);
-        Assert.Contains("Great, alex. Here is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Right now in Boston, U.S., it's light rain, around 61 degrees Fahrenheit.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("That is your personal report.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Sure alex. Here it is.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("First, your weather.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("For your weather. In Boston, U.S., it's light rain and 61 degrees Fahrenheit. Today's high is 65, and the low is 54.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("alex that wraps up your report for the day. Hope you have a good one.", decision.ReplyText, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(decision.ContextUpdates);
         Assert.Equal("idle", decision.ContextUpdates![PersonalReportStateKey]);
         Assert.Equal(true, decision.ContextUpdates[PersonalReportUserVerifiedKey]);
@@ -1952,7 +1953,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Null(decision.SkillName);
         Assert.Null(decision.SkillPayload);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -1967,7 +1968,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -1982,7 +1983,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -1997,7 +1998,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -2012,7 +2013,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -2031,7 +2032,7 @@ public sealed class JiboInteractionServiceTests
         });
 
         Assert.Equal("weather", decision.IntentName);
-        Assert.Equal("I can check weather once my weather service is connected.", decision.ReplyText);
+        Assert.Equal("Looks like our weather service is offline. Sorry.", decision.ReplyText);
     }
 
     [Fact]
@@ -2063,7 +2064,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal(54, decision.SkillPayload["weather_low"]);
         Assert.Equal("F", decision.SkillPayload["weather_unit"]);
         Assert.Equal("Normal", decision.SkillPayload["weather_theme"]);
-        Assert.Equal("Right now in Boston, U.S., it's light rain, around 61 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Boston, U.S., it's light rain and 61 degrees Fahrenheit. Today's high is 65, and the low is 54.", decision.ReplyText);
         Assert.NotNull(provider.LastRequest);
         Assert.False(provider.LastRequest!.IsTomorrow);
         Assert.Equal(0, provider.LastRequest.ForecastDayOffset);
@@ -2088,7 +2089,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in Chicago, U.S., it looks mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("First, the weather tomorrow. Tomorrow in Chicago, U.S., it looks mostly cloudy. Tomorrow's high will be 74 and the low will be 60.", decision.ReplyText);
     }
 
     [Fact]
@@ -2110,7 +2111,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Seattle", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Right now in Seattle, U.S., it's light rain, around 58 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Seattle, U.S., it's light rain and 58 degrees Fahrenheit. Today's high is 61, and the low is 52.", decision.ReplyText);
     }
 
     [Fact]
@@ -2132,7 +2133,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Paris", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Right now in Paris, FR, it's overcast clouds, around 66 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Paris, FR, it's overcast clouds and 66 degrees Fahrenheit. Today's high is 70, and the low is 60.", decision.ReplyText);
     }
 
     [Fact]
@@ -2154,7 +2155,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Redmond Oregon", provider.LastRequest?.LocationQuery);
         Assert.False(provider.LastRequest?.IsTomorrow);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Right now in Redmond, U.S., it's clear sky, around 63 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Redmond, U.S., it's clear sky and 63 degrees Fahrenheit. Today's high is 66, and the low is 52.", decision.ReplyText);
     }
 
     [Fact]
@@ -2176,7 +2177,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("New York City", provider.LastRequest?.LocationQuery);
         Assert.True(provider.LastRequest?.IsTomorrow);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("Tomorrow in New York, U.S., it looks partly cloudy with a high near 76 degrees Fahrenheit and a low around 61 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("First, the weather tomorrow. Tomorrow in New York, U.S., it looks partly cloudy. Tomorrow's high will be 76 and the low will be 61.", decision.ReplyText);
     }
 
     [Fact]
@@ -2231,7 +2232,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Null(provider.LastRequest?.Latitude);
         Assert.Null(provider.LastRequest?.Longitude);
-        Assert.Equal("Right now in Chicago, U.S., it's mostly cloudy, around 70 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Chicago, U.S., it's mostly cloudy and 70 degrees Fahrenheit. Today's high is 75, and the low is 62.", decision.ReplyText);
     }
 
     [Fact]
@@ -2261,7 +2262,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(0, provider.LastRequest?.ForecastDayOffset);
         Assert.False(provider.LastRequest?.IsTomorrow);
-        Assert.Equal("Right now in Chicago, U.S., it's mostly cloudy, around 70 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("For your weather. In Chicago, U.S., it's mostly cloudy and 70 degrees Fahrenheit. Today's high is 75, and the low is 62.", decision.ReplyText);
     }
 
     [Fact]
@@ -2291,7 +2292,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
         Assert.True(provider.LastRequest?.IsTomorrow);
-        Assert.Equal("Tomorrow in Chicago, U.S., it looks mostly cloudy with a high near 75 degrees Fahrenheit and a low around 62 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("First, the weather tomorrow. Tomorrow in Chicago, U.S., it looks mostly cloudy. Tomorrow's high will be 75 and the low will be 62.", decision.ReplyText);
     }
 
     [Theory]
@@ -2361,7 +2362,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
         Assert.False(provider.LastRequest?.IsTomorrow);
-        Assert.Equal("On Monday in Portland, U.S., it looks scattered clouds with a high near 68 degrees Fahrenheit and a low around 53 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Let's look at the weather. On Monday in Portland, U.S., it looks scattered clouds with a high near 68 degrees Fahrenheit and a low around 53 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -2386,7 +2387,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(1, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("On Tuesday in Chicago, U.S., it looks light rain with a high near 63 degrees Fahrenheit and a low around 51 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("First, the weather tomorrow. On Tuesday in Chicago, U.S., it looks light rain. Tomorrow's high will be 63 and the low will be 51.", decision.ReplyText);
     }
 
     [Fact]
@@ -2435,7 +2436,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Paris", provider.LastRequest?.LocationQuery);
         Assert.Equal(5, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("This weekend in Paris, FR, it looks overcast clouds with a high near 70 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Let's look at the weather. This weekend in Paris, FR, it looks overcast clouds with a high near 70 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
@@ -2557,7 +2558,7 @@ public sealed class JiboInteractionServiceTests
         Assert.Equal("weather", decision.IntentName);
         Assert.Equal("Chicago", provider.LastRequest?.LocationQuery);
         Assert.Equal(2, provider.LastRequest?.ForecastDayOffset);
-        Assert.Equal("The day after tomorrow in Chicago, U.S., it looks mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
+        Assert.Equal("Let's look at the weather. The day after tomorrow in Chicago, U.S., it looks mostly cloudy with a high near 74 degrees Fahrenheit and a low around 60 degrees Fahrenheit.", decision.ReplyText);
     }
 
     [Fact]
