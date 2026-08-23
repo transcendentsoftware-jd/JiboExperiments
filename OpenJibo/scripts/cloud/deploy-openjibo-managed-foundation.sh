@@ -185,6 +185,7 @@ deployment_json="$("${deployment_args[@]}")"
 
 python3 - "$deployment_json" "$resource_group_name" "$state_connection_string" "$personal_memory_connection_string" "$open_weather_api_key" "$news_api_key" "$search_backend" "$search_fallback" "$current_principal_id" "$postgres_admin_password" <<'PY'
 import json
+import secrets
 import subprocess
 import sys
 import time
@@ -276,6 +277,28 @@ def set_secret_if_changed(name: str, value: str) -> None:
     set_secret(name, value)
 
 
+def get_or_create_random_secret(name: str, byte_count: int = 32) -> str:
+    result = subprocess.run(
+        [
+            "az", "keyvault", "secret", "show",
+            "--vault-name", key_vault_name,
+            "--name", name,
+            "--query", "value",
+            "--output", "tsv",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    existing_value = result.stdout.strip() if result.returncode == 0 else ""
+    if existing_value:
+        return existing_value
+
+    value = secrets.token_urlsafe(byte_count)
+    set_secret(name, value)
+    print(f"Created managed secret '{name}'.", file=sys.stderr)
+    return value
+
+
 def postgres_connection_string(database_name: str) -> str:
     return (
         f"Host={postgres_host};Port=5432;Database={database_name};"
@@ -340,6 +363,8 @@ set_secret_if_changed("openjibo-openweather-api-key", open_weather_api_key)
 set_secret_if_changed("openjibo-newsapi-key", news_api_key)
 set_secret_if_changed("openjibo-search-backend", search_backend)
 set_secret_if_changed("openjibo-search-fallback", search_fallback)
+get_or_create_random_secret("openjibo-user-encrypt", 48)
+get_or_create_random_secret("openjibo-user-salt", 24)
 
 print(json.dumps(deployment_json, indent=2))
 PY

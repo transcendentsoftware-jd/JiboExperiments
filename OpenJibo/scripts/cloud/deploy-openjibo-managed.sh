@@ -17,6 +17,7 @@ template_path="infra/azure/container-apps/openjibo-managed.bicep"
 parameters_path="infra/azure/container-apps/openjibo-managed.parameters.json"
 run_migration=false
 run_smoke=false
+smoke_generated_fqdn=false
 skip_hostname_binding=false
 
 while [[ $# -gt 0 ]]; do
@@ -87,6 +88,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --run-smoke)
       run_smoke=true
+      shift
+      ;;
+    --smoke-generated-fqdn)
+      smoke_generated_fqdn=true
       shift
       ;;
     --skip-hostname-binding)
@@ -248,6 +253,18 @@ search_backend="$(az keyvault secret show --vault-name "$key_vault_name" --name 
 search_fallback="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-search-fallback --query value -o tsv 2>/dev/null || true)"
 portal_status_password="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-portal-status-password --query value -o tsv)"
 peer_sync_shared_key="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-peer-sync-shared-key --query value -o tsv)"
+user_encryption_passphrase="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-user-encrypt --query value -o tsv)"
+user_encryption_salt="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-user-salt --query value -o tsv)"
+
+if [[ -z "$user_encryption_passphrase" || -z "$user_encryption_salt" ]]; then
+  echo "Managed user encryption secrets are missing from Key Vault '$key_vault_name'." >&2
+  exit 1
+fi
+
+if [[ "$run_migration" == true ]]; then
+  bash "${script_dir}/prepare-openjibo-managed-databases.sh" \
+    --key-vault-name "$key_vault_name"
+fi
 
 echo "Deploying Open Jibo managed Container Apps stack to resource group '${resource_group_name}'"
 deployment_args=(
@@ -271,6 +288,8 @@ deployment_args=(
   --parameters "newsApiKey=${news_api_key}"
   --parameters "portalStatusPassword=${portal_status_password}"
   --parameters "peerSyncSharedKey=${peer_sync_shared_key}"
+  --parameters "userEncryptionPassphrase=${user_encryption_passphrase}"
+  --parameters "userEncryptionSalt=${user_encryption_salt}"
 )
 
 if [[ "$enable_azure_speech" == true ]]; then
@@ -416,6 +435,8 @@ if [[ -n "${container_app_name:-}" ]]; then
     "personal-memory-connection-string=${personal_memory_connection_string}"
     "portal-status-password=${portal_status_password}"
     "peer-sync-shared-key=${peer_sync_shared_key}"
+    "user-encryption-passphrase=${user_encryption_passphrase}"
+    "user-encryption-salt=${user_encryption_salt}"
   )
 
   if [[ -n "$search_backend" ]]; then
@@ -460,20 +481,15 @@ fi
 
 sleep 20
 
-if [[ "$run_migration" == true ]]; then
-  bash "${script_dir}/invoke-openjibo-migration.sh" \
-    --target all \
-    --state-connection "$state_connection_string" \
-    --memory-connection "$personal_memory_connection_string"
-fi
 
 if [[ "$run_smoke" == true ]]; then
-  smoke_base_url="$(python3 - "$deployment_json" "$api_hostname" <<'PY'
+  smoke_base_url="$(python3 - "$deployment_json" "$api_hostname" "$smoke_generated_fqdn" <<'PY'
 import json
 import sys
 
 api_hostname = sys.argv[2].strip()
-if api_hostname:
+use_generated_fqdn = sys.argv[3].strip().lower() == "true"
+if api_hostname and not use_generated_fqdn:
     print(f"https://{api_hostname}")
     raise SystemExit(0)
 

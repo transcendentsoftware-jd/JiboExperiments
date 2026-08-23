@@ -13,3 +13,5 @@ Current split:
   - includes the knowledge-search backend config so hosted deployments can enable Wolfram Alpha, ChatGPT, or other supported AI backends consistently
 
 The managed deployment workflow uses the foundation template first, then publishes the image, then deploys the app template, then runs migrations and smoke checks.
+For the staging-first normalized persistence release procedure, use
+[../../docs/managed-persistence-deployment-runbook.md](../../docs/managed-persistence-deployment-runbook.md).

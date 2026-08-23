@@ -7,7 +7,7 @@ using Jibo.Cloud.Application.Abstractions;
 
 namespace Jibo.Cloud.Infrastructure.Media;
 
-internal sealed class AzureBlobMediaContentStore : IMediaContentStore
+public sealed class AzureBlobMediaContentStore : IMediaContentStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {

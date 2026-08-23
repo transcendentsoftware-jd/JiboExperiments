@@ -1,59 +1,179 @@
 name: openjibo-cloud-managed-deploy
+run-name: OpenJibo ${{ inputs.deployment_target }} deploy @ ${{ github.sha }}
 
 on:
   workflow_dispatch:
     inputs:
-      image_tag:
-        description: Managed image tag to deploy
+      deployment_target:
+        description: Deploy to isolated staging or promote the tested commit to production
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      refresh_staging_from_production:
+        description: Replace staging PostgreSQL data with a fresh production clone before migration
+        required: true
+        type: boolean
+        default: true
+      production_resource_group:
+        description: Production resource group used only as the read-only staging clone source
         required: false
-        default: managed
+        default: ""
+      bind_staging_hostnames:
+        description: Bind staging.openjibo.com hostnames after their DNS records exist
+        required: true
+        type: boolean
+        default: false
+      staging_run_id:
+        description: Successful staging workflow run ID required for production promotion
+        required: false
+        default: ""
+      production_backup_confirmed:
+        description: Confirm Azure PostgreSQL point-in-time recovery is healthy before production maintenance
+        required: true
+        type: boolean
+        default: false
+      image_tag:
+        description: Optional immutable image tag; defaults to sha-<commit>
+        required: false
+        default: ""
       location:
-        description: Optional Azure region override for the Container Apps stack (for example eastus2)
+        description: Optional Azure region override
         required: false
         default: ""
       api_hostname:
-        description: Canonical robot-facing hosted API hostname
+        description: Production robot-facing API hostname
         required: false
         default: api.openjibo.com
       socket_hostname:
-        description: Canonical robot-facing socket hostname for notification traffic
+        description: Production robot-facing socket hostname
         required: false
         default: open-jibo-socket.openjibo.com
       neohub_hostname:
-        description: Canonical robot-facing neohub hostname for listen/proactive traffic
+        description: Production robot-facing neohub hostname
         required: false
         default: neohub.openjibo.com
       enable_azure_speech:
-        description: Enable Azure Speech STT on the managed hosted deployment
+        description: Enable Azure Speech STT
         required: false
-        default: "true"
+        type: boolean
+        default: true
       azure_speech_region:
-        description: Azure Speech region used when Azure Speech STT is enabled
+        description: Optional Azure Speech region override
         required: false
         default: ""
+
+concurrency:
+  group: openjibo-managed-${{ inputs.deployment_target }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: openjibo-managed
+    environment:
+      name: ${{ inputs.deployment_target == 'production' && 'openjibo-managed' || 'openjibo-staging' }}
     permissions:
+      actions: read
       contents: read
       id-token: write
     defaults:
       run:
         working-directory: OpenJibo
+    env:
+      OPENJIBO_RESOURCE_GROUP: ${{ secrets.OPENJIBO_RESOURCE_GROUP }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve immutable image tag
+        id: image
+        shell: bash
+        run: |
+          image_tag="${{ inputs.image_tag }}"
+          if [[ -z "$image_tag" ]]; then
+            image_tag="sha-${GITHUB_SHA:0:12}"
+          fi
+          if [[ ! "$image_tag" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+            echo "Image tag contains unsupported characters." >&2
+            exit 1
+          fi
+          echo "tag=$image_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Validate workflow inputs
+        shell: bash
+        run: |
+          if [[ -z "$OPENJIBO_RESOURCE_GROUP" ]]; then
+            echo "The selected GitHub environment must define OPENJIBO_RESOURCE_GROUP." >&2
+            exit 1
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "staging" &&
+                "${{ inputs.refresh_staging_from_production }}" == "true" &&
+                -z "${{ inputs.production_resource_group }}" ]]; then
+            echo "production_resource_group is required when refreshing staging." >&2
+            exit 1
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "production" &&
+                -z "${{ inputs.staging_run_id }}" ]]; then
+            echo "staging_run_id is required for production promotion." >&2
+            exit 1
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "production" &&
+                "${{ inputs.refresh_staging_from_production }}" == "true" ]]; then
+            echo "Set refresh_staging_from_production to false for production." >&2
+            exit 1
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "production" &&
+                "${{ inputs.production_backup_confirmed }}" != "true" ]]; then
+            echo "production_backup_confirmed must be checked for production." >&2
+            exit 1
+          fi
+
+      - name: Validate managed deployment contract
+        shell: bash
+        run: bash ./scripts/cloud/test-openjibo-managed-deployment-contract.sh
+
+      - name: Verify exact-commit staging gate
+        if: inputs.deployment_target == 'production'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+        run: |
+          gate_directory="$(mktemp -d)"
+          trap 'rm -rf -- "$gate_directory"' EXIT
+          artifact_name="openjibo-staging-gate-${GITHUB_SHA}"
+
+          gh run download "$STAGING_RUN_ID"             --repo "$GITHUB_REPOSITORY"             --name "$artifact_name"             --dir "$gate_directory"
+
+          python3 - "$gate_directory/gate.json" "$GITHUB_SHA" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as gate_file:
+              gate = json.load(gate_file)
+
+          expected_sha = sys.argv[2]
+          if gate.get("target") != "staging":
+              raise SystemExit("Promotion gate was not produced by a staging deployment.")
+          if gate.get("commit") != expected_sha:
+              raise SystemExit(
+                  f"Staging gate commit {gate.get('commit')} does not match {expected_sha}."
+              )
+          if gate.get("smoke") != "passed":
+              raise SystemExit("Staging gate does not record a passing smoke test.")
+          PY
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-
-      - name: Validate managed deployment contract
-        shell: bash
-        run: bash ./scripts/cloud/test-openjibo-managed-deployment-contract.sh
 
       - name: Azure login
         uses: azure/login@v3
@@ -62,18 +182,28 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy managed foundation
+      - name: Deploy isolated managed foundation
         id: foundation
         shell: bash
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          OPENJIBO_SEARCH_BACKEND: ${{ secrets.OPENJIBO_SEARCH_BACKEND }}
+          OPENJIBO_SEARCH_FALLBACK: ${{ secrets.OPENJIBO_SEARCH_FALLBACK }}
         run: |
           deployment_output="$(mktemp)"
           extract_outputs="$(mktemp)"
-          bash ./scripts/cloud/deploy-openjibo-managed-foundation.sh \
-            --resource-group-name "$OPENJIBO_RESOURCE_GROUP" \
-            --open-weather-api-key "$OPENWEATHER_API_KEY" \
-            --news-api-key "$NEWSAPI_KEY" \
-            --search-backend "$OPENJIBO_SEARCH_BACKEND" \
-            --search-fallback "$OPENJIBO_SEARCH_FALLBACK" | tee "$deployment_output"
+          trap 'rm -f -- "$deployment_output" "$extract_outputs"' EXIT
+
+          foundation_args=(
+            --resource-group-name "$OPENJIBO_RESOURCE_GROUP"
+            --open-weather-api-key "$OPENWEATHER_API_KEY"
+            --news-api-key "$NEWSAPI_KEY"
+            --search-backend "$OPENJIBO_SEARCH_BACKEND"
+            --search-fallback "$OPENJIBO_SEARCH_FALLBACK"
+          )
+
+          bash ./scripts/cloud/deploy-openjibo-managed-foundation.sh             "${foundation_args[@]}" | tee "$deployment_output"
 
           cat > "$extract_outputs" <<'PY'
           import json
@@ -84,36 +214,182 @@ jobs:
 
           outputs = deployment["properties"]["outputs"]
           with open(sys.argv[2], "a", encoding="utf-8") as github_output:
-              for output_name in ("keyVaultName", "registryName", "registryLoginServer"):
+              for output_name in (
+                  "keyVaultName",
+                  "registryName",
+                  "registryLoginServer",
+                  "postgresServerName",
+              ):
                   print(f"{output_name}={outputs[output_name]['value']}", file=github_output)
           PY
           python3 "$extract_outputs" "$deployment_output" "$GITHUB_OUTPUT"
-        env:
-          OPENJIBO_RESOURCE_GROUP: ${{ secrets.OPENJIBO_RESOURCE_GROUP }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
-          OPENJIBO_SEARCH_BACKEND: ${{ secrets.OPENJIBO_SEARCH_BACKEND }}
-          OPENJIBO_SEARCH_FALLBACK: ${{ secrets.OPENJIBO_SEARCH_FALLBACK }}
 
-      - name: Build and push managed image
+      - name: Verify production point-in-time recovery window
+        if: inputs.deployment_target == 'production'
+        id: recovery
         shell: bash
-        run: bash ./scripts/cloud/publish-openjibo-managed.sh --registry-name "${{ steps.foundation.outputs.registryName }}" --tag "${{ inputs.image_tag }}"
+        run: |
+          retention_days="$(az postgres flexible-server show --resource-group "$OPENJIBO_RESOURCE_GROUP" --name "${{ steps.foundation.outputs.postgresServerName }}" --query backup.backupRetentionDays --output tsv)"
+          if [[ ! "$retention_days" =~ ^[0-9]+$ || "$retention_days" -lt 7 ]]; then
+            echo "PostgreSQL PITR retention must be at least seven days." >&2
+            exit 1
+          fi
+          recovery_utc="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "utc=$recovery_utc" >> "$GITHUB_OUTPUT"
+          echo "retention_days=$retention_days" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy managed Container Apps stack
+      - name: Build and push immutable managed image
         shell: bash
         run: >
-          bash ./scripts/cloud/deploy-openjibo-managed.sh
-          --resource-group-name "$OPENJIBO_RESOURCE_GROUP"
-          --key-vault-name "${{ steps.foundation.outputs.keyVaultName }}"
+          bash ./scripts/cloud/publish-openjibo-managed.sh
           --registry-name "${{ steps.foundation.outputs.registryName }}"
-          --image-tag "${{ inputs.image_tag }}"
-          --api-hostname "${{ inputs.api_hostname }}"
-          --socket-hostname "${{ inputs.socket_hostname }}"
-          --neohub-hostname "${{ inputs.neohub_hostname }}"
-          ${{ inputs.enable_azure_speech == 'false' && '--disable-azure-speech' || '' }}
-          ${{ inputs.enable_azure_speech == 'true' && inputs.azure_speech_region != '' && format('--azure-speech-region {0}', inputs.azure_speech_region) || '' }}
-          ${{ inputs.location != '' && format('--location {0}', inputs.location) || '' }}
-          --run-migration
-          --run-smoke
+          --tag "${{ steps.image.outputs.tag }}"
+
+      - name: Install PostgreSQL client for staging refresh
+        if: inputs.deployment_target == 'staging' && inputs.refresh_staging_from_production
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Quiesce previous target revision
+        id: previous
+        shell: bash
+        run: |
+          app_name="$(az containerapp list             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --query "[0].name"             --output tsv)"
+
+          if [[ -z "$app_name" ]]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          revision_name="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query properties.latestReadyRevisionName             --output tsv)"
+          image="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.containers[0].image'             --output tsv)"
+          min_replicas="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.scale.minReplicas'             --output tsv)"
+          max_replicas="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.scale.maxReplicas'             --output tsv)"
+
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+          echo "app_name=$app_name" >> "$GITHUB_OUTPUT"
+          echo "revision_name=$revision_name" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "min_replicas=${min_replicas:-1}" >> "$GITHUB_OUTPUT"
+          echo "max_replicas=${max_replicas:-2}" >> "$GITHUB_OUTPUT"
+
+          if [[ -n "$revision_name" ]]; then
+            az containerapp revision deactivate               --resource-group "$OPENJIBO_RESOURCE_GROUP"               --name "$app_name"               --revision "$revision_name"               --output none
+          fi
+
+      - name: Refresh staging databases from production
+        if: inputs.deployment_target == 'staging' && inputs.refresh_staging_from_production
+        shell: bash
+        run: >
+          bash ./scripts/cloud/clone-openjibo-managed-databases.sh
+          --source-resource-group "${{ inputs.production_resource_group }}"
+          --target-resource-group "$OPENJIBO_RESOURCE_GROUP"
+          --target-key-vault-name "${{ steps.foundation.outputs.keyVaultName }}"
+
+      - name: Deploy and smoke-test managed Container App
+        id: deploy
+        shell: bash
+        run: |
+          deploy_args=(
+            --resource-group-name "$OPENJIBO_RESOURCE_GROUP"
+            --key-vault-name "${{ steps.foundation.outputs.keyVaultName }}"
+            --registry-name "${{ steps.foundation.outputs.registryName }}"
+            --image-tag "${{ steps.image.outputs.tag }}"
+            --run-migration
+            --run-smoke
+          )
+
+          if [[ "${{ inputs.enable_azure_speech }}" == "false" ]]; then
+            deploy_args+=(--disable-azure-speech)
+          elif [[ -n "${{ inputs.azure_speech_region }}" ]]; then
+            deploy_args+=(--azure-speech-region "${{ inputs.azure_speech_region }}")
+          fi
+
+          if [[ -n "${{ inputs.location }}" ]]; then
+            deploy_args+=(--location "${{ inputs.location }}")
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "production" ]]; then
+            deploy_args+=(
+              --api-hostname "${{ inputs.api_hostname }}"
+              --socket-hostname "${{ inputs.socket_hostname }}"
+              --neohub-hostname "${{ inputs.neohub_hostname }}"
+            )
+          else
+            deploy_args+=(
+              --api-hostname staging-api.openjibo.com
+              --socket-hostname staging-open-jibo-socket.openjibo.com
+              --neohub-hostname staging-neohub.openjibo.com
+              --native-compatibility-api-hostname staging-open-jibo.jibo.pro
+              --native-compatibility-socket-hostname staging-open-jibo-socket.jibo.pro
+            )
+            if [[ "${{ inputs.bind_staging_hostnames }}" != "true" ]]; then
+              deploy_args+=(--skip-hostname-binding --smoke-generated-fqdn)
+            fi
+          fi
+
+          bash ./scripts/cloud/deploy-openjibo-managed.sh "${deploy_args[@]}"
+
+      - name: Restore previous image after failure
+        if: failure() && steps.previous.outputs.exists == 'true'
+        shell: bash
         env:
-          OPENJIBO_RESOURCE_GROUP: ${{ secrets.OPENJIBO_RESOURCE_GROUP }}
+          PREVIOUS_APP: ${{ steps.previous.outputs.app_name }}
+          PREVIOUS_IMAGE: ${{ steps.previous.outputs.image }}
+          PREVIOUS_MIN_REPLICAS: ${{ steps.previous.outputs.min_replicas }}
+          PREVIOUS_MAX_REPLICAS: ${{ steps.previous.outputs.max_replicas }}
+        run: |
+          echo "Deployment failed; restoring the previous image."
+          az containerapp update             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$PREVIOUS_APP"             --image "$PREVIOUS_IMAGE"             --min-replicas "$PREVIOUS_MIN_REPLICAS"             --max-replicas "$PREVIOUS_MAX_REPLICAS"             --output none
+
+      - name: Create staging promotion gate
+        if: success() && inputs.deployment_target == 'staging'
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/openjibo-staging-gate"
+          python3 - "$RUNNER_TEMP/openjibo-staging-gate/gate.json" <<'PY'
+          import json
+          import os
+          import sys
+
+          gate = {
+              "target": "staging",
+              "commit": os.environ["GITHUB_SHA"],
+              "runId": os.environ["GITHUB_RUN_ID"],
+              "imageTag": "${{ steps.image.outputs.tag }}",
+              "smoke": "passed",
+          }
+          with open(sys.argv[1], "w", encoding="utf-8") as gate_file:
+              json.dump(gate, gate_file, indent=2)
+          PY
+
+      - name: Upload staging promotion gate
+        if: success() && inputs.deployment_target == 'staging'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openjibo-staging-gate-${{ github.sha }}
+          path: ${{ runner.temp }}/openjibo-staging-gate/gate.json
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Deployment summary
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo "### OpenJibo managed deployment"
+            echo
+            echo "- Target: ${{ inputs.deployment_target }}"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Image: ${{ steps.image.outputs.tag }}"
+            echo "- Database preparation: passed"
+            echo "- Smoke test: passed"
+            if [[ "${{ inputs.deployment_target }}" == "staging" ]]; then
+              echo "- Production promotion gate: workflow run $GITHUB_RUN_ID"
+            else
+              echo "- PITR reference time: ${{ steps.recovery.outputs.utc }}"
+              echo "- PITR retention: ${{ steps.recovery.outputs.retention_days }} days"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -14,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Jibo.Cloud.Application\Jibo.Cloud.Application.csproj" />
     <ProjectReference Include="..\Jibo.Cloud.Infrastructure\Jibo.Cloud.Infrastructure.csproj" />
   </ItemGroup>
 

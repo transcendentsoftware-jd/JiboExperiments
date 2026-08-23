@@ -58,6 +58,12 @@ $searchBackend = ""
 $searchFallback = ""
 $portalStatusPassword = az keyvault secret show --vault-name $KeyVaultName --name openjibo-portal-status-password --query value -o tsv
 $peerSyncSharedKey = az keyvault secret show --vault-name $KeyVaultName --name openjibo-peer-sync-shared-key --query value -o tsv
+$userEncryptionPassphrase = az keyvault secret show --vault-name $KeyVaultName --name openjibo-user-encrypt --query value -o tsv
+$userEncryptionSalt = az keyvault secret show --vault-name $KeyVaultName --name openjibo-user-salt --query value -o tsv
+
+if ([string]::IsNullOrWhiteSpace($userEncryptionPassphrase) -or [string]::IsNullOrWhiteSpace($userEncryptionSalt)) {
+    throw "Managed user encryption secrets are missing from Key Vault '$KeyVaultName'."
+}
 
 function Get-OptionalKeyVaultSecretValue {
     param(
@@ -160,7 +166,9 @@ function Set-ContainerAppSecretsFromKeyVault {
         [string]$SearchBackend,
         [string]$SearchFallback,
         [string]$PortalStatusPassword,
-        [string]$PeerSyncSharedKey
+        [string]$PeerSyncSharedKey,
+        [string]$UserEncryptionPassphrase,
+        [string]$UserEncryptionSalt
     )
 
     if ([string]::IsNullOrWhiteSpace($ContainerAppName)) {
@@ -176,7 +184,9 @@ function Set-ContainerAppSecretsFromKeyVault {
             "state-connection-string=$StateConnectionString",
             "personal-memory-connection-string=$PersonalMemoryConnectionString",
             "portal-status-password=$PortalStatusPassword",
-            "peer-sync-shared-key=$PeerSyncSharedKey"
+            "peer-sync-shared-key=$PeerSyncSharedKey",
+            "user-encryption-passphrase=$UserEncryptionPassphrase",
+            "user-encryption-salt=$UserEncryptionSalt"
         )
 
     if (-not [string]::IsNullOrWhiteSpace($SearchBackend)) {
@@ -296,7 +306,9 @@ $arguments = @(
     "--parameters", "openWeatherApiKey=$openWeatherApiKey",
     "--parameters", "newsApiKey=$newsApiKey",
     "--parameters", "portalStatusPassword=$portalStatusPassword",
-    "--parameters", "peerSyncSharedKey=$peerSyncSharedKey"
+    "--parameters", "peerSyncSharedKey=$peerSyncSharedKey",
+    "--parameters", "userEncryptionPassphrase=$userEncryptionPassphrase",
+    "--parameters", "userEncryptionSalt=$userEncryptionSalt"
 )
 
 if (-not [string]::IsNullOrWhiteSpace($Location)) {
@@ -328,6 +340,28 @@ if ($EnableAzureSpeech) {
 }
 
 $arguments += @("--output", "json")
+
+if ($RunMigration) {
+    $migrationScript = Join-Path $repoRoot "scripts/cloud/Invoke-OpenJiboMigration.ps1"
+    $previousEncrypt = [Environment]::GetEnvironmentVariable("OPENJIBO_USER_ENCRYPT", "Process")
+    $previousSalt = [Environment]::GetEnvironmentVariable("OPENJIBO_USER_SALT", "Process")
+    try {
+        [Environment]::SetEnvironmentVariable("OPENJIBO_USER_ENCRYPT", $userEncryptionPassphrase, "Process")
+        [Environment]::SetEnvironmentVariable("OPENJIBO_USER_SALT", $userEncryptionSalt, "Process")
+        & $migrationScript `
+            -Target all `
+            -StateConnectionString $stateConnectionString `
+            -PersonalMemoryConnectionString $personalMemoryConnectionString `
+            -MediaConnectionString $mediaConnectionString `
+            -ImportLegacyCloudState `
+            -ImportLegacyPersonalMemory `
+            -Verify
+    }
+    finally {
+        [Environment]::SetEnvironmentVariable("OPENJIBO_USER_ENCRYPT", $previousEncrypt, "Process")
+        [Environment]::SetEnvironmentVariable("OPENJIBO_USER_SALT", $previousSalt, "Process")
+    }
+}
 
 Write-Host "Deploying Open Jibo managed Container Apps stack to resource group '$ResourceGroupName'"
 $deploymentJson = az @arguments | ConvertFrom-Json
@@ -417,17 +451,10 @@ if (-not $SkipHostnameBinding -and -not [string]::IsNullOrWhiteSpace($ApiHostnam
 
 $stateConnectionString = az keyvault secret show --vault-name $KeyVaultName --name openjibo-state-connection-string --query value -o tsv
 $personalMemoryConnectionString = az keyvault secret show --vault-name $KeyVaultName --name openjibo-personal-memory-connection-string --query value -o tsv
-Set-ContainerAppSecretsFromKeyVault -ContainerAppName $deploymentJson.properties.outputs.containerAppName.value -StateConnectionString $stateConnectionString -PersonalMemoryConnectionString $personalMemoryConnectionString -SearchBackend $searchBackend -SearchFallback $searchFallback -PortalStatusPassword $portalStatusPassword -PeerSyncSharedKey $peerSyncSharedKey
+Set-ContainerAppSecretsFromKeyVault -ContainerAppName $deploymentJson.properties.outputs.containerAppName.value -StateConnectionString $stateConnectionString -PersonalMemoryConnectionString $personalMemoryConnectionString -SearchBackend $searchBackend -SearchFallback $searchFallback -PortalStatusPassword $portalStatusPassword -PeerSyncSharedKey $peerSyncSharedKey -UserEncryptionPassphrase $userEncryptionPassphrase -UserEncryptionSalt $userEncryptionSalt
 Restart-ContainerAppRevision -ContainerAppName $deploymentJson.properties.outputs.containerAppName.value
 Start-Sleep -Seconds 20
 
-if ($RunMigration) {
-    $migrationScript = Join-Path $repoRoot "scripts/cloud/Invoke-OpenJiboMigration.ps1"
-    & $migrationScript `
-        -Target all `
-        -StateConnectionString $stateConnectionString `
-        -PersonalMemoryConnectionString $personalMemoryConnectionString
-}
 
 if ($RunSmoke) {
     $smokeBaseUrl = if (-not [string]::IsNullOrWhiteSpace($ApiHostname)) {

@@ -9,6 +9,8 @@ managed_script_path="scripts/cloud/Deploy-OpenJiboManaged.ps1"
 linux_foundation_script_path="scripts/cloud/deploy-openjibo-managed-foundation.sh"
 linux_publish_script_path="scripts/cloud/publish-openjibo-managed.sh"
 linux_managed_script_path="scripts/cloud/deploy-openjibo-managed.sh"
+linux_prepare_script_path="scripts/cloud/prepare-openjibo-managed-databases.sh"
+linux_clone_script_path="scripts/cloud/clone-openjibo-managed-databases.sh"
 smoke_script_path="scripts/cloud/Invoke-CloudSmoke.ps1"
 linux_smoke_script_path="scripts/cloud/invoke-cloud-smoke.sh"
 dockerfile_path="Dockerfile"
@@ -36,6 +38,8 @@ managed_script_text="$(get_repo_file_text "$managed_script_path")"
 linux_foundation_script_text="$(get_repo_file_text "$linux_foundation_script_path")"
 linux_publish_script_text="$(get_repo_file_text "$linux_publish_script_path")"
 linux_managed_script_text="$(get_repo_file_text "$linux_managed_script_path")"
+linux_prepare_script_text="$(get_repo_file_text "$linux_prepare_script_path")"
+linux_clone_script_text="$(get_repo_file_text "$linux_clone_script_path")"
 smoke_script_text="$(get_repo_file_text "$smoke_script_path")"
 linux_smoke_script_text="$(get_repo_file_text "$linux_smoke_script_path")"
 dockerfile_text="$(get_repo_file_text "$dockerfile_path")"
@@ -215,7 +219,7 @@ if [[ "$linux_publish_script_text" != *"az acr build"* ]]; then
   exit 1
 fi
 
-for marker in "--run-smoke" "--run-migration" "--api-hostname" "--socket-hostname" "--neohub-hostname" "--native-compatibility-api-hostname" "--native-compatibility-socket-hostname" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "az containerapp hostname add" "az containerapp hostname bind" 'bash "${script_dir}/invoke-openjibo-migration.sh"' "--skip-hostname-binding" "portal-status-password" "openjibo-portal-status-password" "searchBackend" "searchFallback" "openjibo-search-backend" "openjibo-search-fallback" "run_command_with_retry"; do
+for marker in "--run-smoke" "--run-migration" "--api-hostname" "--socket-hostname" "--neohub-hostname" "--native-compatibility-api-hostname" "--native-compatibility-socket-hostname" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "az containerapp hostname add" "az containerapp hostname bind" 'prepare-openjibo-managed-databases.sh' "--skip-hostname-binding" "portal-status-password" "openjibo-portal-status-password" "searchBackend" "searchFallback" "openjibo-search-backend" "openjibo-search-fallback" "run_command_with_retry"; do
   if [[ "$linux_managed_script_text" != *"$marker"* ]]; then
     echo "Linux managed deploy script is missing expected marker: $marker" >&2
     exit 1
@@ -236,6 +240,47 @@ for marker in "containerapp env show" "firewall-rule create" "firewall-rule upda
   fi
 done
 
+for marker in "deployment_target" "openjibo-staging-gate" "clone-openjibo-managed-databases.sh" "production_backup_confirmed" "backup.backupRetentionDays" "revision deactivate" "Restore previous image after failure"; do
+  if [[ "$workflow_text" != *"$marker"* ]]; then
+    echo "Workflow is missing staging or promotion safeguard: $marker" >&2
+    exit 1
+  fi
+done
+
+for marker in "OPENJIBO_USER_ENCRYPT" "OPENJIBO_USER_SALT" "user-encryption-passphrase" "user-encryption-salt"; do
+  if [[ "$managed_text" != *"$marker"* ]]; then
+    echo "Managed template is missing encryption marker: $marker" >&2
+    exit 1
+  fi
+done
+
+for marker in "openjibo-user-encrypt" "openjibo-user-salt"; do
+  if [[ "$linux_foundation_script_text" != *"$marker"* ]]; then
+    echo "Linux foundation script is missing encryption secret provisioning: $marker" >&2
+    exit 1
+  fi
+done
+
+for marker in "prepare-openjibo-managed-databases.sh" "--smoke-generated-fqdn" "user-encryption-passphrase" "user-encryption-salt"; do
+  if [[ "$linux_managed_script_text" != *"$marker"* ]]; then
+    echo "Linux managed deploy script is missing pre-deploy safeguard: $marker" >&2
+    exit 1
+  fi
+done
+
+for marker in "--import-legacy-cloud-state" "--import-legacy-personal-memory" "--verify" "openjibo-user-encrypt" "openjibo-user-salt"; do
+  if [[ "$linux_prepare_script_text" != *"$marker"* ]]; then
+    echo "Managed database preparation script is missing expected marker: $marker" >&2
+    exit 1
+  fi
+done
+
+for marker in "pg_dump" "pg_restore" "Source and target resource groups must be different" "source and target PostgreSQL hosts are identical"; do
+  if [[ "$linux_clone_script_text" != *"$marker"* ]]; then
+    echo "Staging clone script is missing expected safety marker: $marker" >&2
+    exit 1
+  fi
+done
 if [[ "$smoke_script_text" == *'Host = "api.jibo.com"'* ]]; then
   echo "Managed smoke script still hardcodes the api.jibo.com host header." >&2
   exit 1

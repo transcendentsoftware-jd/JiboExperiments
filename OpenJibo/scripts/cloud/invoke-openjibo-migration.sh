@@ -6,6 +6,11 @@ scripts_directory="src/Jibo.Cloud/dotnet/src/Jibo.Cloud.Migrations/Migrations/Po
 target="all"
 state_connection_string=""
 personal_memory_connection_string=""
+media_connection_string=""
+media_container="openjibo-media"
+import_legacy_cloud_state=false
+import_legacy_personal_memory=false
+verify=false
 preview=false
 verbose=false
 
@@ -30,6 +35,26 @@ while [[ $# -gt 0 ]]; do
     --memory-connection)
       personal_memory_connection_string="${2:-}"
       shift 2
+      ;;
+    --media-connection)
+      media_connection_string="${2:-}"
+      shift 2
+      ;;
+    --media-container)
+      media_container="${2:-openjibo-media}"
+      shift 2
+      ;;
+    --import-legacy-cloud-state)
+      import_legacy_cloud_state=true
+      shift
+      ;;
+    --import-legacy-personal-memory)
+      import_legacy_personal_memory=true
+      shift
+      ;;
+    --verify)
+      verify=true
+      shift
       ;;
     --preview|--dry-run)
       preview=true
@@ -85,6 +110,22 @@ fi
 
 if [[ -n "$personal_memory_connection_string" ]]; then
   arguments+=(--memory-connection "$personal_memory_connection_string")
+fi
+
+if [[ -n "$media_connection_string" ]]; then
+  arguments+=(--media-connection "$media_connection_string" --media-container "$media_container")
+fi
+
+if [[ "$import_legacy_cloud_state" == true ]]; then
+  arguments+=(--import-legacy-cloud-state)
+fi
+
+if [[ "$import_legacy_personal_memory" == true ]]; then
+  arguments+=(--import-legacy-personal-memory)
+fi
+
+if [[ "$verify" == true ]]; then
+  arguments+=(--verify)
 fi
 
 if [[ "$preview" == true ]]; then

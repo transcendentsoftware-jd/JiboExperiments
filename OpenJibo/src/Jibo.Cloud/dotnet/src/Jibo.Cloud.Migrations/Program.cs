@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Jibo.Cloud.Infrastructure.Media;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Npgsql;
 using Serilog;
@@ -119,23 +120,51 @@ try
             {
                 Log.Information("[State] would explicitly import the legacy cloud-state snapshot.");
             }
+            else if (await LoadSnapshotAsync(connection, "cloud-state") is null)
+            {
+                Log.Information("[State] no legacy cloud-state snapshot exists; explicit import was skipped.");
+            }
             else
             {
                 await using var dataSource = NpgsqlDataSource.Create(connectionString);
                 var backupExportDirectory =
                     Environment.GetEnvironmentVariable("OPENJIBO_LEGACY_BACKUP_EXPORT_DIRECTORY");
+                IBackupPayloadStore? backupPayloadStore = null;
+                if (!string.IsNullOrWhiteSpace(options.MediaConnectionString))
+                    backupPayloadStore = new MediaContentBackupPayloadStore(
+                        new AzureBlobMediaContentStore(
+                            options.MediaConnectionString, options.MediaContainerName));
+                else if (!string.IsNullOrWhiteSpace(backupExportDirectory))
+                    backupPayloadStore = new DirectoryBackupPayloadStore(backupExportDirectory);
                 var importer = new PostgreSqlCloudStateSnapshotImporter(
                     dataSource,
                     new UserDataCloudStateSecretProtector(new UserDataEncryptionService()),
-                    string.IsNullOrWhiteSpace(backupExportDirectory)
-                        ? null
-                        : new DirectoryBackupPayloadStore(backupExportDirectory));
+                    backupPayloadStore);
                 var result = await importer.ImportAsync();
                 Log.Information(
                     "[State] legacy import {ImportName}: sha256={SourceSha256}, alreadyImported={AlreadyImported}, counts={ImportedCounts}",
                     result.ImportName, result.SourceSha256, result.AlreadyImported, result.ImportedCounts);
             }
         }
+
+        if (target == MigrationTarget.PersonalMemory && options.ImportLegacyPersonalMemory)
+        {
+            if (options.PreviewOnly)
+            {
+                Log.Information("[PersonalMemory] would explicitly import the legacy personal-memory snapshot.");
+            }
+            else
+            {
+                using var store = new PostgreSqlPersonalMemoryStore(connectionString);
+                var state = store.GetPersistenceStateInfo();
+                Log.Information(
+                    "[PersonalMemory] legacy import complete: schemaVersion={SchemaVersion}, revision={Revision}",
+                    state.SchemaVersion, state.Revision);
+            }
+        }
+
+        if (options.Verify && !options.PreviewOnly)
+            await VerifyTargetAsync(connection, target);
     }
 
     return 0;
@@ -228,6 +257,63 @@ static async Task<Dictionary<string, string>> LoadAppliedScriptsAsync(NpgsqlConn
     return applied;
 }
 
+static async Task VerifyTargetAsync(NpgsqlConnection connection, MigrationTarget target)
+{
+    if (target == MigrationTarget.State)
+    {
+        var snapshot = await LoadSnapshotAsync(connection, "cloud-state");
+        if (snapshot is not null)
+        {
+            var sha256 = ComputeChecksum(snapshot);
+            await using var import = new NpgsqlCommand("""
+                                                       SELECT COUNT(*)
+                                                       FROM CloudStateImports
+                                                       WHERE SourceSnapshotName = 'cloud-state'
+                                                         AND SourceSha256 = @sha256
+                                                       """, connection);
+            import.Parameters.AddWithValue("sha256", sha256);
+            var importCount = (long)(await import.ExecuteScalarAsync() ?? 0L);
+            if (importCount != 1)
+                throw new InvalidOperationException(
+                    "State verification failed: the current legacy cloud-state snapshot has not been imported.");
+
+            await using var accounts = new NpgsqlCommand("SELECT COUNT(*) FROM Accounts", connection);
+            if ((long)(await accounts.ExecuteScalarAsync() ?? 0L) == 0)
+                throw new InvalidOperationException(
+                    "State verification failed: the imported database has no normalized account.");
+        }
+
+        Log.Information("[State] normalized persistence verification passed.");
+        return;
+    }
+
+    var personalMemorySnapshot = await LoadSnapshotAsync(connection, "personal-memory");
+    if (personalMemorySnapshot is not null)
+    {
+        await using var import = new NpgsqlCommand("""
+                                                   SELECT COUNT(*)
+                                                   FROM PersonalMemoryImports
+                                                   WHERE ImportName = 'persistence-snapshot-v1'
+                                                   """, connection);
+        var importCount = (long)(await import.ExecuteScalarAsync() ?? 0L);
+        if (importCount != 1)
+            throw new InvalidOperationException(
+                "Personal-memory verification failed: the legacy snapshot has not been imported.");
+    }
+
+    Log.Information("[PersonalMemory] normalized persistence verification passed.");
+}
+
+static async Task<string?> LoadSnapshotAsync(NpgsqlConnection connection, string snapshotName)
+{
+    await using var command = new NpgsqlCommand("""
+                                                SELECT SnapshotJson
+                                                FROM PersistenceSnapshots
+                                                WHERE SnapshotName = @snapshotName
+                                                """, connection);
+    command.Parameters.AddWithValue("snapshotName", snapshotName);
+    return await command.ExecuteScalarAsync() as string;
+}
 static bool AppliesToTarget(string scriptPath, MigrationTarget target)
 {
     var fileName = Path.GetFileName(scriptPath);
@@ -254,7 +340,11 @@ internal sealed record MigrationOptions(
     string? ScriptsDirectory,
     string? StateConnectionString,
     string? PersonalMemoryConnectionString,
+    string? MediaConnectionString,
+    string MediaContainerName,
     bool ImportLegacyCloudState,
+    bool ImportLegacyPersonalMemory,
+    bool Verify,
     bool ShowHelp)
 {
     public static string HelpText =>
@@ -273,8 +363,13 @@ internal sealed record MigrationOptions(
           --scripts               Override the SQL script directory
           --state-connection      Override the state database connection string
           --memory-connection     Override the personal memory connection string
+          --media-connection      Azure Blob connection string for imported backup payloads
+          --media-container       Azure Blob media container (default: openjibo-media)
           --import-legacy-cloud-state
                                   Explicitly import PersistenceSnapshots/cloud-state
+          --import-legacy-personal-memory
+                                  Explicitly import PersistenceSnapshots/personal-memory
+          --verify                Fail unless legacy snapshots have matching import ledgers
           --verbose               Print already-applied scripts too
           --help                  Show this help
         """;
@@ -293,8 +388,15 @@ internal sealed record MigrationOptions(
                                              ?? Environment.GetEnvironmentVariable(
                                                  "OPENJIBO_PERSONAL_MEMORY_STORAGE_CONNECTION_STRING")
                                              ?? BuildPostgreSqlConnectionString("openjibo_memory");
+        var mediaConnectionString = Environment.GetEnvironmentVariable("OpenJibo__Media__ConnectionString")
+                                    ?? Environment.GetEnvironmentVariable(
+                                        "OPENJIBO_MEDIA_STORAGE_CONNECTION_STRING");
+        var mediaContainerName = Environment.GetEnvironmentVariable("OpenJibo__Media__ContainerName")
+                                 ?? "openjibo-media";
         var showHelp = false;
         var importLegacyCloudState = false;
+        var importLegacyPersonalMemory = false;
+        var verify = false;
 
         for (var index = 0; index < args.Length; index += 1)
         {
@@ -319,6 +421,12 @@ internal sealed record MigrationOptions(
                 case "--import-legacy-cloud-state":
                     importLegacyCloudState = true;
                     break;
+                case "--import-legacy-personal-memory":
+                    importLegacyPersonalMemory = true;
+                    break;
+                case "--verify":
+                    verify = true;
+                    break;
                 case "--target":
                     target = ParseTarget(GetValue(args, ref index, "--target"));
                     break;
@@ -331,6 +439,12 @@ internal sealed record MigrationOptions(
                 case "--memory-connection":
                     personalMemoryConnectionString = GetValue(args, ref index, "--memory-connection");
                     break;
+                case "--media-connection":
+                    mediaConnectionString = GetValue(args, ref index, "--media-connection");
+                    break;
+                case "--media-container":
+                    mediaContainerName = GetValue(args, ref index, "--media-container") ?? "openjibo-media";
+                    break;
             }
         }
 
@@ -341,7 +455,11 @@ internal sealed record MigrationOptions(
             scriptsDirectory,
             stateConnectionString,
             personalMemoryConnectionString,
+            mediaConnectionString,
+            mediaContainerName,
             importLegacyCloudState,
+            importLegacyPersonalMemory,
+            verify,
             showHelp);
     }
 

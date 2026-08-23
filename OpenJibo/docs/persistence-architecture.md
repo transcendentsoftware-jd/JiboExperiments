@@ -1,5 +1,11 @@
 # Persistence Architecture
 
+## Operator Note
+
+This document explains the design. It is not the deployment checklist. For the staging build,
+legacy import, production promotion, and rollback sequence, follow
+[managed-persistence-deployment-runbook.md](managed-persistence-deployment-runbook.md).
+
 ## Goal
 
 Keep OpenJibo's stateful behavior portable while making durable production state database-backed and bounded.
@@ -157,7 +163,7 @@ receives the default self-hosted account, hidden bootstrap robot, loop, profile,
 
 ## Immediate Next Step
 
-The production-store implementation is complete; the remaining gate is operational validation. Run the
-environment-gated PostgreSQL suite, rehearse the explicit importer against a restored production snapshot,
-verify counts/identity/backup restore, and only then deploy the managed revision. Preserve the legacy snapshot
-and exported v1 backup payloads until the staged and production verification windows both pass.
+Follow the [managed persistence deployment runbook](managed-persistence-deployment-runbook.md): create the
+isolated staging GitHub Environment and Azure resource group, run a production-data rehearsal, complete robot
+verification, and promote only the exact staged commit. Preserve the legacy snapshots and exported v1 backup
+payloads until both staging and production observation windows pass.

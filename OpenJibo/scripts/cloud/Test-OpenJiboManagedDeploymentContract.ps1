@@ -7,6 +7,8 @@ param(
     [string]$LinuxFoundationScriptPath = "scripts/cloud/deploy-openjibo-managed-foundation.sh",
     [string]$LinuxPublishScriptPath = "scripts/cloud/publish-openjibo-managed.sh",
     [string]$LinuxManagedScriptPath = "scripts/cloud/deploy-openjibo-managed.sh",
+    [string]$LinuxPrepareScriptPath = "scripts/cloud/prepare-openjibo-managed-databases.sh",
+    [string]$LinuxCloneScriptPath = "scripts/cloud/clone-openjibo-managed-databases.sh",
     [string]$SmokeScriptPath = "scripts/cloud/Invoke-CloudSmoke.ps1",
     [string]$LinuxSmokeScriptPath = "scripts/cloud/invoke-cloud-smoke.sh",
     [string]$DockerfilePath = "Dockerfile"
@@ -47,6 +49,8 @@ $managedScriptText = Get-RepoFileText -RelativePath $ManagedScriptPath
 $linuxFoundationScriptText = Get-RepoFileText -RelativePath $LinuxFoundationScriptPath
 $linuxPublishScriptText = Get-RepoFileText -RelativePath $LinuxPublishScriptPath
 $linuxManagedScriptText = Get-RepoFileText -RelativePath $LinuxManagedScriptPath
+$linuxPrepareScriptText = Get-RepoFileText -RelativePath $LinuxPrepareScriptPath
+$linuxCloneScriptText = Get-RepoFileText -RelativePath $LinuxCloneScriptPath
 $smokeScriptText = Get-RepoFileText -RelativePath $SmokeScriptPath
 $linuxSmokeScriptText = Get-RepoFileText -RelativePath $LinuxSmokeScriptPath
 $dockerfileText = Get-RepoFileText -RelativePath $DockerfilePath
@@ -198,6 +202,29 @@ foreach ($marker in @("managedEnvironmentName", "--environment", "--validation-m
     Assert-ContainsMarker -Text $linuxManagedScriptText -Marker $marker -FailurePrefix "Linux managed deploy script is missing hostname binding environment marker"
 }
 
+foreach ($marker in @("deployment_target", "openjibo-staging-gate", "clone-openjibo-managed-databases.sh", "production_backup_confirmed", "backup.backupRetentionDays", "revision deactivate", "Restore previous image after failure")) {
+    Assert-ContainsMarker -Text $workflowText -Marker $marker -FailurePrefix "Workflow is missing staging or promotion safeguard"
+}
+
+foreach ($marker in @("OPENJIBO_USER_ENCRYPT", "OPENJIBO_USER_SALT", "user-encryption-passphrase", "user-encryption-salt")) {
+    Assert-ContainsMarker -Text $managedText -Marker $marker -FailurePrefix "Managed template is missing encryption marker"
+}
+
+foreach ($marker in @("openjibo-user-encrypt", "openjibo-user-salt")) {
+    Assert-ContainsMarker -Text $linuxFoundationScriptText -Marker $marker -FailurePrefix "Linux foundation script is missing encryption secret provisioning"
+}
+
+foreach ($marker in @("prepare-openjibo-managed-databases.sh", "--smoke-generated-fqdn", "user-encryption-passphrase", "user-encryption-salt")) {
+    Assert-ContainsMarker -Text $linuxManagedScriptText -Marker $marker -FailurePrefix "Linux managed deploy script is missing pre-deploy safeguard"
+}
+
+foreach ($marker in @("--import-legacy-cloud-state", "--import-legacy-personal-memory", "--verify", "openjibo-user-encrypt", "openjibo-user-salt")) {
+    Assert-ContainsMarker -Text $linuxPrepareScriptText -Marker $marker -FailurePrefix "Managed database preparation script is missing expected marker"
+}
+
+foreach ($marker in @("pg_dump", "pg_restore", "Source and target resource groups must be different", "source and target PostgreSQL hosts are identical")) {
+    Assert-ContainsMarker -Text $linuxCloneScriptText -Marker $marker -FailurePrefix "Staging clone script is missing expected safety marker"
+}
 if ($smokeScriptText -match [regex]::Escape('Host = "api.jibo.com"')) {
     throw "Managed smoke script still hardcodes the api.jibo.com host header."
 }

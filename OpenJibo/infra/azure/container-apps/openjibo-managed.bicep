@@ -85,6 +85,14 @@ param portalStatusPassword string = ''
 @secure()
 param peerSyncSharedKey string = ''
 
+@secure()
+@description('Passphrase used to protect normalized durable secrets.')
+param userEncryptionPassphrase string = ''
+
+@secure()
+@description('Salt used to derive the normalized durable-secret encryption key.')
+param userEncryptionSalt string = ''
+
 @description('Minimum number of replicas for the runtime container.')
 param minReplicas int = 1
 
@@ -162,6 +170,14 @@ var managedSecrets = concat([
   {
     name: 'peer-sync-shared-key'
     value: peerSyncSharedKey
+  }
+  {
+    name: 'user-encryption-passphrase'
+    value: userEncryptionPassphrase
+  }
+  {
+    name: 'user-encryption-salt'
+    value: userEncryptionSalt
   }
 ])
 var azureSpeechEnvEntries = enableAzureSpeech ? [
@@ -298,6 +314,14 @@ var managedEnvVars = concat([
   {
     name: 'OpenJibo__FleetNetwork__PeerSyncSharedKey'
     secretRef: 'peer-sync-shared-key'
+  }
+  {
+    name: 'OPENJIBO_USER_ENCRYPT'
+    secretRef: 'user-encryption-passphrase'
+  }
+  {
+    name: 'OPENJIBO_USER_SALT'
+    secretRef: 'user-encryption-salt'
   }
 ], azureSpeechEnvEntries, searchEnvEntries, searchFallbackEnvEntries)
 

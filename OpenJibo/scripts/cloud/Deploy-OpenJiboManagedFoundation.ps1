@@ -289,6 +289,30 @@ function Set-OpenJiboKeyVaultSecretIfChanged {
     Set-OpenJiboKeyVaultSecretWithRetry -VaultName $VaultName -Name $Name -Value $Value
 }
 
+function Get-OrCreateOpenJiboRandomSecret {
+    param(
+        [string]$VaultName,
+        [string]$Name,
+        [int]$ByteCount
+    )
+
+    try {
+        $existing = Invoke-OpenJiboAzWithRetry `
+            -Arguments @("keyvault", "secret", "show", "--vault-name", $VaultName, "--name", $Name, "--query", "value", "--output", "tsv") `
+            -Description "Key Vault secret lookup for '$Name'" `
+            -Attempts 4
+        if (-not [string]::IsNullOrWhiteSpace($existing)) {
+            return $existing
+        }
+    }
+    catch {
+    }
+
+    $value = ([Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes($ByteCount))).TrimEnd("=").Replace("+", "-").Replace("/", "_")
+    Set-OpenJiboKeyVaultSecretWithRetry -VaultName $VaultName -Name $Name -Value $value
+    Write-Host "Created managed secret '$Name'."
+    return $value
+}
 Set-OpenJiboKeyVaultSecretIfChanged -VaultName $outputs.keyVaultName.value -Name openjibo-state-connection-string -Value $resolvedStateConnectionString
 
 Set-OpenJiboKeyVaultSecretIfChanged -VaultName $outputs.keyVaultName.value -Name openjibo-personal-memory-connection-string -Value $resolvedPersonalMemoryConnectionString
@@ -306,5 +330,8 @@ Set-OpenJiboKeyVaultSecretIfChanged -VaultName $outputs.keyVaultName.value -Name
 Set-OpenJiboKeyVaultSecretIfChanged -VaultName $outputs.keyVaultName.value -Name openjibo-search-backend -Value $SearchBackend
 
 Set-OpenJiboKeyVaultSecretIfChanged -VaultName $outputs.keyVaultName.value -Name openjibo-search-fallback -Value $SearchFallback
+
+$null = Get-OrCreateOpenJiboRandomSecret -VaultName $outputs.keyVaultName.value -Name openjibo-user-encrypt -ByteCount 48
+$null = Get-OrCreateOpenJiboRandomSecret -VaultName $outputs.keyVaultName.value -Name openjibo-user-salt -ByteCount 24
 
 $deploymentJson

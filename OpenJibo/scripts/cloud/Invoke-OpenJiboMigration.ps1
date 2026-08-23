@@ -5,6 +5,11 @@ param(
     [string]$Target = "all",
     [string]$StateConnectionString,
     [string]$PersonalMemoryConnectionString,
+    [string]$MediaConnectionString,
+    [string]$MediaContainer = "openjibo-media",
+    [switch]$ImportLegacyCloudState,
+    [switch]$ImportLegacyPersonalMemory,
+    [switch]$Verify,
     [switch]$Preview,
     [switch]$VerboseOutput
 )
@@ -38,6 +43,22 @@ if (-not [string]::IsNullOrWhiteSpace($StateConnectionString)) {
 
 if (-not [string]::IsNullOrWhiteSpace($PersonalMemoryConnectionString)) {
     $arguments += @("--memory-connection", $PersonalMemoryConnectionString)
+}
+
+if (-not [string]::IsNullOrWhiteSpace($MediaConnectionString)) {
+    $arguments += @("--media-connection", $MediaConnectionString, "--media-container", $MediaContainer)
+}
+
+if ($ImportLegacyCloudState) {
+    $arguments += "--import-legacy-cloud-state"
+}
+
+if ($ImportLegacyPersonalMemory) {
+    $arguments += "--import-legacy-personal-memory"
+}
+
+if ($Verify) {
+    $arguments += "--verify"
 }
 
 if ($Preview) {
