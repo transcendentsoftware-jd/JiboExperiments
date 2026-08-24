@@ -365,6 +365,8 @@ set_secret_if_changed("openjibo-search-backend", search_backend)
 set_secret_if_changed("openjibo-search-fallback", search_fallback)
 get_or_create_random_secret("openjibo-user-encrypt", 48)
 get_or_create_random_secret("openjibo-user-salt", 24)
+get_or_create_random_secret("openjibo-portal-status-password", 32)
+get_or_create_random_secret("openjibo-peer-sync-shared-key", 48)
 
 print(json.dumps(deployment_json, indent=2))
 PY

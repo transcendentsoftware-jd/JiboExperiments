@@ -175,7 +175,7 @@ for marker in "${required_workflow_markers[@]}"; do
   fi
 done
 
-for marker in "openjibo-media-connection-string" "azure-speech-subscription-key" "cognitiveservices account keys list" "speechServicesAccountName" "openjibo-postgres-admin-password" "openjibo-search-backend" "openjibo-search-fallback" "postgresFullyQualifiedDomainName" "Invoke-OpenJiboAzWithRetry"; do
+for marker in "openjibo-media-connection-string" "azure-speech-subscription-key" "cognitiveservices account keys list" "speechServicesAccountName" "openjibo-postgres-admin-password" "openjibo-search-backend" "openjibo-search-fallback" "openjibo-portal-status-password" "openjibo-peer-sync-shared-key" "postgresFullyQualifiedDomainName" "Invoke-OpenJiboAzWithRetry"; do
   if [[ "$foundation_script_text" != *"$marker"* ]]; then
     echo "Foundation script is missing expected marker: $marker" >&2
     exit 1
@@ -254,9 +254,9 @@ for marker in "OPENJIBO_USER_ENCRYPT" "OPENJIBO_USER_SALT" "user-encryption-pass
   fi
 done
 
-for marker in "openjibo-user-encrypt" "openjibo-user-salt"; do
+for marker in "openjibo-user-encrypt" "openjibo-user-salt" "openjibo-portal-status-password" "openjibo-peer-sync-shared-key"; do
   if [[ "$linux_foundation_script_text" != *"$marker"* ]]; then
-    echo "Linux foundation script is missing encryption secret provisioning: $marker" >&2
+    echo "Linux foundation script is missing managed secret provisioning: $marker" >&2
     exit 1
   fi
 done

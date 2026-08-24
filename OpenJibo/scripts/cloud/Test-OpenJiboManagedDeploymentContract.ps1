@@ -171,7 +171,7 @@ foreach ($marker in $requiredWorkflowMarkers) {
     Assert-ContainsMarker -Text $workflowText -Marker $marker -FailurePrefix "Workflow is missing expected marker"
 }
 
-foreach ($marker in @("openjibo-media-connection-string", "azure-speech-subscription-key", "cognitiveservices account keys list", "speechServicesAccountName", "openjibo-postgres-admin-password", "openjibo-search-backend", "openjibo-search-fallback", "postgresFullyQualifiedDomainName", "Invoke-OpenJiboAzWithRetry", "seedPrincipalObjectId")) {
+foreach ($marker in @("openjibo-media-connection-string", "azure-speech-subscription-key", "cognitiveservices account keys list", "speechServicesAccountName", "openjibo-postgres-admin-password", "openjibo-search-backend", "openjibo-search-fallback", "openjibo-portal-status-password", "openjibo-peer-sync-shared-key", "postgresFullyQualifiedDomainName", "Invoke-OpenJiboAzWithRetry", "seedPrincipalObjectId")) {
     Assert-ContainsMarker -Text $foundationScriptText -Marker $marker -FailurePrefix "Foundation script is missing expected marker"
 }
 
@@ -210,8 +210,8 @@ foreach ($marker in @("OPENJIBO_USER_ENCRYPT", "OPENJIBO_USER_SALT", "user-encry
     Assert-ContainsMarker -Text $managedText -Marker $marker -FailurePrefix "Managed template is missing encryption marker"
 }
 
-foreach ($marker in @("openjibo-user-encrypt", "openjibo-user-salt")) {
-    Assert-ContainsMarker -Text $linuxFoundationScriptText -Marker $marker -FailurePrefix "Linux foundation script is missing encryption secret provisioning"
+foreach ($marker in @("openjibo-user-encrypt", "openjibo-user-salt", "openjibo-portal-status-password", "openjibo-peer-sync-shared-key")) {
+    Assert-ContainsMarker -Text $linuxFoundationScriptText -Marker $marker -FailurePrefix "Linux foundation script is missing managed secret provisioning"
 }
 
 foreach ($marker in @("prepare-openjibo-managed-databases.sh", "--smoke-generated-fqdn", "user-encryption-passphrase", "user-encryption-salt")) {
