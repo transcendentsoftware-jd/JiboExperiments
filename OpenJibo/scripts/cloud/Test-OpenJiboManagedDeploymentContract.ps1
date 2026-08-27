@@ -209,7 +209,7 @@ foreach ($marker in @("managedEnvironmentName", "--environment", "--validation-m
     Assert-ContainsMarker -Text $linuxManagedScriptText -Marker $marker -FailurePrefix "Linux managed deploy script is missing hostname binding environment marker"
 }
 
-foreach ($marker in @("deployment_target", "openjibo-staging-gate", "clone-openjibo-managed-databases.sh", "production_backup_confirmed", "enable_fleet_peer_sync", "fleet_peer_allowed_hosts", "Fleet peer sync cannot be enabled by the staging workflow", "backup.backupRetentionDays", "Verify production hostname DNS prerequisites", "customDomainVerificationId", "dig +short CNAME", "dig +short TXT", "open-jibo.jibo.pro", "open-jibo-socket.jibo.pro", "properties.active", '[[ "$revision_active" == "true" ]]', '[[ "$previous_revision_active" != "true" ]]', "already active", "revision deactivate", "revision activate", "PREVIOUS_REVISION", "Restore previous image after failure", "Run deployed WebSocket release smoke", "invoke-release-smoke.mjs", "webSocketReleaseSmoke")) {
+foreach ($marker in @("deployment_target", "openjibo-staging-gate", "clone-openjibo-managed-databases.sh", "production_key_vault_name", "production_backup_confirmed", "enable_fleet_peer_sync", "fleet_peer_allowed_hosts", "Fleet peer sync cannot be enabled by the staging workflow", "backup.backupRetentionDays", "Verify production hostname DNS prerequisites", "customDomainVerificationId", "dig +short CNAME", "dig +short TXT", "open-jibo.jibo.pro", "open-jibo-socket.jibo.pro", "properties.active", '[[ "$revision_active" == "true" ]]', '[[ "$previous_revision_active" != "true" ]]', "already active", "revision deactivate", "revision activate", "PREVIOUS_REVISION", "Restore previous image after failure", "Run deployed WebSocket release smoke", "invoke-release-smoke.mjs", "webSocketReleaseSmoke")) {
     Assert-ContainsMarker -Text $workflowText -Marker $marker -FailurePrefix "Workflow is missing staging or promotion safeguard"
 }
 
@@ -229,7 +229,7 @@ foreach ($marker in @("--import-legacy-cloud-state", "--import-legacy-personal-m
     Assert-ContainsMarker -Text $linuxPrepareScriptText -Marker $marker -FailurePrefix "Managed database preparation script is missing expected marker"
 }
 
-foreach ($marker in @("pg_dump", "pg_restore", "firewall-rule create", "firewall-rule delete", '--server-name "$server_name"', '--name "$rule_name"', "Source and target resource groups must be different", "source and target PostgreSQL hosts are identical")) {
+foreach ($marker in @("pg_dump", "pg_restore", "firewall-rule create", "firewall-rule delete", '--server-name "$server_name"', '--name "$rule_name"', "Source and target resource groups must be different", "source and target PostgreSQL hosts are identical", "source-key-vault-name", "openjibo-user-encrypt", "openjibo-user-salt", "keyvault secret set", "--file")) {
     Assert-ContainsMarker -Text $linuxCloneScriptText -Marker $marker -FailurePrefix "Staging clone script is missing expected safety marker"
 }
 if ($smokeScriptText -match [regex]::Escape('Host = "api.jibo.com"')) {

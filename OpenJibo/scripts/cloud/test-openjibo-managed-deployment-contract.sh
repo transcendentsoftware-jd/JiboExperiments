@@ -247,7 +247,7 @@ for marker in "containerapp env show" "firewall-rule create" "firewall-rule upda
   fi
 done
 
-for marker in "deployment_target" "openjibo-staging-gate" "clone-openjibo-managed-databases.sh" "production_backup_confirmed" "enable_fleet_peer_sync" "fleet_peer_allowed_hosts" "Fleet peer sync cannot be enabled by the staging workflow" "backup.backupRetentionDays" "Verify production hostname DNS prerequisites" "customDomainVerificationId" "dig +short CNAME" "dig +short TXT" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "properties.active" '[[ "$revision_active" == "true" ]]' '[[ "$previous_revision_active" != "true" ]]' "already active" "revision deactivate" "revision activate" "PREVIOUS_REVISION" "Restore previous image after failure" "Run deployed WebSocket release smoke" "invoke-release-smoke.mjs" "webSocketReleaseSmoke"; do
+for marker in "deployment_target" "openjibo-staging-gate" "clone-openjibo-managed-databases.sh" "production_key_vault_name" "production_backup_confirmed" "enable_fleet_peer_sync" "fleet_peer_allowed_hosts" "Fleet peer sync cannot be enabled by the staging workflow" "backup.backupRetentionDays" "Verify production hostname DNS prerequisites" "customDomainVerificationId" "dig +short CNAME" "dig +short TXT" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "properties.active" '[[ "$revision_active" == "true" ]]' '[[ "$previous_revision_active" != "true" ]]' "already active" "revision deactivate" "revision activate" "PREVIOUS_REVISION" "Restore previous image after failure" "Run deployed WebSocket release smoke" "invoke-release-smoke.mjs" "webSocketReleaseSmoke"; do
   if [[ "$workflow_text" != *"$marker"* ]]; then
     echo "Workflow is missing staging or promotion safeguard: $marker" >&2
     exit 1
@@ -282,7 +282,7 @@ for marker in "--import-legacy-cloud-state" "--import-legacy-personal-memory" "-
   fi
 done
 
-for marker in "pg_dump" "pg_restore" "firewall-rule create" "firewall-rule delete" '--server-name "$server_name"' '--name "$rule_name"' "Source and target resource groups must be different" "source and target PostgreSQL hosts are identical"; do
+for marker in "pg_dump" "pg_restore" "firewall-rule create" "firewall-rule delete" '--server-name "$server_name"' '--name "$rule_name"' "Source and target resource groups must be different" "source and target PostgreSQL hosts are identical" "source-key-vault-name" "openjibo-user-encrypt" "openjibo-user-salt" 'keyvault secret set' '--file'; do
   if [[ "$linux_clone_script_text" != *"$marker"* ]]; then
     echo "Staging clone script is missing expected safety marker: $marker" >&2
     exit 1

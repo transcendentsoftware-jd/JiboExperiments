@@ -21,6 +21,10 @@ on:
         description: Production resource group used only as the read-only staging clone source
         required: false
         default: ""
+      production_key_vault_name:
+        description: Exact production Key Vault name used for a staging database clone
+        required: false
+        default: ""
       bind_staging_hostnames:
         description: Bind staging.openjibo.com hostnames after their DNS records exist
         required: true
@@ -174,6 +178,13 @@ jobs:
                 "${{ inputs.refresh_staging_from_production }}" == "true" &&
                 -z "${{ inputs.production_resource_group }}" ]]; then
             echo "production_resource_group is required when refreshing staging." >&2
+            exit 1
+          fi
+
+          if [[ "${{ inputs.deployment_target }}" == "staging" &&
+                "${{ inputs.refresh_staging_from_production }}" == "true" &&
+                -z "${{ inputs.production_key_vault_name }}" ]]; then
+            echo "production_key_vault_name is required when refreshing staging." >&2
             exit 1
           fi
 
@@ -469,6 +480,7 @@ jobs:
         run: >
           bash ./scripts/cloud/clone-openjibo-managed-databases.sh
           --source-resource-group "${{ inputs.production_resource_group }}"
+          --source-key-vault-name "${{ inputs.production_key_vault_name }}"
           --target-resource-group "$OPENJIBO_RESOURCE_GROUP"
           --target-key-vault-name "${{ steps.foundation.outputs.keyVaultName }}"
 

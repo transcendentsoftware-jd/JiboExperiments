@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 source_resource_group=""
 target_resource_group=""
@@ -38,6 +39,11 @@ for required_name in source_resource_group target_resource_group target_key_vaul
   fi
 done
 
+if [[ -z "$source_key_vault_name" ]]; then
+  echo "--source-key-vault-name is required to avoid cloning from an ambiguous vault." >&2
+  exit 2
+fi
+
 if [[ "$source_resource_group" == "$target_resource_group" ]]; then
   echo "Source and target resource groups must be different." >&2
   exit 1
@@ -49,15 +55,6 @@ for command_name in az curl pg_dump pg_restore; do
     exit 1
   fi
 done
-
-if [[ -z "$source_key_vault_name" ]]; then
-  source_key_vault_name="$(az keyvault list     --resource-group "$source_resource_group"     --query "[?starts_with(name, 'kv-')].name | [0]"     --output tsv)"
-fi
-
-if [[ -z "$source_key_vault_name" ]]; then
-  echo "Could not locate the production Key Vault in '$source_resource_group'." >&2
-  exit 1
-fi
 
 read_required_secret() {
   local vault_name="$1"
@@ -95,6 +92,8 @@ connection_value() {
 
 source_state="$(read_required_secret "$source_key_vault_name" openjibo-state-connection-string)"
 source_memory="$(read_required_secret "$source_key_vault_name" openjibo-personal-memory-connection-string)"
+source_user_encryption_passphrase="$(read_required_secret "$source_key_vault_name" openjibo-user-encrypt)"
+source_user_encryption_salt="$(read_required_secret "$source_key_vault_name" openjibo-user-salt)"
 target_state="$(read_required_secret "$target_key_vault_name" openjibo-state-connection-string)"
 target_memory="$(read_required_secret "$target_key_vault_name" openjibo-personal-memory-connection-string)"
 
@@ -179,5 +178,19 @@ restore_database "$target_state" "$temporary_directory/state.dump"
 echo "Cloning production personal memory into isolated staging PostgreSQL."
 dump_database "$source_memory" "$temporary_directory/personal-memory.dump"
 restore_database "$target_memory" "$temporary_directory/personal-memory.dump"
+
+echo "Aligning staging encryption secrets with the cloned production records."
+printf '%s' "$source_user_encryption_passphrase" > "$temporary_directory/openjibo-user-encrypt"
+printf '%s' "$source_user_encryption_salt" > "$temporary_directory/openjibo-user-salt"
+az keyvault secret set \
+  --vault-name "$target_key_vault_name" \
+  --name openjibo-user-encrypt \
+  --file "$temporary_directory/openjibo-user-encrypt" \
+  --output none
+az keyvault secret set \
+  --vault-name "$target_key_vault_name" \
+  --name openjibo-user-salt \
+  --file "$temporary_directory/openjibo-user-salt" \
+  --output none
 
 echo "Production database clone completed without changing the source databases."

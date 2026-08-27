@@ -61,6 +61,10 @@ Create a GitHub Environment named `openjibo-staging` with the same secret names 
 - `OPENJIBO_SEARCH_BACKEND`
 - `OPENJIBO_SEARCH_FALLBACK`
 
+When refreshing staging from production, the workflow dispatch must also provide
+`production_key_vault_name` with the exact active production Key Vault name. The
+clone deliberately does not guess among `kv-*` resources.
+
 Set staging's `OPENJIBO_RESOURCE_GROUP` to the new staging resource group. Never reuse production's value.
 
 ### 3. Add Azure OIDC federation
@@ -71,7 +75,9 @@ The Azure application used by Actions must trust:
 repo:transcendentsoftware-jd/JiboExperiments:environment:openjibo-staging
 ```
 
-Keep the existing `openjibo-managed` production subject. Using the same deployment principal for the first rehearsal allows read access to the production Key Vault; the clone does not write production databases.
+Keep the existing `openjibo-managed` production subject. Using the same deployment principal for the first rehearsal allows read access to the production Key Vault; the clone does not write production databases. The principal also needs Key Vault data-plane `get` permission on the production vault and `set` permission (typically the Key Vault Secrets Officer role) on the staging vault. Azure Contributor alone does not grant these secret data-plane permissions.
+
+The current workflow logs into one Azure subscription, so production and staging resource groups must be in that same subscription. If they diverge, add a separately reviewed multi-subscription login/context before running a clone.
 
 ### 4. Optional staging DNS
 
@@ -106,7 +112,7 @@ Expected sequence:
 2. Create or update isolated staging foundation resources.
 3. Build the exact commit.
 4. Quiesce an older staging revision.
-5. Clone production state and personal-memory databases.
+5. Clone production state and personal-memory databases, then copy the matching encryption passphrase and salt into staging so the cloned encrypted rows remain readable. This makes staging production-sensitive: anyone with staging Key Vault access can decrypt the copied personal data during the verification window.
 6. Apply normalized schemas.
 7. Import and verify both legacy snapshots.
 8. Store embedded backups in staging Azure Blob Storage.
