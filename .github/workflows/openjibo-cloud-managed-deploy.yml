@@ -468,22 +468,31 @@ jobs:
         id: production_vault
         shell: bash
         run: |
-          production_app_name="$(az containerapp list --resource-group "${{ inputs.production_resource_group }}" --query "[0].name" --output tsv)"
-          if [[ -z "$production_app_name" ]]; then
-            echo "Could not locate the production Container App." >&2
-            exit 1
-          fi
+          production_app_names="$(az containerapp list --resource-group "${{ inputs.production_resource_group }}" --query "[].name" --output json)"
           secret_refs="$(az containerapp secret list \
             --resource-group "${{ inputs.production_resource_group }}" \
-            --name "$production_app_name" \
+            --name openjibo-cloud \
             --query "[?name=='user-encryption-passphrase' || name=='user-encryption-salt'].{name:name,url:keyVaultUrl}" \
             --output json)"
-          python3 - "$secret_refs" "$GITHUB_OUTPUT" <<'PY'
+          managed_deployment_name="$(az deployment group list --resource-group "${{ inputs.production_resource_group }}" --query "[?starts_with(name, 'openjibo-managed-') && properties.provisioningState=='Succeeded'] | sort_by(@, &properties.timestamp) | [-1].name" --output tsv)"
+          managed_app_name=""
+          if [[ -n "$managed_deployment_name" ]]; then
+            managed_app_name="$(az deployment group show --resource-group "${{ inputs.production_resource_group }}" --name "$managed_deployment_name" --query "properties.outputs.containerAppName.value" --output tsv)"
+          fi
+          foundation_deployment_name="$(az deployment group list --resource-group "${{ inputs.production_resource_group }}" --query "[?starts_with(name, 'openjibo-foundation-') && properties.provisioningState=='Succeeded'] | sort_by(@, &properties.timestamp) | [-1].name" --output tsv)"
+          foundation_metadata=""
+          if [[ -n "$foundation_deployment_name" ]]; then
+            foundation_metadata="$(az deployment group show --resource-group "${{ inputs.production_resource_group }}" --name "$foundation_deployment_name" --query "{keyVaultName:properties.outputs.keyVaultName.value,keyVaultUri:properties.outputs.keyVaultUri.value}" --output json)"
+          fi
+          python3 - "$production_app_names" "$secret_refs" "$managed_app_name" "$foundation_metadata" "$GITHUB_OUTPUT" <<'PY'
           import json
           import sys
           from urllib.parse import urlsplit, unquote
 
-          refs = json.loads(sys.argv[1])
+          app_names = json.loads(sys.argv[1])
+          if app_names != ["openjibo-cloud"]:
+              raise SystemExit("Production Container App must resolve to exactly openjibo-cloud.")
+          refs = json.loads(sys.argv[2])
           expected = {"user-encryption-passphrase", "user-encryption-salt"}
           by_name = {}
           for ref in refs:
@@ -492,22 +501,40 @@ jobs:
               if name in expected and url:
                   by_name.setdefault(name, []).append(url)
           if set(by_name) != expected or any(len(urls) != 1 for urls in by_name.values()):
-              raise SystemExit("Production encryption Key Vault references are missing or ambiguous.")
+              by_name = {}
 
-          parsed = {}
-          for name, urls in by_name.items():
-              parts = urlsplit(urls[0])
+          def vault_host(url, expected_secret=None):
+              parts = urlsplit(url)
               host = (parts.hostname or "").lower()
               segments = [unquote(segment) for segment in parts.path.split("/") if segment]
-              if parts.scheme.lower() != "https" or not host.endswith(".vault.azure.net") or len(segments) < 2 or segments[0].lower() != "secrets" or segments[1].lower() != name:
-                  raise SystemExit(f"Invalid Key Vault URL metadata for {name}.")
-              parsed[name] = host
-          if parsed["user-encryption-passphrase"] != parsed["user-encryption-salt"]:
-              raise SystemExit("Production encryption secrets reference different Key Vaults.")
-          vault_name = parsed["user-encryption-passphrase"][:-len(".vault.azure.net")]
+              if parts.scheme.lower() != "https" or not host.endswith(".vault.azure.net") or not host[:-len(".vault.azure.net")]:
+                  raise SystemExit("Invalid Key Vault URL metadata.")
+              if expected_secret is not None and (len(segments) < 2 or segments[0].lower() != "secrets" or segments[1].lower() != expected_secret):
+                  raise SystemExit(f"Invalid Key Vault URL metadata for {expected_secret}.")
+              if expected_secret is None and segments:
+                  raise SystemExit("Invalid Key Vault resource URI metadata.")
+              return host
+
+          vault_name = ""
+          if by_name:
+              parsed = {name: vault_host(urls[0], name) for name, urls in by_name.items()}
+              if parsed["user-encryption-passphrase"] != parsed["user-encryption-salt"]:
+                  raise SystemExit("Production encryption secrets reference different Key Vaults.")
+              vault_name = parsed["user-encryption-passphrase"][:-len(".vault.azure.net")]
+          else:
+              if sys.argv[3] != "openjibo-cloud":
+                  raise SystemExit("Latest successful managed deployment does not identify openjibo-cloud.")
+              metadata = json.loads(sys.argv[4])
+              if not metadata.get("keyVaultName") or not metadata.get("keyVaultUri"):
+                  raise SystemExit("Latest successful foundation deployment lacks Key Vault outputs.")
+              uri_host = vault_host(metadata["keyVaultUri"])
+              uri_name = uri_host[:-len(".vault.azure.net")]
+              if metadata["keyVaultName"].lower() != uri_name:
+                  raise SystemExit("Foundation Key Vault name and URI do not match.")
+              vault_name = uri_name
           if not vault_name:
               raise SystemExit("Could not derive the production Key Vault name.")
-          with open(sys.argv[2], "a", encoding="utf-8") as output:
+          with open(sys.argv[5], "a", encoding="utf-8") as output:
               print(f"keyVaultName={vault_name}", file=output)
           PY
 
