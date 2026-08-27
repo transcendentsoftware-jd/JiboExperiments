@@ -21,10 +21,6 @@ on:
         description: Production resource group used only as the read-only staging clone source
         required: false
         default: ""
-      production_key_vault_name:
-        description: Exact production Key Vault name used for a staging database clone
-        required: false
-        default: ""
       bind_staging_hostnames:
         description: Bind staging.openjibo.com hostnames after their DNS records exist
         required: true
@@ -178,13 +174,6 @@ jobs:
                 "${{ inputs.refresh_staging_from_production }}" == "true" &&
                 -z "${{ inputs.production_resource_group }}" ]]; then
             echo "production_resource_group is required when refreshing staging." >&2
-            exit 1
-          fi
-
-          if [[ "${{ inputs.deployment_target }}" == "staging" &&
-                "${{ inputs.refresh_staging_from_production }}" == "true" &&
-                -z "${{ inputs.production_key_vault_name }}" ]]; then
-            echo "production_key_vault_name is required when refreshing staging." >&2
             exit 1
           fi
 
@@ -474,13 +463,61 @@ jobs:
             az containerapp revision deactivate               --resource-group "$OPENJIBO_RESOURCE_GROUP"               --name "$app_name"               --revision "$revision_name"               --output none
           fi
 
+      - name: Resolve production encryption Key Vault
+        if: inputs.deployment_target == 'staging' && inputs.refresh_staging_from_production
+        id: production_vault
+        shell: bash
+        run: |
+          production_app_name="$(az containerapp list --resource-group "${{ inputs.production_resource_group }}" --query "[0].name" --output tsv)"
+          if [[ -z "$production_app_name" ]]; then
+            echo "Could not locate the production Container App." >&2
+            exit 1
+          fi
+          secret_refs="$(az containerapp secret list \
+            --resource-group "${{ inputs.production_resource_group }}" \
+            --name "$production_app_name" \
+            --query "[?name=='user-encryption-passphrase' || name=='user-encryption-salt'].{name:name,url:keyVaultUrl}" \
+            --output json)"
+          python3 - "$secret_refs" "$GITHUB_OUTPUT" <<'PY'
+          import json
+          import sys
+          from urllib.parse import urlsplit, unquote
+
+          refs = json.loads(sys.argv[1])
+          expected = {"user-encryption-passphrase", "user-encryption-salt"}
+          by_name = {}
+          for ref in refs:
+              name = ref.get("name")
+              url = ref.get("url")
+              if name in expected and url:
+                  by_name.setdefault(name, []).append(url)
+          if set(by_name) != expected or any(len(urls) != 1 for urls in by_name.values()):
+              raise SystemExit("Production encryption Key Vault references are missing or ambiguous.")
+
+          parsed = {}
+          for name, urls in by_name.items():
+              parts = urlsplit(urls[0])
+              host = (parts.hostname or "").lower()
+              segments = [unquote(segment) for segment in parts.path.split("/") if segment]
+              if parts.scheme.lower() != "https" or not host.endswith(".vault.azure.net") or len(segments) < 2 or segments[0].lower() != "secrets" or segments[1].lower() != name:
+                  raise SystemExit(f"Invalid Key Vault URL metadata for {name}.")
+              parsed[name] = host
+          if parsed["user-encryption-passphrase"] != parsed["user-encryption-salt"]:
+              raise SystemExit("Production encryption secrets reference different Key Vaults.")
+          vault_name = parsed["user-encryption-passphrase"][:-len(".vault.azure.net")]
+          if not vault_name:
+              raise SystemExit("Could not derive the production Key Vault name.")
+          with open(sys.argv[2], "a", encoding="utf-8") as output:
+              print(f"keyVaultName={vault_name}", file=output)
+          PY
+
       - name: Refresh staging databases from production
         if: inputs.deployment_target == 'staging' && inputs.refresh_staging_from_production
         shell: bash
         run: >
           bash ./scripts/cloud/clone-openjibo-managed-databases.sh
           --source-resource-group "${{ inputs.production_resource_group }}"
-          --source-key-vault-name "${{ inputs.production_key_vault_name }}"
+          --source-key-vault-name "${{ steps.production_vault.outputs.keyVaultName }}"
           --target-resource-group "$OPENJIBO_RESOURCE_GROUP"
           --target-key-vault-name "${{ steps.foundation.outputs.keyVaultName }}"
 

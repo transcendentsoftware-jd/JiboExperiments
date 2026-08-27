@@ -61,9 +61,12 @@ Create a GitHub Environment named `openjibo-staging` with the same secret names 
 - `OPENJIBO_SEARCH_BACKEND`
 - `OPENJIBO_SEARCH_FALLBACK`
 
-When refreshing staging from production, the workflow dispatch must also provide
-`production_key_vault_name` with the exact active production Key Vault name. The
-clone deliberately does not guess among `kv-*` resources.
+When refreshing staging from production, the workflow reads the exact production
+Key Vault URL metadata attached to the deployed Container App secrets
+`user-encryption-passphrase` and `user-encryption-salt`. It requires both
+references, verifies they point to the same vault, and fails closed if either is
+missing, ambiguous, or malformed. It never reads secret values to discover the
+vault and never guesses among `kv-*` resources.
 
 Set staging's `OPENJIBO_RESOURCE_GROUP` to the new staging resource group. Never reuse production's value.
 
@@ -77,7 +80,7 @@ repo:transcendentsoftware-jd/JiboExperiments:environment:openjibo-staging
 
 Keep the existing `openjibo-managed` production subject. Using the same deployment principal for the first rehearsal allows read access to the production Key Vault; the clone does not write production databases. The principal also needs Key Vault data-plane `get` permission on the production vault and `set` permission (typically the Key Vault Secrets Officer role) on the staging vault. Azure Contributor alone does not grant these secret data-plane permissions.
 
-The current workflow logs into one Azure subscription, so production and staging resource groups must be in that same subscription. If they diverge, add a separately reviewed multi-subscription login/context before running a clone.
+The current workflow logs into one Azure subscription, so production and staging resource groups must be in that same subscription. If they diverge, add a separately reviewed multi-subscription login/context before running a clone. The production Container App must retain Key Vault-backed secret references (with `keyVaultUrl` metadata); copied literal Container App secret values are intentionally rejected because they cannot identify the source vault safely.
 
 ### 4. Optional staging DNS
 
