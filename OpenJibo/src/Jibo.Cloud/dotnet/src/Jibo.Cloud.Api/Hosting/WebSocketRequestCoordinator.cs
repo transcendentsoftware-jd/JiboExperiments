@@ -98,7 +98,8 @@ internal sealed class WebSocketRequestCoordinator(
                     kind, context.Request.Host.Host, safePath);
                 return;
             case "api-socket" when string.IsNullOrWhiteSpace(token):
-            case "neo-hub-listen" or "neo-hub-proactive" when string.IsNullOrWhiteSpace(token):
+            case "neo-hub-listen" or "neo-hub-proactive"
+                when string.IsNullOrWhiteSpace(token) && !IsHubConnectionScopedFallbackPath(context.Request.Path):
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 logger.LogWarning(
                     "WebSocket request rejected due to missing token kind={Kind} host={Host} path={Path} remoteIp={RemoteIp}",
@@ -501,6 +502,15 @@ internal sealed class WebSocketRequestCoordinator(
     {
         return session.Metadata.TryGetValue(ActiveConnectionIdMetadataKey, out var owner) &&
                string.Equals(owner?.ToString(), connectionId, StringComparison.Ordinal);
+    }
+
+    private static bool IsHubConnectionScopedFallbackPath(PathString path)
+    {
+        var normalizedPath = path.Value?.TrimEnd('/');
+        return string.Equals(normalizedPath, "/listen", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(normalizedPath, "/v1/listen", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(normalizedPath, "/proactive", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(normalizedPath, "/v1/proactive", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ResolveSessionKey(WebSocketMessageEnvelope envelope)

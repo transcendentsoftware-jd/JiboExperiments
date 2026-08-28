@@ -15,7 +15,25 @@ namespace Jibo.Cloud.Tests.Api;
 public sealed class WebSocketRequestCoordinatorTests
 {
     [Fact]
-    public async Task HandleAsync_ReturnsUnauthorized_WhenNeoHubTokenIsMissing()
+    public async Task HandleAsync_AllowsNeoHubConnectionWithoutToken_UsingConnectionScopedSession()
+    {
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
+        var context = CreateContext(socket);
+        context.Request.Host = new HostString("neo-hub.jibo.com");
+        context.Request.Path = "/v1/listen";
+
+        var coordinator = CreateCoordinator(out var telemetrySink);
+
+        await coordinator.HandleAsync(context);
+
+        Assert.True(socket.Accepted);
+        Assert.Equal(WebSocketState.Closed, socket.State);
+        Assert.Contains(telemetrySink.Events, eventName => eventName == "opened");
+        Assert.Contains(telemetrySink.Events, eventName => eventName == "closed:socket-loop-ended");
+    }
+
+    [Fact]
+    public async Task HandleAsync_RejectsMissingTokenOutsideHubFallbackPaths()
     {
         var socket = new FakeWebSocket();
         var context = CreateContext(socket);
