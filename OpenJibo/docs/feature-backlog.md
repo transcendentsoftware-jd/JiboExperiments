@@ -665,7 +665,7 @@ These are the carryover items that need a clean proof pass first:
   - migration dry-run, apply, verification, rollback/export, backup creation, and restore all have automated tests and a managed-deployment smoke check
   - operators can detect persistence degradation before robot requests begin timing out while `/health` remains green
 - Next action:
-  - run the new environment-gated PostgreSQL suite in CI, rehearse the explicit legacy import against a production backup in staging, and collect seven days of the new low-cardinality transport/memory metrics before making a capacity claim
+  - enforce the production PostgreSQL binding guard, run the environment-gated PostgreSQL suite in CI, complete the two-replica staging proof, and collect seven days of the low-cardinality transport/memory metrics before making a capacity claim
 
 ### Next Up (`2026-05-06`): Dialog Parsing Expansion And Ambiguity Guardrails
 

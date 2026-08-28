@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+python_command="${PYTHON_COMMAND:-python3}"
+
 foundation_template_path="infra/azure/foundation/openjibo-managed-foundation.bicep"
 managed_template_path="infra/azure/container-apps/openjibo-managed.bicep"
 workflow_path="../.github/workflows/openjibo-cloud-managed-deploy.yml"
@@ -12,6 +14,7 @@ linux_managed_script_path="scripts/cloud/deploy-openjibo-managed.sh"
 linux_prepare_script_path="scripts/cloud/prepare-openjibo-managed-databases.sh"
 linux_clone_script_path="scripts/cloud/clone-openjibo-managed-databases.sh"
 release_smoke_cleanup_script_path="scripts/cloud/cleanup-release-smoke-authorization.sh"
+production_database_binding_script_path="scripts/cloud/verify-openjibo-production-database-binding.py"
 smoke_script_path="scripts/cloud/Invoke-CloudSmoke.ps1"
 linux_smoke_script_path="scripts/cloud/invoke-cloud-smoke.sh"
 dockerfile_path="Dockerfile"
@@ -35,6 +38,7 @@ foundation_text="$(get_repo_file_text "$foundation_template_path")"
 managed_text="$(get_repo_file_text "$managed_template_path")"
 workflow_text="$(get_repo_file_text "$workflow_path")"
 release_smoke_cleanup_text="$(get_repo_file_text "$release_smoke_cleanup_script_path")"
+production_database_binding_script_text="$(get_repo_file_text "$production_database_binding_script_path")"
 foundation_script_text="$(get_repo_file_text "$foundation_script_path")"
 managed_script_text="$(get_repo_file_text "$managed_script_path")"
 linux_foundation_script_text="$(get_repo_file_text "$linux_foundation_script_path")"
@@ -126,6 +130,9 @@ required_managed_markers=(
   "keyVaultContainerAppSecretAccessPolicy"
   "OPENJIBO_SEARCH_BACKEND"
   "OPENJIBO_SEARCH_FALLBACK"
+  "OpenJibo__Deployment__PostgreSqlServerName"
+  "OpenJibo__Deployment__StateDatabaseName"
+  "OpenJibo__Deployment__PersonalMemoryDatabaseName"
 )
 
 required_workflow_markers=(
@@ -144,6 +151,15 @@ required_workflow_markers=(
   "existing_postgres_server_name"
   "existing_speech_services_account_name"
   "Specify every existing foundation resource name together"
+  "Production promotion requires all six pinned existing foundation resource names"
+  "Verify existing production database binding"
+  "verify-openjibo-production-database-binding.py"
+  "production_database_binding_bootstrap_confirmed"
+  "if ! app_names_json="
+  "az postgres flexible-server show"
+  "containerapp revision list"
+  "openjiboDatabaseBindingBootstrapCompleted"
+  "Record production database binding bootstrap"
   "api_hostname"
   "socket_hostname"
   "neohub_hostname"
@@ -183,6 +199,60 @@ for marker in "${required_workflow_markers[@]}"; do
     exit 1
   fi
 done
+
+valid_binding_fixture='[{"properties":{"active":true,"trafficWeight":100,"template":{"containers":[{"env":[
+  {"name":"OpenJibo__Deployment__PostgreSqlServerName","value":"psql-current"},
+  {"name":"OpenJibo__Deployment__StateDatabaseName","value":"openjibo_state"},
+  {"name":"OpenJibo__Deployment__PersonalMemoryDatabaseName","value":"openjibo_memory"}
+]}]}}}]'
+if ! printf '%s' "$valid_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-current openjibo_state openjibo_memory false true >/dev/null; then
+  echo "Production database binding validator rejected a matching server." >&2
+  exit 1
+fi
+
+if printf '%s' "$valid_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-replacement openjibo_state openjibo_memory false true >/dev/null 2>&1; then
+  echo "Production database binding validator accepted a server rebind." >&2
+  exit 1
+fi
+
+incomplete_binding_fixture='[{"properties":{"active":true,"trafficWeight":100,"template":{"containers":[{"env":[
+  {"name":"OpenJibo__Deployment__PostgreSqlServerName","value":"psql-current"}
+]}]}}}]'
+if printf '%s' "$incomplete_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-current openjibo_state openjibo_memory true false >/dev/null 2>&1; then
+  echo "Production database binding validator accepted incomplete identity markers." >&2
+  exit 1
+fi
+
+bootstrap_binding_fixture='[{"properties":{"active":true,"trafficWeight":100,"template":{"containers":[{"env":[]}]}}}]'
+if printf '%s' "$bootstrap_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-current openjibo_state openjibo_memory false false >/dev/null 2>&1; then
+  echo "Production database binding validator bootstrapped without explicit confirmation." >&2
+  exit 1
+fi
+if ! printf '%s' "$bootstrap_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-current openjibo_state openjibo_memory true false >/dev/null; then
+  echo "Production database binding validator rejected explicit first-deploy confirmation." >&2
+  exit 1
+fi
+if printf '%s' "$bootstrap_binding_fixture" |
+    "$python_command" "${repo_root}/${production_database_binding_script_path}" \
+      psql-current openjibo_state openjibo_memory true true >/dev/null 2>&1; then
+  echo "Production database binding validator repeated a completed bootstrap." >&2
+  exit 1
+fi
+
+if [[ "$workflow_text" == *"--show-values"* || "$workflow_text" == *"mapfile -t app_names"* ]]; then
+  echo "Production database preflight must not export secret values or fail open through process substitution." >&2
+  exit 1
+fi
 
 for marker in "openjibo-media-connection-string" "azure-speech-subscription-key" "cognitiveservices account keys list" "speechServicesAccountName" "openjibo-postgres-admin-password" "openjibo-search-backend" "openjibo-search-fallback" "openjibo-portal-status-password" "openjibo-peer-sync-shared-key" "postgresFullyQualifiedDomainName" "Invoke-OpenJiboAzWithRetry"; do
   if [[ "$foundation_script_text" != *"$marker"* ]]; then
@@ -228,7 +298,7 @@ if [[ "$linux_publish_script_text" != *"az acr build"* ]]; then
   exit 1
 fi
 
-for marker in "--run-smoke" "--run-migration" "--api-hostname" "--socket-hostname" "--neohub-hostname" "--native-compatibility-api-hostname" "--native-compatibility-socket-hostname" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "az containerapp hostname add" "az containerapp hostname bind" 'prepare-openjibo-managed-databases.sh' "--skip-hostname-binding" "--enable-peer-sync" "--disable-peer-sync" "--peer-sync-allowed-hosts" "peerSyncEnabled" "allowedPeerHosts" "portal-status-password" "openjibo-portal-status-password" "searchBackend" "searchFallback" "openjibo-search-backend" "openjibo-search-fallback" "run_command_with_retry"; do
+for marker in "--run-smoke" "--run-migration" "--api-hostname" "--socket-hostname" "--neohub-hostname" "--native-compatibility-api-hostname" "--native-compatibility-socket-hostname" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "az containerapp hostname add" "az containerapp hostname bind" 'prepare-openjibo-managed-databases.sh' "--skip-hostname-binding" "--enable-peer-sync" "--disable-peer-sync" "--peer-sync-allowed-hosts" "peerSyncEnabled" "allowedPeerHosts" "portal-status-password" "openjibo-portal-status-password" "searchBackend" "searchFallback" "openjibo-search-backend" "openjibo-search-fallback" "run_command_with_retry" "parse_postgres_database_name" "stateDatabaseName" "personalMemoryDatabaseName"; do
   if [[ "$linux_managed_script_text" != *"$marker"* ]]; then
     echo "Linux managed deploy script is missing expected marker: $marker" >&2
     exit 1

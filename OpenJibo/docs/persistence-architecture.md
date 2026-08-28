@@ -165,7 +165,9 @@ receives the default self-hosted account, hidden bootstrap robot, loop, profile,
 
 ## Immediate Next Step
 
-Follow the [managed persistence deployment runbook](managed-persistence-deployment-runbook.md): create the
-isolated staging GitHub Environment and Azure resource group, run a production-data rehearsal, complete robot
-verification, and promote only the exact staged commit. Preserve the legacy snapshots and exported v1 backup
-payloads until both staging and production observation windows pass.
+Keep the production PostgreSQL binding pinned through the
+[managed persistence deployment runbook](managed-persistence-deployment-runbook.md), complete the
+environment-gated PostgreSQL integration suite and two-replica staging proof, then collect seven representative
+days of application, .NET, Npgsql, Container Apps, and PostgreSQL metrics. Preserve the legacy snapshots,
+pre-cutover database, and exported v1 backup payloads until that observation window and a separately reviewed
+recovery drill pass.

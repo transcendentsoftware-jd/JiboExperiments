@@ -161,6 +161,21 @@ raise SystemExit("Could not determine the PostgreSQL server name from the connec
 PY
 }
 
+parse_postgres_database_name() {
+  python3 - "$1" <<'PY'
+import sys
+
+connection_string = sys.argv[1]
+for segment in connection_string.split(";"):
+    key, _, value = segment.partition("=")
+    if key.strip().lower() in {"database", "initial catalog"} and value.strip():
+        print(value.strip())
+        raise SystemExit(0)
+
+raise SystemExit("Could not determine the PostgreSQL database name from the connection string.")
+PY
+}
+
 ensure_postgres_firewall_rule() {
   local postgres_server_name="$1"
   local rule_name="$2"
@@ -265,6 +280,14 @@ deployment_name="openjibo-managed-$(date -u +%s)"
 
 state_connection_string="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-state-connection-string --query value -o tsv)"
 personal_memory_connection_string="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-personal-memory-connection-string --query value -o tsv)"
+postgres_server_name="$(parse_postgres_server_name "$state_connection_string")"
+personal_memory_postgres_server_name="$(parse_postgres_server_name "$personal_memory_connection_string")"
+state_database_name="$(parse_postgres_database_name "$state_connection_string")"
+personal_memory_database_name="$(parse_postgres_database_name "$personal_memory_connection_string")"
+if [[ "$postgres_server_name" != "$personal_memory_postgres_server_name" ]]; then
+  echo "Managed state and personal-memory connections target different PostgreSQL servers." >&2
+  exit 1
+fi
 media_connection_string="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-media-connection-string --query value -o tsv)"
 open_weather_api_key="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-openweather-api-key --query value -o tsv)"
 news_api_key="$(az keyvault secret show --vault-name "$key_vault_name" --name openjibo-newsapi-key --query value -o tsv)"
@@ -300,6 +323,9 @@ deployment_args=(
   --parameters "neoHubHostname=${neohub_hostname}"
   --parameters "nativeCompatibilityApiHostname=${native_compatibility_api_hostname}"
   --parameters "nativeCompatibilitySocketHostname=${native_compatibility_socket_hostname}"
+  --parameters "postgresServerName=${postgres_server_name}"
+  --parameters "stateDatabaseName=${state_database_name}"
+  --parameters "personalMemoryDatabaseName=${personal_memory_database_name}"
   --parameters "stateConnectionString=${state_connection_string}"
   --parameters "personalMemoryConnectionString=${personal_memory_connection_string}"
   --parameters "mediaConnectionString=${media_connection_string}"

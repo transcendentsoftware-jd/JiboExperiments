@@ -35,6 +35,11 @@ on:
         required: true
         type: boolean
         default: false
+      production_database_binding_bootstrap_confirmed:
+        description: One-time confirmation for the first production deploy that records non-secret database identity markers
+        required: true
+        type: boolean
+        default: false
       existing_log_analytics_workspace_name:
         description: Existing Log Analytics workspace name after a resource-group subscription move
         required: false
@@ -223,6 +228,11 @@ jobs:
             echo "Specify every existing foundation resource name together, or leave all of them blank." >&2
             exit 1
           fi
+          if [[ "${{ inputs.deployment_target }}" == "production" &&
+                "$specified_identity_count" -ne "${#foundation_identity[@]}" ]]; then
+            echo "Production promotion requires all six pinned existing foundation resource names." >&2
+            exit 1
+          fi
 
       - name: Validate managed deployment contract
         shell: bash
@@ -275,6 +285,52 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify existing production database binding
+        if: inputs.deployment_target == 'production'
+        shell: bash
+        run: |
+          if ! app_names_json="$(az containerapp list \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --query "[].name" \
+            --output json)"; then
+            echo "Could not enumerate the production Container App." >&2
+            exit 1
+          fi
+
+          export OPENJIBO_ACTIVE_APPS_JSON="$app_names_json"
+          app_count="$(python3 -c 'import json, os; print(len(json.loads(os.environ["OPENJIBO_ACTIVE_APPS_JSON"])))')"
+          app_name="$(python3 -c 'import json, os; apps=json.loads(os.environ["OPENJIBO_ACTIVE_APPS_JSON"]); print(apps[0] if len(apps) == 1 else "")')"
+          unset OPENJIBO_ACTIVE_APPS_JSON
+          if [[ "$app_count" -ne 1 || -z "$app_name" ]]; then
+            echo "Expected exactly one existing production Container App; found $app_count." >&2
+            exit 1
+          fi
+
+          az postgres flexible-server show \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "${{ inputs.existing_postgres_server_name }}" \
+            --query id \
+            --output tsv >/dev/null
+
+          if ! bootstrap_completed="$(az group show \
+            --name "$OPENJIBO_RESOURCE_GROUP" \
+            --query "tags.openjiboDatabaseBindingBootstrapCompleted" \
+            --output tsv)"; then
+            echo "Could not read the production database binding bootstrap marker." >&2
+            exit 1
+          fi
+
+          az containerapp revision list \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "$app_name" \
+            --output json |
+            python3 ./scripts/cloud/verify-openjibo-production-database-binding.py \
+              "${{ inputs.existing_postgres_server_name }}" \
+              openjibo_state \
+              openjibo_memory \
+              "${{ inputs.production_database_binding_bootstrap_confirmed }}" \
+              "$bootstrap_completed"
 
       - name: Deploy isolated managed foundation
         id: foundation
@@ -617,6 +673,35 @@ jobs:
           fi
 
           bash ./scripts/cloud/deploy-openjibo-managed.sh "${deploy_args[@]}"
+
+      - name: Record production database binding bootstrap
+        if: inputs.deployment_target == 'production'
+        shell: bash
+        run: |
+          app_name="$(az containerapp list \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --query "[0].name" \
+            --output tsv)"
+          if [[ -z "$app_name" ]]; then
+            echo "The deployed production Container App could not be resolved." >&2
+            exit 1
+          fi
+
+          az containerapp revision list \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "$app_name" \
+            --output json |
+            python3 ./scripts/cloud/verify-openjibo-production-database-binding.py \
+              "${{ steps.foundation.outputs.postgresServerName }}" \
+              openjibo_state \
+              openjibo_memory \
+              false \
+              false
+
+          az group update \
+            --name "$OPENJIBO_RESOURCE_GROUP" \
+            --set tags.openjiboDatabaseBindingBootstrapCompleted=true \
+            --output none
 
       - name: Configure release smoke authorization
         shell: bash

@@ -53,6 +53,15 @@ param azureSpeechSubscriptionKey string = ''
 @secure()
 param stateConnectionString string = ''
 
+@description('Non-secret PostgreSQL server identity recorded on the Container App for deployment preflight.')
+param postgresServerName string = ''
+
+@description('Non-secret state database identity recorded on the Container App for deployment preflight.')
+param stateDatabaseName string = ''
+
+@description('Non-secret personal-memory database identity recorded on the Container App for deployment preflight.')
+param personalMemoryDatabaseName string = ''
+
 @description('Managed PostgreSQL personal memory connection string used by the runtime.')
 @secure()
 param personalMemoryConnectionString string = ''
@@ -272,6 +281,18 @@ var managedEnvVars = concat([
   {
     name: 'OpenJibo__State__Backend'
     value: 'PostgreSql'
+  }
+  {
+    name: 'OpenJibo__Deployment__PostgreSqlServerName'
+    value: postgresServerName
+  }
+  {
+    name: 'OpenJibo__Deployment__StateDatabaseName'
+    value: stateDatabaseName
+  }
+  {
+    name: 'OpenJibo__Deployment__PersonalMemoryDatabaseName'
+    value: personalMemoryDatabaseName
   }
   {
     name: 'OpenJibo__PersonalMemory__Backend'

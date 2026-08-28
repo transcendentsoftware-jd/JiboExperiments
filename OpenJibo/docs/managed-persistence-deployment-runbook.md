@@ -29,6 +29,7 @@ The workflow now:
 - verifies import ledgers before application startup;
 - smoke-tests staging and creates an exact-commit promotion artifact;
 - requires that artifact and explicit backup confirmation for production;
+- refuses to rebind an existing production Container App to a different PostgreSQL server;
 - verifies Azure PostgreSQL point-in-time recovery retention is at least seven days;
 - quiesces the old revision during the final import; and
 - restores the previous image automatically if deployment fails.
@@ -172,6 +173,8 @@ A subscription move also changes the Container App `customDomainVerificationId`.
 
 Promotion is refused if the staging gate is missing, belongs to another commit, lacks a passing smoke test, backup confirmation is absent, PITR retention is below seven days, or production hostname DNS is not ready.
 
+Production promotion requires all six pinned `existing_*_name` inputs. Before foundation provisioning, it requires exactly one existing Container App and one revision owning traffic, verifies that the pinned PostgreSQL resource exists in the production resource group, and compares that live revision's non-secret server/state-database/personal-memory-database identity markers with the pinned production contract. A mismatch fails before resource mutation, image build, migration, or the maintenance window. The first marker-enabled promotion additionally requires the one-time `production_database_binding_bootstrap_confirmed` check after independent verification of those pinned names. After the marker-enabled revision passes deployment smoke, the workflow persists `openjiboDatabaseBindingBootstrapCompleted=true` on the resource group; a later marker-less revision cannot reuse the checkbox. An intentional PostgreSQL move must use a separately reviewed clone/recovery cutover.
+
 Downtime begins when the old revision is quiesced and ends after the new revision passes smoke checks.
 
 ## Failure and Rollback
@@ -212,3 +215,11 @@ dotnet Jibo.Cloud.Migrations.dll --recover-missing-devices --apply `
 ```
 
 Recovery is limited to missing non-synthetic devices, existing-account links, and host mappings for newly inserted devices. It does not copy accounts, tokens, sessions, credentials, profiles, identity links, or other dependent families. Keep the source database preserved and read-only throughout the process.
+
+## 2026-08-27 Production Inventory Incident
+
+After the production resource group moved subscriptions, Azure's resource-group identity changed. The foundation's default names are derived from that identity, so a deployment without the six pinned `existing_*_name` inputs selected a newly created PostgreSQL server. That server was structurally valid but did not contain the older normalized fleet inventory. With no legacy snapshot requiring import, empty-database bootstrap also looked valid to the application. The admin portal correctly displayed the new database's incomplete inventory.
+
+The preserved pre-move PostgreSQL server still contained the missing records. A guarded recovery restored 14 non-synthetic devices, 14 links to accounts already present in the target, and three host mappings. It deliberately excluded 61 historical smoke/bootstrap devices and did not restore tokens, sessions, credentials, profiles, identity links, or loop membership. A second dry-run reported zero remaining changes.
+
+The prevention boundary is resource identity, not a fixed robot-count threshold: legitimate inventory can grow, shrink, or be archived. Production promotion now refuses any unreviewed PostgreSQL server-name change, while exact-commit staging, PITR verification, dry-run recovery, and the stable smoke namespace provide the remaining layers.
