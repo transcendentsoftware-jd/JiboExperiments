@@ -128,8 +128,14 @@ keep it as a separate portal/latency optimization. The inbound side remains domi
 Ogg Opus audio and must be evaluated through packet/envelope changes and physical-client compatibility evidence.
 
 The capacity report may infer a zero for missing database pending-request samples only when database
-command-duration and connection-usage samples are present. It may infer a zero for missing restart samples only
-when working-set and replica samples are present. These inferences are recorded in
+command-duration and connection-usage samples are present, and for a missing database-failure counter only when
+database command-duration samples populate distinct hourly buckets across the representative coverage threshold
+and prove that the provider meter
+was active. It may infer a zero for missing
+audio-limit-rejection counter samples only when accepted-audio or buffered-audio gauge samples prove that the
+OpenJibo transport meter was active across that same hourly-bucket threshold. It may infer a zero for missing
+restart samples only when distinct populated working-set and replica hours meet the threshold. These inferences
+are recorded in
 `evidence.inferredZeroSignals`; without the corroborating signals, the missing metric remains a blocker and is not
 treated as zero.
 

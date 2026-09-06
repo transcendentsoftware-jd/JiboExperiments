@@ -18,6 +18,7 @@ test("application query uses a bounded literal window and aggregate-only metrics
   assert.match(query, /cloud_RoleInstance startswith 'openjibo-cloud--0000075\/'/);
   assert.match(query, /db\.client\.connections\.usage\.total/);
   assert.match(query, /openjibo\.transport\.payload_bytes/);
+  assert.match(query, /Hours=dcount\(bin\(timestamp, 1h\)\)/);
   assert.doesNotMatch(query, /robot|device|session[_ ]?id/i);
   assert.throws(() => buildApplicationQuery(7, "unsafe' revision"), /Azure-safe/);
 });
@@ -26,15 +27,16 @@ test("Azure table and platform metric payloads are normalized", () => {
   assert.deepEqual(tableRows({ tables: [{ columns: [{ name: "Metric" }, { name: "Max" }],
     rows: [["memory", 42]] }] }), [{ Metric: "memory", Max: 42 }]);
   assert.deepEqual(summarizePlatformMetric({ value: [{ name: { value: "RxBytes" }, unit: "Bytes",
-    timeseries: [{ data: [{ total: 2 }, { total: 3 }, {}] }] }] }, "Total"),
-  { name: "RxBytes", unit: "Bytes", samples: 2, total: 5, max: 3, average: 2.5 });
+    timeseries: [{ data: [{ timeStamp: "2026-08-24T00:00:00Z", total: 2 },
+      { timeStamp: "2026-08-24T01:00:00Z", total: 3 }, {}] }] }] }, "Total"),
+  { name: "RxBytes", unit: "Bytes", samples: 2, hours: 2, total: 5, max: 3, average: 2.5 });
   assert.equal(parseMemoryBytes("2Gi"), 2 * 1024 ** 3);
   assert.equal(parseMemoryBytes("512Mi"), 512 * 1024 ** 2);
   assert.equal(parseMemoryBytes("invalid"), null);
 });
 
 function row(Metric, values = {}) {
-  return { Metric, Samples: 10, P50: 1, P95: 2, Average: 1.5, Max: 3, Total: 4,
+  return { Metric, Samples: 10, Hours: 168, P50: 1, P95: 2, Average: 1.5, Max: 3, Total: 4,
     First: "2026-08-24T00:00:00Z", Last: "2026-08-31T00:00:00Z", ...values };
 }
 
@@ -141,7 +143,8 @@ test("capacity report infers absent pending and restart metrics only with corrob
     row("db.client.commands.failed", { ...timestamps, Total: 0 }),
     row("openjibo.audio.buffer_limit_rejections", { ...timestamps, Total: 0 }),
     row("openjibo.transport.payload_bytes.in", { ...timestamps, Total: 100 })];
-  const platform = { WorkingSetBytes: { max: 1, samples: 10 }, Replicas: { max: 1, samples: 10 },
+  const platform = { WorkingSetBytes: { max: 1, samples: 168, hours: 168 },
+    Replicas: { max: 1, samples: 168, hours: 168 },
     RestartCount: { samples: 0 }, RxBytes: { total: 100 }, TxBytes: { total: 100 }, Requests: { total: 1 } };
   const report = buildCapacityReport({ options, container: { properties: { template: {
     containers: [{ resources: { cpu: 1, memory: "2Gi" } }], scale: { maxReplicas: 2 } } } },
@@ -172,4 +175,94 @@ test("capacity report keeps uncorroborated missing signals blocking", () => {
   assert.ok(report.evidence.missingSignals.includes("platformRestarts"));
   assert.equal(report.database.pendingRequestMax, null);
   assert.equal(report.reliability.containerRestarts, null);
+});
+
+test("capacity report infers absent failure counters only from active related meters", () => {
+  const options = parseArgs([]);
+  const timestamps = { First: "2026-08-24T00:00:00Z", Last: "2026-08-31T00:00:00Z" };
+  const rows = [row("dotnet.process.memory.working_set", timestamps),
+    row("db.client.connections.usage.total", { ...timestamps, Max: 2 }),
+    row("db.client.commands.duration", timestamps),
+    row("openjibo.audio.accepted_bytes", { ...timestamps, Total: 1024 }),
+    row("openjibo.audio.current_buffered_bytes", { ...timestamps, P95: 2048 }),
+    row("openjibo.audio.buffered_high_water_bytes", { ...timestamps, Max: 4096 }),
+    row("openjibo.transport.payload_bytes.in", { ...timestamps, Total: 100 })];
+  const platform = { WorkingSetBytes: { max: 1, samples: 168, hours: 168 },
+    Replicas: { max: 1, samples: 168, hours: 168 },
+    RestartCount: { samples: 0 }, RxBytes: { total: 100 }, TxBytes: { total: 100 }, Requests: { total: 1 } };
+  const report = buildCapacityReport({ options, container: { properties: { template: {
+    containers: [{ resources: { cpu: 1, memory: "2Gi" } }], scale: { maxReplicas: 2 } } } },
+    applicationRows: rows, platform, postgresMaxConnections: 50, configuredPoolCapacityPerReplica: 12 });
+  assert.equal(report.evidence.classification, "representative-evidence");
+  assert.deepEqual(report.evidence.inferredZeroSignals,
+    ["databasePendingRequests", "platformRestarts", "databaseFailures", "audioLimitRejections"]);
+  assert.equal(report.database.commandFailures, 0);
+  assert.equal(report.reliability.audioLimitRejections, 0);
+  assert.equal(report.audio.bufferedCurrentP95Bytes, 2048);
+  assert.equal(report.audio.bufferedHighWaterMaxBytes, 4096);
+  assert.match(renderMarkdown(report), /failures: 0/);
+  assert.match(renderMarkdown(report), /Restarts \/ audio-limit rejections \| 0 \/ 0/);
+  assert.match(renderMarkdown(report), /Buffered audio \(current P95 \/ high-water max\) \| 2\.00 KiB \/ 4\.00 KiB/);
+});
+
+test("capacity report blocks when failure counters lack related meter evidence", () => {
+  const options = parseArgs([]);
+  const timestamps = { First: "2026-08-24T00:00:00Z", Last: "2026-08-31T00:00:00Z" };
+  const rows = [row("dotnet.process.memory.working_set", timestamps),
+    row("db.client.connections.usage.total", { ...timestamps, Max: 2 }),
+    row("db.client.connections.pending_requests", { ...timestamps, Max: 0 }),
+    row("openjibo.transport.payload_bytes.in", { ...timestamps, Total: 100 })];
+  const platform = { WorkingSetBytes: { max: 1, samples: 168, hours: 168 },
+    Replicas: { max: 1, samples: 168, hours: 168 },
+    RestartCount: { max: 0, samples: 10 }, RxBytes: { total: 100 }, TxBytes: { total: 100 }, Requests: { total: 1 } };
+  const report = buildCapacityReport({ options, container: { properties: { template: {
+    containers: [{ resources: { cpu: 1, memory: "2Gi" } }], scale: { maxReplicas: 2 } } } },
+    applicationRows: rows, platform, postgresMaxConnections: 50, configuredPoolCapacityPerReplica: 12 });
+  assert.ok(report.evidence.missingSignals.includes("databaseFailures"));
+  assert.ok(report.evidence.missingSignals.includes("audioLimitRejections"));
+  assert.ok(report.evidence.blockers.includes("required-telemetry-missing"));
+  assert.ok(!report.evidence.blockers.includes("reliability-signal-detected"));
+  assert.equal(report.database.commandFailures, null);
+  assert.equal(report.reliability.audioLimitRejections, null);
+});
+
+test("capacity report distinguishes observed reliability failures from missing evidence", () => {
+  const options = parseArgs([]);
+  const timestamps = { First: "2026-08-24T00:00:00Z", Last: "2026-08-31T00:00:00Z" };
+  const rows = [row("dotnet.process.memory.working_set", timestamps),
+    row("db.client.connections.usage.total", { ...timestamps, Max: 2 }),
+    row("db.client.connections.pending_requests", { ...timestamps, Max: 0 }),
+    row("db.client.commands.duration", timestamps),
+    row("db.client.commands.failed", { ...timestamps, Total: 1 }),
+    row("openjibo.audio.buffer_limit_rejections", { ...timestamps, Total: 0 }),
+    row("openjibo.transport.payload_bytes.in", { ...timestamps, Total: 100 })];
+  const platform = { WorkingSetBytes: { max: 1, samples: 168 }, Replicas: { max: 1, samples: 168 },
+    RestartCount: { max: 0, samples: 10 }, RxBytes: { total: 100 }, TxBytes: { total: 100 }, Requests: { total: 1 } };
+  const report = buildCapacityReport({ options, container: { properties: { template: {
+    containers: [{ resources: { cpu: 1, memory: "2Gi" } }], scale: { maxReplicas: 2 } } } },
+    applicationRows: rows, platform, postgresMaxConnections: 50, configuredPoolCapacityPerReplica: 12 });
+  assert.ok(report.evidence.blockers.includes("reliability-signal-detected"));
+  assert.ok(!report.evidence.blockers.includes("required-telemetry-missing"));
+});
+
+test("capacity report does not infer zero from a late corroborating sample", () => {
+  const options = parseArgs([]);
+  const fullWindow = { First: "2026-08-24T00:00:00Z", Last: "2026-08-31T00:00:00Z" };
+  const lateWindow = { First: "2026-08-30T23:00:00Z", Last: "2026-08-31T00:00:00Z" };
+  const rows = [row("dotnet.process.memory.working_set", fullWindow),
+    row("db.client.connections.usage.total", fullWindow),
+    row("db.client.commands.duration", { ...lateWindow, Hours: 2 }),
+    row("openjibo.audio.current_buffered_bytes", { ...lateWindow, Hours: 2 }),
+    row("openjibo.transport.payload_bytes.in", { ...fullWindow, Total: 100 })];
+  const platform = { WorkingSetBytes: { max: 1, samples: 168, hours: 168 },
+    Replicas: { max: 1, samples: 168, hours: 168 },
+    RestartCount: { samples: 0 }, RxBytes: { total: 100 }, TxBytes: { total: 100 }, Requests: { total: 1 } };
+  const report = buildCapacityReport({ options, container: { properties: { template: {
+    containers: [{ resources: { cpu: 1, memory: "2Gi" } }], scale: { maxReplicas: 2 } } } },
+    applicationRows: rows, platform, postgresMaxConnections: 50, configuredPoolCapacityPerReplica: 12 });
+  assert.ok(report.evidence.missingSignals.includes("databasePendingRequests"));
+  assert.ok(report.evidence.missingSignals.includes("databaseFailures"));
+  assert.ok(report.evidence.missingSignals.includes("audioLimitRejections"));
+  assert.equal(report.database.commandFailures, null);
+  assert.equal(report.reliability.audioLimitRejections, null);
 });

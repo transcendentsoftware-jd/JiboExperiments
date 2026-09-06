@@ -14,6 +14,9 @@ const APP_METRICS = [
   "db.client.commands.failed",
   "openjibo.persistence.postgresql.configured_max_connections",
   "openjibo.persistence.cache.accesses",
+  "openjibo.audio.accepted_bytes",
+  "openjibo.audio.current_buffered_bytes",
+  "openjibo.audio.buffered_high_water_bytes",
   "openjibo.audio.buffer_limit_rejections",
   "openjibo.transport.websocket.payload_bytes",
   "openjibo.transport.http.payload_bytes",
@@ -60,18 +63,18 @@ export function buildApplicationQuery(days, revision = null) {
 ${revisionFilter}
 | where name in (${names});
 let scalar = source
-| where name in ('dotnet.process.memory.working_set','db.client.connections.pending_requests','db.client.commands.failed','openjibo.audio.buffer_limit_rejections')
-| summarize Samples=count(), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by Metric=name;
+| where name in ('dotnet.process.memory.working_set','db.client.connections.pending_requests','db.client.commands.failed','openjibo.audio.accepted_bytes','openjibo.audio.current_buffered_bytes','openjibo.audio.buffered_high_water_bytes','openjibo.audio.buffer_limit_rejections')
+| summarize Samples=count(), Hours=dcount(bin(timestamp, 1h)), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by Metric=name;
 let histograms = source
 | where name in ('dotnet.gc.pause.time','db.client.commands.duration')
-| summarize Samples=tolong(sum(valueCount)), Average=sum(valueSum) / sum(valueCount), Max=max(valueMax), Total=sum(valueSum), First=min(timestamp), Last=max(timestamp) by Metric=name
+| summarize Samples=tolong(sum(valueCount)), Hours=dcount(bin(timestamp, 1h)), Average=sum(valueSum) / sum(valueCount), Max=max(valueMax), Total=sum(valueSum), First=min(timestamp), Last=max(timestamp) by Metric=name
 | extend P50=real(null), P95=real(null);
 let connectionUsage = source
 | where name == 'db.client.connections.usage'
 | extend instance=tostring(cloud_RoleInstance), state=tostring(customDimensions['state'])
 | summarize value=sum(value) by timestamp, instance, state
 | summarize value=sum(value) by timestamp
-| summarize Samples=count(), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp)
+| summarize Samples=count(), Hours=dcount(bin(timestamp, 1h)), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp)
 | extend Metric='db.client.connections.usage.total';
 let configuredPools = source
 | where name == 'openjibo.persistence.postgresql.configured_max_connections'
@@ -83,15 +86,15 @@ let configuredPools = source
 let traffic = source
 | where name in ('openjibo.transport.websocket.payload_bytes','openjibo.transport.http.payload_bytes')
 | extend direction=tostring(customDimensions['direction'])
-| summarize Samples=count(), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by direction
+| summarize Samples=count(), Hours=dcount(bin(timestamp, 1h)), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by direction
 | extend Metric=strcat('openjibo.transport.payload_bytes.', iff(direction == 'out', 'out', 'in'));
 let cache = source
 | where name == 'openjibo.persistence.cache.accesses'
 | extend result=tostring(customDimensions['result'])
-| summarize Samples=count(), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by result
+| summarize Samples=count(), Hours=dcount(bin(timestamp, 1h)), P50=percentile(value, 50), P95=percentile(value, 95), Average=avg(value), Max=max(value), Total=sum(value), First=min(timestamp), Last=max(timestamp) by result
 | extend Metric=strcat('openjibo.persistence.cache.accesses.', iff(result == 'hit', 'hit', 'miss'));
 union scalar, histograms, connectionUsage, configuredPools, traffic, cache
-| project Metric, Samples, P50, P95, Average, Max, Total, First, Last
+| project Metric, Samples, Hours, P50, P95, Average, Max, Total, First, Last
 | order by Metric asc`;
 }
 
@@ -131,9 +134,12 @@ export function parseMemoryBytes(value) {
 export function summarizePlatformMetric(payload, aggregation) {
   const metric = payload?.value?.[0];
   const key = aggregation.toLowerCase();
-  const points = (metric?.timeseries ?? []).flatMap((series) => series.data ?? [])
-    .map((point) => point[key]).filter(Number.isFinite);
-  return { name: metric?.name?.value ?? null, unit: metric?.unit ?? null, samples: points.length,
+  const populatedPoints = (metric?.timeseries ?? []).flatMap((series) => series.data ?? [])
+    .filter((point) => Number.isFinite(point[key]));
+  const points = populatedPoints.map((point) => point[key]);
+  const hours = new Set(populatedPoints.map((point) => Date.parse(point.timeStamp))
+    .filter(Number.isFinite).map((timestamp) => Math.floor(timestamp / 3_600_000))).size;
+  return { name: metric?.name?.value ?? null, unit: metric?.unit ?? null, samples: points.length, hours,
     total: points.reduce((sum, value) => sum + value, 0), max: points.length ? Math.max(...points) : null,
     average: points.length ? points.reduce((sum, value) => sum + value, 0) / points.length : null };
 }
@@ -164,6 +170,11 @@ export function buildCapacityReport({ options, container, applicationRows, platf
     ? Math.max(0, (Math.max(...observedLast) - Math.min(...observedFirst)) / 3_600_000) : 0;
   const requestedHours = options.days * 24;
   const coverageRatio = Math.min(1, observedHours / requestedHours);
+  const requiredCoverageHours = requestedHours * 0.8;
+  const metricHasRepresentativeCoverage = (row) =>
+    (finite(row?.Hours) ?? 0) >= Math.ceil(requiredCoverageHours);
+  const platformMetricHasRepresentativeCoverage = (metric) =>
+    (finite(metric?.hours) ?? 0) >= Math.ceil(requiredCoverageHours);
   const appTrafficBytes = (finite(inbound?.Total) ?? 0) + (finite(outbound?.Total) ?? 0);
   const platformTrafficBytes = (finite(platform.RxBytes?.total) ?? 0) + (finite(platform.TxBytes?.total) ?? 0);
   const observedRobotDays = options.averageRobots * Math.max(observedHours / 24, 0);
@@ -174,19 +185,33 @@ export function buildCapacityReport({ options, container, applicationRows, platf
   const dbFailures = metricByName(applicationRows, "db.client.commands.failed");
   const dbDuration = metricByName(applicationRows, "db.client.commands.duration");
   const pendingRequests = metricByName(applicationRows, "db.client.connections.pending_requests");
+  const acceptedAudioBytes = metricByName(applicationRows, "openjibo.audio.accepted_bytes");
+  const bufferedAudioCurrent = metricByName(applicationRows, "openjibo.audio.current_buffered_bytes");
+  const bufferedAudioHighWater = metricByName(applicationRows, "openjibo.audio.buffered_high_water_bytes");
   const audioRejections = metricByName(applicationRows, "openjibo.audio.buffer_limit_rejections");
   const restarts = platform.RestartCount?.max ?? null;
   const inferredZeroSignals = [];
   const inferPendingRequestsZero = (finite(pendingRequests?.Samples) ?? 0) === 0 &&
-    (finite(dbDuration?.Samples) ?? 0) > 0 && (finite(connectionUsage?.Samples) ?? 0) > 0;
+    metricHasRepresentativeCoverage(dbDuration) && metricHasRepresentativeCoverage(connectionUsage);
   const inferRestartsZero = (finite(platform.RestartCount?.samples) ?? 0) === 0 &&
-    (finite(platform.WorkingSetBytes?.samples) ?? 0) > 0 && (finite(platform.Replicas?.samples) ?? 0) > 0;
+    platformMetricHasRepresentativeCoverage(platform.WorkingSetBytes) &&
+    platformMetricHasRepresentativeCoverage(platform.Replicas);
+  const inferDatabaseFailuresZero = (finite(dbFailures?.Samples) ?? 0) === 0 &&
+    metricHasRepresentativeCoverage(dbDuration);
+  const inferAudioRejectionsZero = (finite(audioRejections?.Samples) ?? 0) === 0 &&
+    (metricHasRepresentativeCoverage(acceptedAudioBytes) ||
+      metricHasRepresentativeCoverage(bufferedAudioCurrent) ||
+      metricHasRepresentativeCoverage(bufferedAudioHighWater));
   if (inferPendingRequestsZero) inferredZeroSignals.push("databasePendingRequests");
   if (inferRestartsZero) inferredZeroSignals.push("platformRestarts");
+  if (inferDatabaseFailuresZero) inferredZeroSignals.push("databaseFailures");
+  if (inferAudioRejectionsZero) inferredZeroSignals.push("audioLimitRejections");
   const pendingRequestP95 = finite(pendingRequests?.P95) ?? (inferPendingRequestsZero ? 0 : null);
   const pendingRequestMax = finite(pendingRequests?.Max) ?? (inferPendingRequestsZero ? 0 : null);
   const restartMax = finite(restarts) ?? (inferRestartsZero ? 0 : null);
-  const sufficientCoverage = observedHours >= requestedHours * 0.8;
+  const databaseFailureTotal = finite(dbFailures?.Total) ?? (inferDatabaseFailuresZero ? 0 : null);
+  const audioRejectionTotal = finite(audioRejections?.Total) ?? (inferAudioRejectionsZero ? 0 : null);
+  const sufficientCoverage = observedHours >= requiredCoverageHours;
   const hasRepresentativeActivity = appTrafficBytes > 0 &&
     (finite(metricByName(applicationRows, "db.client.commands.duration")?.Samples) ?? 0) > 0;
   const requiredSignals = {
@@ -194,17 +219,19 @@ export function buildCapacityReport({ options, container, applicationRows, platf
     databaseDuration: (finite(dbDuration?.Samples) ?? 0) > 0,
     databaseConnections: (finite(connectionUsage?.Samples) ?? 0) > 0,
     databasePendingRequests: (finite(pendingRequests?.Samples) ?? 0) > 0 || inferPendingRequestsZero,
+    databaseFailures: (finite(dbFailures?.Samples) ?? 0) > 0 || inferDatabaseFailuresZero,
+    audioLimitRejections: (finite(audioRejections?.Samples) ?? 0) > 0 || inferAudioRejectionsZero,
     platformMemory: (finite(platform.WorkingSetBytes?.samples) ?? 0) > 0,
     platformRestarts: (finite(platform.RestartCount?.samples) ?? 0) > 0 || inferRestartsZero,
   };
   const missingSignals = Object.entries(requiredSignals).filter(([, present]) => !present).map(([name]) => name);
-  const cleanReliability = (finite(dbFailures?.Total) ?? 0) === 0 &&
-    (finite(audioRejections?.Total) ?? 0) === 0 && restartMax === 0 && pendingRequestMax === 0;
+  const reliabilitySignalDetected = [databaseFailureTotal, audioRejectionTotal, restartMax, pendingRequestMax]
+    .some((value) => finite(value) !== null && finite(value) > 0);
   const blockers = [];
   if (!sufficientCoverage) blockers.push("observation-window-incomplete");
   if (!hasRepresentativeActivity) blockers.push("representative-robot-activity-absent");
   if (missingSignals.length) blockers.push("required-telemetry-missing");
-  if (!cleanReliability) blockers.push("reliability-signal-detected");
+  if (reliabilitySignalDetected) blockers.push("reliability-signal-detected");
   return {
     generatedUtc: new Date().toISOString(),
     scope: { resourceGroup: options.resourceGroup, containerApp: options.containerApp,
@@ -238,14 +265,17 @@ export function buildCapacityReport({ options, container, applicationRows, platf
       configuredServerLimitRatio: ratio(configuredPoolCapacityAtMaxScale, postgresMaxConnections),
       commandDurationAverageSeconds: finite(metricByName(applicationRows, "db.client.commands.duration")?.Average),
       commandDurationMaxSeconds: finite(metricByName(applicationRows, "db.client.commands.duration")?.Max),
-      commandFailures: finite(dbFailures?.Total), pendingRequestP95,
+      commandFailures: databaseFailureTotal, pendingRequestP95,
       pendingRequestMax, cacheHitRatio: ratio(cacheHits?.Total, cacheAccesses) },
     traffic: { applicationInboundPayloadBytes: finite(inbound?.Total) ?? 0,
       applicationOutboundPayloadBytes: finite(outbound?.Total) ?? 0,
       platformRxBytes: finite(platform.RxBytes?.total), platformTxBytes: finite(platform.TxBytes?.total),
       applicationToPlatformRatio: ratio(appTrafficBytes, platformTrafficBytes),
       applicationBytesPerObservedRobotDay: ratio(appTrafficBytes, observedRobotDays) },
-    reliability: { containerRestarts: restartMax, audioLimitRejections: finite(audioRejections?.Total),
+    audio: { acceptedBytes: finite(acceptedAudioBytes?.Total),
+      bufferedCurrentP95Bytes: finite(bufferedAudioCurrent?.P95),
+      bufferedHighWaterMaxBytes: finite(bufferedAudioHighWater?.Max) },
+    reliability: { containerRestarts: restartMax, audioLimitRejections: audioRejectionTotal,
       requestCount: finite(platform.Requests?.total), maximumReplicasObserved: finite(platform.Replicas?.max) },
   };
 }
@@ -279,6 +309,7 @@ export function renderMarkdown(report) {
     `| Persistence cache hit ratio | ${formatPercent(report.database.cacheHitRatio)} | higher is better |\n` +
     `| App payload traffic | ${formatBytes(report.traffic.applicationInboundPayloadBytes + report.traffic.applicationOutboundPayloadBytes)} | ${formatPercent(report.traffic.applicationToPlatformRatio)} of platform wire bytes |\n` +
     `| App bytes per observed robot-day | ${formatBytes(report.traffic.applicationBytesPerObservedRobotDay)} | based on ${report.scope.averageRobotsAssumption} average robots |\n` +
+    `| Buffered audio (current P95 / high-water max) | ${formatBytes(report.audio?.bufferedCurrentP95Bytes)} / ${formatBytes(report.audio?.bufferedHighWaterMaxBytes)} | both should remain bounded |\n` +
     `| Restarts / audio-limit rejections | ${formatNumber(report.reliability.containerRestarts, 0)} / ${formatNumber(report.reliability.audioLimitRejections, 0)} | both should remain zero |\n\n` +
     `Revision: \`${report.scope.revision ?? "unknown"}\`  \nImage: \`${report.scope.image ?? "unknown"}\`\n`;
 }
