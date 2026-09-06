@@ -671,6 +671,12 @@ These are the carryover items that need a clean proof pass first:
   - no restart, pending-request, database-failure, or audio-limit-rejection event was detected in the aggregate window; the only current production blocker is the incomplete observation window
   - staging revision `openjibo-cloud--0000092` has a similar 47.87-hour window but no application requests or payload traffic and no database-duration samples, so waiting alone cannot make that idle window representative
   - preserve the current production revision for the passive 2.5-robot baseline; run active 6/10/15/20 fake-robot tiers only in staging and treat their deployment/configuration revisions as separate evidence
+- Capacity observation update (`2026-09-06`):
+  - production remains on revision `openjibo-cloud--0000049` and image `sha-3773955b69c6`; the read-only report now covers 126.9 of 168 hours (75.6%), about 7.5 hours short of the 134.4-hour classification gate
+  - the overall observation-window gate remains incomplete; absent reliability counters now stay explicit until their related database, audio, or platform meters independently span the representative threshold, preventing a late sample from silently certifying an earlier interval
+  - application working set remains bounded at about 261 MiB maximum, Container Apps working set at about 304 MiB, highest hourly-average CPU at 2.0% of one core, PostgreSQL connections at 3 of 50 maximum, and persistence cache hits at 99.6%
+  - buffered audio was 0 bytes at P95 with a 149 KiB observed high-water mark; this is encouraging evidence that turn audio is released, but the passive baseline still does not replace the staged reconnect/audio soak
+  - no production deployment, configuration update, or active load was run; rerun the same read-only report after the exact-revision window exceeds 134.4 hours and allow for telemetry ingestion delay
 - Exit criteria:
   - production DI does not resolve `InMemoryCloudStateStore` for durable cloud state or personal memory
   - no production mutation serializes or rewrites a whole-cloud JSON snapshot
