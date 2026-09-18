@@ -37,6 +37,9 @@ bootstrap_markers=(
   'admin_secret_name="openjibo-postgres-admin-password"'
   'deployer_secret_name="openjibo-cloud-postgresql-deployer-password"'
   'deployer_role="openjibo_cloud_staging_deployer"'
+  'api_secret_name="openjibo-cloud-postgresql-api-password"'
+  'api_role="openjibo_cloud_staging_api"'
+  'api_capability_role="openjibo_managed_api_runtime"'
   'metering_role="openjibo_usage_metering_runtime"'
   'reconciliation_role="openjibo_usage_reconciliation_runtime"'
   "tags.openjiboEnvironment=='staging'"
@@ -47,6 +50,7 @@ bootstrap_markers=(
   'NOLOGIN INHERIT NOSUPERUSER NOCREATEDB'
   'NOCREATEROLE NOREPLICATION NOBYPASSRLS'
   'WITH ADMIN OPTION'
+  'WITH INHERIT TRUE, SET FALSE, ADMIN FALSE'
   'membership.inherit_option'
   'membership.set_option'
   "member_role.rolname = '\${postgres_admin}'"

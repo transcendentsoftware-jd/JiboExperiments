@@ -7,6 +7,9 @@ readonly postgres_admin="openjiboadmin"
 readonly admin_secret_name="openjibo-postgres-admin-password"
 readonly deployer_secret_name="openjibo-cloud-postgresql-deployer-password"
 readonly deployer_role="openjibo_cloud_staging_deployer"
+readonly api_secret_name="openjibo-cloud-postgresql-api-password"
+readonly api_role="openjibo_cloud_staging_api"
+readonly api_capability_role="openjibo_managed_api_runtime"
 readonly metering_role="openjibo_usage_metering_runtime"
 readonly reconciliation_role="openjibo_usage_reconciliation_runtime"
 
@@ -89,6 +92,7 @@ fi
 work_dir="$(mktemp -d)"
 admin_pgpass="$work_dir/admin.pgpass"
 deployer_pgpass="$work_dir/deployer.pgpass"
+api_pgpass="$work_dir/api.pgpass"
 bootstrap_sql="$work_dir/bootstrap.sql"
 run_identity="${GITHUB_RUN_ID:-local-$(openssl rand -hex 6)}"
 firewall_rule="usage-bootstrap-${run_identity}-${GITHUB_RUN_ATTEMPT:-1}"
@@ -152,6 +156,37 @@ if [[ ! "$deployer_password" =~ ^[A-Za-z0-9+/=]{32,128}$ ]]; then
 fi
 echo "::add-mask::$deployer_password"
 
+existing_api_secret_count="$(az keyvault secret list \
+  --vault-name "$key_vault_name" \
+  --query "[?name=='${api_secret_name}'] | length(@)" \
+  --output tsv --only-show-errors)"
+store_api_secret=false
+if [[ "$existing_api_secret_count" == "0" ]]; then
+  api_password="$(openssl rand -base64 48 | tr -d '\r\n')"
+  store_api_secret=true
+elif [[ "$existing_api_secret_count" == "1" ]]; then
+  api_secret_json="$(az keyvault secret show \
+    --vault-name "$key_vault_name" \
+    --name "$api_secret_name" \
+    --query '{value:value,enabled:attributes.enabled}' --output json --only-show-errors)"
+  api_password="$(jq -r '.value // empty' <<<"$api_secret_json")"
+  api_secret_enabled="$(jq -r '.enabled // false' <<<"$api_secret_json")"
+  unset api_secret_json
+  if [[ "$api_secret_enabled" != "true" ]]; then
+    echo "The existing managed API credential is disabled." >&2
+    exit 1
+  fi
+  unset api_secret_enabled
+else
+  echo "The managed API secret lookup returned an invalid result." >&2
+  exit 1
+fi
+if [[ ! "$api_password" =~ ^[A-Za-z0-9+/=]{32,128}$ ]]; then
+  echo "The managed API credential is missing or malformed." >&2
+  exit 1
+fi
+echo "::add-mask::$api_password"
+
 escape_pgpass() {
   local value="$1"
   value="${value//\\/\\\\}"
@@ -164,6 +199,9 @@ printf '%s:5432:%s:%s:%s\n' \
 printf '%s:5432:%s:%s:%s\n' \
   "$postgres_host" "$expected_database" "$deployer_role" "$(escape_pgpass "$deployer_password")" \
   >"$deployer_pgpass"
+printf '%s:5432:%s:%s:%s\n' \
+  "$postgres_host" "$expected_database" "$api_role" "$(escape_pgpass "$api_password")" \
+  >"$api_pgpass"
 
 runner_ip="$(curl -fsS --max-time 15 https://api.ipify.org)"
 if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
@@ -198,11 +236,20 @@ BEGIN
 
   SELECT count(*) INTO unsafe_count
   FROM pg_roles
-  WHERE rolname IN ('${metering_role}', '${reconciliation_role}')
+  WHERE rolname IN ('${api_capability_role}', '${metering_role}', '${reconciliation_role}')
     AND (rolcanlogin OR NOT rolinherit OR rolsuper OR rolcreatedb OR
          rolcreaterole OR rolreplication OR rolbypassrls);
   IF unsafe_count <> 0 THEN
     RAISE EXCEPTION 'existing OpenJiboCloud runtime principal attributes are unsafe';
+  END IF;
+
+  SELECT count(*) INTO unsafe_count
+  FROM pg_roles
+  WHERE rolname = '${api_role}'
+    AND (NOT rolcanlogin OR NOT rolinherit OR rolsuper OR rolcreatedb OR
+         rolcreaterole OR rolreplication OR rolbypassrls);
+  IF unsafe_count <> 0 THEN
+    RAISE EXCEPTION 'existing managed API login attributes are unsafe';
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${deployer_role}') THEN
@@ -211,6 +258,14 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${metering_role}') THEN
     CREATE ROLE ${metering_role} NOLOGIN INHERIT NOSUPERUSER NOCREATEDB
+      NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${api_role}') THEN
+    CREATE ROLE ${api_role} LOGIN INHERIT NOSUPERUSER NOCREATEDB
+      NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${api_capability_role}') THEN
+    CREATE ROLE ${api_capability_role} NOLOGIN INHERIT NOSUPERUSER NOCREATEDB
       NOCREATEROLE NOREPLICATION NOBYPASSRLS;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${reconciliation_role}') THEN
@@ -271,10 +326,33 @@ BEGIN
        SELECT 1
        FROM pg_auth_members membership
        JOIN pg_roles member_role ON member_role.oid = membership.member
+       JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
+       WHERE member_role.rolname = '${api_role}'
+         AND granted_role.rolname <> '${api_capability_role}') OR
+     EXISTS (
+       SELECT 1
+       FROM pg_auth_members membership
+       JOIN pg_roles member_role ON member_role.oid = membership.member
        WHERE member_role.rolname IN (
+         '${api_capability_role}',
          'openjibo_usage_checkpoint_owner', 'openjibo_usage_metering',
          'openjibo_usage_reconciler')) THEN
     RAISE EXCEPTION 'existing OpenJiboCloud role membership is unsafe';
+  END IF;
+
+  IF EXISTS (
+       SELECT 1
+       FROM pg_auth_members membership
+       JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
+       JOIN pg_roles member_role ON member_role.oid = membership.member
+       WHERE granted_role.rolname = '${api_capability_role}'
+         AND NOT (
+           (member_role.rolname = '${api_role}' AND NOT membership.admin_option AND
+            membership.inherit_option AND NOT membership.set_option) OR
+           (member_role.rolname = '${postgres_admin}' AND membership.admin_option AND
+            NOT membership.inherit_option AND NOT membership.set_option)
+         )) THEN
+    RAISE EXCEPTION 'managed API capability role has an unauthorized member';
   END IF;
 
   IF EXISTS (
@@ -305,8 +383,11 @@ END
 \$bootstrap\$;
 
 ALTER ROLE ${deployer_role} PASSWORD '${deployer_password}';
+ALTER ROLE ${api_role} PASSWORD '${api_password}';
 REVOKE ALL ON DATABASE ${expected_database} FROM PUBLIC;
 GRANT CONNECT, TEMPORARY, CREATE ON DATABASE ${expected_database} TO ${deployer_role};
+GRANT CONNECT ON DATABASE ${expected_database} TO ${api_role};
+GRANT ${api_capability_role} TO ${api_role} WITH INHERIT TRUE, SET FALSE, ADMIN FALSE;
 GRANT openjibo_usage_checkpoint_owner, openjibo_usage_metering,
       openjibo_usage_reconciler TO ${deployer_role} WITH ADMIN OPTION;
 COMMIT;
@@ -323,7 +404,14 @@ if [[ "$store_deployer_secret" == "true" ]]; then
     --value "$deployer_password" \
     --only-show-errors >/dev/null
 fi
-unset admin_password deployer_password
+if [[ "$store_api_secret" == "true" ]]; then
+  az keyvault secret set \
+    --vault-name "$key_vault_name" \
+    --name "$api_secret_name" \
+    --value "$api_password" \
+    --only-show-errors >/dev/null
+fi
+unset admin_password deployer_password api_password
 
 deployer_connection="host=$postgres_host port=5432 dbname=$expected_database user=$deployer_role sslmode=verify-full sslrootcert=system connect_timeout=15"
 identity="$(PGPASSFILE="$deployer_pgpass" psql "$deployer_connection" --no-psqlrc \
@@ -336,4 +424,15 @@ if [[ "$actual_database" != "$expected_database" || "$actual_user" != "$deployer
   exit 1
 fi
 
-echo "OpenJiboCloud staging PostgreSQL principals and deployer credential are ready."
+api_connection="host=$postgres_host port=5432 dbname=$expected_database user=$api_role sslmode=verify-full sslrootcert=system connect_timeout=15"
+api_identity="$(PGPASSFILE="$api_pgpass" psql "$api_connection" --no-psqlrc \
+  --tuples-only --no-align --field-separator '|' --set ON_ERROR_STOP=1 \
+  --command "SELECT current_database(), current_user, COALESCE((SELECT ssl::text FROM pg_stat_ssl WHERE pid=pg_backend_pid()), 'false'), pg_has_role(current_user, '${api_capability_role}', 'USAGE'), pg_has_role(current_user, '${api_capability_role}', 'SET');")"
+IFS='|' read -r api_database api_user api_ssl api_inherits api_can_set <<<"$api_identity"
+if [[ "$api_database" != "$expected_database" || "$api_user" != "$api_role" ||
+      "$api_ssl" != "true" || "$api_inherits" != "true" || "$api_can_set" != "false" ]]; then
+  echo "The managed API login failed its protected TLS or capability-role check." >&2
+  exit 1
+fi
+
+echo "OpenJiboCloud staging PostgreSQL principals and stable credentials are ready."
