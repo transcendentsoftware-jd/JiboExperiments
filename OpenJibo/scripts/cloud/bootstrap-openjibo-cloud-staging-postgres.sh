@@ -427,7 +427,7 @@ fi
 api_connection="host=$postgres_host port=5432 dbname=$expected_database user=$api_role sslmode=verify-full sslrootcert=system connect_timeout=15"
 api_identity="$(PGPASSFILE="$api_pgpass" psql "$api_connection" --no-psqlrc \
   --tuples-only --no-align --field-separator '|' --set ON_ERROR_STOP=1 \
-  --command "SELECT current_database(), current_user, COALESCE((SELECT ssl::text FROM pg_stat_ssl WHERE pid=pg_backend_pid()), 'false'), pg_has_role(current_user, '${api_capability_role}', 'USAGE'), pg_has_role(current_user, '${api_capability_role}', 'SET');")"
+  --command "SELECT current_database(), current_user, COALESCE((SELECT ssl::text FROM pg_stat_ssl WHERE pid=pg_backend_pid()), 'false'), pg_has_role(current_user, '${api_capability_role}', 'USAGE')::text, pg_has_role(current_user, '${api_capability_role}', 'SET')::text;")"
 IFS='|' read -r api_database api_user api_ssl api_inherits api_can_set <<<"$api_identity"
 if [[ "$api_database" != "$expected_database" || "$api_user" != "$api_role" ||
       "$api_ssl" != "true" || "$api_inherits" != "true" || "$api_can_set" != "false" ]]; then

@@ -53,6 +53,8 @@ bootstrap_markers=(
   'WITH INHERIT TRUE, SET FALSE, ADMIN FALSE'
   'membership.inherit_option'
   'membership.set_option'
+  "pg_has_role(current_user, '\${api_capability_role}', 'USAGE')::text"
+  "pg_has_role(current_user, '\${api_capability_role}', 'SET')::text"
   "member_role.rolname = '\${postgres_admin}'"
   'firewall-rule create'
   'firewall-rule delete'
