@@ -186,6 +186,7 @@ SELECT pg_advisory_xact_lock(hashtextextended('openjibo-cloud-staging-postgres-b
 DO \$bootstrap\$
 DECLARE
   unsafe_count integer;
+  unauthorized_members text;
 BEGIN
   SELECT count(*) INTO unsafe_count
   FROM pg_roles
@@ -296,7 +297,30 @@ BEGIN
             NOT membership.admin_option AND membership.inherit_option AND
             NOT membership.set_option)
          )) THEN
-    RAISE EXCEPTION 'usage capability role has an unauthorized member';
+    SELECT string_agg(
+             format('%s->%s(admin=%s,inherit=%s,set=%s)',
+               granted_role.rolname, member_role.rolname,
+               membership.admin_option, membership.inherit_option,
+               membership.set_option), ', ' ORDER BY granted_role.rolname, member_role.rolname)
+    INTO unauthorized_members
+    FROM pg_auth_members membership
+    JOIN pg_roles granted_role ON granted_role.oid = membership.roleid
+    JOIN pg_roles member_role ON member_role.oid = membership.member
+    WHERE granted_role.rolname IN (
+        'openjibo_usage_checkpoint_owner', 'openjibo_usage_metering',
+        'openjibo_usage_reconciler')
+      AND NOT (
+        (member_role.rolname = '${deployer_role}' AND membership.admin_option) OR
+        (granted_role.rolname = 'openjibo_usage_metering' AND
+         member_role.rolname = '${metering_role}' AND
+         NOT membership.admin_option AND membership.inherit_option AND
+         NOT membership.set_option) OR
+        (granted_role.rolname = 'openjibo_usage_reconciler' AND
+         member_role.rolname = '${reconciliation_role}' AND
+         NOT membership.admin_option AND membership.inherit_option AND
+         NOT membership.set_option)
+      );
+    RAISE EXCEPTION 'usage capability role has an unauthorized member: %', unauthorized_members;
   END IF;
 END
 \$bootstrap\$;
