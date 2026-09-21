@@ -1,6 +1,6 @@
 # Runtime Operational Metrics
 
-Status date: `2026-09-07`
+Status date: `2026-09-21`
 
 OpenJibo emits privacy-safe aggregate measurements through the .NET meter `OpenJibo.Transport`. These
 measurements are intended to establish a concurrency and cost envelope; they are not a customer activity log.
@@ -42,6 +42,23 @@ wire protocol.
 The audio high-water value is monotonic for the life of one process and resets when that replica restarts. The
 configured PostgreSQL gauge is a ceiling, not live pool use.
 
+## SigV4 Replay Observer Health
+
+The observe-only legacy SigV4 replay path uses the separate
+`Jibo.Cloud.SigV4ReplayObservation` meter. Its bounded instruments are:
+
+| Instrument | Type | Attributes |
+| --- | --- | --- |
+| `openjibo.sigv4_replay_observation.outcomes` | counter | `operation`, `key_slot`, `outcome` |
+| `openjibo.sigv4_replay_observation.degraded_publishers` | observable gauge | none |
+| `openjibo.sigv4_replay_observation.health_transitions` | counter | `state` |
+
+Operations, key slots, outcomes, and transition states are fixed application labels. The path never emits a
+digest, access key, device, robot, request, or exception value as a metric attribute. A persistence outage logs
+one warning when the publisher enters the degraded state, continues counting every failed observation, and
+coalesces later warnings until a fully successful work item records recovery and the suppressed-failure count.
+Request authorization and token issuance do not depend on replay persistence.
+
 ## Collection And Provider Metrics
 
 Managed Azure deployments provision a workspace-backed Application Insights resource and register the Azure
@@ -49,6 +66,7 @@ Monitor OpenTelemetry metrics exporter when `APPLICATIONINSIGHTS_CONNECTION_STRI
 subscribes to:
 
 - `OpenJibo.Transport` for the application instruments above;
+- `Jibo.Cloud.SigV4ReplayObservation` when the shadow replay observer is explicitly enabled;
 - the .NET runtime metrics for working set, managed heap, allocation rate, GC collections, and pause duration;
 - Npgsql's native metrics for pool connections, pending requests/waits, command duration, and failures;
 - Azure Container Apps and Azure Database for PostgreSQL platform metrics for replica, CPU, memory, restart,

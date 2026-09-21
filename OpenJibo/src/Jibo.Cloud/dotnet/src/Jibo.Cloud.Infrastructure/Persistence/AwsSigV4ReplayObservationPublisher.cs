@@ -29,6 +29,12 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
     private static readonly Meter Meter = new(MeterName, "1.0.0");
     private static readonly Counter<long> Outcomes = Meter.CreateCounter<long>(
         "openjibo.sigv4_replay_observation.outcomes");
+    private static long _degradedPublisherCount;
+    private static readonly ObservableGauge<long> DegradedPublishers = Meter.CreateObservableGauge(
+        "openjibo.sigv4_replay_observation.degraded_publishers",
+        () => Volatile.Read(ref _degradedPublisherCount));
+    private static readonly Counter<long> HealthTransitions = Meter.CreateCounter<long>(
+        "openjibo.sigv4_replay_observation.health_transitions");
     private static readonly HashSet<string> SupportedOperations =
     [
         "Account.CreateHubToken",
@@ -39,6 +45,8 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
     private readonly ReplayDigestKeySlot[] _keys;
     private readonly Channel<ObservationWorkItem> _channel;
     private readonly ILogger<AwsSigV4ReplayObservationPublisher> _logger;
+    private bool _persistenceDegraded;
+    private long _suppressedPersistenceFailures;
 
     public AwsSigV4ReplayObservationPublisher(
         IAwsSigV4ReplayObservationStore store,
@@ -93,6 +101,9 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
             {
                 try
                 {
+                    Exception? firstFailure = null;
+                    string? firstFailedKeySlot = null;
+                    var failedObservations = 0;
                     foreach (var observation in item.Observations)
                     {
                         try
@@ -111,11 +122,23 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
                         catch (Exception exception)
                         {
                             Record(item.Operation, observation.KeySlot, "failed");
-                            _logger.LogWarning(exception,
-                                "Legacy SigV4 replay observation persistence failed operation={Operation} keySlot={KeySlot} shadow=true",
-                                item.Operation,
-                                observation.KeySlot);
+                            firstFailure ??= exception;
+                            firstFailedKeySlot ??= observation.KeySlot;
+                            failedObservations++;
                         }
+                    }
+
+                    if (firstFailure is not null)
+                    {
+                        ReportPersistenceFailure(
+                            firstFailure,
+                            item.Operation,
+                            firstFailedKeySlot!,
+                            failedObservations);
+                    }
+                    else
+                    {
+                        ReportPersistenceRecovery();
                     }
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -126,6 +149,10 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+        }
+        finally
+        {
+            ClearDegradedGauge();
         }
     }
 
@@ -139,6 +166,54 @@ public sealed class AwsSigV4ReplayObservationPublisher : BackgroundService,
         new KeyValuePair<string, object?>("operation", operation),
         new KeyValuePair<string, object?>("key_slot", keySlot),
         new KeyValuePair<string, object?>("outcome", outcome));
+
+    private void ReportPersistenceFailure(
+        Exception exception,
+        string operation,
+        string keySlot,
+        int failedObservations)
+    {
+        if (_persistenceDegraded)
+        {
+            _suppressedPersistenceFailures += failedObservations;
+            return;
+        }
+
+        _persistenceDegraded = true;
+        _suppressedPersistenceFailures = 0;
+        Interlocked.Increment(ref _degradedPublisherCount);
+        RecordHealthTransition("degraded");
+        _logger.LogWarning(exception,
+            "Legacy SigV4 replay observation persistence degraded operation={Operation} keySlot={KeySlot} failedObservations={FailedObservations} shadow=true",
+            operation,
+            keySlot,
+            failedObservations);
+    }
+
+    private void ReportPersistenceRecovery()
+    {
+        if (!_persistenceDegraded) return;
+
+        _persistenceDegraded = false;
+        Interlocked.Decrement(ref _degradedPublisherCount);
+        RecordHealthTransition("recovered");
+        _logger.LogInformation(
+            "Legacy SigV4 replay observation persistence recovered suppressedFailures={SuppressedFailures} shadow=true",
+            _suppressedPersistenceFailures);
+        _suppressedPersistenceFailures = 0;
+    }
+
+    private void ClearDegradedGauge()
+    {
+        if (!_persistenceDegraded) return;
+
+        _persistenceDegraded = false;
+        Interlocked.Decrement(ref _degradedPublisherCount);
+        _suppressedPersistenceFailures = 0;
+    }
+
+    private static void RecordHealthTransition(string state) => HealthTransitions.Add(1,
+        new KeyValuePair<string, object?>("state", state));
 
     private sealed record ReplayDigestKeySlot(string Name, AwsSigV4ReplayDigestKey Key);
     private sealed record ReplayDigestObservation(byte[] Digest, short KeyVersion, string KeySlot);
