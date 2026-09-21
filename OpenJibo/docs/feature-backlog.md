@@ -604,10 +604,15 @@ These are the carryover items that need a clean proof pass first:
   - expose session-link history and artifact capture coverage in the admin status page
 - Current implementation:
   - robot header, bearer/session, SigV4/AWS3, and one-way credential fingerprint evidence are resolved centrally
+  - credential-valid `CreateHubToken` requests now attach a bounded fingerprint/credential-epoch observation to
+    the hashed durable Hub-token row; every PostgreSQL-backed handshake rechecks token revocation and the current
+    account epoch across replicas, while unsigned compatibility tokens remain unchanged and unbound
   - credential claims, swaps, backfill, offline merge, verified serial evidence, and explicit session links are persisted
   - raw binary WebSocket audio is normalized into a single browser-playable Ogg/Opus stream
   - the status page distinguishes observed runtime IDs from explicit links and reports artifact coverage
 - Remaining proof:
+  - keep this observation out of robot identity and ownership decisions; add synchronous replay consumption,
+    live-socket fencing, and physical co-presence before it contributes to a managed pairing attestation
   - deploy and verify attribution survives restart/reconnect on the Azure state backend
   - perform a real capture audit covering events, logs, media, and ASR, including an unassigned-credential claim
   - confirm archived records remain historical after a fresh deployment

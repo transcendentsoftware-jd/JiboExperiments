@@ -40,7 +40,10 @@ public sealed class CloudAuthProtocolHandler(
 
         if (operation.Equals("CreateHubToken", StringComparison.OrdinalIgnoreCase))
         {
-            ObserveLegacyCredential(envelope, CreateHubTokenPolicy);
+            var credentialVerification = ObserveLegacyCredential(envelope, CreateHubTokenPolicy);
+            var credentialBinding = HubTokenCredentialBinding.FromVerification(
+                credentialVerification,
+                account.CredentialEpoch);
             var deviceId = !string.IsNullOrWhiteSpace(envelope.DeviceId)
                 ? envelope.DeviceId!
                 : ReadString(body, "deviceId")
@@ -73,7 +76,10 @@ public sealed class CloudAuthProtocolHandler(
             {
                 // An empty request must not inherit a deployment-smoke robot as its identity.
                 // Leave it unassigned until the physical client provides a real identity signal.
-                token = stateStore.IssueHubToken(deviceId, useDefaultRobot: !defaultRobotIsSynthetic),
+                token = stateStore.IssueHubToken(
+                    deviceId,
+                    useDefaultRobot: !defaultRobotIsSynthetic,
+                    credentialBinding: credentialBinding),
                 expires = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds()
             });
         }
@@ -297,13 +303,15 @@ public sealed class CloudAuthProtocolHandler(
         return null;
     }
 
-    private void ObserveLegacyCredential(ProtocolEnvelope envelope, AwsSigV4OperationPolicy policy)
+    private AwsSigV4Verification ObserveLegacyCredential(
+        ProtocolEnvelope envelope,
+        AwsSigV4OperationPolicy policy)
     {
         var verification = _awsSigV4Verifier.Verify(envelope, policy);
         if (verification.Outcome == AwsSigV4VerificationOutcome.NotPresented)
         {
             _logger.LogDebug("Legacy SigV4 was not presented operation={Operation}", policy.Operation);
-            return;
+            return verification;
         }
 
         if (verification.CredentialAuthenticated)
@@ -332,7 +340,7 @@ public sealed class CloudAuthProtocolHandler(
                 verification.PayloadClassification,
                 verification.HostClassification,
                 verification.OperationAuthenticated);
-            return;
+            return verification;
         }
 
         // Shadow mode: record bounded evidence without changing token issuance. Enforcement
@@ -342,6 +350,7 @@ public sealed class CloudAuthProtocolHandler(
             policy.Operation,
             verification.Outcome,
             verification.AccessKeyFingerprint);
+        return verification;
     }
 
     private ProtocolDispatchResult? TryIssueDeploymentSmokeHubToken(string deviceId, string? registrationSource,

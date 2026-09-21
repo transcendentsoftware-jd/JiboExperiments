@@ -160,7 +160,7 @@ public sealed partial class AwsSigV4RequestVerifier(
         var service = match.Groups["service"].Value;
         var signedHeadersText = match.Groups["headers"].Value;
         var presentedSignature = match.Groups["signature"].Value;
-        var fingerprint = Fingerprint(accessKeyId);
+        var fingerprint = CreateAccessKeyFingerprint(accessKeyId);
 
         var account = stateStore.GetAccount();
         if (string.IsNullOrWhiteSpace(account.AccessKeyId) ||
@@ -383,7 +383,11 @@ public sealed partial class AwsSigV4RequestVerifier(
 
     private static byte[] HmacSha256(byte[] key, byte[] value) => HMACSHA256.HashData(key, value);
     private static string HexSha256(byte[] value) => Convert.ToHexString(SHA256.HashData(value)).ToLowerInvariant();
-    private static string Fingerprint(string value) => HexSha256(Encoding.UTF8.GetBytes(value))[..16];
+    public static string CreateAccessKeyFingerprint(string accessKeyId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(accessKeyId);
+        return HexSha256(Encoding.UTF8.GetBytes(accessKeyId.Trim()))[..16];
+    }
 
     private static AwsSigV4Verification Malformed(string? fingerprint = null, DateTimeOffset? signedAt = null) =>
         new(AwsSigV4VerificationOutcome.Malformed, fingerprint, signedAt);

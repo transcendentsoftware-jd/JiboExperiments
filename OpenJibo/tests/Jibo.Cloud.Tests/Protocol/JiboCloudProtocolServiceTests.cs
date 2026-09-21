@@ -93,6 +93,8 @@ public sealed class JiboCloudProtocolServiceTests
         Assert.Equal("BOJW-KITCHEN-0001", kitchenSession.DeviceId);
         Assert.Equal("BOJW-OFFICE-0002", officeSession.DeviceId);
         Assert.NotEqual(kitchenSession.DeviceId, officeSession.DeviceId);
+        Assert.False(HubTokenCredentialBinding.ContainsMetadata(kitchenSession.Metadata));
+        Assert.False(HubTokenCredentialBinding.ContainsMetadata(officeSession.Metadata));
         Assert.DoesNotContain(store.GetDevices(), device => device.DeviceId == "BOJW-KITCHEN-0001");
         Assert.DoesNotContain(store.GetDevices(), device => device.DeviceId == "BOJW-OFFICE-0002");
     }

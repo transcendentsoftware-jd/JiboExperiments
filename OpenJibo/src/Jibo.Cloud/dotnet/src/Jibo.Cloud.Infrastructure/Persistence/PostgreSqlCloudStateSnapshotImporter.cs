@@ -165,15 +165,17 @@ public sealed class PostgreSqlCloudStateSnapshotImporter
             await ExecuteAsync(connection, transaction, """
                 INSERT INTO Accounts
                     (AccountId, Email, FirstName, LastName, AccessKeyId, SecretAccessKeyCiphertext,
-                     SecretWrappingKeyId, IsDefault)
-                VALUES (@id, @email, @first, @last, @access, @secret, @keyId, TRUE)
+                     SecretWrappingKeyId, CredentialEpoch, IsDefault)
+                VALUES (@id, @email, @first, @last, @access, @secret, @keyId, @credentialEpoch, TRUE)
                 ON CONFLICT (AccountId) DO UPDATE SET
                     Email=EXCLUDED.Email, FirstName=EXCLUDED.FirstName, LastName=EXCLUDED.LastName,
                     AccessKeyId=EXCLUDED.AccessKeyId, SecretAccessKeyCiphertext=EXCLUDED.SecretAccessKeyCiphertext,
-                    SecretWrappingKeyId=EXCLUDED.SecretWrappingKeyId, UpdatedUtc=NOW()
+                    SecretWrappingKeyId=EXCLUDED.SecretWrappingKeyId,
+                    CredentialEpoch=GREATEST(Accounts.CredentialEpoch, EXCLUDED.CredentialEpoch), UpdatedUtc=NOW()
                 """, cancellationToken, ("id", account.AccountId), ("email", account.Email),
                 ("first", account.FirstName), ("last", account.LastName), ("access", account.AccessKeyId),
-                ("secret", encrypted), ("keyId", _secretProtector.KeyId));
+                ("secret", encrypted), ("keyId", _secretProtector.KeyId),
+                ("credentialEpoch", account.CredentialEpoch));
         }
 
         var devices = snapshot.AllDevices();

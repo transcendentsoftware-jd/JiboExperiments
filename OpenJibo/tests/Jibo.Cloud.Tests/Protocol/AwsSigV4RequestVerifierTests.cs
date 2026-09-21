@@ -469,6 +469,13 @@ public sealed class AwsSigV4RequestVerifierTests
         Assert.Contains("operationAuthenticated=False", messages, StringComparison.Ordinal);
         Assert.Contains("shadow=true", messages, StringComparison.Ordinal);
         Assert.Equal(["Account.CreateHubToken"], publisher.Operations);
+        using var payload = JsonDocument.Parse(response.BodyText);
+        var token = payload.RootElement.GetProperty("token").GetString();
+        var issued = Assert.IsType<CloudSession>(store.FindIssuedToken(token!));
+        Assert.True(HubTokenCredentialBinding.TryRead(issued.Metadata, out var binding));
+        Assert.NotNull(binding);
+        Assert.False(binding.OperationAuthenticated);
+        Assert.Equal(store.GetAccount().CredentialEpoch, binding.CredentialEpoch);
     }
 
     [Fact]
@@ -496,6 +503,13 @@ public sealed class AwsSigV4RequestVerifierTests
         Assert.Contains("host=Match", messages, StringComparison.Ordinal);
         Assert.Contains("operationAuthenticated=True", messages, StringComparison.Ordinal);
         Assert.Contains("shadow=true", messages, StringComparison.Ordinal);
+        using var payload = JsonDocument.Parse(response.BodyText);
+        var token = payload.RootElement.GetProperty("token").GetString();
+        var issued = Assert.IsType<CloudSession>(store.FindIssuedToken(token!));
+        Assert.True(HubTokenCredentialBinding.TryRead(issued.Metadata, out var binding));
+        Assert.NotNull(binding);
+        Assert.True(binding.OperationAuthenticated);
+        Assert.Equal(store.GetAccount().CredentialEpoch, binding.CredentialEpoch);
     }
 
     [Fact]

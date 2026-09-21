@@ -24,6 +24,8 @@ public sealed class PostgreSqlCloudAccountRepository(
             throw new ArgumentException("AccountId is required.", nameof(account));
         if (string.IsNullOrWhiteSpace(account.Email))
             throw new ArgumentException("Email is required.", nameof(account));
+        if (account.CredentialEpoch < 1)
+            throw new ArgumentOutOfRangeException(nameof(account), "CredentialEpoch must be positive.");
 
         await using var connection = await dataSource.Value.OpenConnectionAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
@@ -39,10 +41,11 @@ public sealed class PostgreSqlCloudAccountRepository(
         await using (var command = new NpgsqlCommand("""
                                                      INSERT INTO Accounts
                                                          (AccountId, Email, FirstName, LastName, AccessKeyId,
-                                                          SecretAccessKeyCiphertext, SecretWrappingKeyId, IsDefault)
+                                                          SecretAccessKeyCiphertext, SecretWrappingKeyId,
+                                                          CredentialEpoch, IsDefault)
                                                      VALUES
                                                          (@id, @email, @firstName, @lastName, @accessKeyId,
-                                                          @secret, @keyId, @insertIsDefault)
+                                                          @secret, @keyId, @credentialEpoch, @insertIsDefault)
                                                      ON CONFLICT (AccountId) DO UPDATE SET
                                                          Email = EXCLUDED.Email,
                                                          FirstName = EXCLUDED.FirstName,
@@ -50,6 +53,9 @@ public sealed class PostgreSqlCloudAccountRepository(
                                                          AccessKeyId = EXCLUDED.AccessKeyId,
                                                          SecretAccessKeyCiphertext = EXCLUDED.SecretAccessKeyCiphertext,
                                                          SecretWrappingKeyId = EXCLUDED.SecretWrappingKeyId,
+                                                         CredentialEpoch = GREATEST(
+                                                             Accounts.CredentialEpoch,
+                                                             EXCLUDED.CredentialEpoch),
                                                          IsDefault = COALESCE(@isDefault, Accounts.IsDefault),
                                                          UpdatedUtc = NOW()
                                                      """, connection, transaction))
@@ -61,6 +67,7 @@ public sealed class PostgreSqlCloudAccountRepository(
             command.Parameters.AddWithValue("accessKeyId", account.AccessKeyId.Trim());
             command.Parameters.AddWithValue("secret", secretProtector.Protect(account.SecretAccessKey));
             command.Parameters.AddWithValue("keyId", secretProtector.KeyId);
+            command.Parameters.AddWithValue("credentialEpoch", account.CredentialEpoch);
             command.Parameters.AddWithValue("insertIsDefault", isDefault ?? false);
             command.Parameters.Add("isDefault", NpgsqlTypes.NpgsqlDbType.Boolean).Value =
                 (object?)isDefault ?? DBNull.Value;
@@ -79,7 +86,7 @@ public sealed class PostgreSqlCloudAccountRepository(
         await using var command = connection.CreateCommand();
         command.CommandText = $"""
                                SELECT AccountId, Email, FirstName, LastName, AccessKeyId,
-                                      SecretAccessKeyCiphertext, SecretWrappingKeyId
+                                      SecretAccessKeyCiphertext, SecretWrappingKeyId, CredentialEpoch
                                FROM Accounts
                                WHERE {predicate}
                                ORDER BY CreatedUtc
@@ -101,7 +108,8 @@ public sealed class PostgreSqlCloudAccountRepository(
             FirstName = reader.GetString(2),
             LastName = reader.GetString(3),
             AccessKeyId = reader.GetString(4),
-            SecretAccessKey = ciphertext is null ? string.Empty : secretProtector.Unprotect(ciphertext)
+            SecretAccessKey = ciphertext is null ? string.Empty : secretProtector.Unprotect(ciphertext),
+            CredentialEpoch = reader.GetInt64(7)
         };
     }
 }

@@ -405,7 +405,8 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         Sync(_devices.SwapCredentialBindingsAsync(firstAccessKeyFingerprint, secondAccessKeyFingerprint,
             claimSource));
 
-    public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true)
+    public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
+        HubTokenCredentialBinding? credentialBinding = null)
     {
         var account = GetAccount();
         var resolvedDeviceId = !string.IsNullOrWhiteSpace(deviceId)
@@ -414,7 +415,8 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
                 ? GetRobot().DeviceId
                 : null;
         var token = $"hub-{account.AccountId}-{Guid.NewGuid():N}";
-        RegisterIssuedToken(token, "hub", account.AccountId, resolvedDeviceId, _hubTokenLifetime);
+        RegisterIssuedToken(token, "hub", account.AccountId, resolvedDeviceId, _hubTokenLifetime,
+            credentialBinding);
         return token;
     }
 
@@ -516,11 +518,19 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
     {
         if (string.IsNullOrWhiteSpace(token)) return null;
         var key = token.Trim();
+        // A positive process-local cache cannot be authoritative: another replica may
+        // revoke the token or advance the account credential epoch. Re-read the durable
+        // row for every new handshake before consulting the bounded object cache.
+        var stored = Sync(_authTokens.FindValidAsync(key));
+        if (stored is null || !CredentialBindingIsCurrent(stored.Metadata, stored.AccountId))
+        {
+            _sessions.TryRemove(key, out _);
+            return null;
+        }
+
         var durable = _sessions.FindDurable(key);
         if (durable is null)
         {
-            var stored = Sync(_authTokens.FindValidAsync(key));
-            if (stored is null) return null;
             durable = CreateSession(stored.TokenKind, stored.AccountId, stored.DeviceId, key, null, null,
                 stored.IssuedUtc, stored.ExpiresUtc);
             foreach (var pair in stored.Metadata) durable.Metadata[pair.Key] = pair.Value;
@@ -612,10 +622,11 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
     }
 
     private void RegisterIssuedToken(string token, string kind, string accountId, string? deviceId,
-        TimeSpan lifetime)
+        TimeSpan lifetime, HubTokenCredentialBinding? credentialBinding = null)
     {
         var expiresUtc = DateTimeOffset.UtcNow.Add(lifetime);
         var metadata = BuildSessionMetadata(accountId, deviceId);
+        credentialBinding?.WriteTo(metadata);
         var registered = ResolveRegisteredDevice(deviceId);
         if (registered is not null)
         {
@@ -634,6 +645,24 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         // Reconcile after registration so a concurrent link/unlink operation either
         // updates this row directly or is observed from PostgreSQL here.
         ReinheritDialogMetadata(session);
+    }
+
+    private bool CredentialBindingIsCurrent(
+        IEnumerable<KeyValuePair<string, object?>> metadata,
+        string? accountId)
+    {
+        if (!HubTokenCredentialBinding.ContainsMetadata(metadata))
+            return true;
+        if (!HubTokenCredentialBinding.TryRead(metadata, out var binding) || binding is null ||
+            string.IsNullOrWhiteSpace(accountId))
+            return false;
+
+        var account = Sync(_accounts.GetByIdAsync(accountId));
+        return account is not null && binding.CredentialEpoch == account.CredentialEpoch &&
+               string.Equals(
+                   binding.CredentialFingerprint,
+                   AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
+                   StringComparison.Ordinal);
     }
 
     private DeviceRegistration? ResolveRegisteredDevice(string? observedDeviceId)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
@@ -9,6 +10,71 @@ namespace Jibo.Cloud.Tests.Infrastructure;
 
 public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task CredentialBoundHubToken_RevalidatesEpochRevocationAndCrossReplicaCache()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        var account = first.GetAccount();
+        var binding = new HubTokenCredentialBinding(
+            AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
+            account.CredentialEpoch,
+            DateTimeOffset.UtcNow,
+            operationAuthenticated: false);
+
+        var token = first.IssueHubToken(
+            "credential-observed-device",
+            useDefaultRobot: false,
+            credentialBinding: binding);
+        var rehydrated = Assert.IsType<CloudSession>(second.FindIssuedToken(token));
+        Assert.True(HubTokenCredentialBinding.TryRead(rehydrated.Metadata, out var observed));
+        Assert.Equal(binding, observed);
+        var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))).ToLowerInvariant();
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>(
+            $"SELECT COUNT(*) FROM CloudAuthTokens WHERE TokenHash='{tokenHash}'"));
+        Assert.Equal(0, await database.ExecuteScalarAsync<long>(
+            $"SELECT COUNT(*) FROM CloudAuthTokens WHERE TokenHash='{token}'"));
+
+        await database.ExecuteAsync(
+            "UPDATE Accounts SET CredentialEpoch=CredentialEpoch+1 WHERE AccountId='usr_openjibo_owner'");
+        Assert.Null(first.FindIssuedToken(token));
+        Assert.Null(second.FindIssuedToken(token));
+
+        var rotatedAccount = first.GetAccount();
+        var accessKeyBound = first.IssueHubToken(
+            "access-key-rotation-device",
+            useDefaultRobot: false,
+            credentialBinding: new HubTokenCredentialBinding(
+                AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(rotatedAccount.AccessKeyId),
+                rotatedAccount.CredentialEpoch,
+                DateTimeOffset.UtcNow,
+                operationAuthenticated: false));
+        Assert.NotNull(second.FindIssuedToken(accessKeyBound));
+        await database.ExecuteAsync(
+            "UPDATE Accounts SET AccessKeyId='rotated-access-key' WHERE AccountId='usr_openjibo_owner'");
+        Assert.Null(first.FindIssuedToken(accessKeyBound));
+        Assert.Null(second.FindIssuedToken(accessKeyBound));
+
+        var malformed = first.IssueHubToken("malformed-binding-device", useDefaultRobot: false);
+        var malformedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(malformed)))
+            .ToLowerInvariant();
+        await database.ExecuteAsync(
+            $"UPDATE CloudAuthTokens SET Metadata='{{\"legacyCredentialBindingVersion\":\"1\"}}'::jsonb " +
+            $"WHERE TokenHash='{malformedHash}'");
+        Assert.Null(first.FindIssuedToken(malformed));
+
+        var unbound = first.IssueHubToken("legacy-unbound-device", useDefaultRobot: false);
+        Assert.NotNull(second.FindIssuedToken(unbound));
+        var unboundHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(unbound))).ToLowerInvariant();
+        await database.ExecuteAsync(
+            $"UPDATE CloudAuthTokens SET RevokedUtc=NOW() WHERE TokenHash='{unboundHash}'");
+        Assert.Null(second.FindIssuedToken(unbound));
+    }
+
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
     public async Task HubToken_PreservesUnlinkedObservedIdentityWithoutCreatingInventory()

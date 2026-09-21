@@ -1005,7 +1005,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
                 item.DeviceId.Equals(deviceId.Trim(), StringComparison.OrdinalIgnoreCase))?.UserId;
     }
 
-    public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true)
+    public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
+        HubTokenCredentialBinding? credentialBinding = null)
     {
         var resolvedDeviceId = !string.IsNullOrWhiteSpace(deviceId)
             ? deviceId.Trim()
@@ -1013,6 +1014,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
                 ? _robot.DeviceId
                 : null;
         var token = $"hub-{_account.AccountId}-{Guid.NewGuid():N}";
+        var metadata = BuildSessionMetadata(_account.AccountId, resolvedDeviceId, ResolveDefaultLoopId());
+        credentialBinding?.WriteTo(metadata);
         RegisterIssuedSession(token, new CloudSession
         {
             Kind = "hub",
@@ -1020,7 +1023,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             Token = token,
             DeviceId = resolvedDeviceId,
             ExpiresUtc = DateTimeOffset.UtcNow.AddDays(365),
-            Metadata = BuildSessionMetadata(_account.AccountId, resolvedDeviceId, ResolveDefaultLoopId())
+            Metadata = metadata
         });
 
         TouchState();
@@ -1259,8 +1262,29 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
                string.Equals(key, "sleepState", StringComparison.OrdinalIgnoreCase);
     }
 
-    public CloudSession? FindIssuedToken(string token) =>
-        string.IsNullOrWhiteSpace(token) ? null : _sessions.FindDurable(token.Trim());
+    public CloudSession? FindIssuedToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+        var issued = _sessions.FindDurable(token.Trim());
+        return issued is not null && CredentialBindingIsCurrent(issued.Metadata, _account)
+            ? issued
+            : null;
+    }
+
+    private static bool CredentialBindingIsCurrent(
+        IEnumerable<KeyValuePair<string, object?>> metadata,
+        AccountProfile account)
+    {
+        if (!HubTokenCredentialBinding.ContainsMetadata(metadata))
+            return true;
+        return HubTokenCredentialBinding.TryRead(metadata, out var binding) &&
+               binding is not null &&
+               binding.CredentialEpoch == account.CredentialEpoch &&
+               string.Equals(
+                   binding.CredentialFingerprint,
+                   AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
+                   StringComparison.Ordinal);
+    }
 
     public CloudSession? FindSessionByToken(string token)
     {
