@@ -163,19 +163,4 @@ public sealed class CloudStateMigrationSchemaTests
         Assert.DoesNotContain("GRANT EXECUTE", migration, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public void HubTokenCredentialEpoch_IsPositiveAndDoesNotPersistCredentialMaterial()
-    {
-        var migration = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Migrations", "PostgreSql",
-            "015_bind_hub_tokens_to_credential_epoch.state.sql"));
-
-        Assert.Contains("CredentialEpoch BIGINT NOT NULL DEFAULT 1", migration,
-            StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("CHECK (CredentialEpoch > 0)", migration,
-            StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("AccessKeyId", migration, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("SecretAccessKey", migration, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Authorization", migration, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Signature", migration, StringComparison.OrdinalIgnoreCase);
-    }
 }

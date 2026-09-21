@@ -658,8 +658,7 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             return false;
 
         var account = Sync(_accounts.GetByIdAsync(accountId));
-        return account is not null && binding.CredentialEpoch == account.CredentialEpoch &&
-               string.Equals(
+        return account is not null && string.Equals(
                    binding.CredentialFingerprint,
                    AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
                    StringComparison.Ordinal);

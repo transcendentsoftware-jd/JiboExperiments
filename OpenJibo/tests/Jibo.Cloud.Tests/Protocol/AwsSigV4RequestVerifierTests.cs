@@ -476,7 +476,6 @@ public sealed class AwsSigV4RequestVerifierTests
         Assert.True(HubTokenCredentialBinding.TryRead(issued.Metadata, out var binding));
         Assert.NotNull(binding);
         Assert.False(binding.OperationAuthenticated);
-        Assert.Equal(store.GetAccount().CredentialEpoch, binding.CredentialEpoch);
     }
 
     [Fact]
@@ -510,7 +509,6 @@ public sealed class AwsSigV4RequestVerifierTests
         Assert.True(HubTokenCredentialBinding.TryRead(issued.Metadata, out var binding));
         Assert.NotNull(binding);
         Assert.True(binding.OperationAuthenticated);
-        Assert.Equal(store.GetAccount().CredentialEpoch, binding.CredentialEpoch);
     }
 
     [Fact]

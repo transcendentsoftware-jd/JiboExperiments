@@ -8,5 +8,4 @@ public sealed class AccountProfile
     public string LastName { get; init; } = "Owner";
     public string AccessKeyId { get; init; } = "openjibo-access-key";
     public string SecretAccessKey { get; init; } = "openjibo-secret-access-key";
-    public long CredentialEpoch { get; init; } = 1;
 }

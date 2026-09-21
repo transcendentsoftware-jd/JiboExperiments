@@ -12,7 +12,7 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
-    public async Task CredentialBoundHubToken_RevalidatesEpochRevocationAndCrossReplicaCache()
+    public async Task CredentialObservedHubToken_RevalidatesAccessKeyRevocationAndCrossReplicaCache()
     {
         await using var database = await CloudStateTestDatabase.CreateAsync();
         await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
@@ -22,7 +22,6 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
         var account = first.GetAccount();
         var binding = new HubTokenCredentialBinding(
             AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
-            account.CredentialEpoch,
             DateTimeOffset.UtcNow,
             operationAuthenticated: false);
 
@@ -39,18 +38,11 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
         Assert.Equal(0, await database.ExecuteScalarAsync<long>(
             $"SELECT COUNT(*) FROM CloudAuthTokens WHERE TokenHash='{token}'"));
 
-        await database.ExecuteAsync(
-            "UPDATE Accounts SET CredentialEpoch=CredentialEpoch+1 WHERE AccountId='usr_openjibo_owner'");
-        Assert.Null(first.FindIssuedToken(token));
-        Assert.Null(second.FindIssuedToken(token));
-
-        var rotatedAccount = first.GetAccount();
         var accessKeyBound = first.IssueHubToken(
             "access-key-rotation-device",
             useDefaultRobot: false,
             credentialBinding: new HubTokenCredentialBinding(
-                AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(rotatedAccount.AccessKeyId),
-                rotatedAccount.CredentialEpoch,
+                AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
                 DateTimeOffset.UtcNow,
                 operationAuthenticated: false));
         Assert.NotNull(second.FindIssuedToken(accessKeyBound));

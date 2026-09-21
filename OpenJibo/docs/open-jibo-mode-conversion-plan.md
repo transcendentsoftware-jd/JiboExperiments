@@ -120,13 +120,14 @@ Current identity hypothesis:
 - issuing a new Open Jibo token during conversion may give us the cleanest trust root, with all robot-presented stock values treated as mapping evidence after the fact
 
 Implemented runtime boundary (`2026-09-21`): a credential-valid `CreateHubToken` request can bind the resulting
-hashed durable Hub token to a one-way access-key fingerprint and positive account credential epoch. PostgreSQL
-revalidates that binding, token expiry, and revocation on every new WebSocket handshake, including on another
+hashed durable Hub token to a one-way access-key fingerprint. PostgreSQL revalidates that observation, token
+expiry, and revocation on every new WebSocket handshake, including on another
 replica. Compatibility-shaped or unsigned requests still receive unbound tokens, so this does not change stock
 robot behavior. The binding proves only continuity with an exportable account credential; it does not prove the
 request body, physical robot identity, ownership, or co-presence and cannot automatically merge or assign a
-robot. The current slice provides the persistence and enforcement seam; an operator or future credential-rotation
-workflow must advance the epoch whenever credential material changes without changing the access-key identifier.
+robot. The current slice provides the persistence and enforcement seam. Secret-only rotation under the same
+access-key identifier must explicitly revoke existing Hub tokens until a future transactionally authoritative
+credential-generation workflow exists.
 
 Research targets:
 

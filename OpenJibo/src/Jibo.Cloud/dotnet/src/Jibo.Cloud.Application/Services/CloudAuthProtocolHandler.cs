@@ -41,9 +41,7 @@ public sealed class CloudAuthProtocolHandler(
         if (operation.Equals("CreateHubToken", StringComparison.OrdinalIgnoreCase))
         {
             var credentialVerification = ObserveLegacyCredential(envelope, CreateHubTokenPolicy);
-            var credentialBinding = HubTokenCredentialBinding.FromVerification(
-                credentialVerification,
-                account.CredentialEpoch);
+            var credentialBinding = HubTokenCredentialBinding.FromVerification(credentialVerification);
             var deviceId = !string.IsNullOrWhiteSpace(envelope.DeviceId)
                 ? envelope.DeviceId!
                 : ReadString(body, "deviceId")

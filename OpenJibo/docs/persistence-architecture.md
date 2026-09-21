@@ -124,11 +124,11 @@ Implemented:
 - A one-time, transactionally locked importer preserves and imports the legacy `personal-memory` snapshot.
 - Personal memory is explicitly capped at four PostgreSQL connections per replica by default. The cloud-state pool defaults to eight, keeping two replicas at 24 pooled connections and leaving headroom under the current 35-connection database limit.
 - durable issued-token records and bounded active dialog sessions now use separate registries; only token records are serialized, active sessions are removed on disconnect, and explicit robot links persist outside session metadata.
-- credential-observed Hub tokens carry only a bounded one-way fingerprint, credential epoch, signed timestamp,
-  and proof-quality flag in their durable metadata. PostgreSQL token lookup bypasses positive process cache on
-  each new handshake so cross-replica revocation and epoch changes fail closed; unbound compatibility tokens
-  retain their existing behavior. Credential rotation must advance the epoch when secret material changes under
-  the same access-key identifier; automating that rotation remains follow-up work.
+- credential-observed Hub tokens carry only a bounded one-way access-key fingerprint, signed timestamp, and
+  proof-quality flag in their durable metadata. PostgreSQL token lookup bypasses positive process cache on each
+  new handshake so cross-replica revocation and access-key identity changes fail closed; unbound compatibility
+  tokens retain their existing behavior. Secret-only rotation under the same access-key identifier must explicitly
+  revoke existing Hub tokens until an atomic credential-generation workflow is implemented.
 - audio buffering is independently bounded at 4 MiB per session and 64 MiB across the process, with buffer release tied to WebSocket teardown.
 - the normalized cloud-state migration now defines target-specific relational tables for all durable state families, excluding live WebSocket/turn state.
 - aggregate WebSocket message/byte/connection metrics cover primary, notification, and Home Assistant send paths without recording payloads or identifiers.

@@ -1279,7 +1279,6 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             return true;
         return HubTokenCredentialBinding.TryRead(metadata, out var binding) &&
                binding is not null &&
-               binding.CredentialEpoch == account.CredentialEpoch &&
                string.Equals(
                    binding.CredentialFingerprint,
                    AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),

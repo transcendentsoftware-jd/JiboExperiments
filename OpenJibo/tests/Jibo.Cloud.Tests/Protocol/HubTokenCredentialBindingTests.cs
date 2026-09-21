@@ -10,7 +10,6 @@ public sealed class HubTokenCredentialBindingTests
     {
         var binding = new HubTokenCredentialBinding(
             "0123456789abcdef",
-            3,
             new DateTimeOffset(2026, 9, 21, 5, 0, 0, TimeSpan.Zero),
             operationAuthenticated: false);
         var metadata = new Dictionary<string, object?>();
@@ -45,7 +44,6 @@ public sealed class HubTokenCredentialBindingTests
         var nonCanonicalBoolean = new Dictionary<string, object?>();
         new HubTokenCredentialBinding(
             "0123456789abcdef",
-            1,
             DateTimeOffset.UtcNow,
             operationAuthenticated: true).WriteTo(nonCanonicalBoolean);
         nonCanonicalBoolean[HubTokenCredentialBinding.OperationAuthenticatedMetadataKey] = "True";

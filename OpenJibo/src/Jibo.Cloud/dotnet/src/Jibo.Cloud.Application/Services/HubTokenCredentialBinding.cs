@@ -13,13 +13,11 @@ public sealed record HubTokenCredentialBinding
 {
     public const string VersionMetadataKey = "legacyCredentialBindingVersion";
     public const string FingerprintMetadataKey = "legacyCredentialFingerprint";
-    public const string EpochMetadataKey = "legacyCredentialEpoch";
     public const string SignedAtMetadataKey = "legacyCredentialSignedAtUtc";
     public const string OperationAuthenticatedMetadataKey = "legacyCredentialOperationAuthenticated";
 
     public HubTokenCredentialBinding(
         string credentialFingerprint,
-        long credentialEpoch,
         DateTimeOffset signedAt,
         bool operationAuthenticated)
     {
@@ -29,29 +27,21 @@ public sealed record HubTokenCredentialBinding
             !string.Equals(credentialFingerprint, credentialFingerprint.ToLowerInvariant(), StringComparison.Ordinal))
             throw new ArgumentException("Credential fingerprint must be 16 lowercase hexadecimal characters.",
                 nameof(credentialFingerprint));
-        if (credentialEpoch < 1)
-            throw new ArgumentOutOfRangeException(nameof(credentialEpoch));
-
         CredentialFingerprint = credentialFingerprint;
-        CredentialEpoch = credentialEpoch;
         SignedAt = signedAt.ToUniversalTime();
         OperationAuthenticated = operationAuthenticated;
     }
 
     public string CredentialFingerprint { get; }
-    public long CredentialEpoch { get; }
     public DateTimeOffset SignedAt { get; }
     public bool OperationAuthenticated { get; }
 
-    public static HubTokenCredentialBinding? FromVerification(
-        AwsSigV4Verification verification,
-        long credentialEpoch) =>
+    public static HubTokenCredentialBinding? FromVerification(AwsSigV4Verification verification) =>
         verification.CredentialAuthenticated &&
         verification.AccessKeyFingerprint is { Length: > 0 } fingerprint &&
         verification.SignedAt is { } signedAt
             ? new HubTokenCredentialBinding(
                 fingerprint,
-                credentialEpoch,
                 signedAt,
                 verification.OperationAuthenticated)
             : null;
@@ -60,7 +50,6 @@ public sealed record HubTokenCredentialBinding
     {
         metadata[VersionMetadataKey] = "1";
         metadata[FingerprintMetadataKey] = CredentialFingerprint;
-        metadata[EpochMetadataKey] = CredentialEpoch.ToString(CultureInfo.InvariantCulture);
         metadata[SignedAtMetadataKey] = SignedAt.ToString("O", CultureInfo.InvariantCulture);
         metadata[OperationAuthenticatedMetadataKey] = OperationAuthenticated ? "true" : "false";
     }
@@ -76,8 +65,6 @@ public sealed record HubTokenCredentialBinding
                 return false;
         if (!values.TryGetValue(VersionMetadataKey, out var version) || version != "1" ||
             !values.TryGetValue(FingerprintMetadataKey, out var fingerprint) ||
-            !values.TryGetValue(EpochMetadataKey, out var epochText) ||
-            !long.TryParse(epochText, NumberStyles.None, CultureInfo.InvariantCulture, out var epoch) ||
             !values.TryGetValue(SignedAtMetadataKey, out var signedAtText) ||
             !DateTimeOffset.TryParseExact(signedAtText, "O", CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal, out var signedAt) ||
@@ -90,7 +77,7 @@ public sealed record HubTokenCredentialBinding
 
         try
         {
-            binding = new HubTokenCredentialBinding(fingerprint ?? string.Empty, epoch, signedAt,
+            binding = new HubTokenCredentialBinding(fingerprint ?? string.Empty, signedAt,
                 operationAuthenticated);
             return true;
         }
@@ -104,7 +91,6 @@ public sealed record HubTokenCredentialBinding
         metadata.Any(pair =>
             pair.Key.Equals(VersionMetadataKey, StringComparison.OrdinalIgnoreCase) ||
             pair.Key.Equals(FingerprintMetadataKey, StringComparison.OrdinalIgnoreCase) ||
-            pair.Key.Equals(EpochMetadataKey, StringComparison.OrdinalIgnoreCase) ||
             pair.Key.Equals(SignedAtMetadataKey, StringComparison.OrdinalIgnoreCase) ||
             pair.Key.Equals(OperationAuthenticatedMetadataKey, StringComparison.OrdinalIgnoreCase));
 

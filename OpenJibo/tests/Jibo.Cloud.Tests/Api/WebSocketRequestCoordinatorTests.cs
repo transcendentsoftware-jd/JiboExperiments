@@ -53,6 +53,34 @@ public sealed class WebSocketRequestCoordinatorTests
     }
 
     [Theory]
+    [InlineData("/listen")]
+    [InlineData("/v1/proactive")]
+    public async Task HandleAsync_AcceptsCredentialObservedHubToken(string path)
+    {
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
+        var context = CreateContext(socket);
+        context.Request.Host = new HostString("neo-hub.jibo.com");
+        context.Request.Path = path;
+        var coordinator = CreateCoordinator(out var telemetrySink, out var store);
+        var account = store.GetAccount();
+        var token = store.IssueHubToken(
+            "credential-observed-robot",
+            useDefaultRobot: false,
+            credentialBinding: new HubTokenCredentialBinding(
+                AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
+                DateTimeOffset.UtcNow,
+                operationAuthenticated: false));
+        context.Request.Headers.Authorization = $"Bearer {token}";
+
+        await coordinator.HandleAsync(context);
+
+        Assert.True(socket.Accepted);
+        Assert.Equal(WebSocketState.Closed, socket.State);
+        Assert.Contains("opened", telemetrySink.Events);
+        Assert.NotNull(store.FindIssuedToken(token));
+    }
+
+    [Theory]
     [InlineData("neo-hub.jibo.com", true)]
     [InlineData("192.168.7.142", false)]
     public async Task HandleAsync_RejectsIssuedTokenWithWrongSocketKind(string host, bool useRobotToken)
