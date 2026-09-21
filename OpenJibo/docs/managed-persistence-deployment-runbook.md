@@ -135,6 +135,7 @@ Run `openjibo-cloud-managed-deploy` with:
 | `production_resource_group`       | existing production resource group               |
 | `bind_staging_hostnames`          | `false` until DNS exists                         |
 | `production_backup_confirmed`     | `false`                                          |
+| `enable_sigv4_replay_observation` | `false` for the first deployment; enable only for the reviewed shadow trial |
 | `staging_run_id`                  | blank                                            |
 | `image_tag`                       | blank                                            |
 | `location`                        | blank unless Container Apps needs another region |
@@ -159,9 +160,16 @@ The same WebSocket release smoke is available from the admin harness and runs ag
 
 Fleet peer synchronization is disabled by default and the managed workflow forbids enabling it in staging, even
 when staging was cloned from production and has the same trusted-server rows or shared-key secret. Production
-must deliberately set `enable_fleet_peer_sync` and provide exact comma-separated
-`fleet_peer_allowed_hosts`; the application applies that allowlist to both outbound and inbound presence reports.
+must deliberately provide exact comma-separated `fleet_peer_allowed_hosts`; a nonempty production value enables
+peer sync, and the application applies that allowlist to both outbound and inbound presence reports.
 Do not enable it until the remote peer has the matching key and reciprocal trust configuration.
+
+Legacy SigV4 replay observation is also disabled by default and is deliberately staging-only. A reviewed shadow
+trial may set `enable_sigv4_replay_observation=true`; the workflow then requires migration/role provisioning,
+passes the explicit enable flag to the deployment script, and verifies that the resulting Container App uses the
+dedicated observer connection and HMAC secret references. The observer remains asynchronous and non-authorizing.
+Production rejects the enable input until the staging trial has bounded persistence-failure, queue-drop,
+cross-replica, and key-rotation evidence.
 
 Immediate staging containment was applied on `2026-08-26`: the
 `OpenJibo__FleetNetwork__PeerSyncSharedKey` environment reference was removed from `rg-openjibo-staging`, creating
@@ -199,6 +207,7 @@ Run the workflow with:
 | `refresh_staging_from_production` | `false`                                        |
 | `staging_run_id`                  | successful run ID for this exact commit        |
 | `production_backup_confirmed`     | `true` after checking PostgreSQL backup health |
+| `enable_sigv4_replay_observation` | `false`                                        |
 | `image_tag`                       | blank                                          |
 | Production hostnames              | retain current defaults                        |
 

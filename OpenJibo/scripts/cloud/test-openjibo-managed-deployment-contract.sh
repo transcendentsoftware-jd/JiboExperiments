@@ -356,12 +356,27 @@ for marker in "containerapp env show" "firewall-rule create" "firewall-rule upda
   fi
 done
 
-for marker in "deployment_target" "openjibo-staging-gate" "clone-openjibo-managed-databases.sh" "keyVaultUrl" "keyVaultUri" "urlsplit" "openjibo-managed-" "containerAppName" "properties.outputs" "user-encryption-passphrase" "user-encryption-salt" "production_backup_confirmed" "enable_fleet_peer_sync" "fleet_peer_allowed_hosts" "Fleet peer sync cannot be enabled by the staging workflow" "backup.backupRetentionDays" "Verify production hostname DNS prerequisites" "customDomainVerificationId" "dig +short CNAME" "dig +short TXT" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "api.jibo.pro" "staging-api.jibo.pro" "properties.active" '[[ "$revision_active" == "true" ]]' '[[ "$previous_revision_active" != "true" ]]' "already active" "revision deactivate" "revision activate" "revision restart" "latestReadyRevisionName" "properties.runningState" '[[ "$latest_ready_revision" == "$configured_revision"' "PREVIOUS_REVISION" "Restore previous image after failure" "Re-disable release smoke authorization after rollback" "Run deployed WebSocket release smoke" "invoke-release-smoke.mjs" "cleanup-release-smoke-authorization.sh" "TEST_ROBOT_ID: open-jibo-smoke-staging" "openssl rand -hex 32" "release-smoke-authorization" "OpenJibo__ReleaseSmoke__Enabled=true" "OPENJIBO_RELEASE_SMOKE_ALLOWED_HOST" "cancel-in-progress: false" "webSocketReleaseSmoke"; do
+for marker in "deployment_target" "openjibo-staging-gate" "clone-openjibo-managed-databases.sh" "keyVaultUrl" "keyVaultUri" "urlsplit" "openjibo-managed-" "containerAppName" "properties.outputs" "user-encryption-passphrase" "user-encryption-salt" "production_backup_confirmed" "fleet_peer_allowed_hosts" "Fleet peer sync cannot be enabled by the staging workflow" "--enable-peer-sync --peer-sync-allowed-hosts" "enable_sigv4_replay_observation" "SigV4 replay observation is staging-only" "--enable-sigv4-replay-observation" "--disable-sigv4-replay-observation" "Verify staging SigV4 replay observer configuration" "OpenJibo__Security__SigV4ReplayObservation__Enabled" "sigv4-replay-observer-connection-string" "sigv4-replay-hmac-key" "sigV4ReplayObservation" "enabled-shadow" "PREVIOUS_REPLAY_OBSERVATION_ENABLED" "backup.backupRetentionDays" "Verify production hostname DNS prerequisites" "customDomainVerificationId" "dig +short CNAME" "dig +short TXT" "open-jibo.jibo.pro" "open-jibo-socket.jibo.pro" "api.jibo.pro" "staging-api.jibo.pro" "properties.active" '[[ "$revision_active" == "true" ]]' '[[ "$previous_revision_active" != "true" ]]' "already active" "revision deactivate" "revision activate" "revision restart" "latestReadyRevisionName" "properties.runningState" '[[ "$latest_ready_revision" == "$configured_revision"' "PREVIOUS_REVISION" "Restore previous image after failure" "Re-disable release smoke authorization after rollback" "Run deployed WebSocket release smoke" "invoke-release-smoke.mjs" "cleanup-release-smoke-authorization.sh" "TEST_ROBOT_ID: open-jibo-smoke-staging" "openssl rand -hex 32" "release-smoke-authorization" "OpenJibo__ReleaseSmoke__Enabled=true" "OPENJIBO_RELEASE_SMOKE_ALLOWED_HOST" "cancel-in-progress: false" "webSocketReleaseSmoke"; do
   if [[ "$workflow_text" != *"$marker"* ]]; then
     echo "Workflow is missing staging or promotion safeguard: $marker" >&2
     exit 1
   fi
 done
+production_reject_line="$(grep -n -- "SigV4 replay observation is staging-only" <<<"$workflow_text" | head -1 | cut -d: -f1)"
+deploy_invocation_line="$(grep -nF -- 'bash ./scripts/cloud/deploy-openjibo-managed.sh "${deploy_args[@]}"' <<<"$workflow_text" | head -1 | cut -d: -f1)"
+verify_replay_line="$(grep -n -- "- name: Verify staging SigV4 replay observer configuration" <<<"$workflow_text" | head -1 | cut -d: -f1)"
+promotion_gate_line="$(grep -n -- "- name: Create staging promotion gate" <<<"$workflow_text" | head -1 | cut -d: -f1)"
+if [[ -z "$production_reject_line" || -z "$deploy_invocation_line" || -z "$verify_replay_line" || -z "$promotion_gate_line" ||
+      ! ( "$production_reject_line" -lt "$deploy_invocation_line" && "$deploy_invocation_line" -lt "$verify_replay_line" && "$verify_replay_line" -lt "$promotion_gate_line" ) ]]; then
+  echo "Replay observation must reject production before deployment and verify staging before promotion evidence is created." >&2
+  exit 1
+fi
+rollback_line="$(grep -n -- "- name: Restore previous image after failure" <<<"$workflow_text" | head -1 | cut -d: -f1)"
+rollback_replay_line="$(grep -nF -- '--set-env-vars "OpenJibo__Security__SigV4ReplayObservation__Enabled=${PREVIOUS_REPLAY_OBSERVATION_ENABLED:-false}"' <<<"$workflow_text" | head -1 | cut -d: -f1)"
+if [[ -z "$rollback_line" || -z "$rollback_replay_line" || ! "$rollback_line" -lt "$rollback_replay_line" ]]; then
+  echo "Rollback must restore the previous replay-observation enabled state." >&2
+  exit 1
+fi
 configure_smoke_line="$(grep -n -- "OpenJibo__ReleaseSmoke__Enabled=true" <<<"$workflow_text" | head -1 | cut -d: -f1)"
 for marker in "Capture staging scale before two-replica proof" "--min-replicas 2" '"$revision_running_state" == "RunningAtMaxScale"' "RELEASE_SMOKE_MIN_REPLICAS" "RELEASE_SMOKE_EXPECTED_REVISION" "minimumReplicasObserved" "crossReplicaCommittedRead" "Restore staging scale after two-replica proof"; do
   if [[ "$workflow_text" != *"$marker"* ]]; then

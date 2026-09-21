@@ -85,6 +85,11 @@ on:
         required: false
         type: boolean
         default: true
+      enable_sigv4_replay_observation:
+        description: Enable observe-only legacy SigV4 replay telemetry in staging
+        required: true
+        type: boolean
+        default: false
       azure_speech_region:
         description: Optional Azure Speech region override
         required: false
@@ -116,13 +121,8 @@ on:
         description: Delay between staging turn rounds in milliseconds
         required: true
         default: "0"
-      enable_fleet_peer_sync:
-        description: Enable exact-host fleet peer sync in production only
-        required: true
-        type: boolean
-        default: false
       fleet_peer_allowed_hosts:
-        description: Exact comma-separated peer hosts required when fleet peer sync is enabled
+        description: Exact comma-separated peer hosts; a nonempty production value enables fleet peer sync
         required: false
         default: ""
 
@@ -190,14 +190,14 @@ jobs:
           fi
 
           if [[ "${{ inputs.deployment_target }}" != "production" &&
-                "${{ inputs.enable_fleet_peer_sync }}" == "true" ]]; then
+                -n "${{ inputs.fleet_peer_allowed_hosts }}" ]]; then
             echo "Fleet peer sync cannot be enabled by the staging workflow." >&2
             exit 1
           fi
 
-          if [[ "${{ inputs.enable_fleet_peer_sync }}" == "true" &&
-                -z "${{ inputs.fleet_peer_allowed_hosts }}" ]]; then
-            echo "fleet_peer_allowed_hosts is required when fleet peer sync is enabled." >&2
+          if [[ "${{ inputs.deployment_target }}" == "production" &&
+                "${{ inputs.enable_sigv4_replay_observation }}" == "true" ]]; then
+            echo "SigV4 replay observation is staging-only until shadow evidence is approved." >&2
             exit 1
           fi
 
@@ -262,6 +262,11 @@ jobs:
               raise SystemExit("Staging gate does not prove two serving replicas.")
           if gate.get("crossReplicaCommittedRead") != "passed":
               raise SystemExit("Staging gate does not prove a cross-replica committed read.")
+          replay_observation = gate.get("sigV4ReplayObservation")
+          if replay_observation not in {"disabled", "enabled-shadow"}:
+              raise SystemExit(
+                  "Staging gate does not record a recognized SigV4 replay-observation state."
+              )
           PY
 
       - name: Setup .NET
@@ -520,6 +525,11 @@ jobs:
           image="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.containers[0].image'             --output tsv)"
           min_replicas="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.scale.minReplicas'             --output tsv)"
           max_replicas="$(az containerapp show             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$app_name"             --query 'properties.template.scale.maxReplicas'             --output tsv)"
+          replay_observation_enabled="$(az containerapp show \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "$app_name" \
+            --query "properties.template.containers[0].env[?name=='OpenJibo__Security__SigV4ReplayObservation__Enabled'].value | [0]" \
+            --output tsv)"
 
           echo "exists=true" >> "$GITHUB_OUTPUT"
           echo "app_name=$app_name" >> "$GITHUB_OUTPUT"
@@ -527,6 +537,7 @@ jobs:
           echo "image=$image" >> "$GITHUB_OUTPUT"
           echo "min_replicas=${min_replicas:-1}" >> "$GITHUB_OUTPUT"
           echo "max_replicas=${max_replicas:-2}" >> "$GITHUB_OUTPUT"
+          echo "replay_observation_enabled=${replay_observation_enabled:-false}" >> "$GITHUB_OUTPUT"
 
           if [[ "$revision_active" == "true" ]]; then
             az containerapp revision deactivate               --resource-group "$OPENJIBO_RESOURCE_GROUP"               --name "$app_name"               --revision "$revision_name"               --output none
@@ -669,13 +680,53 @@ jobs:
           fi
 
 
-          if [[ "${{ inputs.enable_fleet_peer_sync }}" == "true" ]]; then
+          if [[ -n "${{ inputs.fleet_peer_allowed_hosts }}" ]]; then
             deploy_args+=(--enable-peer-sync --peer-sync-allowed-hosts "${{ inputs.fleet_peer_allowed_hosts }}")
           else
             deploy_args+=(--disable-peer-sync)
           fi
 
+          if [[ "${{ inputs.enable_sigv4_replay_observation }}" == "true" ]]; then
+            deploy_args+=(--enable-sigv4-replay-observation)
+          else
+            deploy_args+=(--disable-sigv4-replay-observation)
+          fi
+
           bash ./scripts/cloud/deploy-openjibo-managed.sh "${deploy_args[@]}"
+
+      - name: Verify staging SigV4 replay observer configuration
+        if: inputs.deployment_target == 'staging'
+        shell: bash
+        env:
+          EXPECTED_REPLAY_OBSERVATION: ${{ inputs.enable_sigv4_replay_observation }}
+        run: |
+          app_name="$(az containerapp list --resource-group "$OPENJIBO_RESOURCE_GROUP" --query "[0].name" --output tsv)"
+          env_json="$(az containerapp show \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "$app_name" \
+            --query 'properties.template.containers[0].env' \
+            --output json)"
+          python3 - "$env_json" "$EXPECTED_REPLAY_OBSERVATION" <<'PY'
+          import json
+          import sys
+
+          entries = {entry.get("name"): entry for entry in json.loads(sys.argv[1])}
+          expected = sys.argv[2].lower()
+          enabled = entries.get("OpenJibo__Security__SigV4ReplayObservation__Enabled", {})
+          if str(enabled.get("value", "")).lower() != expected:
+              raise SystemExit("Staging replay-observer enabled state does not match the workflow input.")
+
+          if expected == "true":
+              required_refs = {
+                  "OpenJibo__Security__SigV4ReplayObservation__ConnectionString":
+                      "sigv4-replay-observer-connection-string",
+                  "OpenJibo__Security__SigV4ReplayHmacKey": "sigv4-replay-hmac-key",
+              }
+              for name, secret_ref in required_refs.items():
+                  entry = entries.get(name, {})
+                  if entry.get("secretRef") != secret_ref or entry.get("value"):
+                      raise SystemExit(f"Staging replay-observer secret reference is invalid for {name}.")
+          PY
 
       - name: Record production database binding bootstrap
         if: inputs.deployment_target == 'production'
@@ -861,9 +912,17 @@ jobs:
           PREVIOUS_IMAGE: ${{ steps.previous.outputs.image }}
           PREVIOUS_MIN_REPLICAS: ${{ steps.previous.outputs.min_replicas }}
           PREVIOUS_MAX_REPLICAS: ${{ steps.previous.outputs.max_replicas }}
+          PREVIOUS_REPLAY_OBSERVATION_ENABLED: ${{ steps.previous.outputs.replay_observation_enabled }}
         run: |
-          echo "Deployment failed; restoring the previous image."
-          az containerapp update             --resource-group "$OPENJIBO_RESOURCE_GROUP"             --name "$PREVIOUS_APP"             --image "$PREVIOUS_IMAGE"             --min-replicas "$PREVIOUS_MIN_REPLICAS"             --max-replicas "$PREVIOUS_MAX_REPLICAS"             --output none
+          echo "Deployment failed; restoring the previous image and replay-observer state."
+          az containerapp update \
+            --resource-group "$OPENJIBO_RESOURCE_GROUP" \
+            --name "$PREVIOUS_APP" \
+            --image "$PREVIOUS_IMAGE" \
+            --min-replicas "$PREVIOUS_MIN_REPLICAS" \
+            --max-replicas "$PREVIOUS_MAX_REPLICAS" \
+            --set-env-vars "OpenJibo__Security__SigV4ReplayObservation__Enabled=${PREVIOUS_REPLAY_OBSERVATION_ENABLED:-false}" \
+            --output none
           if [[ -n "$PREVIOUS_REVISION" ]]; then
             previous_revision_active="$(az containerapp revision show               --resource-group "$OPENJIBO_RESOURCE_GROUP"               --name "$PREVIOUS_APP"               --revision "$PREVIOUS_REVISION"               --query properties.active               --output tsv)"
             if [[ "$previous_revision_active" != "true" ]]; then
@@ -901,6 +960,7 @@ jobs:
               "replicaEvidence": "passed",
               "minimumReplicasObserved": 2,
               "crossReplicaCommittedRead": "passed",
+              "sigV4ReplayObservation": "${{ inputs.enable_sigv4_replay_observation == true && 'enabled-shadow' || 'disabled' }}",
           }
           with open(sys.argv[1], "w", encoding="utf-8") as gate_file:
               json.dump(gate, gate_file, indent=2)
