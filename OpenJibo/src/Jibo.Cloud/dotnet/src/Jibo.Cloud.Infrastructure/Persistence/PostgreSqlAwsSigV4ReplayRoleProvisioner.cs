@@ -155,19 +155,29 @@ public static class PostgreSqlAwsSigV4ReplayRoleProvisioner
                         ) THEN
                             RAISE EXCEPTION 'SigV4 replay observer role membership is invalid';
                         END IF;
+                        -- PostgreSQL 16 grants a non-superuser creator ADMIN OPTION on
+                        -- roles it creates. Azure PostgreSQL uses that path for its
+                        -- deployment administrator, so CURRENT_USER is an expected
+                        -- administrative member; no other runtime member is permitted.
                         IF EXISTS (
                             SELECT 1
                             FROM pg_catalog.pg_auth_members membership
                             JOIN pg_catalog.pg_roles member ON member.oid = membership.member
                             WHERE member.rolname IN ('{{OwnerRole}}', '{{CapabilityRole}}')
-                        ) OR EXISTS (
+                        ) THEN
+                            RAISE EXCEPTION 'SigV4 replay supporting roles must not inherit other roles';
+                        END IF;
+                        IF EXISTS (
                             SELECT 1
                             FROM pg_catalog.pg_auth_members membership
                             JOIN pg_catalog.pg_roles parent ON parent.oid = membership.roleid
                             JOIN pg_catalog.pg_roles member ON member.oid = membership.member
                             WHERE parent.rolname = '{{CapabilityRole}}'
-                              AND member.rolname <> '{{LoginRole}}'
-                        ) OR EXISTS (
+                              AND member.rolname NOT IN ('{{LoginRole}}', CURRENT_USER)
+                        ) THEN
+                            RAISE EXCEPTION 'SigV4 replay capability role has an unexpected member';
+                        END IF;
+                        IF EXISTS (
                             SELECT 1
                             FROM pg_catalog.pg_auth_members membership
                             JOIN pg_catalog.pg_roles parent ON parent.oid = membership.roleid
@@ -175,7 +185,7 @@ public static class PostgreSqlAwsSigV4ReplayRoleProvisioner
                             WHERE parent.rolname = '{{OwnerRole}}'
                               AND member.rolname <> CURRENT_USER
                         ) THEN
-                            RAISE EXCEPTION 'SigV4 replay supporting role membership is invalid';
+                            RAISE EXCEPTION 'SigV4 replay owner role has an unexpected member';
                         END IF;
                         IF NOT pg_catalog.has_function_privilege(
                             '{{LoginRole}}',
