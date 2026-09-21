@@ -62,7 +62,11 @@ public static class PostgreSqlAwsSigV4ReplayRoleProvisioner
                     ALTER ROLE {{LoginRole}} LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS CONNECTION LIMIT 2 PASSWORD {{quotedPassword}};
 
                     GRANT {{OwnerRole}} TO CURRENT_USER WITH INHERIT FALSE, SET TRUE, ADMIN FALSE;
-                    GRANT USAGE ON SCHEMA public TO {{OwnerRole}};
+                    -- PostgreSQL requires a function's new owner to hold CREATE on the
+                    -- containing schema. Azure revokes PUBLIC CREATE on public, unlike
+                    -- many local test installations, so grant it only for the ownership
+                    -- transfer and revoke it immediately afterward.
+                    GRANT USAGE, CREATE ON SCHEMA public TO {{OwnerRole}};
                     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.AwsSigV4ReplayObservations TO {{OwnerRole}};
                     REVOKE ALL ON TABLE public.AwsSigV4ReplayObservations FROM PUBLIC, {{CapabilityRole}}, {{LoginRole}};
                     REVOKE {{OwnerRole}} FROM {{LoginRole}};
@@ -81,6 +85,7 @@ public static class PostgreSqlAwsSigV4ReplayRoleProvisioner
                         END IF;
                     END
                     $ownership$;
+                    REVOKE CREATE ON SCHEMA public FROM {{OwnerRole}};
 
                     SET LOCAL ROLE {{OwnerRole}};
                     DO $acl$
@@ -182,6 +187,13 @@ public static class PostgreSqlAwsSigV4ReplayRoleProvisioner
                             'SELECT,INSERT,UPDATE,DELETE'
                         ) THEN
                             RAISE EXCEPTION 'SigV4 replay observer privileges are invalid';
+                        END IF;
+                        IF pg_catalog.has_schema_privilege(
+                            '{{OwnerRole}}',
+                            'public',
+                            'CREATE'
+                        ) THEN
+                            RAISE EXCEPTION 'SigV4 replay owner retained schema CREATE privilege';
                         END IF;
                     END
                     $verify$;

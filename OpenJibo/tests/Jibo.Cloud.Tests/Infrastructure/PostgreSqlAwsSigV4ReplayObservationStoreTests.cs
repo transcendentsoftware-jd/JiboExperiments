@@ -89,6 +89,8 @@ public sealed class PostgreSqlAwsSigV4ReplayObservationStoreTests
             observerConnection, "CREATE TABLE public.SigV4ReplayPrivilegeEscape(Id INTEGER)"));
         await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsObserverAsync(
             observerConnection, $"SET ROLE {PostgreSqlAwsSigV4ReplayRoleProvisioner.OwnerRole}"));
+        Assert.False(await database.ExecuteScalarAsync<bool>(
+            $"SELECT has_schema_privilege('{PostgreSqlAwsSigV4ReplayRoleProvisioner.OwnerRole}', 'public', 'CREATE')"));
     }
 
     [Fact]
