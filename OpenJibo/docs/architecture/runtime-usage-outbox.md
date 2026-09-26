@@ -1,6 +1,6 @@
 # Runtime Usage Outbox Boundary
 
-Status date: `2026-09-14`
+Status date: `2026-09-26`
 
 This boundary provides dormant, source-local PostgreSQL storage for privacy-safe runtime usage components. It
 does not collect usage yet, does not contact a managed-service endpoint, and is not billing evidence.
@@ -8,7 +8,7 @@ does not collect usage yet, does not contact a managed-service endpoint, and is 
 ```mermaid
 flowchart LR
     Runtime["HTTP/WebSocket/turn seams<br/><b>NOT WIRED</b>"]
-    Writer["Typed runtime event writer<br/><b>REMAINING</b>"]
+    Writer["Typed runtime event writer<br/><b>DORMANT / NOT REGISTERED</b>"]
     Record["RecordRuntimeUsageEvent<br/>identity resolution + exact replay"]
     Binding["HMAC subject binding<br/>managed robot UUID"]
     Accumulator["Daily typed accumulator<br/>monotonic + incomplete sticky"]
@@ -39,6 +39,23 @@ counts/bytes, and input-audio bytes. There is no arbitrary JSON/blob payload and
 serial, credential, customer, transcript, prompt, response, audio content, header, or provider payload.
 Source identity is a 32-byte HMAC mapped administratively to the managed robot UUID; historical rows freeze the
 UUID and bindings can only move from active to revoked.
+
+`RuntimeUsageEvent` and `IRuntimeUsageEventWriter` define the typed application
+boundary. `PostgreSqlRuntimeUsageEventWriter` calls the existing state function
+with explicit parameter types and a validated, schema-qualified function name.
+It is not registered in dependency injection and does not hook robot traffic,
+derive identity HMACs, schedule snapshots, or retry automatically. The caller must
+retain the same event identity and values on retry. Storage and cancellation
+failures propagate to the caller; this primitive is not the serving-side outage
+policy. The database remains authoritative for binding resolution and its
+35-day historical / five-minute future timestamp acceptance window.
+The event constructor truncates sub-microsecond ticks once to PostgreSQL timestamp
+precision; retries use that normalized UTC value. Differences below one
+microsecond intentionally represent the same event timestamp.
+
+This adapter currently targets the invoker-rights function for controlled tests.
+It must not be enabled against live traffic using owner credentials. A narrow
+writer wrapper, durable outage handling, and activation tests remain required.
 
 `RecordRuntimeUsageEvent` resolves the binding for the event timestamp, rejects empty/negative deltas, records
 the typed event once, detects conflicting reuse of an event UUID, and advances the accumulator in one database
@@ -96,6 +113,33 @@ with invoker rights and are currently usable only by the database owner. Before 
 
 Application Insights and diagnostic capture remain operational/debugging systems. They are aggregate or
 best-effort and must not be parsed into this ledger.
+
+### Ordered activation work
+
+The September 24 controlled staging fixture passed source recording, scheduling,
+destination intake, acknowledgment, and two nonempty restricted-reader comparisons.
+Those synthetic snapshots were roughly four seconds apart, not a live-traffic soak.
+They do not close the following activation gates:
+
+1. A typed writer must preserve the caller's event UUID and exact event values
+   across retries. Validation must match the SQL bounds; database failure must not
+   be reported as successful recording.
+2. A separately reviewed, least-privilege writer wrapper and bounded connection
+   pool must replace owner credentials before live traffic is connected.
+3. Durable pending-event and outage/gap evidence must survive process restart.
+   Serving must remain available during metering failure without silently treating
+   affected UTC days as complete. An in-memory queue alone does not meet this gate.
+4. Start with finalized speech turns, not every transport seam at once. Define
+   success, failure, cancellation, no-input, and suppressed duplicate finalization
+   explicitly; the operational `finalizeOutcome` metric is not itself that contract.
+   Snapshot audio byte counts before buffers reset. Do not derive a trusted binding
+   from an unverified display name or session identifier.
+5. Exercise duplicate finalization, crash/retry, binding revocation, midnight UTC,
+   and database outage/recovery before explicitly enabling capture in staging.
+6. Enable bounded snapshot scheduling and collection separately, then retain
+   organic nonempty reconciliation over a representative observation interval.
+
+No step enables charging, changes production, or certifies the proposed fleet size.
 
 ## Source delivery deployment artifact
 
