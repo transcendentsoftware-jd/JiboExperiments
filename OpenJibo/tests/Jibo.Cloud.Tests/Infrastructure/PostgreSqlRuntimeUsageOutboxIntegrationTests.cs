@@ -1,10 +1,89 @@
 using System.Diagnostics;
 using Npgsql;
+using Jibo.Cloud.Application.Abstractions;
+using Jibo.Cloud.Infrastructure.Persistence;
 
 namespace Jibo.Cloud.Tests.Infrastructure;
 
 public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
 {
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task Writer_RecordsReplaysAndRejectsConflictingEventId()
+    {
+        await using var database = await RuntimeUsageTestDatabase.CreateAsync();
+        await database.ExecuteAsync("""
+            INSERT INTO RuntimeUsageRobotBindings
+                (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
+            VALUES (decode(repeat('ab', 32), 'hex'), 1,
+                    'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', NOW() - INTERVAL '1 day',
+                    'binding-admin', 'writer-test')
+            """);
+        await using var dataSource = NpgsqlDataSource.Create(database.ConnectionString);
+        var writer = new PostgreSqlRuntimeUsageEventWriter(dataSource, database.SchemaName);
+        var subject = Enumerable.Repeat((byte)0xab, 32).ToArray();
+        var eventId = Guid.NewGuid();
+        var occurred = DateTimeOffset.UtcNow.AddSeconds(-5);
+        var usageEvent = new RuntimeUsageEvent(subject, eventId, occurred, "staging",
+            1, 0, 1, 120, 240, 2, 3, 100, 200, 300);
+
+        var first = await writer.WriteAsync(usageEvent);
+        var replay = await writer.WriteAsync(usageEvent);
+        Assert.Equal(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), first.ManagedRobotId);
+        Assert.Equal(DateOnly.FromDateTime(occurred.UtcDateTime), first.UsageDate);
+        Assert.Equal(1, first.AccumulatorRevision);
+        Assert.False(first.WasReplay);
+        Assert.True(replay.WasReplay);
+        Assert.Equal(1, replay.AccumulatorRevision);
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM RuntimeUsageAppliedEvents"));
+        Assert.Equal("1,0,1,120,240,2,3,100,200,300",
+            await database.ExecuteScalarAsync<string>("""
+                SELECT concat_ws(',', SuccessfulTurns, FailedTurns, HttpRequests,
+                    HttpRequestBytes, HttpResponseBytes, WebSocketInboundMessages,
+                    WebSocketOutboundMessages, WebSocketInboundBytes,
+                    WebSocketOutboundBytes, AudioInputBytes)
+                FROM RuntimeUsageDailyAccumulators
+                """));
+
+        var changed = new RuntimeUsageEvent(subject, eventId, occurred, "staging",
+            1, 0, 1, 121, 240, 2, 3, 100, 200, 300);
+        var conflict = await Assert.ThrowsAsync<PostgresException>(() => writer.WriteAsync(changed));
+        Assert.Equal(PostgresErrorCodes.InvalidParameterValue, conflict.SqlState);
+        var changedTime = new RuntimeUsageEvent(subject, eventId, occurred.AddTicks(10), "staging",
+            1, 0, 1, 120, 240, 2, 3, 100, 200, 300);
+        var timeConflict = await Assert.ThrowsAsync<PostgresException>(() => writer.WriteAsync(changedTime));
+        Assert.Equal(PostgresErrorCodes.InvalidParameterValue, timeConflict.SqlState);
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM RuntimeUsageAppliedEvents"));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task Writer_RecordsIncompleteMarkerAndPropagatesMissingBinding()
+    {
+        await using var database = await RuntimeUsageTestDatabase.CreateAsync();
+        await using var dataSource = NpgsqlDataSource.Create(database.ConnectionString);
+        var writer = new PostgreSqlRuntimeUsageEventWriter(dataSource, database.SchemaName);
+        var subject = Enumerable.Repeat((byte)0xcd, 32).ToArray();
+        var occurred = DateTimeOffset.UtcNow.AddSeconds(-5);
+        var marker = new RuntimeUsageEvent(subject, Guid.NewGuid(), occurred, "staging",
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "source-write-failed");
+        var missing = await Assert.ThrowsAsync<PostgresException>(() => writer.WriteAsync(marker));
+        Assert.Equal(PostgresErrorCodes.InvalidParameterValue, missing.SqlState);
+        Assert.Equal(0, await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM RuntimeUsageAppliedEvents"));
+
+        await database.ExecuteAsync("""
+            INSERT INTO RuntimeUsageRobotBindings
+                (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
+            VALUES (decode(repeat('cd', 32), 'hex'), 1,
+                    'cccccccc-cccc-cccc-cccc-cccccccccccc', NOW() - INTERVAL '1 day',
+                    'binding-admin', 'writer-test')
+            """);
+        var result = await writer.WriteAsync(marker);
+        Assert.False(result.WasReplay);
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM RuntimeUsageDailyAccumulators WHERE IsIncomplete AND IncompleteReasonCode = 'source-write-failed'"));
+    }
+
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
     public async Task Migration_IsRepeatableAndEnforcesPrivacyAndImmutabilityBoundaries()
@@ -758,7 +837,8 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             }.ConnectionString;
         }
 
-        private string ConnectionString { get; }
+        internal string ConnectionString { get; }
+        internal string SchemaName => _schemaName;
 
         internal static async Task<RuntimeUsageTestDatabase> CreateAsync()
         {
