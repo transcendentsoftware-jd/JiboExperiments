@@ -113,8 +113,10 @@ passed migrations, authenticated sockets and synthetic backup/restore. It also
 confirmed that the managed candidate lacks local Whisper. A separate
 [local speech image acceptance run](speech-build-preflight-20260928.md) now
 covers acoustic input and cloud-response instructions, including a two-client
-overlap smoke. Physical-robot playback, native Linux-host coverage and official
-release gates remain open.
+overlap smoke. [Native Ubuntu acceptance](native-linux-acceptance-20260928.md)
+now covers build, startup, restart persistence and separate-stack restore with
+authenticated socket reconnection. Native acoustic speech, physical-robot
+playback and official release gates remain open.
 
 - Approve a registry, signing ownership and official image/build provenance.
 - Verify the exact image's CPU architecture and speech/model variant.
