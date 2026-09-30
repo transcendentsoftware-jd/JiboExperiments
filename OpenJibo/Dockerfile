@@ -37,16 +37,22 @@ ARG WHISPER_CPP_REF
 ARG WHISPER_MODEL
 # Keep the default safe for memory-limited builders; override only with sufficient RAM.
 ARG WHISPER_BUILD_JOBS=2
+ARG WHISPER_CPU_PROFILE=portable
 # Conservative x86 baseline avoids AVX-era requirements on older CPUs, at a speed cost.
 RUN case "${WHISPER_BUILD_JOBS}" in ''|*[!0-9]*) echo 'WHISPER_BUILD_JOBS must be an integer from 1 to 32' >&2; exit 1;; esac \
     && if ! [ "${WHISPER_BUILD_JOBS}" -ge 1 ] || ! [ "${WHISPER_BUILD_JOBS}" -le 32 ]; then echo 'WHISPER_BUILD_JOBS must be an integer from 1 to 32' >&2; exit 1; fi \
+    && case "${WHISPER_CPU_PROFILE}" in \
+        portable) whisper_simd=OFF ;; \
+        avx2) test "$(uname -m)" = x86_64 || { echo 'avx2 profile requires an x86_64 build target' >&2; exit 1; }; whisper_simd=ON ;; \
+        *) echo 'WHISPER_CPU_PROFILE must be portable or avx2' >&2; exit 1 ;; \
+       esac \
     && apt-get update \
     && apt-get install -y --no-install-recommends build-essential cmake git curl \
     && rm -rf /var/lib/apt/lists/* \
     && git clone --branch "${WHISPER_CPP_REF}" --depth 1 https://github.com/ggml-org/whisper.cpp.git /usr/bin/whisper.cpp \
     && cmake -S /usr/bin/whisper.cpp -B /usr/bin/whisper.cpp/build -DCMAKE_BUILD_TYPE=Release \
-        -DGGML_NATIVE=OFF -DGGML_SSE42=OFF -DGGML_AVX=OFF -DGGML_AVX2=OFF \
-        -DGGML_FMA=OFF -DGGML_F16C=OFF -DGGML_BMI2=OFF \
+        -DGGML_NATIVE=OFF -DGGML_SSE42="$whisper_simd" -DGGML_AVX="$whisper_simd" -DGGML_AVX2="$whisper_simd" \
+        -DGGML_FMA="$whisper_simd" -DGGML_F16C="$whisper_simd" -DGGML_BMI2="$whisper_simd" \
     && cmake --build /usr/bin/whisper.cpp/build --config Release -j"${WHISPER_BUILD_JOBS}" \
     && bash /usr/bin/whisper.cpp/models/download-ggml-model.sh "${WHISPER_MODEL}" /usr/bin/whisper.cpp/models
 
