@@ -46,7 +46,7 @@ class StarterBundleTests(unittest.TestCase):
             self.assertEqual(names, sorted(names))
             self.assertNotIn(".env", names)
             self.assertNotIn("untracked-secret.txt", names)
-            self.assertEqual(set(names), {target for _, target in bundle.SOURCES} | {"README.md", "start.sh", "Start.ps1", "MANIFEST.json"})
+            self.assertEqual(set(names), {target for _, target in bundle.SOURCES} | {"README.md", "start.sh", "Start.ps1", "MANIFEST.json", "CPU-PROFILE.json"})
             manifest = json.loads(archive.read("MANIFEST.json"))
             self.assertEqual(manifest["runtime_image"], IMAGE)
             self.assertEqual(manifest["sha256"], {
@@ -72,6 +72,16 @@ class StarterBundleTests(unittest.TestCase):
         for image in ("openjibo:latest", "registry.example/repo@sha256:" + "A" * 64, "repo@sha256:" + "a" * 64):
             with self.subTest(image=image), self.assertRaises(ValueError):
                 bundle.build_payload(self.repo, image)
+
+    def test_cpu_profile_is_explicit_and_checksum_covered(self):
+        payload = bundle.build_payload(self.repo, IMAGE, "avx2")
+        profile = json.loads(payload["CPU-PROFILE.json"])
+        self.assertEqual(profile["profile"], "avx2")
+        self.assertEqual(profile["required_x86_flags"], ["avx", "avx2", "bmi2", "f16c", "fma", "sse4_2"])
+        manifest = json.loads(payload["MANIFEST.json"])
+        self.assertEqual(manifest["sha256"]["CPU-PROFILE.json"], hashlib.sha256(payload["CPU-PROFILE.json"]).hexdigest())
+        with self.assertRaises(ValueError):
+            bundle.build_payload(self.repo, IMAGE, "native")
 
     def test_refuses_existing_output(self):
         output = self.base / "bundle.zip"

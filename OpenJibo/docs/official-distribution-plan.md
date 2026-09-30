@@ -194,6 +194,8 @@ restore fixtures also remain outstanding.
 portable and AVX2 candidates. It retains source commit, image ID, model checksum,
 CMake flags and server executable smoke evidence. It does not push images,
 publish downloads, sign artifacts, or deploy. CI evidence artifacts contain
-metadata only; they are not installable packages. Its first run is pending.
+metadata only; they are not installable packages. The first run passed both
+profiles: https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36769399458.
+These checks cover compilation/executable startup, not acoustic behavior on CI.
 Registry/signing ownership, SBOM/license review, immutable release metadata and
 starter linkage remain D2 deliverables.

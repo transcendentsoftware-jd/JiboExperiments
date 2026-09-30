@@ -18,6 +18,13 @@ hexadecimal digest characters. Tags are rejected. The destination must not
 already exist. Do not distribute a bundle referencing an untested or unavailable
 image. No official public image reference is supplied by this milestone.
 
+Use `--cpu-profile avx2` only for a reviewed AVX2 image; the default is
+`portable`. The package includes checksum-covered `CPU-PROFILE.json` and the
+README identifies the required CPU flags. This is publisher-declared metadata,
+not inspection of the image or an automatic host compatibility check. Match it
+to retained CMake/build evidence and the actual Docker runtime host. The verifier
+reports `declared_cpu_profile`; legacy bundles without metadata report null.
+
 The builder includes an explicit allowlist of starter files, not the checkout
 directory. Live `.env` files, database/media files, credentials, build outputs
 and robot images are not inputs. Included text uses normalized line endings;

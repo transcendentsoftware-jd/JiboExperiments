@@ -145,7 +145,9 @@ check archive integrity; it is not a signature or proof of image authenticity.
 """
 
 
-def build_payload(root: Path, image: str) -> dict[str, bytes]:
+def build_payload(root: Path, image: str, cpu_profile: str = "portable") -> dict[str, bytes]:
+    if cpu_profile not in ("portable", "avx2"):
+        raise ValueError("CPU profile must be portable or avx2")
     if not IMAGE_PATTERN.fullmatch(image):
         raise ValueError("--image must be a lowercase digest-pinned registry/repository reference")
     if root.is_symlink():
@@ -154,6 +156,15 @@ def build_payload(root: Path, image: str) -> dict[str, bytes]:
     entries = {name: _text(data).encode("utf-8") for name, data in entries.items()}
     entries["docker-compose.yml"] = transform_compose(_text(entries["docker-compose.yml"]), image).encode("utf-8")
     entries["README.md"] = _readme(image).encode("utf-8")
+    entries["CPU-PROFILE.json"] = (json.dumps({
+        "schema": 1, "profile": cpu_profile,
+        "required_x86_flags": ["avx", "avx2", "bmi2", "f16c", "fma", "sse4_2"] if cpu_profile == "avx2" else [],
+        "scope": "Publisher-declared CPU profile; verify against image build evidence and the actual Docker runtime host.",
+    }, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    entries["README.md"] += (f"\nCPU profile: `{cpu_profile}`. See `CPU-PROFILE.json`.\n"
+        "An AVX2 image requires x86_64 with AVX, AVX2, BMI2, F16C, FMA and SSE4.2\n"
+        "on the Docker runtime host. Do not infer capabilities from a remote client.\n"
+        "Profile metadata is a publisher declaration, not image verification.\n").encode("utf-8")
     entries["start.sh"] = (
         '#!/usr/bin/env bash\nset -euo pipefail\n'
         'script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n'
@@ -170,12 +181,12 @@ def build_payload(root: Path, image: str) -> dict[str, bytes]:
     return entries
 
 
-def write_bundle(root: Path, image: str, output: Path) -> None:
+def write_bundle(root: Path, image: str, output: Path, cpu_profile: str = "portable") -> None:
     if output.suffix.lower() != ".zip" or output.name.lower() in {".env", ".env.example"}:
         raise ValueError("--output must name a .zip file")
     if output.exists() or output.is_symlink():
         raise FileExistsError(f"Output already exists: {output}")
-    entries = build_payload(root, image)
+    entries = build_payload(root, image, cpu_profile)
     output.parent.mkdir(parents=True, exist_ok=True)
     descriptor, staged = tempfile.mkstemp(prefix=".openjibo-starter-", suffix=".zip", dir=output.parent)
     try:
@@ -200,9 +211,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", required=True)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--cpu-profile", choices=("portable", "avx2"), default="portable")
     args = parser.parse_args()
     try:
-        write_bundle(Path(__file__).resolve().parents[3], args.image, args.output)
+        write_bundle(Path(__file__).resolve().parents[3], args.image, args.output, args.cpu_profile)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"starter bundle: {error}", file=sys.stderr)
         return 1

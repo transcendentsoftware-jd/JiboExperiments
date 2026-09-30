@@ -24,6 +24,7 @@ MEMBERS = frozenset({
     "scripts/cloud/invoke-openjibo-self-hosted-stack.sh",
     "scripts/cloud/postgres-init/01-create-databases.sh",
 })
+PROFILE_MEMBERS = MEMBERS | {"CPU-PROFILE.json"}
 HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 IMAGE = re.compile(
     r"(?:localhost(?::[0-9]+)?|[a-z0-9]+(?:[.-][a-z0-9]+)*(?::[0-9]+)?)"
@@ -75,7 +76,7 @@ def verify_bundle(path: Path, expected_sha256: str) -> dict:
         names = [info.filename for info in infos]
         if len(names) != len(set(names)):
             raise ValueError("Duplicate archive member")
-        if set(names) != MEMBERS:
+        if set(names) not in (MEMBERS, PROFILE_MEMBERS):
             raise ValueError("Archive member set differs from the starter allowlist")
         if archive.comment:
             raise ValueError("Archive comment is not permitted")
@@ -124,6 +125,16 @@ def verify_bundle(path: Path, expected_sha256: str) -> dict:
         if hashlib.sha256(data).hexdigest() != digest:
             raise ValueError(f"Checksum mismatch: {name}")
 
+    cpu_profile = None
+    if "CPU-PROFILE.json" in payload:
+        profile = json.loads(payload["CPU-PROFILE.json"].decode("utf-8"), object_pairs_hook=_unique_object, parse_constant=_reject_constant)
+        if not isinstance(profile, dict) or set(profile) != {"schema", "profile", "required_x86_flags", "scope"}:
+            raise ValueError("Invalid CPU profile metadata")
+        cpu_profile = profile["profile"]
+        required = ["avx", "avx2", "bmi2", "f16c", "fma", "sse4_2"] if cpu_profile == "avx2" else []
+        if type(profile["schema"]) is not int or profile["schema"] != 1 or cpu_profile not in ("portable", "avx2") or profile["required_x86_flags"] != required or not isinstance(profile["scope"], str):
+            raise ValueError("Invalid CPU profile metadata")
+
     try:
         compose = payload["docker-compose.yml"].decode("utf-8")
         bash = payload["start.sh"].decode("utf-8")
@@ -144,6 +155,7 @@ def verify_bundle(path: Path, expected_sha256: str) -> dict:
         "archive_bytes": len(snapshot),
         "members": len(infos),
         "runtime_image": image,
+        "declared_cpu_profile": cpu_profile,
         "verified_against_external_sha256": True,
     }
 

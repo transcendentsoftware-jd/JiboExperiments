@@ -77,6 +77,37 @@ class VerifyStarterBundleTests(unittest.TestCase):
         self.assertEqual(report["runtime_image"], IMAGE)
         self.assertEqual(report["archive_sha256"], hashlib.sha256(self.bundle.read_bytes()).hexdigest())
         self.assertTrue(report["verified_against_external_sha256"])
+        self.assertEqual(report["declared_cpu_profile"], "portable")
+
+    def test_legacy_bundle_has_no_cpu_claim(self):
+        def legacy(entries):
+            result = []
+            for name, data in entries:
+                if name == "CPU-PROFILE.json":
+                    continue
+                if name == "MANIFEST.json":
+                    manifest = json.loads(data)
+                    manifest["sha256"].pop("CPU-PROFILE.json")
+                    data = json.dumps(manifest).encode()
+                result.append((name, data))
+            return result
+        report = self.check(self.rewrite(legacy))
+        self.assertEqual(report.returncode, 0, report.stderr)
+        self.assertIsNone(json.loads(report.stdout)["declared_cpu_profile"])
+
+    def test_cpu_declaration_rejects_invalid_requirements_even_with_updated_hash(self):
+        def invalid(entries):
+            values = dict(entries)
+            profile = json.loads(values["CPU-PROFILE.json"])
+            profile.update(profile="avx2", required_x86_flags=[])
+            values["CPU-PROFILE.json"] = json.dumps(profile).encode()
+            manifest = json.loads(values["MANIFEST.json"])
+            manifest["sha256"]["CPU-PROFILE.json"] = hashlib.sha256(values["CPU-PROFILE.json"]).hexdigest()
+            values["MANIFEST.json"] = json.dumps(manifest).encode()
+            return list(values.items())
+        result = self.check(self.rewrite(invalid))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("CPU profile", result.stderr)
 
     def test_hash_checked_before_zip_parsing(self):
         invalid = self.base / "invalid.zip"
