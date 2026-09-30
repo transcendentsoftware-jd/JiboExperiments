@@ -174,7 +174,26 @@ Docker Desktop install, authenticated socket checks, persistence and separate
 backup/restore rehearsal. The [speech acceptance record](speech-build-preflight-20260928.md)
 adds an explicitly built local Whisper image, offline acoustic transcription,
 same-socket repeated turns and cloud-response speech instructions. Neither is
-an official published release. Independent native-Linux installation and actual
-robot speech playback remain D3 acceptance gaps; release trust/publication remains
+an official published release. Independent native-Linux installation has since
+passed the checks recorded below; actual robot speech playback remains a D3 gap.
+Release trust/publication remains
 D2 work. Do not infer hybrid or managed-provider certification from these isolated
 tests.
+
+### Native Linux progress, 2026-09-30
+
+The [native Ubuntu record](native-linux-acceptance-20260928.md) now covers fresh
+build/startup, authenticated sockets, restart persistence, separate database and
+volume restore, and acoustic turns. The [AVX2 experiment](whisper-avx2-experiment.md)
+records successful portable/AVX2 comparisons and a second synthetic phrase.
+Actual robot microphone input and playback remain pending; development proceeds
+with that gate visible. Broader speaker/noise coverage and encrypted user-data
+restore fixtures also remain outstanding.
+
+`openjibo-speech-build-preview.yml` adds manual build validation for Linux/amd64
+portable and AVX2 candidates. It retains source commit, image ID, model checksum,
+CMake flags and server executable smoke evidence. It does not push images,
+publish downloads, sign artifacts, or deploy. CI evidence artifacts contain
+metadata only; they are not installable packages. Its first run is pending.
+Registry/signing ownership, SBOM/license review, immutable release metadata and
+starter linkage remain D2 deliverables.

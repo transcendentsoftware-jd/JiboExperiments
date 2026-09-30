@@ -1,0 +1,74 @@
+name: openjibo-speech-build-preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu_profile: [portable, avx2]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate build contract and optional CPU prerequisites
+        env:
+          CPU_PROFILE: ${{ matrix.cpu_profile }}
+        run: |
+          python3 -B OpenJibo/tests/test_whisper_docker_build_contract.py
+          if [ "$CPU_PROFILE" = avx2 ]; then
+            python3 -B OpenJibo/scripts/cloud/preflight-whisper-avx2.py
+          fi
+
+      - name: Build the local speech candidate
+        working-directory: OpenJibo
+        env:
+          CPU_PROFILE: ${{ matrix.cpu_profile }}
+        run: |
+          docker build --progress plain \
+            --build-arg ENABLE_LOCAL_WHISPER=true \
+            --build-arg WHISPER_CPU_PROFILE="$CPU_PROFILE" \
+            --build-arg WHISPER_MODEL=base.en \
+            --build-arg WHISPER_BUILD_JOBS=2 \
+            -t "openjibo-speech-preview:$CPU_PROFILE" .
+
+      - name: Retain source and compiled profile evidence
+        env:
+          CPU_PROFILE: ${{ matrix.cpu_profile }}
+        run: |
+          mkdir -p build-evidence
+          git rev-parse HEAD > build-evidence/source-commit.txt
+          printf '%s\n' "$CPU_PROFILE" > build-evidence/cpu-profile.txt
+          docker image inspect "openjibo-speech-preview:$CPU_PROFILE" \
+            --format 'ID={{.Id}} Platform={{.Os}}/{{.Architecture}}' \
+            > build-evidence/image.txt
+          docker run --rm --pull never --network none --entrypoint sh \
+            "openjibo-speech-preview:$CPU_PROFILE" \
+            -c 'grep -E "^GGML_(NATIVE|SSE42|AVX|AVX2|FMA|F16C|BMI2):BOOL=" /usr/bin/whisper.cpp/build/CMakeCache.txt' \
+            > build-evidence/cmake-profile.txt
+          set +e
+          docker run --rm --pull never --network none \
+            --entrypoint /usr/bin/whisper.cpp/build/bin/whisper-server \
+            "openjibo-speech-preview:$CPU_PROFILE" --help \
+            > build-evidence/server-help.txt 2>&1
+          help_status=$?
+          set -e
+          test "$help_status" -eq 0 || test "$help_status" -eq 1
+          grep -q 'usage:' build-evidence/server-help.txt
+          docker run --rm --pull never --network none --entrypoint sha256sum \
+            "openjibo-speech-preview:$CPU_PROFILE" \
+            /usr/bin/whisper.cpp/models/ggml-base.en.bin \
+            > build-evidence/model-sha256.txt
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: speech-build-evidence-${{ matrix.cpu_profile }}-${{ github.sha }}
+          path: build-evidence/
+          if-no-files-found: error
+          retention-days: 14

@@ -97,3 +97,9 @@ Expected output includes `phraseMatched: true` and `cloudInstruction: null`.
 The null is intentional: this mode does not certify a speech response.
 This second synthetic recording adds phrase variety, not speaker diversity,
 noise robustness, or physical microphone validation. Those remain separate gates.
+
+The Ubuntu user then reported this second fixture passing three times in
+601, 646 and 642 ms (median 642 ms), with expected words and EOS. The CPU
+preflight passed for all eight logical processors and the fixture checksum
+matched. The probe ran in transcription mode, so speech instructions/playback
+were not evaluated for these three turns.
