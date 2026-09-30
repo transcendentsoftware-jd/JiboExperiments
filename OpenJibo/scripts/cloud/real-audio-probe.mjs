@@ -21,6 +21,11 @@ export function normalizeRealAudioOptions(options = {}) {
   assert(typeof robotId === "string" && /^speech-acceptance-[a-z0-9-]{1,40}$/.test(robotId),
     "--robot-id must be a synthetic speech-acceptance identity.");
   const expectedPhrase = options.expectedPhrase ?? "cloud version";
+  const responseMode = options.responseMode ?? "cloud-version";
+  assert(["cloud-version", "transcription"].includes(responseMode),
+    "--response-mode must be cloud-version or transcription.");
+  assert(responseMode !== "transcription" || options.expectedPhrase,
+    "Transcription mode requires an explicit --expected-phrase.");
   assert(typeof expectedPhrase === "string" && /^[a-z]+(?: [a-z]+)*$/.test(expectedPhrase) &&
     expectedPhrase.length <= 100, "--expected-phrase must contain 1-100 lowercase ASCII letters and spaces.");
   const turns = Number(options.turns ?? 5);
@@ -28,7 +33,7 @@ export function normalizeRealAudioOptions(options = {}) {
   const timeoutMs = Number(options.timeoutMs ?? 300_000);
   assert(Number.isInteger(timeoutMs) && timeoutMs >= 1_000 && timeoutMs <= 300_000,
     "--timeout-ms must be an integer from 1000 through 300000.");
-  return { audioPath: options.audioPath, baseUrl, robotId, expectedPhrase, turns, timeoutMs };
+  return { audioPath: options.audioPath, baseUrl, robotId, expectedPhrase, responseMode, turns, timeoutMs };
 }
 
 export function splitOggOpusPages(buffer) {
@@ -116,12 +121,14 @@ export async function runRealAudioProbe(options, { fetchImpl = globalThis.fetch,
           settled = true;
           cleanup();
           if (error) reject(error);
-          else resolve({ turn, replyTypes, phraseMatched: true, cloudInstruction: true,
+          else resolve({ turn, replyTypes: [...replyTypes], phraseMatched: true,
+            cloudInstruction: config.responseMode === "cloud-version" ? cloudInstruction : null,
             durationMs: Math.round(performance.now() - started) });
         }
         function onClose() { finish(new Error("Local listen socket closed early.")); }
         function onError() { finish(new Error("Local listen socket failed.")); }
         function onMessage(raw, isBinary) {
+          if (settled) return;
           if (isBinary) return;
           let reply;
           try { reply = JSON.parse(raw.toString()); }
@@ -138,14 +145,14 @@ export async function runRealAudioProbe(options, { fetchImpl = globalThis.fetch,
             }
             finalAsr = true;
           }
-          if (reply.type === "SKILL_ACTION") {
+          if (reply.type === "SKILL_ACTION" && config.responseMode === "cloud-version") {
             const esml = reply.data?.action?.config?.jcp?.config?.play?.esml;
             if (typeof esml !== "string" || !/cloud version/i.test(esml)) {
               finish(new Error("Cloud response did not contain the expected speech instruction.")); return;
             }
             cloudInstruction = true;
           }
-          if (finalAsr && cloudInstruction && replyTypes.includes("EOS")) finish();
+          if (finalAsr && (config.responseMode === "transcription" || cloudInstruction) && replyTypes.includes("EOS")) finish();
         }
         socket.on("message", onMessage);
         socket.on("close", onClose);
@@ -161,7 +168,8 @@ export async function runRealAudioProbe(options, { fetchImpl = globalThis.fetch,
       });
       completedTurns.push(result);
     }
-    return { robotId: config.robotId, expectedPhrase: config.expectedPhrase, turns: completedTurns };
+    return { robotId: config.robotId, expectedPhrase: config.expectedPhrase,
+      responseMode: config.responseMode, turns: completedTurns };
   } finally {
     clearTimeout(timer);
     socket?.terminate();

@@ -3,6 +3,7 @@
 from pathlib import Path
 import re
 import unittest
+import importlib.util
 
 
 DOCKERFILE = Path(__file__).resolve().parents[1] / "Dockerfile"
@@ -46,6 +47,34 @@ class WhisperDockerBuildContractTests(unittest.TestCase):
         self.assertIn('whisper_simd=ON ;;', stage)
         self.assertIn("*) echo 'WHISPER_CPU_PROFILE must be portable or avx2' >&2; exit 1 ;;", stage)
         self.assertNotIn("-DGGML_NATIVE=ON", stage)
+
+
+class Avx2PreflightTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        path = DOCKERFILE.parent / "scripts/cloud/preflight-whisper-avx2.py"
+        spec = importlib.util.spec_from_file_location("avx2_preflight", path)
+        cls.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.module)
+
+    def test_all_processors_must_support_required_flags(self):
+        flags = " ".join(sorted(self.module.REQUIRED))
+        good = f"processor : 0\nflags : {flags}\n\nprocessor : 1\nflags : {flags}"
+        self.assertTrue(self.module.assess("Linux", "x86_64", good)["avx2_cpu_prerequisites_passed"])
+        bad = good.replace("processor : 1\nflags :", "processor : 1\nunknown :")
+        self.assertFalse(self.module.assess("Linux", "x86_64", bad)["avx2_cpu_prerequisites_passed"])
+
+    def test_missing_evidence_and_other_platforms_fail_closed(self):
+        flags = " ".join(sorted(self.module.REQUIRED))
+        for system, machine, info in [("Linux", "x86_64", ""), ("Windows", "x86_64", f"processor:0\nflags:{flags}"), ("Linux", "aarch64", f"processor:0\nflags:{flags}")]:
+            self.assertFalse(self.module.assess(system, machine, info)["avx2_cpu_prerequisites_passed"])
+
+    def test_each_required_flag_is_checked(self):
+        for absent in self.module.REQUIRED:
+            flags = " ".join(sorted(self.module.REQUIRED - {absent}))
+            result = self.module.assess("Linux", "x86_64", f"processor:0\nflags:{flags}")
+            self.assertFalse(result["avx2_cpu_prerequisites_passed"])
+            self.assertEqual([absent], result["missing_flags"])
 
 
 if __name__ == "__main__":

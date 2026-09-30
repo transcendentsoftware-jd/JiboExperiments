@@ -29,6 +29,8 @@ test("accepts only HTTP loopback origins and bounded synthetic turns", () => {
   assert.throws(() => normalizeRealAudioOptions({ audioPath: "sample.ogg", turns: 11 }), /1 through 10/);
   assert.throws(() => normalizeRealAudioOptions({ audioPath: "sample.ogg", timeoutMs: 300001 }), /300000/);
   assert.throws(() => normalizeRealAudioOptions({ audioPath: "sample.ogg", robotId: "real-robot" }), /synthetic/);
+  assert.throws(() => normalizeRealAudioOptions({ audioPath: "sample.ogg", responseMode: "anything" }), /response-mode/);
+  assert.throws(() => normalizeRealAudioOptions({ audioPath: "sample.ogg", responseMode: "transcription" }), /explicit/);
 });
 
 test("requires bounded Ogg/Opus pages and matches complete words", () => {
@@ -59,6 +61,34 @@ class FakeSocket extends EventEmitter {
 
   terminate() { this.terminated = true; }
 }
+
+test("transcription mode requires final phrase and EOS without claiming a cloud instruction", async () => {
+  const socket = new FakeSocket();
+  socket.send = function (data, options) {
+    this.sent.push({ data, options });
+    if (typeof data !== "string" || JSON.parse(data).type !== "CLIENT_ASR") return;
+    const transID = JSON.parse(data).transID;
+    queueMicrotask(() => {
+      for (const reply of [
+        { type: "LISTEN", data: { asr: { final: true, text: "The quick brown fox." } } },
+        { type: "EOS" },
+      ]) this.emit("message", Buffer.from(JSON.stringify({ ...reply, transID })), false);
+    });
+  };
+  const result = await runRealAudioProbe({ audioPath: "sample.ogg", turns: 3,
+    responseMode: "transcription", expectedPhrase: "quick brown fox" }, {
+    readAudio: async () => audio,
+    fetchImpl: async () => ({ ok: true, json: async () => ({ token: "secret-token" }) }),
+    openSocket: async () => socket,
+  });
+  assert.equal(result.turns.length, 3);
+  assert.equal(result.responseMode, "transcription");
+  for (const turn of result.turns) {
+    assert.deepEqual(turn.replyTypes, ["LISTEN", "EOS"]);
+    assert.equal(turn.cloudInstruction, null);
+  }
+  assert.equal(socket.sent.some(({ data }) => typeof data === "string" && data.includes("quick")), false);
+});
 
 test("sends binary pages, never sends transcript hints, and completes three real audio turns", async () => {
   const socket = new FakeSocket();

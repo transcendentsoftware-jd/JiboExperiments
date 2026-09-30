@@ -10,6 +10,7 @@ Options:
   --audio PATH             Local Ogg/Opus recording (required; maximum 4 MiB)
   --base-url URL           HTTP loopback origin (default http://127.0.0.1:8081)
   --expected-phrase TEXT   Words required in final ASR (default "cloud version")
+  --response-mode MODE     cloud-version (default) or transcription (ASR + EOS only)
   --turns COUNT            Repetitions, 1-10 (default 5)
   --timeout-ms MS          Whole batch deadline, 1000-300000 (default 300000)
   --robot-id ID            Synthetic speech-acceptance ID
@@ -20,6 +21,7 @@ function parseArgs(args) {
   const keys = new Map([
     ["--audio", "audioPath"], ["--base-url", "baseUrl"],
     ["--expected-phrase", "expectedPhrase"], ["--turns", "turns"],
+    ["--response-mode", "responseMode"],
     ["--timeout-ms", "timeoutMs"], ["--robot-id", "robotId"],
   ]);
   const options = {};
