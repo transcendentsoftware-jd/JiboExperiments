@@ -1,6 +1,6 @@
 # Official site, builds and hosting starters
 
-Status: delivery plan with digest launchers and organization-owned private runtime
+Status: delivery plan with digest launchers and organization-owned public runtime
 previews, 2026-10-01. Existing source-build and Azure
 deployment tools are foundations, not a published official download service.
 This plan does not authorize publishing artifacts, changing DNS, spending on
@@ -11,7 +11,7 @@ the API and migrations without rebuilding. Fake-Docker tests cover both shell
 launchers. Native source-built container installation and restore have passed;
 fresh installation from the published registry digest and upgrade verification
 remain pending. An offline, allowlisted standalone ZIP builder is available as a
-[packaging preview](standalone-starter-packaging.md); private preview bundles are
+[packaging preview](standalone-starter-packaging.md); preview bundles are
 now published, but are not stable or install-certified official downloads.
 
 The launcher foundation also validates resolved Compose configuration quietly
@@ -125,6 +125,28 @@ Additional hosts can implement the same documented adapter contract.
 
 ## Updates, mirrors and recovery
 
+### Agreed installer and site sequence, 2026-10-01
+
+Publish a neutral site preview with hosting choices, exact preview downloads,
+limitations and isolated fresh-install instructions. A site is a useful test
+entry point, not a technical prerequisite for testing a bundle. Keep
+`openjibo.com` DNS unchanged until the public-host/domain cutover is reviewed.
+
+Start with a targeted preview installer, tied to an exact bundle checksum and
+image digest. Download, inspect, then run; do not recommend piping a remote script
+into a shell. Once stable acceptance exists, the default channel selects the
+latest approved stable release; `--version` selects a reproducible release and
+`--channel preview` explicitly opts into experimental builds. No stable selector
+is available before a stable release exists. Portable is the default; AVX2
+requires explicit validation of the actual Docker runtime host.
+
+The installer validates prerequisites and verified release metadata, initializes
+fresh-install secrets, and starts pinned images in an unused project/directory.
+It must not silently upgrade an existing stack, rotate keys or reuse live data.
+Upgrades are a separate operator-reviewed command with backup, compatibility,
+migration and recovery checks. Signed metadata/trust-root work remains a gate
+before claiming a stable or mirror-safe installer.
+
 Channels such as stable/preview resolve through authenticated release metadata
 to immutable artifacts. A mutable `latest` tag is not an installation identity.
 Use a reviewed signing/trust-root design with key rotation/revocation and
@@ -205,6 +227,7 @@ Registry ownership is now settled: Transcendent-Software-LLC owns
 `ghcr.io/transcendent-software-llc/openjibo-runtime`. The
 [publication record](runtime-registry-publication.md) records successful portable
 and AVX2 publication, digest-pinned starter ZIP verification, and independent
-registry-pull/provenance verification. Package visibility is currently private.
-Public access requires an owner decision; SBOM and stable release trust remain
+registry-pull/provenance verification. Package visibility was made public by the
+owner, and anonymous manifest reads for both exact digests returned 200 with
+matching identities. SBOM and stable release trust remain
 pending. No stable/latest tag, production deployment or robot change was made.

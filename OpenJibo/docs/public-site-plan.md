@@ -10,7 +10,13 @@ Stand up a small public site and web app on `openjibo.com` that makes the projec
 
 Status: `ready` for neutral site implementation.
 
-The repository contains a static placeholder only. The first implementation should explain the platform, link the Jibo Revival Group and source repositories, show device/conversion information, compare hosting choices consistently, and provide clean contact routing. Commercial membership belongs on each provider's own clearly labeled surface.
+The repository now contains a neutral static overview and preview downloads/test
+page in `src/OpenJibo.Site`. It compares all three hosting profiles, links the
+revival community, and labels unimplemented starters and release gates clearly.
+`openjibo-public-site.yml` publishes only this allowlisted directory through a
+manual main-only GitHub Pages preview. Custom-domain/DNS cutover, visual
+acceptance and fuller contact/documentation journeys remain outstanding.
+Commercial membership belongs on each provider's own clearly labeled surface.
 
 The [official distribution plan](official-distribution-plan.md) adds versioned
 downloads, isolated/hybrid/managed starter packages, host adapters and verified

@@ -65,6 +65,11 @@ The package API confirmed owner `Transcendent-Software-LLC` and visibility
 `private`. Anonymous installation is therefore not enabled. Making the preview
 public requires a separate owner decision; no visibility was changed here.
 
+The owner subsequently made the package public on 2026-10-01. Anonymous GHCR
+token issuance and manifest reads passed for both exact digests, returning HTTP
+200 and matching Docker-Content-Digest values. This verifies anonymous manifest
+access, not a fresh published-image installation or every layer download.
+
 A partial matrix failure can leave a published
 preview for one profile; do not list it as a complete release. Retain the successful
 registry digest and repair/retry under a new run tag rather than assuming atomic

@@ -1,0 +1,36 @@
+name: openjibo-public-site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openjibo-public-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'transcendentsoftware-jd/JiboExperiments' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check public site contract
+        run: python3 -B -m unittest discover -s OpenJibo/tests -p test_public_site.py
+      - uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: OpenJibo/src/OpenJibo.Site
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish neutral site preview
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1

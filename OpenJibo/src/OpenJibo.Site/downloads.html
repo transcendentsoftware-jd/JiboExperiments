@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Preview downloads and testing — OpenJibo</title><link rel="stylesheet" href="site.css"></head><body>
+<a class="skip" href="#main">Skip to content</a><header class="shell"><nav aria-label="Main"><a href="index.html">OpenJibo</a><a href="index.html#hosting">Hosting choices</a><a href="downloads.html" aria-current="page">Downloads and testing</a></nav></header>
+<main id="main" class="shell"><section class="hero"><p class="eyebrow">Targeted preview · 2026-10-01</p><h1>Test the published starter.</h1><p class="lede">Linux/amd64 isolated fresh-install preview. Not a stable release, updater or robot conversion tool. Do not point it at an existing installation.</p><p>Images are public and digest-pinned. Build provenance was verified. ZIP checksums provide integrity, not signed download metadata; SBOM/license certification and physical-robot acceptance remain outstanding.</p></section>
+<section class="grid"><article class="card"><h2>Portable — default</h2><p>Choose this unless you have checked the actual Docker host's CPU capabilities.</p><a class="button primary" href="https://github.com/transcendentsoftware-jd/JiboExperiments/releases/download/runtime-preview-36863178102/starter-portable-preview.zip">Download portable ZIP</a><p>SHA-256:</p><code class="digest">68f7181b4c50b08c632a482efd9f0a20be3ab3a2ad1de97fe6281a5e320b6a91</code></article><article class="card"><h2>AVX2 — opt-in</h2><p>Requires x86_64 with AVX, AVX2, BMI2, F16C, FMA and SSE4.2 on the Docker runtime host. Checking a client CPU does not certify a remote daemon.</p><a class="button secondary" href="https://github.com/transcendentsoftware-jd/JiboExperiments/releases/download/runtime-preview-36863178102/starter-avx2-preview.zip">Download AVX2 ZIP</a><p>SHA-256:</p><code class="digest">eaab909b46e1166d08344c7582fb3833fe9bdc596a005e0ce4ee4a8c3bdb6466</code></article></section>
+<section class="panel"><h2>Fresh Linux test, separate from your working stacks</h2><p>Prerequisites: Linux x86_64, Docker Compose 2.24.4 or later, Python 3, Bash, OpenSSL and unzip. Leave the original stacks and volumes intact. Download the portable ZIP first; do not pipe a remote script into a shell.</p><ol><li>Download and inspect the <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/ef8014611bb85139701136b32eb440ab0f253617/OpenJibo/scripts/cloud/verify-openjibo-starter-bundle.py">pinned offline verifier</a>, saving it as <code>verify-openjibo-starter-bundle.py</code>.</li><li>Verify before extracting. Stop on any error.</li></ol>
+<pre><code>python3 -B verify-openjibo-starter-bundle.py \
+  --bundle starter-portable-preview.zip \
+  --expected-sha256 68f7181b4c50b08c632a482efd9f0a20be3ab3a2ad1de97fe6281a5e320b6a91</code></pre>
+<p>Create a new directory, extract, and inspect the README and launchers:</p><pre><code>mkdir openjibo-published-preview
+unzip starter-portable-preview.zip -d openjibo-published-preview
+cd openjibo-published-preview
+bash scripts/cloud/initialize-openjibo-compose-env.sh</code></pre>
+<p>Edit the generated <code>.env</code> privately to set a strong, unique <code>OPENJIBO_POSTGRES_PASSWORD</code>. Preserve encryption keys; do not copy sample values or paste secrets into an issue.</p><p>Create <code>test-port.compose.yaml</code> to use port 8082 and local speech:</p>
+<pre><code>services:
+  api:
+    ports: !override
+      - "127.0.0.1:8082:8080"
+    environment:
+      OpenJibo__Stt__EnableAzureSpeech: "false"
+      OpenJibo__Stt__WhisperThreads: "4"</code></pre>
+<p>The override requires Compose 2.24.4 or later. Check <code>docker compose version</code>. Confirm the project name is unused:</p>
+<pre><code>docker ps -a --filter label=com.docker.compose.project=openjibo-published-preview
+docker volume ls --filter label=com.docker.compose.project=openjibo-published-preview</code></pre>
+<p>If either lists existing resources, stop and choose an unused project name. Then launch the pinned images without rebuilding:</p>
+<pre><code>docker compose -p openjibo-published-preview \
+  -f docker-compose.yml -f test-port.compose.yaml \
+  up -d --no-build postgres migrate api
+docker compose -p openjibo-published-preview \
+  -f docker-compose.yml -f test-port.compose.yaml ps -a
+curl --fail-with-body --max-time 15 http://localhost:8082/health</code></pre>
+<p>Expected: PostgreSQL healthy, migrator exited with code 0, API running and health returns <code>ok: true</code>. Next, run authenticated socket and audio probes from your trusted source checkout against port 8082. Do not redirect a physical robot yet. Preserve results, image identities and bundle checksum. <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/native-linux-acceptance-20260928.md">Acceptance evidence and probe context</a>.</p><p>Stop the test with the same project and both Compose files followed by <code>stop</code>. Preserve files, keys and volumes. Never use <code>down -v</code> on data you wish to retain.</p></section>
+<section class="panel"><h2>Installation and update roadmap</h2><p>Planned installer: download, inspect, run; stable by default once a stable release exists, explicit preview opt-in, and targeted version selection. Each selection resolves to verified immutable artifacts. Portable is the default; AVX2 needs an explicit capability check. No latest/stable selector or automatic upgrade is available today.</p><p>Updates will be separate, operator-reviewed operations with backups, migration compatibility and recovery checks. <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/runtime-registry-publication.md">Image digests and release evidence</a> · <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-36863178102">Preview release files</a></p></section>
+</main><footer class="shell">Windows published-bundle acceptance remains pending. No ARM64, hybrid or managed starter certification is implied.</footer></body></html>

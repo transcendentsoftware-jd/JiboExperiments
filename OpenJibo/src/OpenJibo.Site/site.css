@@ -11,6 +11,17 @@
   box-sizing: border-box;
 }
 
+nav { display: flex; flex-wrap: wrap; gap: 1.2rem; }
+header.shell { padding: 1.5rem 0 0; }
+a { color: var(--accent-dark); text-underline-offset: 0.2em; }
+a:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
+.skip { position: absolute; left: 1rem; top: -5rem; background: white; padding: 1rem; z-index: 2; }
+.skip:focus { top: 0; }
+p, li { line-height: 1.65; }
+pre { overflow-x: auto; background: #fffaf4; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; }
+.digest { display: block; overflow-wrap: anywhere; }
+footer { font-size: 0.9rem; }
+
 body {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;

@@ -3,46 +3,56 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>OpenJibo</title>
+	<title>OpenJibo — revival and preview downloads</title>
 	<link rel="stylesheet" href="site.css">
 </head>
 <body>
-<main class="shell">
+<a class="skip" href="#main">Skip to content</a>
+<header class="shell"><nav aria-label="Main"><a href="#main">OpenJibo</a><a href="#hosting">Hosting</a><a href="downloads.html">Downloads and testing</a></nav></header>
+<main id="main" class="shell">
 	<section class="hero">
 		<p class="eyebrow">OpenJibo</p>
-		<h1>Bringing Jibo back with a stable open cloud.</h1>
+		<h1>A new chapter for your Jibo.</h1>
 		<p class="lede">
-			OpenJibo is rebuilding the hosted layer Jibo still expects, then using that foothold
-			to modernize the platform step by step.
+			One shared runtime, with owner-operated and managed hosting choices. An independent
+			community revival, not Jibo, Inc. No paid-provider account is needed to read or download.
 		</p>
 		<div class="actions">
-			<a href="https://github.com/" class="button primary">Source Repos</a>
-			<a href="../../docs/device-bootstrap.md" class="button secondary">Bootstrap Docs</a>
+			<a href="downloads.html" class="button primary">Test a preview</a>
+			<a href="https://jiborevived.com/" class="button secondary">Jibo Revival Group</a>
 		</div>
 	</section>
 
 	<section class="panel">
-		<h2>Current Direction</h2>
+		<h2>Built alongside the revival community</h2>
 		<p>
-			The first milestone is a stable Azure-hosted replacement cloud. We support real robots
-			first through controlled DNS plus targeted device patching, then smooth the path later with OTA.
+			The Jibo Revival Group remains the community hub. Transcendent Software LLC maintains
+			these runtime previews. A container install does not convert a robot: OOBE,
+			original Pegasus-bound and later v2 robots have different starting states.
 		</p>
 	</section>
 
-	<section class="grid">
+	<p><a href="https://github.com/Jibo-Revival-Group/JiboExperiments">Community source</a> · <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/device-bootstrap.md">Bootstrap guidance</a> · <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/issues">Release tooling and issues</a></p>
+	<section id="hosting" class="grid" aria-label="Hosting choices">
 		<article class="card">
-			<h3>Cloud First</h3>
-			<p>Replace the missing hosted services before attempting deeper on-device modernization.</p>
+			<h2>Self-hosted isolated</h2>
+			<p>Available for preview testing. You operate the server, storage, backups and updates.
+			No managed-cloud account is required. You pay for hardware and configured services.
+			HTTP or HTTPS is a deployment choice, not an authentication bypass.</p>
 		</article>
 		<article class="card">
-			<h3>Real Hardware</h3>
-			<p>Use repeatable device bootstrap steps instead of pretending recovery is already one-click.</p>
+			<h2>Self-hosted hybrid</h2>
+			<p>Starter release planned. Owner-fleet-only hosting with HTTPS and trusted-server enrollment.
+			Registration, renewal, revocation and disconnected behavior need acceptance first.</p>
 		</article>
 		<article class="card">
-			<h3>Open Path</h3>
-			<p>Keep the protocol work, docs, and codebase visible so the community can iterate with us.</p>
+			<h2>Managed providers</h2>
+			<p>Provider starters planned. HTTPS with controlled multi-owner admission and provider-specific
+			accounts, billing and support. <a href="https://cloud.openjibo.com/">OpenJibo Cloud</a> is Transcendent
+			Software LLC's separate service. This page does not promise public signup or pricing.</p>
 		</article>
 	</section>
 </main>
+<footer class="shell">Independent revival · Runtime compatibility is not provider endorsement.</footer>
 </body>
 </html>

@@ -63,6 +63,9 @@ jobs:
 
       - name: Validate offline standalone starter packaging
         run: python3 -B -m unittest discover -s tests -p test_prepare_openjibo_starter_bundle.py
+
+      - name: Validate neutral public site contract
+        run: python3 -B -m unittest discover -s tests -p test_public_site.py
         env:
           OPENJIBO_TEST_COMPOSE_CONFIG: "1"
 
