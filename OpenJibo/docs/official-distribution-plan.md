@@ -1,17 +1,18 @@
 # Official site, builds and hosting starters
 
-Status: delivery plan with a locally implemented digest-launcher foundation,
-2026-09-26. Existing source-build and Azure
+Status: delivery plan with digest launchers and organization-owned private runtime
+previews, 2026-10-01. Existing source-build and Azure
 deployment tools are foundations, not a published official download service.
 This plan does not authorize publishing artifacts, changing DNS, spending on
 new hosts, enrolling servers or modifying robots.
 
 The opt-in `-Image` / `--image` starter mode now uses one digest-pinned image for
 the API and migrations without rebuilding. Fake-Docker tests cover both shell
-launchers; real container install/upgrade verification and official release
-publication remain pending. An offline, allowlisted standalone ZIP builder is
-available as a [local packaging preview](standalone-starter-packaging.md), not a
-published or install-certified official download.
+launchers. Native source-built container installation and restore have passed;
+fresh installation from the published registry digest and upgrade verification
+remain pending. An offline, allowlisted standalone ZIP builder is available as a
+[packaging preview](standalone-starter-packaging.md); private preview bundles are
+now published, but are not stable or install-certified official downloads.
 
 The launcher foundation also validates resolved Compose configuration quietly
 after `.env` initialization and before startup. Configuration failure blocks
@@ -21,7 +22,8 @@ Fresh-environment initialization generates per-install encryption values instead
 of copying shared sample values. Existing keys are preserved, not rotated. This
 is a packaging prerequisite. The local bundle builder removes source-build
 dependencies and host PostgreSQL exposure from its generated Compose file;
-real install/restore proof and release publication remain pending.
+native source-built install/restore evidence is recorded below. Published-bundle
+installation and stable release certification remain pending.
 
 An offline pre-extraction verifier checks the whole ZIP against an independently
 trusted SHA-256 and validates the bounded archive/manifest contract. It does not
@@ -176,8 +178,7 @@ adds an explicitly built local Whisper image, offline acoustic transcription,
 same-socket repeated turns and cloud-response speech instructions. Neither is
 an official published release. Independent native-Linux installation has since
 passed the checks recorded below; actual robot speech playback remains a D3 gap.
-Release trust/publication remains
-D2 work. Do not infer hybrid or managed-provider certification from these isolated
+Stable release trust remains D2 work. Do not infer hybrid or managed-provider certification from these isolated
 tests.
 
 ### Native Linux progress, 2026-09-30
@@ -197,11 +198,13 @@ publish downloads, sign artifacts, or deploy. CI evidence artifacts contain
 metadata only; they are not installable packages. The first run passed both
 profiles: https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36769399458.
 These checks cover compilation/executable startup, not acoustic behavior on CI.
-Registry/signing ownership, SBOM/license review, immutable release metadata and
-starter linkage remain D2 deliverables.
+Signing policy, SBOM/license review and stable release metadata remain D2
+deliverables. Registry ownership and preview starter linkage are now in place.
 
 Registry ownership is now settled: Transcendent-Software-LLC owns
 `ghcr.io/transcendent-software-llc/openjibo-runtime`. The
-[publication setup](runtime-registry-publication.md) describes the prepared
-main-only preview publisher and required environment credentials. Package
-publication, public visibility, SBOM and stable release trust remain pending.
+[publication record](runtime-registry-publication.md) records successful portable
+and AVX2 publication, digest-pinned starter ZIP verification, and independent
+registry-pull/provenance verification. Package visibility is currently private.
+Public access requires an owner decision; SBOM and stable release trust remain
+pending. No stable/latest tag, production deployment or robot change was made.

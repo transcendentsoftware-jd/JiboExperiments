@@ -42,8 +42,30 @@ downloads; decide visibility before offering download links. Image source labels
 describe the personal source repository; cross-owner package access must be
 reviewed separately rather than assuming automatic permission inheritance.
 
-This publication workflow is prepared but has not been run. First run requires
-the environment credential setup. A partial matrix failure can leave a published
+The first publication passed both profiles on 2026-10-01:
+https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36863178102.
+Published source is `ef8014611bb85139701136b32eb440ab0f253617`.
+
+| Profile | Registry digest | Starter ZIP SHA-256 |
+| --- | --- | --- |
+| portable | `sha256:08b3e27362f47373696158ec619d9ac21e44e7bcf5995bce049b6dbac70d970b` | `68f7181b4c50b08c632a482efd9f0a20be3ab3a2ad1de97fe6281a5e320b6a91` |
+| avx2 | `sha256:b39887ad412d4eee77bb20ca15fe5ae82bae2024d72487b7947ca37e8426bdf0` | `eaab909b46e1166d08344c7582fb3833fe9bdc596a005e0ce4ee4a8c3bdb6466` |
+
+Both downloaded ZIPs passed the offline verifier against the checksums retained
+by the trusted Actions run. `openjibo-runtime-preview-verify.yml` performs a
+separate authenticated digest pull, package-owner/visibility inspection, and
+provenance verification bound to the publisher workflow and source commit.
+It does not deploy images or change package visibility.
+
+Independent verification passed on 2026-10-01:
+https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36863863670.
+Both exact digests were pulled and their provenance verified against the source
+commit and trusted publishing workflow; revision and CPU-profile labels matched.
+The package API confirmed owner `Transcendent-Software-LLC` and visibility
+`private`. Anonymous installation is therefore not enabled. Making the preview
+public requires a separate owner decision; no visibility was changed here.
+
+A partial matrix failure can leave a published
 preview for one profile; do not list it as a complete release. Retain the successful
 registry digest and repair/retry under a new run tag rather than assuming atomic
 multi-profile publication.
