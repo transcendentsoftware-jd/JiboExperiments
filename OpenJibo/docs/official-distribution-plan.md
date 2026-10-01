@@ -199,3 +199,9 @@ profiles: https://github.com/transcendentsoftware-jd/JiboExperiments/actions/run
 These checks cover compilation/executable startup, not acoustic behavior on CI.
 Registry/signing ownership, SBOM/license review, immutable release metadata and
 starter linkage remain D2 deliverables.
+
+Registry ownership is now settled: Transcendent-Software-LLC owns
+`ghcr.io/transcendent-software-llc/openjibo-runtime`. The
+[publication setup](runtime-registry-publication.md) describes the prepared
+main-only preview publisher and required environment credentials. Package
+publication, public visibility, SBOM and stable release trust remain pending.

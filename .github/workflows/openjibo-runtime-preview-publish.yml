@@ -1,0 +1,130 @@
+name: openjibo-runtime-preview-publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openjibo-runtime-preview-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'transcendentsoftware-jd/JiboExperiments' && github.ref == 'refs/heads/main'
+    environment: openjibo-runtime-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        cpu_profile: [portable, avx2]
+    env:
+      IMAGE: ghcr.io/transcendent-software-llc/openjibo-runtime
+      CPU_PROFILE: ${{ matrix.cpu_profile }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate publication prerequisites
+        env:
+          PUBLISH_TOKEN: ${{ secrets.OPENJIBO_GHCR_PUBLISH_TOKEN }}
+          PUBLISH_USER: ${{ vars.OPENJIBO_GHCR_PUBLISH_USER }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -n "$PUBLISH_TOKEN" || { echo 'Missing release-environment package token'; exit 1; }
+          test -n "$PUBLISH_USER" || { echo 'Missing release-environment publishing username'; exit 1; }
+          ci_result=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow openjibo-cloud-ci.yml \
+            --commit "$GITHUB_SHA" --limit 1 --json conclusion --jq '.[0].conclusion')
+          test "$ci_result" = success || { echo 'Source commit must have passing runtime CI'; exit 1; }
+          python3 -B OpenJibo/tests/test_whisper_docker_build_contract.py
+          if [ "$CPU_PROFILE" = avx2 ]; then
+            python3 -B OpenJibo/scripts/cloud/preflight-whisper-avx2.py
+          fi
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ vars.OPENJIBO_GHCR_PUBLISH_USER }}
+          password: ${{ secrets.OPENJIBO_GHCR_PUBLISH_TOKEN }}
+
+      - name: Build preview candidate
+        working-directory: OpenJibo
+        run: |
+          docker build --progress plain \
+            --build-arg ENABLE_LOCAL_WHISPER=true \
+            --build-arg WHISPER_CPU_PROFILE="$CPU_PROFILE" \
+            --build-arg WHISPER_MODEL=base.en \
+            --build-arg WHISPER_BUILD_JOBS=2 \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "org.openjibo.cpu-profile=$CPU_PROFILE" \
+            -t "$IMAGE:preview-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$CPU_PROFILE" .
+
+      - name: Verify compiled profile and executable
+        run: |
+          tag="$IMAGE:preview-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$CPU_PROFILE"
+          mkdir -p release-evidence
+          docker run --rm --pull never --network none --entrypoint sh "$tag" \
+            -c 'grep -E "^GGML_(NATIVE|SSE42|AVX|AVX2|FMA|F16C|BMI2):BOOL=" /usr/bin/whisper.cpp/build/CMakeCache.txt' \
+            > release-evidence/cmake-profile.txt
+          grep -qx 'GGML_NATIVE:BOOL=OFF' release-evidence/cmake-profile.txt
+          expected=OFF
+          if [ "$CPU_PROFILE" = avx2 ]; then expected=ON; fi
+          for flag in SSE42 AVX AVX2 FMA F16C BMI2; do
+            grep -qx "GGML_$flag:BOOL=$expected" release-evidence/cmake-profile.txt
+          done
+          set +e
+          docker run --rm --pull never --network none \
+            --entrypoint /usr/bin/whisper.cpp/build/bin/whisper-server "$tag" --help \
+            > release-evidence/server-help.txt 2>&1
+          help_status=$?
+          set -e
+          test "$help_status" -eq 0 || test "$help_status" -eq 1
+          grep -q 'usage:' release-evidence/server-help.txt
+          docker run --rm --pull never --network none --entrypoint sha256sum "$tag" \
+            /usr/bin/whisper.cpp/models/ggml-base.en.bin > release-evidence/model-sha256.txt
+          grep -q '^a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002 ' release-evidence/model-sha256.txt
+          git rev-parse HEAD > release-evidence/source-commit.txt
+
+      - name: Push preview and record registry digest
+        id: image
+        run: |
+          tag="$IMAGE:preview-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$CPU_PROFILE"
+          docker push "$tag"
+          reference=$(docker image inspect "$tag" --format '{{range .RepoDigests}}{{println .}}{{end}}' | grep "^$IMAGE@sha256:")
+          digest=${reference#*@}
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf '%s\n' "$reference" > release-evidence/runtime-image.txt
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Attest preview image provenance
+        uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-name: ghcr.io/transcendent-software-llc/openjibo-runtime
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: false
+
+      - name: Prepare and verify digest-pinned starter
+        run: |
+          reference=$(cat release-evidence/runtime-image.txt)
+          python3 -B OpenJibo/scripts/cloud/prepare-openjibo-starter-bundle.py \
+            --image "$reference" --cpu-profile "$CPU_PROFILE" \
+            --output "release-evidence/starter-$CPU_PROFILE-preview.zip"
+          archive_sha=$(sha256sum "release-evidence/starter-$CPU_PROFILE-preview.zip" | cut -d ' ' -f1)
+          python3 -B OpenJibo/scripts/cloud/verify-openjibo-starter-bundle.py \
+            --bundle "release-evidence/starter-$CPU_PROFILE-preview.zip" \
+            --expected-sha256 "$archive_sha" > release-evidence/package-verification.json
+          sha256sum "release-evidence/starter-$CPU_PROFILE-preview.zip" > release-evidence/SHA256SUMS
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: runtime-preview-${{ matrix.cpu_profile }}-${{ github.sha }}
+          path: release-evidence/
+          if-no-files-found: error
+          retention-days: 14
