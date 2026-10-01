@@ -1,0 +1,79 @@
+name: openjibo-runtime-preview-verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Published source commit (40 lowercase hex characters)
+        required: true
+        type: string
+      portable_digest:
+        description: Portable sha256 registry digest
+        required: true
+        type: string
+      avx2_digest:
+        description: AVX2 sha256 registry digest
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'transcendentsoftware-jd/JiboExperiments' && github.ref == 'refs/heads/main'
+    environment: openjibo-runtime-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      IMAGE: ghcr.io/transcendent-software-llc/openjibo-runtime
+      SOURCE_COMMIT: ${{ inputs.source_commit }}
+      PORTABLE_DIGEST: ${{ inputs.portable_digest }}
+      AVX2_DIGEST: ${{ inputs.avx2_digest }}
+    steps:
+      - name: Validate supplied identities
+        run: |
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$PORTABLE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          [[ "$AVX2_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          test "$PORTABLE_DIGEST" != "$AVX2_DIGEST"
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ vars.OPENJIBO_GHCR_PUBLISH_USER }}
+          password: ${{ secrets.OPENJIBO_GHCR_PUBLISH_TOKEN }}
+
+      - name: Read package owner and visibility
+        env:
+          GH_TOKEN: ${{ secrets.OPENJIBO_GHCR_PUBLISH_TOKEN }}
+        run: |
+          mkdir -p verification
+          gh api orgs/Transcendent-Software-LLC/packages/container/openjibo-runtime \
+            --jq '{name,visibility,owner:.owner.login,html_url}' > verification/package.json
+          jq -e '.owner == "Transcendent-Software-LLC" and .name == "openjibo-runtime"' verification/package.json
+
+      - name: Pull and verify both published image attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for profile in portable avx2; do
+            digest="$PORTABLE_DIGEST"
+            if [ "$profile" = avx2 ]; then digest="$AVX2_DIGEST"; fi
+            docker pull "$IMAGE@$digest"
+            gh attestation verify "oci://$IMAGE@$digest" \
+              --repo transcendentsoftware-jd/JiboExperiments \
+              --signer-workflow transcendentsoftware-jd/JiboExperiments/.github/workflows/openjibo-runtime-preview-publish.yml \
+              --source-digest "$SOURCE_COMMIT" --format json > "verification/$profile-provenance.json"
+            docker image inspect "$IMAGE@$digest" \
+              --format '{{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.openjibo.cpu-profile"}}' \
+              > "verification/$profile-labels.txt"
+            test "$(cat "verification/$profile-labels.txt")" = "$SOURCE_COMMIT $profile"
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: runtime-preview-verification-${{ github.run_id }}
+          path: verification/
+          if-no-files-found: error
+          retention-days: 14
