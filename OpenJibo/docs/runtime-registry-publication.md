@@ -70,6 +70,13 @@ token issuance and manifest reads passed for both exact digests, returning HTTP
 200 and matching Docker-Content-Digest values. This verifies anonymous manifest
 access, not a fresh published-image installation or every layer download.
 
+The original, unchanged portable and AVX2 ZIPs are now retained as public
+prerelease assets (not latest/stable):
+https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-36863178102.
+The release tag targets the published source commit; site/documentation changes
+do not rebuild or replace those image or bundle bytes. GitHub release assets are
+not signed metadata and must still be checked against the recorded hashes.
+
 A partial matrix failure can leave a published
 preview for one profile; do not list it as a complete release. Retain the successful
 registry digest and repair/retry under a new run tag rather than assuming atomic

@@ -29,6 +29,18 @@ docker volume ls --filter label=com.docker.compose.project=openjibo-published-pr
 docker compose -p openjibo-published-preview \
   -f docker-compose.yml -f test-port.compose.yaml ps -a
 curl --fail-with-body --max-time 15 http://localhost:8082/health</code></pre>
-<p>Expected: PostgreSQL healthy, migrator exited with code 0, API running and health returns <code>ok: true</code>. Next, run authenticated socket and audio probes from your trusted source checkout against port 8082. Do not redirect a physical robot yet. Preserve results, image identities and bundle checksum. <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/native-linux-acceptance-20260928.md">Acceptance evidence and probe context</a>.</p><p>Stop the test with the same project and both Compose files followed by <code>stop</code>. Preserve files, keys and volumes. Never use <code>down -v</code> on data you wish to retain.</p></section>
+<p>Expected: PostgreSQL healthy, migrator exited with code 0, API running and health returns <code>ok: true</code>. For the current tester with a trusted checkout at <code>~/JiboExperiments</code> and Node installed, test authenticated sockets:</p>
+<pre><code>node ~/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/invoke-jetstream-compatibility-probe.mjs \
+  --entrypoint-url http://localhost:8082 \
+  --hub-url ws://localhost:8082 \
+  --notification-url ws://localhost:8082 \
+  --mode authenticated --robots 2 \
+  --device-prefix published-preview --skip-turn</code></pre>
+<p>This deliberately creates two synthetic device records only in the new test stack. If you retained the previously verified <code>~/Downloads/cloud-version.ogg</code> fixture, run:</p>
+<pre><code>node ~/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/invoke-real-audio-probe.mjs \
+  --audio ~/Downloads/cloud-version.ogg \
+  --base-url http://localhost:8082 \
+  --robot-id speech-acceptance-published --turns 3</code></pre>
+<p>Do not redirect a physical robot yet. Preserve results, image identities and bundle checksum. <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/native-linux-acceptance-20260928.md">Acceptance evidence and probe context</a>.</p><p>Stop the test with the same project and both Compose files followed by <code>stop</code>. Preserve files, keys and volumes. Never use <code>down -v</code> on data you wish to retain.</p></section>
 <section class="panel"><h2>Installation and update roadmap</h2><p>Planned installer: download, inspect, run; stable by default once a stable release exists, explicit preview opt-in, and targeted version selection. Each selection resolves to verified immutable artifacts. Portable is the default; AVX2 needs an explicit capability check. No latest/stable selector or automatic upgrade is available today.</p><p>Updates will be separate, operator-reviewed operations with backups, migration compatibility and recovery checks. <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/blob/main/OpenJibo/docs/runtime-registry-publication.md">Image digests and release evidence</a> · <a href="https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-36863178102">Preview release files</a></p></section>
 </main><footer class="shell">Windows published-bundle acceptance remains pending. No ARM64, hybrid or managed starter certification is implied.</footer></body></html>

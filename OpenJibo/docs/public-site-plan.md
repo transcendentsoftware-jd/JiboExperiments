@@ -6,9 +6,16 @@ Stand up a small public site and web app on `openjibo.com` that makes the projec
 
 `jiborevived.com` remains the community-maintained Jibo Revival Group hub and status space. `openjibo.com` is the Open Jibo showcase, account entry surface, and hosted-cloud entry point.
 
-## Current Status (`2026-09-26`)
+## Current Status (`2026-10-01`)
 
-Status: `ready` for neutral site implementation.
+Status: neutral preview published at
+https://transcendentsoftware-jd.github.io/JiboExperiments/.
+First publication passed:
+https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36936001289.
+The durable targeted bundles are an explicit prerelease at
+https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-36863178102.
+`openjibo.com` DNS is unchanged. Visual/keyboard acceptance and fresh
+published-bundle installation still need tester evidence.
 
 The repository now contains a neutral static overview and preview downloads/test
 page in `src/OpenJibo.Site`. It compares all three hosting profiles, links the
@@ -22,8 +29,10 @@ The [official distribution plan](official-distribution-plan.md) adds versioned
 downloads, isolated/hybrid/managed starter packages, host adapters and verified
 updates/mirrors to this site work. Promote the revival group and its existing
 community hub; do not replace or conflate that hub with a commercial provider.
-Publish a downloads catalog only for releases that passed the package and
-platform acceptance matrix. The placeholder is not a deployed finished site.
+The preview catalog labels compilation, registry/provenance and offline ZIP
+verification separately from pending published-bundle and physical-robot
+acceptance. Do not promote previews as stable supported downloads before the
+full package/platform acceptance matrix passes.
 
 ## First Version Content
 
