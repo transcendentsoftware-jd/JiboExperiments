@@ -125,5 +125,24 @@ python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/launch-published-starter.py 
 
 Do not rerun preparation or fresh launch on this directory afterward. Inspect
 the exact named project on failure, keeping `.env` private. Health alone is not
-socket/audio acceptance. The manual published-image test already passed, but
-end-to-end automatic launch by this script remains pending user execution.
+socket/audio acceptance.
+
+### User-reported launcher acceptance, 2026-10-06
+
+The native Ubuntu laptop completed preparation, default read-only checking and
+explicit `--start` for `openjibo-launch-test` on loopback port 8084. The launcher
+reported `health_passed: true` with the portable digest recorded above. Both
+`launcher-preview-1` and `launcher-preview-2` then completed authenticated
+notification, listen and proactive socket checks in 605 ms. The probe used
+`--skip-turn`; this verifies connections, not proactive transactions.
+
+Three acoustic `cloud version` turns for `speech-acceptance-launcher` all matched
+the phrase and cloud instruction, with `LISTEN`, `EOS`, `SKILL_ACTION` replies.
+Durations were 8508, 7002 and 6676 ms. These are user-reported synthetic results,
+not physical microphone/playback or capacity certification. Timing alone does
+not establish a cold-start cause or independently identify the STT provider.
+
+This closes the native portable preparer-to-launcher-to-socket/audio acceptance
+loop. Windows, fresh AVX2 ZIP installation, physical-robot playback and stable
+release gates remain open. Existing stacks, private environment files and
+volumes must remain intact.

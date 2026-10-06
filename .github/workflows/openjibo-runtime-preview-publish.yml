@@ -122,6 +122,26 @@ jobs:
             --expected-sha256 "$archive_sha" > release-evidence/package-verification.json
           sha256sum "release-evidence/starter-$CPU_PROFILE-preview.zip" > release-evidence/SHA256SUMS
 
+      - name: Attest verified starter ZIP provenance
+        id: starter_attestation
+        uses: actions/attest@v4.2.2
+        with:
+          subject-path: release-evidence/starter-${{ matrix.cpu_profile }}-preview.zip
+
+      - name: Verify and retain starter ZIP attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ATTESTATION_BUNDLE: ${{ steps.starter_attestation.outputs.bundle-path }}
+        run: |
+          test -s "$ATTESTATION_BUNDLE"
+          cp "$ATTESTATION_BUNDLE" "release-evidence/starter-$CPU_PROFILE-attestation.json"
+          archive_sha=$(sha256sum "release-evidence/starter-$CPU_PROFILE-preview.zip" | cut -d ' ' -f1)
+          python3 -B OpenJibo/scripts/cloud/verify-starter-provenance.py \
+            --bundle "release-evidence/starter-$CPU_PROFILE-preview.zip" \
+            --expected-sha256 "$archive_sha" --source-commit "$GITHUB_SHA" \
+            --attestation "release-evidence/starter-$CPU_PROFILE-attestation.json" \
+            > "release-evidence/starter-$CPU_PROFILE-provenance-verification.json"
+
       - uses: actions/upload-artifact@v7
         with:
           name: runtime-preview-${{ matrix.cpu_profile }}-${{ github.sha }}
