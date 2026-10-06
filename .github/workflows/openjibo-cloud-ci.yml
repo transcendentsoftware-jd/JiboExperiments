@@ -66,6 +66,9 @@ jobs:
 
       - name: Validate neutral public site contract
         run: python3 -B -m unittest discover -s tests -p test_public_site.py
+
+      - name: Validate targeted published starter preparation
+        run: python3 -B -m unittest discover -s tests -p test_prepare_published_starter.py
         env:
           OPENJIBO_TEST_COMPOSE_CONFIG: "1"
 

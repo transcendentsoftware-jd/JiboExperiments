@@ -127,6 +127,13 @@ Additional hosts can implement the same documented adapter contract.
 
 ### Agreed installer and site sequence, 2026-10-01
 
+The [published acceptance record](published-starter-acceptance-20261006.md)
+now covers portable Linux install, restart persistence, separate backup/restore
+and acoustic checks, plus the actual published AVX2 image on the restored stack.
+The targeted portable preview preparer is implemented with explicit version,
+checksum and new-directory enforcement. It does not start Docker or constitute
+the full installer; runtime-host checks and controlled launch remain next.
+
 Publish a neutral site preview with hosting choices, exact preview downloads,
 limitations and isolated fresh-install instructions. A site is a useful test
 entry point, not a technical prerequisite for testing a bundle. Keep
