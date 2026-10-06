@@ -2,9 +2,11 @@
 import hashlib
 import importlib.util
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 
@@ -86,6 +88,28 @@ class StarterProvenanceTests(unittest.TestCase):
         self.assertIn("subject-path: release-evidence/starter-${{ matrix.cpu_profile }}-preview.zip", workflow)
         self.assertIn('--source-commit "$GITHUB_SHA"', workflow)
         self.assertIn("environment: openjibo-runtime-release", workflow)
+
+    def test_independent_verifier_binds_artifacts_to_successful_source_run(self):
+        workflow = (ROOT / ".github/workflows/openjibo-runtime-preview-verify.yml").read_text()
+        self.assertIn("publication_run_id:", workflow)
+        self.assertIn("actions: read", workflow)
+        self.assertIn("attestations: read", workflow)
+        self.assertLess(workflow.index("Publisher run identity or completion does not match"), workflow.index("gh run download"))
+        self.assertIn("'conclusion': 'success'", workflow)
+        self.assertIn("'workflowName': 'openjibo-runtime-preview-publish'", workflow)
+        self.assertIn("'headSha': os.environ['SOURCE_COMMIT']", workflow)
+        self.assertIn("runtime-preview-$profile-$SOURCE_COMMIT", workflow)
+        self.assertIn("Artifact image mismatch", workflow)
+        self.assertIn("verify-starter-provenance.py", workflow)
+        self.assertNotIn('--attestation "$directory', workflow)
+        self.assertIn("Verified ZIP identity mismatch", workflow)
+
+    def test_independent_workflow_embedded_python_compiles(self):
+        workflow = (ROOT / ".github/workflows/openjibo-runtime-preview-verify.yml").read_text()
+        scripts = re.findall(r"python3 - <<'PY'\n(.*?)\n          PY", workflow, re.S)
+        self.assertEqual(len(scripts), 3)
+        for script in scripts:
+            compile(textwrap.dedent(script), "workflow-inline", "exec")
 
 
 if __name__ == "__main__":

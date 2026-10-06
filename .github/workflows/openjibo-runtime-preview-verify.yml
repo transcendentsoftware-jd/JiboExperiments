@@ -15,6 +15,10 @@ on:
         description: AVX2 sha256 registry digest
         required: true
         type: string
+      publication_run_id:
+        description: Optional successful publisher run to independently verify both starter ZIPs
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -25,18 +29,28 @@ jobs:
     environment: openjibo-runtime-release
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      attestations: read
     env:
       IMAGE: ghcr.io/transcendent-software-llc/openjibo-runtime
       SOURCE_COMMIT: ${{ inputs.source_commit }}
       PORTABLE_DIGEST: ${{ inputs.portable_digest }}
       AVX2_DIGEST: ${{ inputs.avx2_digest }}
+      PUBLICATION_RUN_ID: ${{ inputs.publication_run_id }}
     steps:
+      - uses: actions/checkout@v7
+
       - name: Validate supplied identities
         run: |
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
           [[ "$PORTABLE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           [[ "$AVX2_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
           test "$PORTABLE_DIGEST" != "$AVX2_DIGEST"
+          if [ -n "$PUBLICATION_RUN_ID" ]; then
+            [[ "$PUBLICATION_RUN_ID" =~ ^[1-9][0-9]{0,19}$ ]]
+          fi
 
       - uses: docker/login-action@v4.6.0
         with:
@@ -69,6 +83,65 @@ jobs:
               --format '{{index .Config.Labels "org.opencontainers.image.revision"}} {{index .Config.Labels "org.openjibo.cpu-profile"}}' \
               > "verification/$profile-labels.txt"
             test "$(cat "verification/$profile-labels.txt")" = "$SOURCE_COMMIT $profile"
+          done
+
+      - name: Independently verify published starter ZIPs
+        if: inputs.publication_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run view "$PUBLICATION_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --json conclusion,headSha,headBranch,event,workflowName > verification/publisher-run.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('verification/publisher-run.json').read_text())
+          expected = {'conclusion': 'success', 'headSha': os.environ['SOURCE_COMMIT'],
+                      'headBranch': 'main', 'event': 'workflow_dispatch',
+                      'workflowName': 'openjibo-runtime-preview-publish'}
+          if any(run.get(key) != value for key, value in expected.items()):
+              raise SystemExit('Publisher run identity or completion does not match')
+          PY
+          for profile in portable avx2; do
+            directory="downloaded-$profile"
+            gh run download "$PUBLICATION_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+              --name "runtime-preview-$profile-$SOURCE_COMMIT" --dir "$directory"
+            CPU_PROFILE="$profile" python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          profile = os.environ['CPU_PROFILE']
+          root = Path('downloaded-' + profile)
+          lines = (root / 'SHA256SUMS').read_text().splitlines()
+          expected_name = 'release-evidence/starter-' + profile + '-preview.zip'
+          if len(lines) != 1:
+              raise SystemExit('Expected one ZIP checksum')
+          fields = lines[0].split()
+          if len(fields) != 2 or not re.fullmatch(r'[0-9a-f]{64}', fields[0]) or fields[1] != expected_name:
+              raise SystemExit('Unexpected ZIP checksum identity')
+          if (root / 'source-commit.txt').read_text().strip() != os.environ['SOURCE_COMMIT']:
+              raise SystemExit('Artifact source mismatch')
+          digest = os.environ['PORTABLE_DIGEST' if profile == 'portable' else 'AVX2_DIGEST']
+          expected_image = os.environ['IMAGE'] + '@' + digest
+          if (root / 'runtime-image.txt').read_text().strip() != expected_image:
+              raise SystemExit('Artifact image mismatch')
+          (Path('verification') / (profile + '-zip-sha256.txt')).write_text(fields[0])
+          PY
+            archive_sha=$(cat "verification/$profile-zip-sha256.txt")
+            python3 -B OpenJibo/scripts/cloud/verify-starter-provenance.py \
+              --bundle "$directory/starter-$profile-preview.zip" \
+              --expected-sha256 "$archive_sha" --source-commit "$SOURCE_COMMIT" \
+              > "verification/$profile-starter-provenance.json"
+            CPU_PROFILE="$profile" python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          profile = os.environ['CPU_PROFILE']
+          report = json.loads((Path('verification') / (profile + '-starter-provenance.json')).read_text())
+          digest = os.environ['PORTABLE_DIGEST' if profile == 'portable' else 'AVX2_DIGEST']
+          if (report.get('provenance_verified') is not True or
+              report.get('declared_cpu_profile') != profile or
+              report.get('runtime_image') != os.environ['IMAGE'] + '@' + digest):
+              raise SystemExit('Verified ZIP identity mismatch')
+          PY
           done
 
       - uses: actions/upload-artifact@v7

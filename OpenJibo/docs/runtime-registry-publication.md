@@ -81,3 +81,25 @@ A partial matrix failure can leave a published
 preview for one profile; do not list it as a complete release. Retain the successful
 registry digest and repair/retry under a new run tag rather than assuming atomic
 multi-profile publication.
+
+## Signed starter verification for subsequent previews
+
+The publisher now signs each verified starter ZIP and checks that signature
+before retaining evidence. The first release above remains unchanged and has
+checksum-only ZIPs. A new candidate publication was dispatched on 2026-10-06:
+[run 37540893708](https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/37540893708),
+source `fd32678bb29ade975c71a9bcd7dc7a89babaf541`. Completion and actual signed
+ZIP verification must be recorded before offering new download pins.
+
+The independent verification workflow accepts optional `publication_run_id`.
+With that input it requires a successful main/manual publisher run whose source
+matches `source_commit`, downloads the two exactly named evidence artifacts,
+checks source/image/checksum identities and independently verifies both ZIP
+signatures through GitHub (not the publisher's saved verification report).
+Each verified ZIP must also match the supplied registry digest and CPU profile.
+Without that input the workflow retains its legacy image-only behavior; an
+image-only success must not be described as starter ZIP certification.
+
+No artifact scripts are executed, no containers are started, and no existing
+release assets, installation data or stable/latest tags are changed. These
+checks establish provenance, not physical-robot or full installation acceptance.
