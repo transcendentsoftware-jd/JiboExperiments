@@ -136,7 +136,9 @@ the full installer. Native-Linux runtime-host checks and an explicit fresh-only
 launch command are implemented with regression coverage; user-reported native
 portable launcher health, two-robot sockets and three acoustic turns passed.
 The next release-trust foundation is [signed starter ZIP provenance](starter-provenance.md)
-for future publications. Stable channel selection, Windows launch and signed
+and its [first verified publication](published-starter-provenance-20261006.md).
+Reviewed multi-version preparer/launcher pin integration and fresh candidate
+acceptance are next. Stable channel selection, Windows launch and signed
 channel metadata remain separate deliverables.
 
 Publish a neutral site preview with hosting choices, exact preview downloads,

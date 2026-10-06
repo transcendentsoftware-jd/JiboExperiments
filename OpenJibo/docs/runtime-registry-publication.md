@@ -88,8 +88,10 @@ The publisher now signs each verified starter ZIP and checks that signature
 before retaining evidence. The first release above remains unchanged and has
 checksum-only ZIPs. A new candidate publication was dispatched on 2026-10-06:
 [run 37540893708](https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/37540893708),
-source `fd32678bb29ade975c71a9bcd7dc7a89babaf541`. Completion and actual signed
-ZIP verification must be recorded before offering new download pins.
+source `fd32678bb29ade975c71a9bcd7dc7a89babaf541`. Publication and independent
+image/ZIP verification passed. The [signed preview acceptance record](published-starter-provenance-20261006.md)
+retains exact identities and follow-up release-download verification. The new
+prerelease does not replace the older, installation-tested download instructions.
 
 The independent verification workflow accepts optional `publication_run_id`.
 With that input it requires a successful main/manual publisher run whose source

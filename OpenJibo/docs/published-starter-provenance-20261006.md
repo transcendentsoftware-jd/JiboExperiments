@@ -1,0 +1,57 @@
+# Signed starter preview candidate, 2026-10-06
+
+This is a new preview candidate, not a stable release or an in-place update.
+The previously tested `runtime-preview-36863178102` release remains unchanged.
+Neither runtime deployment nor physical-robot testing is implied.
+
+Published source: `fd32678bb29ade975c71a9bcd7dc7a89babaf541`.
+[Publisher run 37540893708](https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/37540893708)
+passed both profiles, including actual ZIP signature verification.
+
+| Profile | Runtime digest | Starter ZIP SHA-256 |
+| --- | --- | --- |
+| portable | `sha256:6bb69fd68d2c4863feaf17fd90319125ed1534f8cf728a4070ce04ee116c6010` | `5e38ef4e26920db0909f407ef7b53ac49ecd8d63f33dc9f631ca32f10ac66210` |
+| avx2 | `sha256:5311f91890754171b9f87bac288e9179b4ba6512a527c3c66569d2525e228fa6` | `30e2e9b9555042698b2dc25e32fdd7b0da282d8e08fdaf4de53ad394c5dec6c2` |
+
+Image namespace: `ghcr.io/transcendent-software-llc/openjibo-runtime`.
+Both ZIPs were also verified locally through GitHub using the trusted publisher
+workflow, exact source commit, GitHub Actions issuer and hosted-runner policy.
+An actual check using the previous release's source commit rejected the new ZIP.
+No checksum-only fallback or extraction occurred for that rejected check.
+
+[Independent image-and-ZIP verification run 37541750517](https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/37541750517)
+passed before exposing this candidate as a downloadable prerelease.
+It checked both registry pulls, image labels and image attestations, then downloaded
+the successful publisher evidence and independently verified both ZIP signatures.
+
+The prerelease tag is `runtime-preview-37540893708`, targeting the
+published source above. Retain the original ZIP bytes and their distinct
+`starter-portable-attestation.json` / `starter-avx2-attestation.json` signature
+bundles. Never replace the previous release assets or set a latest/stable tag.
+
+[The public prerelease](https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-37540893708)
+now retains all four assets. Both ZIPs were downloaded back from this release
+and passed signature verification using their published local attestation bundles.
+The returned image/profile identities and SHA-256 values matched the table.
+
+After publication, download and inspect a trusted checkout's verifier, then
+verify the portable ZIP before extracting:
+
+```bash
+python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/verify-starter-provenance.py \
+  --bundle starter-portable-preview.zip \
+  --expected-sha256 5e38ef4e26920db0909f407ef7b53ac49ecd8d63f33dc9f631ca32f10ac66210 \
+  --source-commit fd32678bb29ade975c71a9bcd7dc7a89babaf541 \
+  --attestation starter-portable-attestation.json
+```
+
+GitHub CLI with attestation verification support is required. A local signature
+bundle does not guarantee offline trust-root verification. Trusted pins come
+from this reviewed record, not an arbitrary checksum next to a download.
+
+The targeted preparer and guarded launcher still pin the older tested preview.
+Do not point that launcher at this candidate. Reviewed multi-version pin
+integration, fresh candidate installation/socket/audio acceptance, Windows,
+SBOM/license approval, channel freshness/revocation and physical-robot playback
+remain outstanding. The AVX2 profile additionally requires compatible CPU
+features on the actual Docker daemon host.

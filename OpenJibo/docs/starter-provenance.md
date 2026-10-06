@@ -31,9 +31,10 @@ require network access. Checksums and source identity must come from a trusted
 release record, not solely from adjacent untrusted download files.
 
 Offline regression tests cover policy enforcement and failure behavior using
-mocked CLI results. Actual positive cryptographic execution remains pending the
-first new publisher run; no publication or runtime deployment is implied by
-these tests. Signed builder identity is not stable-channel freshness, rollback
+mocked CLI results. Actual positive cryptographic execution now passed for both
+profiles in the [first signed preview record](published-starter-provenance-20261006.md),
+including independent CI verification and downloaded prerelease assets. No
+runtime deployment is implied. Signed builder identity is not stable-channel freshness, rollback
 protection, payload license approval, SBOM certification or physical-robot
 acceptance.
 
