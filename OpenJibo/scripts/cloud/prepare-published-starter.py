@@ -7,12 +7,14 @@ import io
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import urllib.parse
 import urllib.request
 import zipfile
 
 VERSION = "runtime-preview-36863178102"
+SOURCE_COMMIT = "ef8014611bb85139701136b32eb440ab0f253617"
 SHA256 = "68f7181b4c50b08c632a482efd9f0a20be3ab3a2ad1de97fe6281a5e320b6a91"
 IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:08b3e27362f47373696158ec619d9ac21e44e7bcf5995bce049b6dbac70d970b"
 URL = f"https://github.com/transcendentsoftware-jd/JiboExperiments/releases/download/{VERSION}/starter-portable-preview.zip"
@@ -49,7 +51,21 @@ def download():
         return read_bounded(response)
 
 
-def prepare(data, destination):
+def verify_provenance(data, attestation=None):
+    spec = importlib.util.spec_from_file_location("published_provenance_verifier", Path(__file__).with_name("verify-starter-provenance.py"))
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    with tempfile.TemporaryDirectory() as temp:
+        snapshot = Path(temp) / "starter.zip"
+        snapshot.write_bytes(data)
+        report = verifier.verify(snapshot, SHA256, SOURCE_COMMIT, attestation)
+    if report.get("provenance_verified") is not True:
+        raise ValueError("Signed release verification did not succeed")
+
+
+def prepare(data, destination, require_provenance=False, attestation=None):
+    if attestation is not None and not require_provenance:
+        raise ValueError("Attestation input requires signed verification")
     # Hash immutable in-memory bytes before parsing or creating the destination.
     if hashlib.sha256(data).hexdigest() != SHA256:
         raise ValueError("Published bundle checksum mismatch")
@@ -71,6 +87,8 @@ def prepare(data, destination):
         report = verifier.verify_bundle(snapshot, SHA256)
     if report["runtime_image"] != IMAGE or report["declared_cpu_profile"] != "portable":
         raise ValueError("Verified package differs from the reviewed release identity")
+    if require_provenance:
+        verify_provenance(data, attestation)
     # The existing verifier rejects traversal, duplicate names, links and extra files.
     # Extract those same verified bytes; refuse overwrite even after validation.
     destination.mkdir(mode=0o700)
@@ -89,6 +107,8 @@ def prepare(data, destination):
     return {"prepared": True, "version": VERSION, "cpu_profile": "portable",
             "archive_sha256": SHA256, "runtime_image": IMAGE,
             "destination": str(destination), "docker_started": False,
+            "provenance_verified": require_provenance,
+            "verification_policy": "signed-provenance" if require_provenance else "reviewed-preview-checksum-only",
             "scope": "Fresh-directory preparation only; inspect README and invoke scripts with Bash/PowerShell. No secrets initialized or data migrated."}
 
 
@@ -99,10 +119,17 @@ def main():
     parser.add_argument("--destination", required=True, type=Path)
     parser.add_argument("--bundle", type=Path, help="Optional local copy of this exact release ZIP")
     parser.add_argument("--plan", action="store_true", help="Print pinned identity without downloading or writing")
+    parser.add_argument("--require-provenance", action="store_true", help="Require signed ZIP provenance before extraction; current unsigned preview will fail")
+    parser.add_argument("--attestation", type=Path, help="Optional local signature bundle; requires --require-provenance")
     args = parser.parse_args()
+    if args.attestation is not None and not args.require_provenance:
+        parser.error("--attestation requires --require-provenance")
     if args.plan:
         print(json.dumps({"version": VERSION, "url": URL, "archive_sha256": SHA256,
-                          "runtime_image": IMAGE, "cpu_profile": "portable"}, sort_keys=True))
+                          "runtime_image": IMAGE, "cpu_profile": "portable",
+                          "source_commit": SOURCE_COMMIT,
+                          "provenance_required": args.require_provenance,
+                          "release_zip_attested": False}, sort_keys=True))
         return 0
     try:
         if args.destination.exists() or args.destination.is_symlink():
@@ -112,9 +139,9 @@ def main():
                 data = read_bounded(stream)
         else:
             data = download()
-        print(json.dumps(prepare(data, args.destination), sort_keys=True))
+        print(json.dumps(prepare(data, args.destination, args.require_provenance, args.attestation), sort_keys=True))
         return 0
-    except (OSError, ValueError, zipfile.BadZipFile) as error:
+    except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, subprocess.TimeoutExpired) as error:
         # Do not print redirect URLs, query tokens, secrets or partial archive data.
         print(f"Preview preparation failed ({type(error).__name__}); verify the release, network and unused destination. Any partial directory is retained for inspection.", file=sys.stderr)
         return 1

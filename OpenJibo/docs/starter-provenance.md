@@ -35,4 +35,18 @@ mocked CLI results. Actual positive cryptographic execution remains pending the
 first new publisher run; no publication or runtime deployment is implied by
 these tests. Signed builder identity is not stable-channel freshness, rollback
 protection, payload license approval, SBOM certification or physical-robot
-acceptance. Integration with the preparer's release selection is still pending.
+acceptance.
+
+The targeted preparer now supports `--require-provenance` (and optional local
+`--attestation`), enforcing this check before creating the destination. Its
+checksum, image and source commit remain pinned in reviewed source; callers
+cannot substitute a different release identity through CLI flags. JSON output
+explicitly distinguishes signed verification from checksum-only preparation.
+`--plan` only describes the policy: it does not verify a signature.
+
+The current pinned preview has no ZIP attestation, so requiring provenance on it
+must fail without extraction. Do not use this option as a working installation
+instruction for that release. A future attested publication must first pass
+cryptographic verification and receive reviewed pins before the preparer can
+offer a successful signed path. No new release, stable selector or unattended
+upgrade is introduced here.

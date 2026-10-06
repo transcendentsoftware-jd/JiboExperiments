@@ -54,6 +54,8 @@ class PublishedStarterTests(unittest.TestCase):
                 target = base / "new"
                 result = installer.prepare(data, target)
                 self.assertFalse(result["docker_started"])
+                self.assertFalse(result["provenance_verified"])
+                self.assertEqual(result["verification_policy"], "reviewed-preview-checksum-only")
                 self.assertTrue((target / "docker-compose.yml").is_file())
                 self.assertFalse((target / ".env").exists())
                 if sys.platform != "win32":
@@ -72,6 +74,44 @@ class PublishedStarterTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     installer.prepare(data, base / "new")
             self.assertFalse((base / "new").exists())
+
+    def test_provenance_failure_creates_no_destination(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            bundle = base / "fixture.zip"
+            builder.write_bundle(ROOT, installer.IMAGE, bundle)
+            data = bundle.read_bytes()
+            target = base / "new"
+            with patch.object(installer, "SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance", side_effect=ValueError("missing signature")) as verify:
+                with self.assertRaises(ValueError):
+                    installer.prepare(data, target, require_provenance=True)
+                verify.assert_called_once_with(data, None)
+            self.assertFalse(target.exists())
+
+    def test_signed_policy_verifies_before_extraction(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            bundle = base / "fixture.zip"
+            builder.write_bundle(ROOT, installer.IMAGE, bundle)
+            data = bundle.read_bytes()
+            target = base / "new"
+            proof = base / "proof.json"
+            def verify(snapshot, attestation):
+                self.assertFalse(target.exists())
+                self.assertEqual(snapshot, data)
+                self.assertEqual(attestation, proof)
+            with patch.object(installer, "SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance", side_effect=verify):
+                result = installer.prepare(data, target, require_provenance=True, attestation=proof)
+            self.assertTrue(result["provenance_verified"])
+            self.assertEqual(result["verification_policy"], "signed-provenance")
+            self.assertFalse((target / ".env").exists())
+
+    def test_attestation_cannot_be_silently_ignored(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "new"
+            with self.assertRaises(ValueError):
+                installer.prepare(b"invalid", target, attestation=Path(temp) / "proof.json")
+            self.assertFalse(target.exists())
 
 
 if __name__ == "__main__":
