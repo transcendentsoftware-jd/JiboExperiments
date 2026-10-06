@@ -69,6 +69,9 @@ jobs:
 
       - name: Validate targeted published starter preparation
         run: python3 -B -m unittest discover -s tests -p test_prepare_published_starter.py
+
+      - name: Validate explicit published starter launch
+        run: python3 -B -m unittest discover -s tests -p test_launch_published_starter.py
         env:
           OPENJIBO_TEST_COMPOSE_CONFIG: "1"
 

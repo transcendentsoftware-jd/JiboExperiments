@@ -132,7 +132,10 @@ now covers portable Linux install, restart persistence, separate backup/restore
 and acoustic checks, plus the actual published AVX2 image on the restored stack.
 The targeted portable preview preparer is implemented with explicit version,
 checksum and new-directory enforcement. It does not start Docker or constitute
-the full installer; runtime-host checks and controlled launch remain next.
+the full installer. Native-Linux runtime-host checks and an explicit fresh-only
+launch command are now implemented with mocked regression coverage; end-to-end
+launcher execution on the user's laptop is next. Stable channel selection,
+Windows launch and signed metadata remain separate deliverables.
 
 Publish a neutral site preview with hosting choices, exact preview downloads,
 limitations and isolated fresh-install instructions. A site is a useful test

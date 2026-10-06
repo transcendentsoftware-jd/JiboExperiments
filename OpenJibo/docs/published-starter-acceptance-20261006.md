@@ -76,3 +76,54 @@ python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/prepare-published-starter.py
 Do not launch this directory until selecting another unused Compose project and
 loopback port. Existing preview/restore stacks must stay untouched. This is a
 preparer foundation, not the completed installer or a signed release selector.
+
+The user subsequently ran the preparer on native Ubuntu successfully. It
+reported the expected archive hash, portable digest and `docker_started: false`
+for a new `~/Downloads/openjibo-preparer-test` directory. This closes native
+preparation execution, not automatic launch acceptance.
+
+## Explicit launch foundation (native Linux portable preview)
+
+`launch-published-starter.py` defaults to read-only checking. It verifies the
+exact extracted manifest and payload hashes, refuses an existing `.env` or extra
+files, checks native Linux/amd64 prerequisites, Docker access, Compose 2.24.4+,
+RAM/free disk screening, existing project resources and loopback-port conflicts.
+Unix endpoint evidence is best-effort locality, not daemon host identity proof.
+The disk check covers the prepared directory filesystem, not a remote/separate
+Docker data filesystem; these checks are not speech/capacity certification.
+
+Explicit `--start` rechecks prerequisites, records a fresh-only launch attempt,
+uses the verified environment initializer with a randomly generated PostgreSQL
+password, writes a loopback-only override and starts the pinned API/migrator
+without rebuilding. It waits for health. Secrets are not printed or passed on
+the command line. Partial failures preserve files, keys and volumes; this command
+does not resume failed attempts or silently upgrade existing installations.
+
+Run Python as the normal user, not root. If Docker needs sudo, authorize it in
+the console first and pass `--sudo-docker`; only Docker uses `sudo -n`. These
+launch commands use a new project and port, distinct from existing 8080–8083
+stacks:
+
+```bash
+cd ~/JiboExperiments
+git pull --ff-only
+sudo -v
+
+python3 -B OpenJibo/scripts/cloud/launch-published-starter.py \
+  --directory ~/Downloads/openjibo-preparer-test \
+  --project openjibo-launch-test --port 8084 --sudo-docker
+```
+
+Only after that check passes, explicitly launch:
+
+```bash
+sudo -v
+python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/launch-published-starter.py \
+  --directory ~/Downloads/openjibo-preparer-test \
+  --project openjibo-launch-test --port 8084 --sudo-docker --start
+```
+
+Do not rerun preparation or fresh launch on this directory afterward. Inspect
+the exact named project on failure, keeping `.env` private. Health alone is not
+socket/audio acceptance. The manual published-image test already passed, but
+end-to-end automatic launch by this script remains pending user execution.
