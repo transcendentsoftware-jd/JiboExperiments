@@ -62,6 +62,27 @@ class LauncherTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             launcher.checked_files(self.target)
 
+    def test_signed_manifest_selects_new_image_without_changing_legacy(self):
+        archive = self.base / "signed-fixture.zip"
+        builder.write_bundle(ROOT, launcher.SIGNED_IMAGE, archive)
+        self.target = self.base / "signed-prepared"
+        with zipfile.ZipFile(archive) as source:
+            source.extractall(self.target)
+        raw = (self.target / "MANIFEST.json").read_bytes()
+        with patch.object(launcher, "SIGNED_MANIFEST_SHA256", hashlib.sha256(raw).hexdigest()):
+            self.assertEqual(launcher.checked_files(self.target), self.target)
+            _, report = self.check_with()
+            self.assertEqual(report["version"], "runtime-preview-37540893708")
+            self.assertEqual(report["runtime_image"], launcher.SIGNED_IMAGE)
+            self.assertFalse(report["docker_started"])
+        self.assertEqual(launcher.IMAGE, "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:08b3e27362f47373696158ec619d9ac21e44e7bcf5995bce049b6dbac70d970b")
+
+    def test_signed_manifest_cannot_substitute_legacy_image(self):
+        raw = (self.target / "MANIFEST.json").read_bytes()
+        with patch.object(launcher, "MANIFEST_SHA256", "0" * 64), patch.object(launcher, "SIGNED_MANIFEST_SHA256", hashlib.sha256(raw).hexdigest()):
+            with self.assertRaises(ValueError):
+                launcher.checked_files(self.target)
+
     @unittest.skipIf(sys.platform == "win32", "Native Linux symlink contract")
     def test_symlink_rejected(self):
         (self.target / "extra").symlink_to(self.base)

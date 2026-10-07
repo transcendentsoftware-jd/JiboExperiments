@@ -45,9 +45,9 @@ cannot substitute a different release identity through CLI flags. JSON output
 explicitly distinguishes signed verification from checksum-only preparation.
 `--plan` only describes the policy: it does not verify a signature.
 
-The current pinned preview has no ZIP attestation, so requiring provenance on it
-must fail without extraction. Do not use this option as a working installation
-instruction for that release. A future attested publication must first pass
-cryptographic verification and receive reviewed pins before the preparer can
-offer a successful signed path. No new release, stable selector or unattended
-upgrade is introduced here.
+The legacy pinned preview has no ZIP attestation, so requiring provenance on it
+must fail without extraction. The new reviewed `runtime-preview-37540893708`
+passed actual signature verification and is now selectable explicitly. It always
+requires provenance, even without the CLI flag. Both exact versions remain
+available; neither a stable selector nor an unattended upgrade is introduced.
+See the signed preview record for separate native Linux test commands.

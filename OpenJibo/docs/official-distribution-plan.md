@@ -137,8 +137,9 @@ launch command are implemented with regression coverage; user-reported native
 portable launcher health, two-robot sockets and three acoustic turns passed.
 The next release-trust foundation is [signed starter ZIP provenance](starter-provenance.md)
 and its [first verified publication](published-starter-provenance-20261006.md).
-Reviewed multi-version preparer/launcher pin integration and fresh candidate
-acceptance are next. Stable channel selection, Windows launch and signed
+Reviewed two-version preparer/launcher pin integration is in place; the signed
+candidate's actual preparation and payload checks passed without Docker startup.
+Fresh candidate Linux launch/socket/audio acceptance is next. Stable channel selection, Windows launch and signed
 channel metadata remain separate deliverables.
 
 Publish a neutral site preview with hosting choices, exact preview downloads,

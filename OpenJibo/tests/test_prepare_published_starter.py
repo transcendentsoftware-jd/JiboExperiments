@@ -85,7 +85,7 @@ class PublishedStarterTests(unittest.TestCase):
             with patch.object(installer, "SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance", side_effect=ValueError("missing signature")) as verify:
                 with self.assertRaises(ValueError):
                     installer.prepare(data, target, require_provenance=True)
-                verify.assert_called_once_with(data, None)
+                verify.assert_called_once_with(data, None, installer.VERSION)
             self.assertFalse(target.exists())
 
     def test_signed_policy_verifies_before_extraction(self):
@@ -96,10 +96,11 @@ class PublishedStarterTests(unittest.TestCase):
             data = bundle.read_bytes()
             target = base / "new"
             proof = base / "proof.json"
-            def verify(snapshot, attestation):
+            def verify(snapshot, attestation, version):
                 self.assertFalse(target.exists())
                 self.assertEqual(snapshot, data)
                 self.assertEqual(attestation, proof)
+                self.assertEqual(version, installer.VERSION)
             with patch.object(installer, "SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance", side_effect=verify):
                 result = installer.prepare(data, target, require_provenance=True, attestation=proof)
             self.assertTrue(result["provenance_verified"])
@@ -112,6 +113,36 @@ class PublishedStarterTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 installer.prepare(b"invalid", target, attestation=Path(temp) / "proof.json")
             self.assertFalse(target.exists())
+
+    def test_signed_release_always_checks_provenance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            bundle = base / "fixture.zip"
+            builder.write_bundle(ROOT, installer.SIGNED_IMAGE, bundle)
+            data = bundle.read_bytes()
+            target = base / "new"
+            with patch.object(installer, "SIGNED_SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance") as verify:
+                result = installer.prepare(data, target, version=installer.SIGNED_VERSION)
+                verify.assert_called_once_with(data, None, installer.SIGNED_VERSION)
+            self.assertTrue(result["provenance_verified"])
+            self.assertEqual(result["runtime_image"], installer.SIGNED_IMAGE)
+
+    def test_signed_release_signature_failure_cannot_downgrade(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            bundle = base / "fixture.zip"
+            builder.write_bundle(ROOT, installer.SIGNED_IMAGE, bundle)
+            data = bundle.read_bytes()
+            target = base / "new"
+            with patch.object(installer, "SIGNED_SHA256", hashlib.sha256(data).hexdigest()), patch.object(installer, "verify_provenance", side_effect=ValueError("signature failed")):
+                with self.assertRaises(ValueError):
+                    installer.prepare(data, target, require_provenance=False, version=installer.SIGNED_VERSION)
+            self.assertFalse(target.exists())
+
+    def test_unknown_versions_cannot_supply_download_pins(self):
+        for version in ("latest", "stable", "runtime-preview-999", "../other"):
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                installer.release_identity(version)
 
 
 if __name__ == "__main__":

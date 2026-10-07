@@ -18,6 +18,19 @@ import urllib.request
 
 MANIFEST_SHA256 = "d68cf6afee940d77e59b862da3566f94fbc163c6619f4c1f62f9b4870da3a02e"
 IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:08b3e27362f47373696158ec619d9ac21e44e7bcf5995bce049b6dbac70d970b"
+SIGNED_MANIFEST_SHA256 = "c9ceaedd1339721a7fa1a32b64990623633a2abc2617ed6242be973079f38b86"
+SIGNED_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:6bb69fd68d2c4863feaf17fd90319125ed1534f8cf728a4070ce04ee116c6010"
+
+
+def manifest_identity(raw):
+    approved = {
+        MANIFEST_SHA256: ("runtime-preview-36863178102", IMAGE),
+        SIGNED_MANIFEST_SHA256: ("runtime-preview-37540893708", SIGNED_IMAGE),
+    }
+    identity = approved.get(hashlib.sha256(raw).hexdigest())
+    if identity is None:
+        raise ValueError("Manifest does not match a reviewed published preview")
+    return identity
 
 
 def clean_environment():
@@ -43,10 +56,9 @@ def checked_files(directory):
     if manifest.is_symlink() or not manifest.is_file() or manifest.stat().st_size > 512 * 1024:
         raise ValueError("Invalid manifest file")
     raw = manifest.read_bytes()
-    if hashlib.sha256(raw).hexdigest() != MANIFEST_SHA256:
-        raise ValueError("Manifest does not match this exact published preview")
+    _, image = manifest_identity(raw)
     record = json.loads(raw)
-    if record["runtime_image"] != IMAGE:
+    if record["runtime_image"] != image:
         raise ValueError("Unexpected image identity")
     expected = set(record["sha256"]) | {"MANIFEST.json"}
     found = set()
@@ -91,6 +103,7 @@ def collect_preflight(docker, env):
 def check(directory, project, port, docker, env):
     parameters(project, port)
     directory = checked_files(directory)
+    version, image = manifest_identity((directory / "MANIFEST.json").read_bytes())
     if platform.system() != "Linux" or platform.machine().lower() not in ("x86_64", "amd64"):
         raise ValueError("This launcher supports native Linux x86_64 only")
     for binary in ("docker", "bash", "openssl"):
@@ -102,8 +115,8 @@ def check(directory, project, port, docker, env):
     server = report["docker_server"]
     if server["architecture"].lower() not in ("x86_64", "amd64"):
         raise ValueError("Docker daemon architecture is not x86_64")
-    version = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?", report["compose_version"])
-    if not version or tuple(map(int, version.groups())) < (2, 24, 4):
+    compose_version = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?", report["compose_version"])
+    if not compose_version or tuple(map(int, compose_version.groups())) < (2, 24, 4):
         raise ValueError("Docker Compose 2.24.4 or newer is required")
     if server["memory_total_bytes"] < 4 * 1024**3 or report["host"]["memory_available_bytes"] < 1024**3:
         raise ValueError("Need at least 4 GiB daemon RAM and 1 GiB available host RAM")
@@ -119,7 +132,7 @@ def check(directory, project, port, docker, env):
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", port))
     return directory, {"checked": True, "project": project, "port": port,
-                       "runtime_image": IMAGE, "docker_started": False,
+                       "version": version, "runtime_image": image, "docker_started": False,
                        "scope": "Prerequisites and current conflicts only; no capacity or physical-robot certification."}
 
 
