@@ -5,6 +5,7 @@ import io
 from pathlib import Path
 import tempfile
 import sys
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -23,6 +24,17 @@ builder = load("published_builder", ROOT / "OpenJibo/scripts/cloud/prepare-openj
 
 
 class PublishedStarterTests(unittest.TestCase):
+    def test_old_cli_is_identified_as_prerequisite_failure(self):
+        for result in (subprocess.CompletedProcess([], 1, "", 'unknown command "attestation"'),
+                       subprocess.CompletedProcess([], 0, "--source-digest", "")):
+            with patch.object(installer.subprocess, "run", return_value=result), self.assertRaises(installer.ProvenancePrerequisiteError):
+                installer.check_provenance_cli()
+
+    def test_supported_cli_is_accepted(self):
+        help_text = "--source-digest --signer-workflow --deny-self-hosted-runners --cert-oidc-issuer --predicate-type --format --bundle --repo"
+        with patch.object(installer.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, help_text, "")):
+            installer.check_provenance_cli()
+
     def test_reject_untrusted_redirects(self):
         for url in ("http://github.com/file", "https://evil.example/file", "https://github.com.evil.example/file", "https://user@github.com/file", "https://github.com:8443/file"):
             with self.subTest(url=url), self.assertRaises(ValueError):

@@ -75,6 +75,8 @@ signature verification.
 First inspect the selected identity without downloading or creating files:
 
 ```bash
+(
+set -euo pipefail
 cd ~/JiboExperiments
 git pull --ff-only
 command -v gh
@@ -83,21 +85,28 @@ gh attestation verify --help >/dev/null
 python3 -B OpenJibo/scripts/cloud/prepare-published-starter.py \
   --channel preview --version runtime-preview-37540893708 \
   --destination ~/Downloads/openjibo-signed-preview-test --plan
+)
 ```
 
 Prepare the new portable ZIP; provenance is mandatory for this version even
 without `--require-provenance`:
 
 ```bash
+(
+set -euo pipefail
+gh attestation verify --help >/dev/null
 python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/prepare-published-starter.py \
   --channel preview --version runtime-preview-37540893708 \
   --destination ~/Downloads/openjibo-signed-preview-test
+)
 ```
 
 Expect `prepared: true`, `provenance_verified: true`, `docker_started: false`.
 Inspect the extracted README, then check and explicitly start the new project:
 
 ```bash
+(
+set -euo pipefail
 sudo -v
 python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/launch-published-starter.py \
   --directory ~/Downloads/openjibo-signed-preview-test \
@@ -107,11 +116,14 @@ sudo -v
 python3 -B ~/JiboExperiments/OpenJibo/scripts/cloud/launch-published-starter.py \
   --directory ~/Downloads/openjibo-signed-preview-test \
   --project openjibo-signed-preview-test --port 8085 --sudo-docker --start
+)
 ```
 
 After `health_passed: true`, run the familiar synthetic acceptance probes:
 
 ```bash
+(
+set -euo pipefail
 node ~/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/invoke-jetstream-compatibility-probe.mjs \
   --entrypoint-url http://localhost:8085 \
   --hub-url ws://localhost:8085 --notification-url ws://localhost:8085 \
@@ -120,8 +132,16 @@ node ~/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/invoke-jetstream-compatibili
 node ~/JiboExperiments/OpenJibo/src/Jibo.Cloud/node/invoke-real-audio-probe.mjs \
   --audio ~/Downloads/cloud-version.ogg --base-url http://localhost:8085 \
   --robot-id speech-acceptance-signed-preview --turns 3
+)
 ```
 
 Share only the JSON results/errors, not `.env` or tokens. This is portable
 software acceptance on an isolated loopback stack, not physical-robot testing,
 AVX2 fresh installation or production deployment.
+
+If `gh` reports `unknown command "attestation"`, the distro-provided CLI is too
+old for these checks. Upgrade using the [official GitHub CLI Ubuntu/Debian repository instructions](https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian),
+then verify the required command before retrying. Each command block above runs
+in a fail-fast subshell; failure does not close your interactive terminal.
+The preparer also checks CLI capabilities before downloading when signed
+verification is required, and reports this prerequisite separately.

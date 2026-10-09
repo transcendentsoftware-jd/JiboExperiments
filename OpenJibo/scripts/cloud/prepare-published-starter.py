@@ -25,6 +25,22 @@ SIGNED_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:6bb69f
 SIGNED_SOURCE_COMMIT = "fd32678bb29ade975c71a9bcd7dc7a89babaf541"
 
 
+class ProvenancePrerequisiteError(ValueError):
+    pass
+
+
+def check_provenance_cli():
+    try:
+        result = subprocess.run(["gh", "attestation", "verify", "--help"],
+                                capture_output=True, text=True, timeout=15, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ProvenancePrerequisiteError("GitHub CLI is missing or unavailable") from error
+    flags = ("--source-digest", "--signer-workflow", "--deny-self-hosted-runners",
+             "--cert-oidc-issuer", "--predicate-type", "--format", "--bundle", "--repo")
+    if result.returncode or not all(flag in result.stdout for flag in flags):
+        raise ProvenancePrerequisiteError("GitHub CLI lacks required attestation verification support")
+
+
 def release_identity(version):
     if version == VERSION:
         return dict(version=version, archive_sha256=SHA256, runtime_image=IMAGE,
@@ -151,6 +167,8 @@ def main():
     try:
         if args.destination.exists() or args.destination.is_symlink():
             raise ValueError("Destination already exists; upgrades are not supported")
+        if required:
+            check_provenance_cli()
         if args.bundle:
             with args.bundle.open("rb") as stream:
                 data = read_bounded(stream)
@@ -158,6 +176,9 @@ def main():
             data = download(args.version)
         print(json.dumps(prepare(data, args.destination, required, args.attestation, args.version), sort_keys=True))
         return 0
+    except ProvenancePrerequisiteError:
+        print("Preview preparation stopped: GitHub CLI is missing, outdated or unavailable. Upgrade gh from its official repository and confirm gh attestation verify --help succeeds. No download or extraction was attempted.", file=sys.stderr)
+        return 1
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, subprocess.TimeoutExpired) as error:
         # Do not print redirect URLs, query tokens, secrets or partial archive data.
         print(f"Preview preparation failed ({type(error).__name__}); verify the release, network and unused destination. Any partial directory is retained for inspection.", file=sys.stderr)
