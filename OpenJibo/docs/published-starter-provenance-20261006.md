@@ -57,8 +57,9 @@ remain supported; there is no moving latest selection or upgrade path.
 
 Actual HTTPS download/preparation passed with `provenance_verified: true` and
 `docker_started: false`. The resulting files passed the launcher's exact
-manifest/payload checks. Docker launch on the user's native Linux laptop remains
-the next acceptance gate. Windows,
+manifest/payload checks. Native Linux launch/socket/audio acceptance subsequently
+passed as recorded below. Exact-candidate restart persistence and backup/restore,
+Windows,
 SBOM/license approval, channel freshness/revocation and physical-robot playback
 remain outstanding. The AVX2 profile additionally requires compatible CPU
 features on the actual Docker daemon host.
@@ -145,3 +146,63 @@ then verify the required command before retrying. Each command block above runs
 in a fail-fast subshell; failure does not close your interactive terminal.
 The preparer also checks CLI capabilities before downloading when signed
 verification is required, and reports this prerequisite separately.
+
+## User-reported native Linux acceptance, 2026-10-09
+
+The user upgraded GitHub CLI to 2.102.0. Ubuntu ESM's older 2.45.0 package had
+APT priority 510 versus 500 for the official GitHub repository, so a normal
+upgrade kept the older CLI; explicit version selection resolved that prerequisite.
+Authentication and access to the ZIP attestation succeeded. A previous target
+directory existed and was preserved; preparation succeeded into the fresh
+`/home/jake-dubin/Downloads/openjibo-signed-preview-20261009T124133Z` directory.
+Its report had `provenance_verified: true`, the expected archive/image identity
+and `docker_started: false`.
+
+The read-only launcher check passed for `openjibo-signed-preview-test`, port 8085.
+Explicit startup then returned `health_passed: true` and the expected signed
+preview version/image. Two consecutive socket/audio probe batches passed:
+
+| Probe batch | Two-robot socket checks | Audio turn durations (ms) |
+| --- | --- | --- |
+| 1 | 612 ms | 9576, 7135, 7001 |
+| 2 | 350 ms | 5235, 6949, 6767 |
+
+Both `signed-preview-1` and `signed-preview-2` connected to notification, listen
+and proactive sockets in each batch. Socket tests used `--skip-turn`, so this
+does not prove proactive transaction replies. All six audio transactions matched
+`cloud version`, validated the cloud instruction and returned `LISTEN`, `EOS`,
+`SKILL_ACTION`. Timing alone does not establish the provider or a cold-start cause.
+This evidence is user-reported terminal output, not agent execution on the laptop.
+
+The signed portable preparation-to-launch-to-synthetic-speech path has passed.
+Restart persistence and separate backup/restore for this exact candidate remain
+open; older release recovery evidence is not silently transferred to it.
+Representative encrypted-data recovery and physical microphone/playback are also
+not proven. Preserve the private `.env`, data keys and all existing volumes.
+
+### Next: API restart without reinitialization
+
+This restarts only the signed candidate API, using its existing Docker
+configuration rather than recomputing Compose variables. It does not rerun the
+fresh launcher, migrator or initializer. After health recovers, the probe verifies
+reconnection; it is not proof that database rows survived, because a probe can
+recreate records. Database persistence must be checked separately with API stopped.
+
+```bash
+(
+set -euo pipefail
+cd "$HOME/JiboExperiments"
+sudo -v
+api=openjibo-signed-preview-test-api-1
+expected=sha256:6bb69fd68d2c4863feaf17fd90319125ed1534f8cf728a4070ce04ee116c6010
+test "$(sudo -n docker inspect --format '{{.Config.Image}}' "$api")" = \
+  "ghcr.io/transcendent-software-llc/openjibo-runtime@$expected"
+sudo -n docker restart "$api"
+curl --fail-with-body --max-time 15 --retry 10 --retry-delay 2 \
+  --retry-connrefused --retry-all-errors http://localhost:8085/health
+node OpenJibo/src/Jibo.Cloud/node/invoke-jetstream-compatibility-probe.mjs \
+  --entrypoint-url http://localhost:8085 \
+  --hub-url ws://localhost:8085 --notification-url ws://localhost:8085 \
+  --mode authenticated --robots 2 --device-prefix signed-preview --skip-turn
+)
+```
