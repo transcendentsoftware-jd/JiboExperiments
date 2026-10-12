@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import unittest
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1] / "src" / "OpenJibo.Site"
 
@@ -232,6 +233,22 @@ const script = JSON.parse(process.argv[1]);
             with self.subTest(foreground=foreground, background=background):
                 values = sorted([luminance(colors[foreground]), luminance(colors[background])])
                 self.assertGreaterEqual((values[1] + .05) / (values[0] + .05), 4.5)
+
+    def test_robot_illustration_preserves_owner_reference_features(self):
+        home = (ROOT / 'index.html').read_text(encoding='utf-8')
+        raw = re.search(r'<svg class="robot-art"[\s\S]*?</svg>', home).group(0)
+        svg = ET.fromstring(raw)
+        self.assertEqual(svg.attrib['viewBox'], '0 0 460 460')
+        self.assertEqual(svg.attrib['role'], 'img')
+        features = {element.attrib['id']: element for element in svg.iter() if 'id' in element.attrib}
+        self.assertEqual(features['jibo-round-face'].tag, 'circle')
+        self.assertEqual(len([element for element in svg.iter('circle')
+                              if element.attrib.get('class') == 'jibo-camera']), 2)
+        self.assertIn('jibo-white-body', features)
+        self.assertIn('jibo-lower-body', features)
+        for reference in re.findall(r'url\(#([^)]+)\)', raw):
+            self.assertIn(reference, features)
+        self.assertNotIn('codex-clipboard', home)
 
 
 if __name__ == "__main__":

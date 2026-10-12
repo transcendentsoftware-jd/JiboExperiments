@@ -11,13 +11,32 @@
 <main id="main">
 <section class="shell hero home-hero">
 <div class="hero-copy"><p class="eyebrow"><span class="status-dot" aria-hidden="true"></span>A community revival</p><h1>A little robot.<br>A new <em>beginning.</em></h1><p class="lede">Jibo has a place in our homes—and our hearts. We’re working with the revival community to give his software a path forward.</p><div class="actions"><a class="button primary" href="#start">Find your next step ↓</a><a class="text-link" href="https://jiborevived.com/">Meet the community ↗</a></div><p class="hero-note">Independent, community-minded, and still growing.<br>Not affiliated with Jibo, Inc.</p></div>
-<div class="robot-scene"><svg class="robot-art" viewBox="0 0 460 460" role="img" aria-labelledby="robot-title robot-description"><title id="robot-title">A friendly illustration of Jibo</title><desc id="robot-description">A white tabletop robot with a dark face and a small blue eye, surrounded by a warm circle.</desc>
-<circle cx="230" cy="216" r="172" fill="#e7eee8"/><ellipse cx="230" cy="395" rx="115" ry="13" fill="#173d35" opacity=".09"/>
-<path d="M151 330 Q150 371 170 384 Q230 409 290 384 Q310 371 309 330Z" fill="#fafaf6" stroke="#ced8d1" stroke-width="2"/>
-<path d="M167 317 Q178 260 198 252 L259 250 Q288 267 295 317 Q232 349 167 317Z" fill="#fdfdf9" stroke="#ced8d1" stroke-width="2"/><path d="M168 316 Q229 340 295 316" fill="none" stroke="#c4d0c8" stroke-width="4"/>
-<path d="M144 172 Q149 139 178 130 Q230 111 281 131 Q315 142 320 177 L312 228 Q301 259 257 269 Q189 275 158 246 Q140 225 144 172Z" fill="#fdfdf9" stroke="#cbd6cf" stroke-width="2"/>
-<path d="M171 163 Q209 142 267 152 Q301 161 307 187 L301 224 Q289 248 250 251 Q203 249 176 228 Q156 201 171 163Z" fill="#18302f"/><ellipse cx="242" cy="202" rx="21" ry="23" fill="#79d4e4"/><ellipse cx="248" cy="194" rx="5" ry="6" fill="#dcfaff" opacity=".85"/><path d="M183 159 Q217 146 257 151" stroke="#fff" stroke-width="4" opacity=".55" fill="none"/>
-<path d="M103 155 v20 M93 165 h20 M352 289 v18 M343 298 h18" stroke="#b86c47" stroke-width="3" stroke-linecap="round"/><circle cx="351" cy="130" r="6" fill="#b86c47"/><circle cx="112" cy="300" r="4" fill="#789a89"/>
+<div class="robot-scene"><svg class="robot-art" viewBox="0 0 460 460" role="img" aria-labelledby="robot-title robot-description"><title id="robot-title">An illustration of Jibo, based on an owner’s photograph</title><desc id="robot-description">Jibo has a large round black face, two small camera lenses, a glowing circular eye, a tapered white body, and a dark curved lower section.</desc>
+<defs>
+<linearGradient id="jibo-shell" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#e4e5de"/><stop offset=".35" stop-color="#fffef8"/><stop offset=".72" stop-color="#f8f7f0"/><stop offset="1" stop-color="#d6dbd6"/></linearGradient>
+<linearGradient id="jibo-base" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#52605d"/><stop offset=".5" stop-color="#2e3b39"/><stop offset="1" stop-color="#182724"/></linearGradient>
+<linearGradient id="jibo-rim" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#687875"/><stop offset=".5" stop-color="#d4d9d4"/><stop offset="1" stop-color="#a4ada7"/></linearGradient>
+<radialGradient id="jibo-face" cx=".36" cy=".25" r=".85"><stop stop-color="#10313b"/><stop offset="1" stop-color="#05181e"/></radialGradient>
+<radialGradient id="jibo-eye"><stop offset="0" stop-color="#fbffff"/><stop offset=".7" stop-color="#eefcff"/><stop offset=".85" stop-color="#b5e6fb"/><stop offset="1" stop-color="#7cabc7" stop-opacity="0"/></radialGradient>
+</defs>
+<circle cx="230" cy="224" r="175" fill="#e7eee8"/>
+<ellipse cx="233" cy="416" rx="100" ry="12" fill="#173d35" opacity=".10"/>
+<!-- One tapered body, with the curved white-to-dark joint seen in the reference. -->
+<path id="jibo-lower-body" d="M188 250 Q230 234 274 254 C291 285 303 315 306 349 C309 373 296 397 273 407 Q231 423 193 408 C170 399 158 380 160 354 C162 315 176 278 188 250Z" fill="url(#jibo-base)" stroke="#354540" stroke-width="1.5"/>
+<path id="jibo-white-body" d="M188 250 Q230 234 274 254 C291 285 300 313 305 342 C281 367 209 390 161 363 C160 327 175 279 188 250Z" fill="url(#jibo-shell)" stroke="#d8ddd6" stroke-width="1.5"/>
+<path d="M188 276 Q177 311 176 338" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+<!-- The face is circular; the screen and camera pair tilt with the head. -->
+<g transform="rotate(-6 230 167)">
+<circle cx="230" cy="167" r="110" fill="url(#jibo-shell)" stroke="#b6c1b8" stroke-width="1.5"/>
+<circle id="jibo-round-face" cx="228" cy="164" r="106" fill="url(#jibo-rim)"/>
+<circle cx="228" cy="164" r="102" fill="url(#jibo-face)" stroke="#263e40" stroke-width="1.5"/>
+<circle class="jibo-camera" cx="181" cy="98" r="7.3" fill="#6d796b"/><circle cx="181" cy="98" r="3.8" fill="#3c5b58"/>
+<circle class="jibo-camera" cx="275" cy="98" r="7.3" fill="#6d796b"/><circle cx="275" cy="98" r="3.8" fill="#3c5b58"/>
+<rect x="164" y="130" width="128" height="76" rx="6" fill="#778997" fill-opacity=".49"/>
+<circle cx="228" cy="168" r="37" fill="url(#jibo-eye)"/><circle cx="228" cy="168" r="26" fill="#effcff"/>
+<path d="M149 132 A87 87 0 0 1 201 82" fill="none" stroke="#9ab8b9" stroke-opacity=".12" stroke-width="3" stroke-linecap="round"/>
+</g>
+<path d="M102 155 v18 M93 164 h18 M355 303 v16 M347 311 h16" stroke="#b86c47" stroke-width="3" stroke-linecap="round"/><circle cx="351" cy="115" r="5" fill="#b86c47"/>
 </svg><p class="scene-caption">Small robot. A whole lot of possibility.</p></div>
 </section>
 <section id="start" class="shell section-block"><div class="section-heading"><p class="eyebrow">You’re in the right place</p><h2>What brings you here?</h2><p>You don’t need to know the technical details to take the first step.</p></div><div class="audience-grid">
