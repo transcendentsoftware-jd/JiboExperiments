@@ -6,7 +6,56 @@ Stand up a small public site and web app on `openjibo.com` that makes the projec
 
 `jiborevived.com` remains the community-maintained Jibo Revival Group hub and status space. `openjibo.com` is the Open Jibo showcase, account entry surface, and hosted-cloud entry point.
 
-## Current Status (`2026-10-01`)
+## Current Status (`2026-10-12`)
+
+The neutral site is public at **https://openjibo.com/** with HTTPS enforced.
+Republishing temporarily reset Pages to branch-root publishing; the intended
+Actions source was restored and verified in run `38251443557`. Keep GitHub
+Actions as the Pages source; do not publish the repository README from `/`.
+
+### Human-first site milestone
+
+The owner requested a welcoming, visually appealing site and genuinely easy
+instructions—not an engineering progress report presented as a landing page.
+The current usability pass adds:
+
+- Separate first steps for robot owners seeking community help and Linux
+  tinkerers testing the server. The server installer does not convert a robot.
+- Warm, readable typography, a lightweight inline robot illustration, clear
+  hosting availability labels, responsive layouts and accessible FAQs.
+- A four-step preview guide: prerequisites, verified preparation, explicit
+  launch, then a simple health checkpoint. It keeps the existing signed release
+  and all safety/acceptance limitations; it does not promise a stable installer.
+- Copy controls with a manual fallback, clear expected results, fresh timestamped
+  test names, and non-destructive stop instructions. Technical evidence and
+  older releases remain accessible through expandable details.
+- Tests for audience boundaries, valid links/copy targets, preserved release
+  pins, copy-control behavior, and fresh-name/data-preservation instructions.
+
+The Sites design guidance informed the audience-first structure and progressive
+disclosure. Hosting stays on GitHub Pages; no Sites hosting or cloud/runtime
+deployment is introduced. Interactive visual/keyboard QA is still outstanding:
+the browser helper failed at sandbox startup and the headless attempt was
+interrupted. Do not report a screenshot or visual acceptance that did not occur.
+
+### Next usability legs
+
+1. Inspect the published desktop/mobile experience and observe a newcomer using
+   the guide without coaching; repair each unclear step rather than merely adding
+   more technical warnings. Test the revised commands on a fresh supported host.
+2. Provide one guided, version-targeted download/preflight flow so the user does
+   not need a source checkout. Keep provenance checks, explicit launch approval,
+   platform checks, backups and recovery—no blind download-and-run pipe.
+3. Add easy, tested prerequisites for each supported operating system. Windows,
+   ARM64, automatic upgrades and stable-channel selection must stay unavailable
+   until their own acceptance gates pass.
+4. Add provider-neutral robot conversion/onboarding guidance as JiboAutoMod gains
+   the orchestrated conversion flow; separately document hybrid/provider starters
+   and eventually official robot builds/OTA. Do not imply these are available now.
+5. Link OpenJibo Cloud signup only after production auth, recovery, hostname and
+   closed-preview gates pass. Website progress does not approve that deployment.
+
+## Earlier publication milestones
 
 Update, 2026-10-11: the owner approved recommending the guarded-source signed
 experimental preview `runtime-preview-38165346370`. The site source now pins both
@@ -21,8 +70,7 @@ workflow publication is separate from runtime deployment; no runtime deploy or
 custom-domain cutover is authorized by this update.
 
 The owner subsequently verified and approved the apex/`www` domain cutover;
-its DNS records now point to Pages and HTTP routing works. TLS issuance remains
-pending, not a completed HTTPS launch. The
+its DNS records now point to Pages and HTTPS routing works. The
 [domain runbook and execution record](public-site-domain-cutover.md) preserves
 the original routing snapshot, executed checks and separate managed-cloud gate.
 
@@ -32,15 +80,16 @@ First publication passed:
 https://github.com/transcendentsoftware-jd/JiboExperiments/actions/runs/36936001289.
 The durable targeted bundles are an explicit prerelease at
 https://github.com/transcendentsoftware-jd/JiboExperiments/releases/tag/runtime-preview-36863178102.
-`openjibo.com` DNS is unchanged. Visual/keyboard acceptance and fresh
-published-bundle installation still need tester evidence.
+The original project-URL publication is historical; the apex domain is now
+configured. Visual/keyboard acceptance of this redesign and its new guide flow
+still need tester evidence; earlier package acceptance is recorded separately.
 
 The repository now contains a neutral static overview and preview downloads/test
 page in `src/OpenJibo.Site`. It compares all three hosting profiles, links the
 revival community, and labels unimplemented starters and release gates clearly.
 `openjibo-public-site.yml` publishes only this allowlisted directory through a
-manual main-only GitHub Pages preview. Custom-domain/DNS cutover, visual
-acceptance and fuller contact/documentation journeys remain outstanding.
+manual main-only GitHub Pages publication. The domain cutover is complete;
+visual acceptance and fuller contact/documentation journeys remain outstanding.
 Commercial membership belongs on each provider's own clearly labeled surface.
 
 The [official distribution plan](official-distribution-plan.md) adds versioned

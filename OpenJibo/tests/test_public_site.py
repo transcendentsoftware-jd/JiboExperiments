@@ -2,6 +2,11 @@
 from html.parser import HTMLParser
 from pathlib import Path
 import importlib.util
+import os
+import json
+import re
+import shutil
+import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "src" / "OpenJibo.Site"
@@ -14,6 +19,10 @@ class Page(HTMLParser):
         self.ids = set()
         self.h1 = 0
         self.lang = None
+        self.duplicate_ids = []
+        self.copy_targets = []
+        self.commands = {}
+        self.current_command = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -22,10 +31,25 @@ class Page(HTMLParser):
         if tag == "h1":
             self.h1 += 1
         if "id" in attrs:
+            if attrs["id"] in self.ids:
+                self.duplicate_ids.append(attrs["id"])
             self.ids.add(attrs["id"])
+        if tag == "button" and "data-copy" in attrs:
+            self.copy_targets.append(attrs["data-copy"])
+        if tag == "code" and attrs.get("id", "").endswith("-command"):
+            self.current_command = attrs["id"]
+            self.commands[self.current_command] = ""
         for key in ("href", "src"):
             if key in attrs:
                 self.links.append(attrs[key])
+
+    def handle_data(self, data):
+        if self.current_command:
+            self.commands[self.current_command] += data
+
+    def handle_endtag(self, tag):
+        if tag == "code":
+            self.current_command = None
 
 
 class PublicSiteTests(unittest.TestCase):
@@ -38,6 +62,9 @@ class PublicSiteTests(unittest.TestCase):
                 self.assertEqual(parsed.h1, 1)
                 self.assertIn("main", parsed.ids)
                 self.assertIn("#main", parsed.links)
+                self.assertFalse(parsed.duplicate_ids)
+                for target in parsed.copy_targets:
+                    self.assertIn(target, parsed.commands)
                 for link in parsed.links:
                     if link.startswith("#"):
                         self.assertIn(link[1:], parsed.ids)
@@ -115,6 +142,96 @@ class PublicSiteTests(unittest.TestCase):
         self.assertIn('public DNS setup is still', page)
         self.assertNotIn('href="https://cloud.openjibo.com/', page)
         self.assertIn('does not promise public signup or pricing', page)
+
+    def test_guided_path_keeps_robot_help_separate_from_server_installation(self):
+        home = (ROOT / 'index.html').read_text(encoding='utf-8')
+        for phrase in ('I have a Jibo.', 'I want to try OpenJibo.',
+                       'does not change or convert a physical robot',
+                       'Public signup is not open yet.', 'jiborevived.com'):
+            self.assertIn(phrase, home)
+        page = (ROOT / 'downloads.html').read_text(encoding='utf-8')
+        for anchor in ('check', 'prepare', 'launch', 'verify', 'help'):
+            self.assertIn(f'id="{anchor}"', page)
+        for phrase in ('Keep this terminal open', 'health_passed',
+                       'The <code>--plan</code> output alone does not verify',
+                       'Keep it—especially its private settings and data'):
+            self.assertIn(phrase, page)
+
+    def test_guided_commands_keep_fresh_names_and_nondestructive_stop(self):
+        page = Page()
+        page.feed((ROOT / 'downloads.html').read_text(encoding='utf-8'))
+        prepare = page.commands['prepare-command']
+        launch = page.commands['launch-command']
+        stop = page.commands['stop-command']
+        self.assertIn('preview_project="openjibo-preview-$(date -u +%Y%m%d%H%M%S)"', prepare)
+        self.assertIn('preview_dir="$HOME/Downloads/$preview_project"', prepare)
+        self.assertIn('--destination "$preview_dir" --plan', prepare)
+        self.assertIn('--destination "$preview_dir"', prepare)
+        self.assertIn('--directory "$preview_dir"', launch)
+        self.assertIn('--project "$preview_project" --port 8093', launch)
+        self.assertIn('${preview_dir:?Run step 2 in this terminal first}', launch)
+        self.assertIn('preview-launch.compose.yaml" stop', stop)
+        for command in page.commands.values():
+            self.assertNotRegex(command, r'\b(?:rm|prune)\b|down\s+-v|curl[^\n]*\|\s*(?:sh|bash)')
+
+    def test_copy_controls_without_a_real_clipboard(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node is required for the copy-control behavior check')
+        raw = (ROOT / 'downloads.html').read_text(encoding='utf-8')
+        script = re.search(r'<script>([\s\S]*?)</script>', raw).group(1)
+        harness = r'''
+const vm = require('node:vm');
+const script = JSON.parse(process.argv[1]);
+(async () => {
+  for (const scenario of ['success','denied','insecure']) {
+    let copied = null, callback = null;
+    const button = {hidden:true,dataset:{copy:'command'},addEventListener:(_,fn)=>callback=fn};
+    const status = {textContent:''};
+    const context = {window:{isSecureContext:scenario!=='insecure',setTimeout:()=>{}},
+      navigator:{clipboard:{writeText:async text=>{if(scenario==='denied')throw Error('denied');copied=text;}}},
+      document:{querySelectorAll:()=>[button],getElementById:id=>id==='command'?{textContent:'safe test command'}:status}};
+    vm.runInNewContext(script,context);
+    if(scenario==='insecure'){if(!button.hidden||callback)throw Error('insecure copy exposed');continue;}
+    if(button.hidden||!callback)throw Error('copy unavailable');
+    await callback();
+    if(scenario==='success'&&(copied!=='safe test command'||!status.textContent.includes('copied')))throw Error('copy failed');
+    if(scenario==='denied'&&!status.textContent.includes('manually'))throw Error('missing fallback');
+  }
+})().catch(error=>{console.error(error.message);process.exitCode=1});
+'''
+        result = subprocess.run([node, '-e', harness, json.dumps(script)],
+                                text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_guided_commands_have_valid_bash_syntax(self):
+        git_bash = Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'Git/bin/bash.exe'
+        bash = str(git_bash) if git_bash.is_file() else shutil.which('bash')
+        if not bash:
+            self.skipTest('Bash is required for command syntax checks')
+        parsed = Page()
+        parsed.feed((ROOT / 'downloads.html').read_text(encoding='utf-8'))
+        for name, command in parsed.commands.items():
+            with self.subTest(command=name):
+                result = subprocess.run([bash, '-n'], input=command, text=True,
+                                        capture_output=True, timeout=15)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_core_text_colors_meet_normal_text_contrast(self):
+        css = (ROOT / 'site.css').read_text(encoding='utf-8')
+        colors = dict(re.findall(r'--([a-z]+):\s*(#[0-9a-f]{6})', css))
+
+        def luminance(value):
+            channels = [int(value[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+            linear = [c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4 for c in channels]
+            return sum(c * w for c, w in zip(linear, (.2126, .7152, .0722)))
+
+        for foreground, background in [('ink', 'paper'), ('muted', 'paper'),
+                                      ('accent', 'paper'), ('white', 'ink'),
+                                      ('muted', 'mint')]:
+            with self.subTest(foreground=foreground, background=background):
+                values = sorted([luminance(colors[foreground]), luminance(colors[background])])
+                self.assertGreaterEqual((values[1] + .05) / (values[0] + .05), 4.5)
 
 
 if __name__ == "__main__":
