@@ -58,6 +58,9 @@ jobs:
         shell: pwsh
         run: ./scripts/cloud/Test-OpenJiboSelfHostedImageLauncher.ps1
 
+      - name: Validate managed registry build authentication without Azure
+        run: python3 -B -m unittest discover -s tests -p test_managed_acr_build_auth.py
+
       - name: Validate offline robot OTA envelope inspector
         run: python3 -B -m unittest discover -s scripts/bootstrap -p test_inspect_robot_ota_package.py
 

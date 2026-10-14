@@ -55,7 +55,25 @@ if [[ ! -f "$resolved_dockerfile_path" ]]; then
   exit 1
 fi
 
+if ! role_assignment_mode="$(az acr show --name "$registry_name" --query roleAssignmentMode --output tsv --only-show-errors)"; then
+  echo "Could not determine ACR role assignment mode for $registry_name" >&2
+  exit 1
+fi
+
+acr_auth_args=()
+case "$role_assignment_mode" in
+  LegacyRegistryPermissions)
+    ;;
+  AbacRepositoryPermissions)
+    acr_auth_args=(--source-acr-auth-id '[caller]')
+    ;;
+  *)
+    echo "Unsupported ACR role assignment mode for $registry_name: $role_assignment_mode" >&2
+    exit 1
+    ;;
+esac
+
 echo "Building managed Open Jibo image in ACR: ${registry_name}.azurecr.io/${image_name}:${tag}"
 cd "$repo_root"
 # Managed deployments rely on Azure Speech, so skip baking in whisper.cpp and its model.
-exec az acr build --registry "$registry_name" --image "${image_name}:${tag}" --file "$resolved_dockerfile_path" --build-arg ENABLE_LOCAL_WHISPER=false "$repo_root"
+exec az acr build --registry "$registry_name" --image "${image_name}:${tag}" --file "$resolved_dockerfile_path" --build-arg ENABLE_LOCAL_WHISPER=false "${acr_auth_args[@]}" "$repo_root"
