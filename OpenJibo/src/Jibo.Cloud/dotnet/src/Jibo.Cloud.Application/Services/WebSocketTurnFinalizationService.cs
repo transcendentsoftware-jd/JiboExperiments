@@ -738,10 +738,9 @@ public sealed class WebSocketTurnFinalizationService(
             UpdateGlsmPhaseMarker(session);
             return
             [
-                .. ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
+                .. ResponsePlanToSocketMessagesMapper.MapNoInput(
                         session.TurnState.TransId ?? session.LastTransId ?? string.Empty,
-                        session.TurnState.ListenRules,
-                        "@be/idle")
+                        ["word-of-the-day/right_word"])
                     .Select(map => new WebSocketReply
                     {
                         Text = map.Text,
@@ -1311,10 +1310,9 @@ public sealed class WebSocketTurnFinalizationService(
                 ClearListenTracking(turnState);
                 return
                 [
-                    .. ResponsePlanToSocketMessagesMapper.MapNoInputAndRedirectToSkill(
+                    .. ResponsePlanToSocketMessagesMapper.MapNoInput(
                             turnState.TransId ?? session.LastTransId ?? string.Empty,
-                            turnState.ListenRules,
-                            "@be/idle")
+                            ["word-of-the-day/right_word"])
                         .Select(map => new WebSocketReply
                         {
                             Text = map.Text,
