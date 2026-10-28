@@ -5831,17 +5831,16 @@ public sealed class JiboWebSocketServiceTests
             Text = """{"type":"CLIENT_ASR","transID":"trans-wod-right-word","data":{}}"""
         });
 
-        Assert.Equal(3, replies.Count);
+        Assert.Equal(2, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
-        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.False(listenPayload.RootElement.GetProperty("data").TryGetProperty("match", out _));
-
-        using var redirectPayload = JsonDocument.Parse(replies[2].Text!);
-        Assert.Equal("@be/idle",
-            redirectPayload.RootElement.GetProperty("data").GetProperty("match").GetProperty("skillID").GetString());
+        Assert.Equal("trans-wod-right-word", listenPayload.RootElement.GetProperty("transID").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("word-of-the-day/right_word", rules[0].GetString());
     }
 
     [Fact]
@@ -5911,7 +5910,7 @@ public sealed class JiboWebSocketServiceTests
     [Fact]
     public async Task BinaryAudio_AfterWordOfDayRightWordListen_IsIgnoredDuringCleanupWindow()
     {
-        await _service.HandleMessageAsync(new WebSocketMessageEnvelope
+        var initialReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
             HostName = "neo-hub.jibo.com",
             Path = "/listen",
@@ -5920,6 +5919,17 @@ public sealed class JiboWebSocketServiceTests
             Text =
                 """{"type":"LISTEN","transID":"trans-wod-right-word-audio","data":{"rules":["word-of-the-day/right_word","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
         });
+
+        Assert.Equal(2, initialReplies.Count);
+        Assert.Equal("LISTEN", ReadReplyType(initialReplies[0]));
+        Assert.Equal("EOS", ReadReplyType(initialReplies[1]));
+        using (var initialPayload = JsonDocument.Parse(initialReplies[0].Text!))
+        {
+            Assert.Equal("trans-wod-right-word-audio", initialPayload.RootElement.GetProperty("transID").GetString());
+            var initialRules = initialPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+            Assert.Single(initialRules.EnumerateArray());
+            Assert.Equal("word-of-the-day/right_word", initialRules[0].GetString());
+        }
 
         var replies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
@@ -5931,15 +5941,18 @@ public sealed class JiboWebSocketServiceTests
                 """{"type":"LISTEN","transID":"trans-wod-right-word-audio","data":{"rules":["word-of-the-day/right_word","globals/gui_nav","globals/mim_repeat","globals/global_commands_launch"]}}"""
         });
 
-        Assert.Equal(3, replies.Count);
+        Assert.Equal(2, replies.Count);
         Assert.Equal("LISTEN", ReadReplyType(replies[0]));
         Assert.Equal("EOS", ReadReplyType(replies[1]));
-        Assert.Equal("SKILL_REDIRECT", ReadReplyType(replies[2]));
 
         using var listenPayload = JsonDocument.Parse(replies[0].Text!);
         Assert.Equal(string.Empty,
             listenPayload.RootElement.GetProperty("data").GetProperty("asr").GetProperty("text").GetString());
         Assert.False(listenPayload.RootElement.GetProperty("data").TryGetProperty("match", out _));
+        Assert.Equal("trans-wod-right-word-audio", listenPayload.RootElement.GetProperty("transID").GetString());
+        var rules = listenPayload.RootElement.GetProperty("data").GetProperty("nlu").GetProperty("rules");
+        Assert.Single(rules.EnumerateArray());
+        Assert.Equal("word-of-the-day/right_word", rules[0].GetString());
 
         var binaryReplies = await _service.HandleMessageAsync(new WebSocketMessageEnvelope
         {
