@@ -24,20 +24,20 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('11', 32), 'hex'), 1, '11111111-1111-1111-1111-111111111111',
-                 '2026-09-13T01:00:00Z', 'binding-admin', 'initial-link');
+                 '%FIXTURE_DAY%T01:00:00Z', 'binding-admin', 'initial-link');
             """);
 
         await database.ExecuteAsync("""
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('11', 32), 'hex'),
-                '22222222-2222-2222-2222-222222222222', '2026-09-13T01:05:00Z', 'staging',
+                '22222222-2222-2222-2222-222222222222', '%FIXTURE_DAY%T01:05:00Z', 'staging',
                 1, 0, 1, 100, 200, 5, 6, 300, 400, 500, NULL);
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('11', 32), 'hex'),
-                '22222222-2222-2222-2222-222222222222', '2026-09-13T01:05:00Z', 'staging',
+                '22222222-2222-2222-2222-222222222222', '%FIXTURE_DAY%T01:05:00Z', 'staging',
                 1, 0, 1, 100, 200, 5, 6, 300, 400, 500, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('11', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('11', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 '33333333-3333-3333-3333-333333333333',
                 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
             """);
@@ -56,7 +56,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         var idempotencyConflict = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('11', 32), 'hex'),
-                '22222222-2222-2222-2222-222222222222', '2026-09-13T01:05:00Z', 'staging',
+                '22222222-2222-2222-2222-222222222222', '%FIXTURE_DAY%T01:05:00Z', 'staging',
                 1, 0, 1, 101, 200, 5, 6, 300, 400, 500, NULL);
             """));
         Assert.Equal(PostgresErrorCodes.InvalidParameterValue, idempotencyConflict.SqlState);
@@ -64,10 +64,10 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         await database.ExecuteAsync("""
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('11', 32), 'hex'),
-                '44444444-4444-4444-4444-444444444444', '2026-09-13T01:06:00Z', 'staging',
+                '44444444-4444-4444-4444-444444444444', '%FIXTURE_DAY%T01:06:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 1, 50, 60, 70, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('11', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('11', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 '55555555-5555-5555-5555-555555555555',
                 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
             """);
@@ -78,14 +78,14 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         Assert.Equal(1, await database.ExecuteScalarAsync<long>("""
             SELECT ScheduledSourceSequence
             FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('11', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('11', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 '33333333-3333-3333-3333-333333333333',
                 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
             """));
 
         var conflictingScheduleKey = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('11', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('11', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 '33333333-3333-3333-3333-333333333333',
                 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC');
             """));
@@ -118,16 +118,16 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
 
         await database.ExecuteAsync("""
             UPDATE RuntimeUsageDailyAccumulators
-            SET IsIncomplete=TRUE, FirstIncompleteUtc='2026-09-13T01:06:00Z',
+            SET IsIncomplete=TRUE, FirstIncompleteUtc='%FIXTURE_DAY%T01:06:00Z',
                 IncompleteReasonCode='source-write-failed', UpdatedUtc=NOW()
             WHERE ManagedRobotId='11111111-1111-1111-1111-111111111111'
-              AND UsageDate='2026-09-13' AND ServiceEnvironment='staging';
+              AND UsageDate='%FIXTURE_DAY%' AND ServiceEnvironment='staging';
             """);
         var clearIncomplete = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             UPDATE RuntimeUsageDailyAccumulators
             SET IsIncomplete=FALSE, FirstIncompleteUtc=NULL, IncompleteReasonCode=NULL, UpdatedUtc=NOW()
             WHERE ManagedRobotId='11111111-1111-1111-1111-111111111111'
-              AND UsageDate='2026-09-13' AND ServiceEnvironment='staging';
+              AND UsageDate='%FIXTURE_DAY%' AND ServiceEnvironment='staging';
             """));
         Assert.Equal("55000", clearIncomplete.SqlState);
 
@@ -140,7 +140,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
 
         await database.ExecuteAsync("""
             UPDATE RuntimeUsageRobotBindings
-            SET RevokedUtc='2026-09-13T02:00:00Z'
+            SET RevokedUtc='%FIXTURE_DAY%T02:00:00Z'
             WHERE SourceSubjectHmac=decode(repeat('11', 32), 'hex') AND BindingVersion=1;
             """);
         var rewriteBinding = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
@@ -159,7 +159,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         var deleteAccumulator = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             DELETE FROM RuntimeUsageDailyAccumulators
             WHERE ManagedRobotId='11111111-1111-1111-1111-111111111111'
-              AND UsageDate='2026-09-13' AND ServiceEnvironment='staging'
+              AND UsageDate='%FIXTURE_DAY%' AND ServiceEnvironment='staging'
             """));
         Assert.Equal("55000", deleteAccumulator.SqlState);
     }
@@ -175,7 +175,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('55', 32), 'hex'), 1, '55555555-5555-5555-5555-555555555555',
-                 '2026-09-13T01:00:00Z', 'binding-admin', 'initial-link');
+                 '%FIXTURE_DAY%T01:00:00Z', 'binding-admin', 'initial-link');
             """);
 
         var duplicateBinding = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
@@ -183,7 +183,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('55', 32), 'hex'), 2, '66666666-6666-6666-6666-666666666666',
-                 '2026-09-13T02:00:00Z', 'binding-admin', 'replacement');
+                 '%FIXTURE_DAY%T02:00:00Z', 'binding-admin', 'replacement');
             """));
         Assert.Equal(PostgresErrorCodes.UniqueViolation, duplicateBinding.SqlState);
 
@@ -192,8 +192,8 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (ManagedRobotId, UsageDate, ServiceEnvironment, FirstEventUtc, LastEventUtc,
                  Revision, IsIncomplete)
             VALUES
-                ('55555555-5555-5555-5555-555555555555', '2026-09-13', 'staging',
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', 1, TRUE);
+                ('55555555-5555-5555-5555-555555555555', '%FIXTURE_DAY%', 'staging',
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', 1, TRUE);
             """));
         Assert.Equal(PostgresErrorCodes.CheckViolation, incompleteWithoutEvidence.SqlState);
 
@@ -201,8 +201,8 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             INSERT INTO RuntimeUsageDailyAccumulators
                 (ManagedRobotId, UsageDate, ServiceEnvironment, FirstEventUtc, LastEventUtc, Revision)
             VALUES
-                ('55555555-5555-5555-5555-555555555555', '2026-09-13', 'staging',
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', 1);
+                ('55555555-5555-5555-5555-555555555555', '%FIXTURE_DAY%', 'staging',
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', 1);
             """));
         Assert.Equal(PostgresErrorCodes.CheckViolation, completeZero.SqlState);
 
@@ -210,8 +210,8 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             INSERT INTO RuntimeUsageDailyAccumulators
                 (ManagedRobotId, UsageDate, ServiceEnvironment, FirstEventUtc, LastEventUtc, Revision)
             VALUES
-                ('55555555-5555-5555-5555-555555555555', '2026-09-13', 'staging',
-                 '2026-09-14T00:00:00Z', '2026-09-14T00:00:00Z', 1);
+                ('55555555-5555-5555-5555-555555555555', '%FIXTURE_DAY%', 'staging',
+                 '%FIXTURE_NEXT_DAY%T00:00:00Z', '%FIXTURE_NEXT_DAY%T00:00:00Z', 1);
             """));
         Assert.Equal(PostgresErrorCodes.CheckViolation, wrongUtcDay.SqlState);
 
@@ -221,28 +221,28 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                  ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('77', 32), 'hex'), 1, '77777777-7777-7777-7777-777777777777',
-                 '2026-09-13T00:00:00Z', '2026-09-13T03:00:00Z', 'binding-admin', 'historical'),
+                 '%FIXTURE_DAY%T00:00:00Z', '%FIXTURE_DAY%T03:00:00Z', 'binding-admin', 'historical'),
                 (decode(repeat('77', 32), 'hex'), 2, '88888888-8888-8888-8888-888888888888',
-                 '2026-09-13T01:00:00Z', '2026-09-13T04:00:00Z', 'binding-admin', 'historical');
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T04:00:00Z', 'binding-admin', 'historical');
             INSERT INTO RuntimeUsageDailyAccumulators
                 (ManagedRobotId, UsageDate, ServiceEnvironment, SuccessfulTurns,
                  FirstEventUtc, LastEventUtc, Revision)
             VALUES
-                ('77777777-7777-7777-7777-777777777777', '2026-09-13', 'staging', 1,
-                 '2026-09-13T02:00:00Z', '2026-09-13T02:00:00Z', 1);
+                ('77777777-7777-7777-7777-777777777777', '%FIXTURE_DAY%', 'staging', 1,
+                 '%FIXTURE_DAY%T02:00:00Z', '%FIXTURE_DAY%T02:00:00Z', 1);
             """);
 
         var ambiguousEvent = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('77', 32), 'hex'),
-                '99999999-9999-9999-9999-999999999999', '2026-09-13T02:00:00Z', 'staging',
+                '99999999-9999-9999-9999-999999999999', '%FIXTURE_DAY%T02:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL)
             """));
         Assert.Equal(PostgresErrorCodes.InvalidParameterValue, ambiguousEvent.SqlState);
 
         var ambiguousSchedule = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('77', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('77', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
             """));
@@ -251,7 +251,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         var nullEvent = await Assert.ThrowsAsync<PostgresException>(() => database.ExecuteAsync("""
             SELECT * FROM RecordRuntimeUsageEvent(
                 NULL, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-                '2026-09-13T02:00:00Z', 'staging',
+                '%FIXTURE_DAY%T02:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL)
             """));
         Assert.Equal(PostgresErrorCodes.InvalidParameterValue, nullEvent.SqlState);
@@ -267,20 +267,20 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('66', 32), 'hex'), 1, '66666666-6666-6666-6666-666666666666',
-                 '2026-09-13T01:00:00Z', 'binding-admin', 'initial-link');
+                 '%FIXTURE_DAY%T01:00:00Z', 'binding-admin', 'initial-link');
             """);
 
         await Task.WhenAll(
             database.ExecuteAsync("""
                 SELECT * FROM RecordRuntimeUsageEvent(
                     decode(repeat('66', 32), 'hex'),
-                    '77777777-7777-7777-7777-777777777777', '2026-09-13T02:00:00Z', 'staging',
+                    '77777777-7777-7777-7777-777777777777', '%FIXTURE_DAY%T02:00:00Z', 'staging',
                     1, 0, 0, 0, 0, 1, 0, 10, 0, 10, NULL)
                 """),
             database.ExecuteAsync("""
                 SELECT * FROM RecordRuntimeUsageEvent(
                     decode(repeat('66', 32), 'hex'),
-                    '88888888-8888-8888-8888-888888888888', '2026-09-13T02:01:00Z', 'staging',
+                    '88888888-8888-8888-8888-888888888888', '%FIXTURE_DAY%T02:01:00Z', 'staging',
                     1, 0, 0, 0, 0, 1, 0, 10, 0, 10, NULL)
                 """));
 
@@ -296,13 +296,13 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         var scheduleResults = await Task.WhenAll(
             database.TryExecuteAsync("""
                 SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                    decode(repeat('66', 32), 'hex'), '2026-09-13', 'staging',
+                    decode(repeat('66', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                     '99999999-9999-9999-9999-999999999999',
                     'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
                 """),
             database.TryExecuteAsync("""
                 SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                    decode(repeat('66', 32), 'hex'), '2026-09-13', 'staging',
+                    decode(repeat('66', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                     'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
                 """));
@@ -325,29 +325,29 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('aa', 32), 'hex'), 1, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                 '2026-09-13T00:00:00Z', 'binding-admin', 'delivery-test');
+                 '%FIXTURE_DAY%T00:00:00Z', 'binding-admin', 'delivery-test');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('aa', 32), 'hex'),
-                'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '2026-09-13T01:00:00Z', 'staging',
+                'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', '%FIXTURE_DAY%T01:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('aa', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('aa', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'cccccccc-cccc-cccc-cccc-cccccccccccc',
                 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('aa', 32), 'hex'),
-                'dddddddd-dddd-dddd-dddd-dddddddddddd', '2026-09-13T02:00:00Z', 'staging',
+                'dddddddd-dddd-dddd-dddd-dddddddddddd', '%FIXTURE_DAY%T02:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('aa', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('aa', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
                 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('aa', 32), 'hex'),
-                'ffffffff-ffff-ffff-ffff-ffffffffffff', '2026-09-13T03:00:00Z', 'staging',
+                'ffffffff-ffff-ffff-ffff-ffffffffffff', '%FIXTURE_DAY%T03:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('aa', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('aa', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 '12121212-1212-1212-1212-121212121212',
                 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF');
             """);
@@ -429,13 +429,13 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('ab', 32), 'hex'), 1, 'abababab-abab-abab-abab-abababababab',
-                 '2026-09-13T00:00:00Z', 'binding-admin', 'concurrent-delivery-test');
+                 '%FIXTURE_DAY%T00:00:00Z', 'binding-admin', 'concurrent-delivery-test');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('ab', 32), 'hex'),
-                'acacacac-acac-acac-acac-acacacacacac', '2026-09-13T01:00:00Z', 'staging',
+                'acacacac-acac-acac-acac-acacacacacac', '%FIXTURE_DAY%T01:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('ab', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('ab', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'adadadad-adad-adad-adad-adadadadadad',
                 'ADADADADADADADADADADADADADADADADADADADADADA');
             """);
@@ -469,21 +469,21 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (SourceSubjectHmac, BindingVersion, ManagedRobotId, ActiveFromUtc, ActorCode, ReasonCode)
             VALUES
                 (decode(repeat('bc', 32), 'hex'), 1, 'bcbcbcbc-bcbc-bcbc-bcbc-bcbcbcbcbcbc',
-                 '2026-09-13T00:00:00Z', 'binding-admin', 'defer-test');
+                 '%FIXTURE_DAY%T00:00:00Z', 'binding-admin', 'defer-test');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('bc', 32), 'hex'),
-                'bdbdbdbd-bdbd-bdbd-bdbd-bdbdbdbdbdbd', '2026-09-13T01:00:00Z', 'staging',
+                'bdbdbdbd-bdbd-bdbd-bdbd-bdbdbdbdbdbd', '%FIXTURE_DAY%T01:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('bc', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('bc', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'bebebebe-bebe-bebe-bebe-bebebebebebe',
                 'BEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEBEB');
             SELECT * FROM RecordRuntimeUsageEvent(
                 decode(repeat('bc', 32), 'hex'),
-                'bfbfbfbf-bfbf-bfbf-bfbf-bfbfbfbfbfbf', '2026-09-13T02:00:00Z', 'staging',
+                'bfbfbfbf-bfbf-bfbf-bfbf-bfbfbfbfbfbf', '%FIXTURE_DAY%T02:00:00Z', 'staging',
                 1, 0, 0, 0, 0, 1, 0, 10, 0, 20, NULL);
             SELECT * FROM ScheduleRuntimeUsageSnapshot(
-                decode(repeat('bc', 32), 'hex'), '2026-09-13', 'staging',
+                decode(repeat('bc', 32), 'hex'), '%FIXTURE_DAY%', 'staging',
                 'cacacaca-caca-caca-caca-cacacacacaca',
                 'CACACACACACACACACACACACACACACACACACACACACAC');
             SELECT * FROM ClaimRuntimeUsageOutbox('defer-collector', 300, 1);
@@ -593,8 +593,8 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                 (ManagedRobotId, UsageDate, ServiceEnvironment, SuccessfulTurns,
                  FirstEventUtc, LastEventUtc, Revision)
             VALUES
-                ('16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 1,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', 1);
+                ('16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 1,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', 1);
 
             INSERT INTO RuntimeUsageOutboxMessages
                 (MessageId, ManagedRobotId, UsageDate, ServiceEnvironment, SourceSequence,
@@ -604,27 +604,27 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
                  WebSocketInboundBytes, WebSocketOutboundBytes, AudioInputBytes,
                  FirstEventUtc, LastEventUtc, IsIncomplete, IdempotencyKey)
             VALUES
-                ('16161616-0000-0000-0000-000000000001', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 1,
+                ('16161616-0000-0000-0000-000000000001', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 1,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('A', 43)),
-                ('16161616-0000-0000-0000-000000000002', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 2,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('A', 43)),
+                ('16161616-0000-0000-0000-000000000002', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 2,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('B', 43)),
-                ('16161616-0000-0000-0000-000000000003', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 3,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('B', 43)),
+                ('16161616-0000-0000-0000-000000000003', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 3,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('C', 43)),
-                ('16161616-0000-0000-0000-000000000004', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 4,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('C', 43)),
+                ('16161616-0000-0000-0000-000000000004', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 4,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('D', 43)),
-                ('16161616-0000-0000-0000-000000000005', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 5,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('D', 43)),
+                ('16161616-0000-0000-0000-000000000005', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 5,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('E', 43)),
-                ('16161616-0000-0000-0000-000000000006', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 6,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('E', 43)),
+                ('16161616-0000-0000-0000-000000000006', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 6,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('F', 43)),
-                ('16161616-0000-0000-0000-000000000007', '16161616-1616-1616-1616-161616161616', '2026-09-13', 'staging', 7,
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('F', 43)),
+                ('16161616-0000-0000-0000-000000000007', '16161616-1616-1616-1616-161616161616', '%FIXTURE_DAY%', 'staging', 7,
                  1, 1, 'openjibo-runtime-usage.v1', '1', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                 '2026-09-13T01:00:00Z', '2026-09-13T01:00:00Z', FALSE, repeat('G', 43));
+                 '%FIXTURE_DAY%T01:00:00Z', '%FIXTURE_DAY%T01:00:00Z', FALSE, repeat('G', 43));
 
             INSERT INTO RuntimeUsageOutboxDelivery
                 (MessageId, DeliveryState, AttemptCount, NotBeforeUtc, LeaseOwner,
@@ -745,6 +745,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
         private const string ConnectionVariable = "OPENJIBO_TEST_POSTGRES_CONNECTION_STRING";
         private readonly string _adminConnectionString;
         private readonly string _schemaName;
+        private readonly DateOnly _fixtureDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-2);
 
         private RuntimeUsageTestDatabase(string adminConnectionString, string schemaName)
         {
@@ -801,12 +802,17 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             }
         }
 
+        // Capture both fixture days per database so UTC midnight cannot split its chronology.
+        private string FixtureSql(string sql) => sql
+            .Replace("%FIXTURE_DAY%", _fixtureDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal)
+            .Replace("%FIXTURE_NEXT_DAY%", _fixtureDate.AddDays(1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal);
+
         internal async Task ExecuteAsync(string sql)
         {
             await using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = FixtureSql(sql);
             await command.ExecuteNonQueryAsync();
         }
 
@@ -828,7 +834,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             await using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = FixtureSql(sql);
             var value = await command.ExecuteScalarAsync();
             return (T)Convert.ChangeType(value!, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
         }
@@ -838,7 +844,7 @@ public sealed class PostgreSqlRuntimeUsageOutboxIntegrationTests
             await using var connection = new NpgsqlConnection(ConnectionString);
             await connection.OpenAsync();
             await using var command = connection.CreateCommand();
-            command.CommandText = sql;
+            command.CommandText = FixtureSql(sql);
             return await command.ExecuteScalarAsync();
         }
 
