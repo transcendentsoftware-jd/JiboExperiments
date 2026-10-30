@@ -44,10 +44,11 @@ public sealed class WebSocketTurnFinalizationService(
     private static readonly TimeSpan AutoFinalizeMinTurnAge = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan AutoFinalizeSilenceWindow = TimeSpan.FromMilliseconds(350);
     private static readonly TimeSpan AutoFinalizeHotphraseOggSilenceWindow = TimeSpan.FromMilliseconds(400);
-    // Arrival-gap early probe stays above typical mid-utterance frame batching (~300-500ms)
-    // but no longer waits a full second after the last frame.
+    // Stock robots batch active speech about 420-500ms apart. Network gaps must
+    // stay longer than that cadence; only audio-content silence gets the fast path.
+    private static readonly TimeSpan AutoFinalizeHotphraseOggArrivalGap = TimeSpan.FromMilliseconds(1200);
     private static readonly TimeSpan AutoFinalizeHotphraseOggEarlyProbeMinTurnAge = TimeSpan.FromMilliseconds(700);
-    private static readonly TimeSpan AutoFinalizeHotphraseOggEarlyProbeGap = TimeSpan.FromMilliseconds(550);
+    private static readonly TimeSpan AutoFinalizeHotphraseOggEarlyProbeGap = AutoFinalizeHotphraseOggArrivalGap;
     private static readonly TimeSpan AutoFinalizeEarlyProbeRetryInterval = TimeSpan.FromMilliseconds(250);
 
     // Safety net only when VAD cannot see trailing quiet. Mid-utterance probes at
@@ -2051,7 +2052,7 @@ public sealed class WebSocketTurnFinalizationService(
             : TimeSpan.Zero;
         var reachedSilenceWindow = turnState.LastAudioReceivedUtc.HasValue &&
                                    elapsedSinceLastAudio >= silenceWindow;
-        var reachedContentSilence = HasContentSilence(turnState, silenceWindow);
+        var reachedContentSilence = HasContentSilence(turnState, ResolveAutoFinalizeContentSilenceWindow(turnState));
         var transcriptHintEarlyFinalize = ShouldEarlyFinalizeFromTranscriptHint(turnState);
 
         // Incomplete-command deferrals must not re-enter finalize on arrival-time
@@ -2387,6 +2388,13 @@ public sealed class WebSocketTurnFinalizationService(
     }
 
     private static TimeSpan ResolveAutoFinalizeSilenceWindow(WebSocketTurnState turnState)
+    {
+        return turnState.ListenHotphrase && IsHotphraseLaunchListen(turnState) && HasOggOpusFrames(turnState)
+            ? AutoFinalizeHotphraseOggArrivalGap
+            : AutoFinalizeSilenceWindow;
+    }
+
+    private static TimeSpan ResolveAutoFinalizeContentSilenceWindow(WebSocketTurnState turnState)
     {
         if (!turnState.ListenHotphrase || !turnState.ListenRules.Any(static rule =>
                 string.Equals(rule, "launch", StringComparison.OrdinalIgnoreCase) ||
