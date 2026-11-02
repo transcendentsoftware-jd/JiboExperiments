@@ -19,13 +19,17 @@ internal sealed class WebSocketRequestCoordinator(
     SingleRobotHttpHubAccessGuard singleRobotHttpHubAccessGuard,
     WebSocketTransportPolicy transportPolicy,
     ILogger<WebSocketRequestCoordinator> logger,
-    HubChannelLeasePolicy? channelLeases = null)
+    HubChannelLeasePolicy? channelLeases = null,
+    IRuntimePairingInitiationClient? pairingClient = null,
+    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null)
 {
     private static readonly TimeSpan TurnWatchdogInterval = TimeSpan.FromMilliseconds(50);
     private const string ActiveConnectionIdMetadataKey = "openjibo.activeWebSocketConnectionId";
     private static readonly object SessionGateRegistryLock = new();
     private static readonly Dictionary<string, SessionGate> SessionGates = new(StringComparer.OrdinalIgnoreCase);
     internal HubChannelLeasePolicy LeasePolicy { get; init; } = channelLeases ?? HubChannelLeasePolicy.Disabled;
+    internal IRuntimePairingInitiationClient PairingClient { get; init; } = pairingClient ?? RejectingRuntimePairingInitiationClient.Instance;
+    internal RuntimePairingCredentialEvidenceKey? PairingCredentialKey { get; init; } = pairingCredentialKey;
     internal TimeSpan LeaseRenewalInterval { get; init; } = TimeSpan.FromSeconds(5);
     internal TimeSpan CredentialRevalidationInterval { get; init; } = HubTokenContinuityMonitor.DefaultInterval;
 
@@ -180,6 +184,7 @@ internal sealed class WebSocketRequestCoordinator(
 
         using var singleRobotHttpHubLeaseScope = singleRobotHttpHubLease;
         HubTokenCredentialBinding? credentialBinding = null;
+        RuntimePairingCredentialEvidence? pairingEvidence = null;
         string? issuedBearer = null;
         if (!string.IsNullOrWhiteSpace(token) && TryResolveRequiredTokenKind(kind, out var requiredTokenKind))
         {
@@ -196,6 +201,7 @@ internal sealed class WebSocketRequestCoordinator(
                 return;
             }
             issuedBearer = issuedToken.Token;
+            pairingEvidence = RuntimePairingCredentialEvidence.Read(issuedToken.Metadata);
             if (requiredTokenKind == "hub" && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
                 !HubTokenCredentialBinding.TryRead(issuedToken.Metadata, out credentialBinding))
             {
@@ -282,6 +288,12 @@ internal sealed class WebSocketRequestCoordinator(
         var sessionStateOwnedOnClose = false;
         using var connectionLifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         var connectionCancellation = connectionLifetime.Token;
+        using var pairingContext = AmbientRuntimePairingSession.Bind(
+            kind == "neo-hub-listen" && channelLease is not null && credentialBinding is not null && pairingEvidence is not null &&
+            PairingClient.IsReady && PairingCredentialKey?.IsReady == true
+                ? new HubRuntimePairingSession(cloudStateStore,token!,credentialBinding,pairingEvidence,PairingCredentialKey,
+                    channelLease,PairingClient,connectionCancellation) : null);
+
         var continuity = credentialBinding is not null
             ? new HubTokenContinuityMonitor(cloudStateStore, CredentialRevalidationInterval)
                 .RunAsync(socket, token!, credentialBinding, connectionLifetime)
