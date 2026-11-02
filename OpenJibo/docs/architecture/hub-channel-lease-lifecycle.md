@@ -130,3 +130,8 @@ The [credential/session evidence contract](runtime-pairing-credential-evidence.m
 adds full verified-credential capture and a fresh Listen-generation binding for
 future pairing integration. These primitives do not invoke a managed endpoint,
 register credentials, establish co-presence or enable assignment.
+
+The [runtime initiation client](runtime-pairing-initiation-client.md) now uses
+this fresh Listen binding in a connection-owned context, with authority checks
+before dispatch and after a created response. It remains disabled and does not
+implement physical confirmation, completion or assignment.

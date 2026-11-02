@@ -17,6 +17,53 @@ namespace Jibo.Cloud.Tests.Api;
 public sealed class WebSocketRequestCoordinatorTests
 {
     [Theory]
+    [InlineData("eligible")]
+    [InlineData("client-disabled")]
+    [InlineData("lease-disabled")]
+    [InlineData("proactive")]
+    [InlineData("old-token")]
+    [InlineData("key-disabled")]
+    public async Task PairingContextIsServerBoundToEligibleListenConnectionAndRevokedOnClose(string scenario)
+    {
+        var service=CreateWebSocketService(out var store);
+        using var key=Protocol.RuntimePairingCredentialEvidenceTests.Key();
+        using var disabledKey=RuntimePairingCredentialEvidenceKey.Create(new());
+        var verified=Protocol.RuntimePairingCredentialEvidenceTests.Verify(store);
+        var original=HubTokenCredentialBinding.FromVerification(verified)!;
+        var evidence=verified.VerifiedProof!.CreatePairingCredentialEvidence(key)!;
+        var token=store.IssueHubToken("untrusted-body-device",false,original,scenario=="old-token" ? null : evidence);
+        var leases=HubChannelLeasePolicyTests.WorkingStore();
+        using var policy=scenario=="lease-disabled" ? HubChannelLeasePolicy.Disabled : new HubChannelLeasePolicy(leases.Object,new byte[32]);
+        var client=new Mock<IRuntimePairingInitiationClient>(); client.SetupGet(c => c.IsReady).Returns(scenario!="client-disabled");
+        client.Setup(c => c.BeginAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<CancellationToken>()))
+            .Returns((RuntimePairingCredentialEvidence observed,byte[] session,CancellationToken ct) =>
+            { Assert.Equal(evidence,observed); Assert.Equal(32,session.Length); return Task.FromResult(HubRuntimePairingSessionTests.Client.Created(session)); });
+        var accessor=new AmbientRuntimePairingSession(); IRuntimePairingSession? retained=null;
+        var closed=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously); Task<IRuntimePairingSession?>? inherited=null;
+        var telemetry=new RecordingWebSocketTelemetrySink { OnOpen=async ct =>
+        {
+            retained=accessor.Current;
+            if(scenario!="eligible") { Assert.Null(retained); return; }
+            Assert.NotNull(retained);
+            inherited=Task.Run(async () => { await closed.Task; return accessor.Current; });
+            var result=await retained.BeginAsync(ct); Assert.Equal(RuntimePairingInitiationOutcome.Created,result.Outcome);
+            Assert.NotNull(result.Descriptor);
+        } };
+        var socket=new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close,[]));
+        var coordinator=new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()),telemetry,store)
+        { LeasePolicy=policy, PairingClient=client.Object, PairingCredentialKey=scenario=="key-disabled" ? disabledKey : key };
+        await coordinator.HandleAsync(LeaseContext(socket,token,scenario=="proactive" ? "/v1/proactive" : "/listen"));
+        Assert.True(socket.Accepted); Assert.Null(accessor.Current);
+        client.Verify(c => c.BeginAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<CancellationToken>()),scenario=="eligible" ? Times.Once() : Times.Never());
+        if(retained is not null)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => retained.BeginAsync());
+            closed.SetResult(true); Assert.Null(await inherited!.WaitAsync(TimeSpan.FromSeconds(5)));
+        }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task LeaseProfileRejectsCaseAliasesWithoutChangingDisabledCompatibility(bool enabled)

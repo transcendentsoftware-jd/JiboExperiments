@@ -76,14 +76,15 @@ its existing contract. It cannot substitute for this active-generation binding.
 
 ## Next integration and acceptance
 
-Next: connect these primitives to the active Listen connection and a separate
-default-disabled initiation signer/HTTPS client. Authenticate a pinned managed
-origin, prohibit redirects, bound request/response/time, validate exact descriptor
-fields and request/session bindings, and treat uncertain responses as failures
-without retry. No robot/browser-supplied binding or lease generation may enter
-that trusted context. Then implement authenticated authorization status delivery,
-usable human confirmation, current-generation completion and atomic assignment,
-credential delivery and entitlement integration.
+The [initiation signer/client](runtime-pairing-initiation-client.md) now connects
+these primitives to a server-created active Listen context behind a separate
+default-disabled profile. It validates the managed HTTPS origin, bounded
+request/response, exact descriptor fields and request/session bindings, and
+rechecks credential/lease authority around dispatch without retry. Robot/browser
+intent, authenticated authorization status, usable physical confirmation,
+current-generation completion and atomic assignment/credential delivery/
+entitlement integration remain next work. No caller-provided identity or lease
+generation can create the trusted connection context.
 
 No managed credential registration is created here. The trusted registration
 workflow must use this exact full binding, review shared-account ambiguity, and

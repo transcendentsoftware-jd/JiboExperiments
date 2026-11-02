@@ -362,6 +362,7 @@ public static class ServiceCollectionExtensions
         var pairingEvidenceKey = RuntimePairingCredentialEvidenceKey.Create(pairingEvidenceOptions);
         pairingEvidenceOptions.HmacKey = null;
         services.AddSingleton<RuntimePairingCredentialEvidenceKey>(_ => pairingEvidenceKey);
+        Jibo.Cloud.Infrastructure.ManagedPairing.RuntimePairingInitiationClientRegistration.Add(services, configuration);
         services.AddSingleton<ICloudAuthProtocolHandler, CloudAuthProtocolHandler>();
         services.AddSingleton<IPersonalMemoryStore>(provider =>
         {
