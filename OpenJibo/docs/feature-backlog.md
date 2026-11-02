@@ -611,6 +611,9 @@ These are the carryover items that need a clean proof pass first:
   - a default-disabled ES256 runtime-attestation issuer now implements the exact managed-service claim contract
     and a domain-separated opaque-Hub-token session binding, but has no caller, configured signing key, transport,
     pairing command, or ownership side effect
+  - credential-bound Hub sockets now revalidate durable token/account state while
+    open; invalid or unavailable validation cancels their work and aborts the
+    socket, without promoting compatibility tokens or runtime IDs into ownership
   - raw binary WebSocket audio is normalized into a single browser-playable Ogg/Opus stream
   - the status page distinguishes observed runtime IDs from explicit links and reports artifact coverage
 - Remaining proof:

@@ -556,6 +556,22 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         return durable;
     }
 
+    public async Task<bool> IsHubTokenCredentialBindingCurrentAsync(string token,
+        HubTokenCredentialBinding expected, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        if (string.IsNullOrWhiteSpace(token)) return false;
+        // Do not hydrate or trust the process-local session metadata. In particular,
+        // removing a persisted binding must not downgrade an open socket to compatibility mode.
+        var stored = await _authTokens.FindValidAsync(token.Trim(), cancellationToken: cancellationToken);
+        if (stored is null || stored.TokenKind != "hub" || string.IsNullOrWhiteSpace(stored.AccountId) ||
+            !HubTokenCredentialBinding.TryRead(stored.Metadata, out var current) || current != expected)
+            return false;
+        var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
+        return account is not null && string.Equals(expected.CredentialFingerprint,
+            AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), StringComparison.Ordinal);
+    }
+
     public CloudSession? FindSessionByToken(string token) =>
         string.IsNullOrWhiteSpace(token) ? null : _sessions.FindActive(token.Trim()) ?? FindIssuedToken(token);
 

@@ -12,6 +12,42 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
+    public async Task OpenHubBindingValidation_RechecksRemoteRevocationExpiryAndMetadataWithoutCacheDowngrade()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        var account = first.GetAccount();
+        var binding = new HubTokenCredentialBinding(
+            AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), DateTimeOffset.UtcNow, false);
+        foreach (var change in new[] { "revoked", "expired", "removed", "replaced", "malformed" })
+        {
+            var token = first.IssueHubToken("bound-" + change, useDefaultRobot: false, credentialBinding: binding);
+            Assert.NotNull(second.FindIssuedToken(token)); // populate a positive cache before the remote change
+            Assert.True(await second.IsHubTokenCredentialBindingCurrentAsync(token, binding));
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))).ToLowerInvariant();
+            var update = change switch
+            {
+                "revoked" => "RevokedUtc=NOW()",
+                "expired" => "ExpiresUtc=NOW()-INTERVAL '1 second'",
+                "removed" => "Metadata='{}'::jsonb",
+                "replaced" => "Metadata=jsonb_set(Metadata,'{legacyCredentialOperationAuthenticated}','\"true\"'::jsonb)",
+                _ => "Metadata='{\"legacyCredentialBindingVersion\":\"1\"}'::jsonb"
+            };
+            await database.ExecuteAsync($"UPDATE CloudAuthTokens SET {update} WHERE TokenHash='{hash}'");
+            Assert.False(await second.IsHubTokenCredentialBindingCurrentAsync(token, binding));
+            Assert.False(await first.IsHubTokenCredentialBindingCurrentAsync(token, binding));
+        }
+        var rotated = first.IssueHubToken("rotated-account", useDefaultRobot: false, credentialBinding: binding);
+        Assert.NotNull(second.FindIssuedToken(rotated));
+        await database.ExecuteAsync("UPDATE Accounts SET AccessKeyId='rotated-account-access-key' WHERE AccountId='usr_openjibo_owner'");
+        Assert.False(await second.IsHubTokenCredentialBindingCurrentAsync(rotated, binding));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
     public async Task CredentialObservedHubToken_RevalidatesAccessKeyRevocationAndCrossReplicaCache()
     {
         await using var database = await CloudStateTestDatabase.CreateAsync();
