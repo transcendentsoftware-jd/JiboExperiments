@@ -1,5 +1,11 @@
 # Official site, builds and hosting starters
 
+For the current owner-facing entry points and Windows/macOS/Linux delivery
+matrix, see the [platform setup guide](platform-setup-guide.md). Host prerequisite
+checks now have a bounded, read-only checker; they do not certify installation,
+image compatibility or conversion. Historical release evidence below retains
+its original scope.
+
 Status: delivery plan with digest launchers and organization-owned public runtime
 previews, 2026-10-01. Existing source-build and Azure
 deployment tools are foundations, not a published official download service.

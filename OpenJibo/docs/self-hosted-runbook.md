@@ -12,6 +12,11 @@ This is the single starting point for self-hosting the OpenJibo cloud with Docke
 
 ## 1. Prerequisites
 
+Check the [OS/architecture matrix and read-only host checker](platform-setup-guide.md#check-prerequisites-first)
+before installation. Windows and macOS have Compose script paths, but still
+need complete host acceptance; the published-preview Python launcher is native
+Linux only. Current preview image evidence is Linux/amd64.
+
 Install:
 
 - Docker and Docker Compose (`docker compose` v2 CLI)

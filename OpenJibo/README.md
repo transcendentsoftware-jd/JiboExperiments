@@ -17,6 +17,9 @@ Current release truth lives in [docs/development-plan.md](docs/development-plan.
 
 ## Running Locally
 
+For hosting choices, Windows/macOS/Linux prerequisites, current support limits,
+and the conversion journey, start with the [platform setup guide](docs/platform-setup-guide.md).
+
 For local setup, use [docs/local-cloud-quickstart.md](docs/local-cloud-quickstart.md).
 
 To self-host the Docker Compose stack on your own hardware, start with [docs/self-hosted-runbook.md](docs/self-hosted-runbook.md).

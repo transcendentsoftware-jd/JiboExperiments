@@ -10,6 +10,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  host-prerequisites:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.9'
+      - name: Validate read-only host prerequisites without Docker or credentials
+        working-directory: OpenJibo
+        run: python -B -m unittest discover -s tests -p test_inspect_openjibo_host.py
+
   test:
     runs-on: ubuntu-latest
     services:
