@@ -108,7 +108,10 @@ public sealed class PostgreSqlHubTokenReplayAdmissionTests
         {
             await using var connection=new NpgsqlConnection(new NpgsqlConnectionStringBuilder(database.Connection){Pooling=false}.ConnectionString);
             await connection.OpenAsync();
-            await using (var set=new NpgsqlCommand($"SET ROLE {role}; CREATE TEMP TABLE HubTokenReplayAdmissions (WrongColumn INTEGER)",connection))await set.ExecuteNonQueryAsync();
+            // Keep the shadow object owned by the disposable administrator. The
+            // function-only role must own no objects when its grants are removed;
+            // backend temp-table cleanup can lag client connection disposal.
+            await using (var set=new NpgsqlCommand($"CREATE TEMP TABLE HubTokenReplayAdmissions (WrongColumn INTEGER); SET ROLE {role}",connection))await set.ExecuteNonQueryAsync();
             var digest=database.NewDigest();
             await using(var consume=new NpgsqlCommand("SELECT public.ConsumeHubTokenReplay(ARRAY[@digest],ARRAY[1]::smallint[],clock_timestamp())",connection))
             {consume.Parameters.AddWithValue("digest",digest);Assert.True((bool)(await consume.ExecuteScalarAsync())!);}
