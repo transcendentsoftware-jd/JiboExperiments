@@ -1,5 +1,10 @@
 # Word of the Day stalled winning screen — October 27–28, 2026
 
+The November 1 [closing-cue regression report](word-of-day-closing-cue-regression-20261101.md)
+is a separate open follow-up. The owner reports a new error-like sound after the
+final silent listen. Normal skill exit in the captured replay does not resolve
+that audible regression or establish stock-equivalent behavior.
+
 The owner reported winning with “grandiloquent” on October 27; the winning word stayed on screen overnight. On October 28 the robot unexpectedly spoke its definition again, and a later command restored the eye.
 
 Production logs associate the robot with a Word of the Day guess at 21:22:44 UTC on October 27. At 21:22:55, a `word-of-the-day/right_word` listen opened with transaction `tid-93328ab6-d24c-11f1-a436-5cf821ea55ae`. The cloud logged its completed-word cleanup and a three-reply batch. The deployed cleanup code constructs an empty LISTEN result, EOS, and an idle skill redirect; the coordinator sends replies sequentially. Batch readiness is not evidence that the robot consumed the replies. The same connection continued sending audio in the following seconds.
