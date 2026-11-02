@@ -73,9 +73,11 @@ end-to-end contract, especially generation predicates at durable commit boundari
    Treat these as bounded transport checks, not atomic fencing of side effects.
    Durable writes and external actions need generation predicates/transactional
    integration at their own commit boundary; a check followed by work has a race.
-4. Make session metadata, buffered-audio cleanup and session closure respect
-   channel plus generation. The current process-local active connection ID is
-   not a cross-replica fence, and the two channels may share session state.
+4. Make local session metadata, buffered-audio cleanup and registry closure
+   respect channel and connection ownership. Existing `CloseSession` only removes
+   a local active entry; it is not a durable write or cross-replica fence. The two
+   channels share turn state, whose later durable side effects need their own
+   generation predicates.
 5. Release only the exact handle during teardown and bound the release wait.
    Failed or stale teardown must never erase successor state. Account/token
    revocation remains separately enforced by the credential continuity monitor.

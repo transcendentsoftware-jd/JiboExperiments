@@ -63,13 +63,16 @@ socket cannot clear a successor's channel marker. Proactive teardown does not
 release listen audio; listen teardown releases local buffered audio only while
 that connection still owns its local channel marker.
 
-Leased teardown deliberately does not call `CloseSession` or mark premature-loop
-completion. Neither operation has a durable generation predicate, and closing
-the shared session could interfere with another channel or replica. Durable
-session rows remain open for now, including after both leased sockets disconnect.
-Generation-aware session closure/retention is a prerequisite for production
-activation. This is not a session-retention policy or a repair of existing stock
-Word of the Day behavior. Exact-handle lease release is attempted once with a
+Once the last local channel marker is removed, teardown calls `CloseSession`
+under the local session gate. In both existing stores this removes only the
+process-local active registry entry. It does not delete a database session row,
+revoke a durable token or mutate another replica's session/lease state. An older
+local connection cannot remove its successor's marker or entry. Other local
+channels keep the shared entry alive. Leased teardown still skips premature-loop
+completion, which can mutate shared turn state after a lost lease.
+
+This is not a repair of existing stock Word of the Day behavior.
+Exact-handle lease release is attempted once with a
 bounded wait; if unavailable, the lease expires. Stale release cannot erase a
 successor's durable generation.
 
@@ -87,10 +90,10 @@ plus inbound/reply checks and five-second renewals. Measure this load and pool
 contention before rollout; this implementation is not a capacity acceptance claim.
 Any optimization must preserve explicit validation/expiry bounds.
 
-Application/session writes, buffered-media persistence, background turn work and
+Durable application writes, buffered-media persistence, background turn work and
 Home Assistant command dispatch still need commit-boundary generation semantics.
 A point check followed by an action cannot fence that action atomically. Shared
-turn-state concurrency and generation-aware durable cleanup also remain work.
+turn-state concurrency and durable state retention also remain work.
 Managed pairing descriptors, physical co-presence, attestation invocation and
 entitlements remain disabled/unimplemented at their existing boundaries.
 

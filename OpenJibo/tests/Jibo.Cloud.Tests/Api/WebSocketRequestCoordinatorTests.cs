@@ -57,7 +57,7 @@ public sealed class WebSocketRequestCoordinatorTests
     [Theory]
     [InlineData("/listen")]
     [InlineData("/v1/proactive")]
-    public async Task LeaseLossAbortsAnIdleReceive_WithoutClosingSharedDurableSession(string path)
+    public async Task LeaseLossAbortsAnIdleReceive_AndReleasesItsLastLocalSession(string path)
     {
         var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
         var leaseStore = HubChannelLeasePolicyTests.WorkingStore(); var renewals = 0;
@@ -79,7 +79,7 @@ public sealed class WebSocketRequestCoordinatorTests
         Assert.Equal(WebSocketState.Aborted, socket.State); Assert.Empty(socket.SentPayloads);
         Assert.DoesNotContain(telemetry.Events, e => e.StartsWith("inbound:", StringComparison.Ordinal));
         Assert.Contains("closed:socket-loop-ended-lease-invalid", telemetry.Events);
-        Assert.NotNull(store.FindActiveSessionByToken(token));
+        Assert.Null(store.FindActiveSessionByToken(token));
         leaseStore.Verify(s => s.TryReleaseAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -97,12 +97,15 @@ public sealed class WebSocketRequestCoordinatorTests
             new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store) { LeasePolicy = policy };
         await coordinator.HandleAsync(LeaseContext(socket, token, "/listen"));
         Assert.Equal(WebSocketState.Aborted, socket.State); Assert.Empty(socket.SentPayloads);
-        Assert.False(store.FindActiveSessionByToken(token)!.TurnState.SawListen);
+        Assert.False(telemetry.ClosedSession!.TurnState.SawListen);
+        Assert.Null(store.FindActiveSessionByToken(token));
         Assert.DoesNotContain(telemetry.Events, e => e.StartsWith("inbound:", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public async Task ProactiveTeardownCannotReleaseListenAudioOrCloseTheSharedSession()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ChannelTeardownPreservesOtherConnection_AndLastCloseReleasesLocalSession(bool closeProactiveFirst)
     {
         var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
         var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
@@ -113,18 +116,47 @@ public sealed class WebSocketRequestCoordinatorTests
         { PauseBeforeReceiveNumber = 1, ReceiveGate = gate, FirstFrameReceived = received };
         var listenCoordinator = new WebSocketRequestCoordinator(service,
             new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store) { LeasePolicy = policy };
-        var listening = listenCoordinator.HandleAsync(LeaseContext(listen, token, "/listen"));
+        var listening = listenCoordinator.HandleAsync(LeaseContext(listen, token, closeProactiveFirst ? "/listen" : "/v1/proactive"));
         await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
         var shared = store.FindActiveSessionByToken(token)!; shared.TurnState.BufferedAudioBytes = 4096;
         var proactive = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
         var proactiveCoordinator = new WebSocketRequestCoordinator(service,
             new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store) { LeasePolicy = policy };
-        await proactiveCoordinator.HandleAsync(LeaseContext(proactive, token, "/v1/proactive"));
-        Assert.Same(shared, store.FindActiveSessionByToken(token)); Assert.Equal(4096, shared.TurnState.BufferedAudioBytes);
+        await proactiveCoordinator.HandleAsync(LeaseContext(proactive, token, closeProactiveFirst ? "/v1/proactive" : "/listen"));
+        Assert.Same(shared, store.FindActiveSessionByToken(token)); Assert.Equal(closeProactiveFirst ? 4096 : 0, shared.TurnState.BufferedAudioBytes);
         Assert.Equal(WebSocketState.Open, listen.State);
         gate.SetResult(true); await listening.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(0, shared.TurnState.BufferedAudioBytes);
-        Assert.Same(shared, store.FindActiveSessionByToken(token)); // durable closure is deferred for leased connections
+        Assert.Null(store.FindActiveSessionByToken(token)); // local entry is released only after the last channel
+        Assert.NotNull(store.FindIssuedToken(token)); // local closure does not revoke the bearer
+    }
+
+    [Fact]
+    public async Task OldLocalConnectionFinishingAfterReplacementCannotClearSuccessorSessionOrAudio()
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        var oldReceived = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var newReceived = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var oldGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var newGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var oldSocket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
+        { PauseBeforeReceiveNumber = 1, ReceiveGate = oldGate, FirstFrameReceived = oldReceived };
+        var newSocket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
+        { PauseBeforeReceiveNumber = 1, ReceiveGate = newGate, FirstFrameReceived = newReceived };
+        WebSocketRequestCoordinator Coordinator() => new(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store)
+        { LeasePolicy = policy };
+        var oldHandling = Coordinator().HandleAsync(LeaseContext(oldSocket, token, "/listen"));
+        await oldReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var newHandling = Coordinator().HandleAsync(LeaseContext(newSocket, token, "/listen"));
+        await newReceived.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var shared = store.FindActiveSessionByToken(token)!; shared.TurnState.BufferedAudioBytes = 4096;
+        oldGate.SetResult(true); await oldHandling.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Same(shared, store.FindActiveSessionByToken(token)); Assert.Equal(4096, shared.TurnState.BufferedAudioBytes);
+        newGate.SetResult(true); await newHandling.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Null(store.FindActiveSessionByToken(token)); Assert.Equal(0, shared.TurnState.BufferedAudioBytes);
     }
 
     [Fact]

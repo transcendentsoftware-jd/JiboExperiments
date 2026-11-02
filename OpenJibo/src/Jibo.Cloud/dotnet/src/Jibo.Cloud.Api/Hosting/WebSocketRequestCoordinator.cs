@@ -458,15 +458,22 @@ internal sealed class WebSocketRequestCoordinator(
                         string.Equals(localOwner?.ToString(), connectionId, StringComparison.Ordinal);
                     if (ownsLocalState)
                     {
-                        // The leased channels share a token-keyed session. Proactive
-                        // teardown must not release listen audio. Durable session close
-                        // requires its own generation predicate and remains deferred.
+                        // The leased channels share process-local session state. Proactive
+                        // teardown must not release listen audio. CloseSession only removes
+                        // this process's active registry entry; it does not revoke durable
+                        // tokens or mutate the lease rows owned by another replica.
                         if (channelLease is null || kind == "neo-hub-listen")
                             WebSocketTurnFinalizationService.ReleaseBufferedAudio(session);
                         session.Metadata.Remove(ownershipKey);
                         if (channelLease is null)
                         {
                             sessionStateOwnedOnClose = true;
+                            cloudStateStore.CloseSession(session.SessionId);
+                        }
+                        else if (!session.Metadata.ContainsKey(ActiveConnectionIdMetadataKey) &&
+                                 !session.Metadata.ContainsKey(ActiveConnectionIdMetadataKey + ".neo-hub-listen") &&
+                                 !session.Metadata.ContainsKey(ActiveConnectionIdMetadataKey + ".neo-hub-proactive"))
+                        {
                             cloudStateStore.CloseSession(session.SessionId);
                         }
                     }
