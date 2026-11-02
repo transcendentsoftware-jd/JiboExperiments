@@ -14,6 +14,17 @@ public sealed class HubChannelLeasePolicyTests
     private static HubChannelLease Grant(long generation = 1) => new(generation, DateTimeOffset.UtcNow.AddSeconds(30));
 
     [Fact]
+    public async Task CancellationDuringPositiveLeaseResponseCannotProducePairingBinding()
+    {
+        var store = WorkingStore(); using var cancelled = new CancellationTokenSource();
+        store.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>()))
+            .Returns(() => { cancelled.Cancel(); return Task.FromResult(true); });
+        using var policy = new HubChannelLeasePolicy(store.Object,Key);
+        await using var lease = (await policy.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => lease.CreatePairingSessionBindingAsync(cancelled.Token));
+    }
+
+    [Fact]
     public async Task PairingBindingPinsGenerationEvenForSameOwnerAndSurvivesRenewal()
     {
         var store = WorkingStore(); var clock = new ManualClock(); var owner = Guid.NewGuid();

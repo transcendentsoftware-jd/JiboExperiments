@@ -95,6 +95,7 @@ internal sealed class HubChannelLeaseHandle(
     {
         cancellation.ThrowIfCancellationRequested();
         if (channel != HubChannel.Listen || !await CheckAsync(cancellation)) return null;
+        cancellation.ThrowIfCancellationRequested();
         using var stream = new MemoryStream();
         using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
         {
