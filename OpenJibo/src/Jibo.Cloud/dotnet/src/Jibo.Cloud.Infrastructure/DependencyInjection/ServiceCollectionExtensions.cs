@@ -356,6 +356,7 @@ public static class ServiceCollectionExtensions
         runtimePairingAttestationOptions.PrivateKeyPem = string.Empty;
         services.AddSingleton<IRuntimePairingAttestationIssuer>(
             _ => runtimePairingAttestationIssuer);
+        HubTokenReplayAdmissionRegistration.Add(services, configuration);
         services.AddSingleton<ICloudAuthProtocolHandler, CloudAuthProtocolHandler>();
         services.AddSingleton<IPersonalMemoryStore>(provider =>
         {

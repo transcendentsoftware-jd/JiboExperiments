@@ -13,6 +13,8 @@ public sealed class PostgreSqlIsolatedStateMigrationScriptsTests
             .Where(path => !path.EndsWith(".personal-memory.sql", StringComparison.OrdinalIgnoreCase))
             .Where(path => !Path.GetFileName(path).Equals(
                 "014_harden_sigv4_replay_observer.state.sql", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !Path.GetFileName(path).Equals(
+                "017_hub_token_replay_admission.state.sql", StringComparison.OrdinalIgnoreCase))
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase);
 
         Assert.Equal(expected, selected);

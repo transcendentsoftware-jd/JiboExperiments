@@ -77,7 +77,8 @@ public sealed class AwsSigV4VerifiedProof
         string region,
         string service,
         DateTimeOffset signedAt,
-        ReadOnlySpan<byte> signature)
+        ReadOnlySpan<byte> signature,
+        string? authenticatedOperation = null)
     {
         _accessKeyId = accessKeyId;
         _credentialDate = credentialDate;
@@ -85,7 +86,12 @@ public sealed class AwsSigV4VerifiedProof
         _service = service;
         _signedTimestamp = signedAt.UtcDateTime.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture);
         _signature = signature.ToArray();
+        SignedAt = signedAt.ToUniversalTime();
+        AuthenticatedOperation = authenticatedOperation;
     }
+
+    public DateTimeOffset SignedAt { get; }
+    public string? AuthenticatedOperation { get; }
 
     public byte[] CreateReplayDigest(AwsSigV4ReplayDigestKey key, string operation) =>
         AwsSigV4ReplayDigestFactory.Create(
@@ -260,7 +266,8 @@ public sealed partial class AwsSigV4RequestVerifier(
                 region,
                 service,
                 signedAt,
-                presentedSignatureBytes));
+                presentedSignatureBytes,
+                fullyBound && policy is not null ? policy.Operation : null));
     }
 
     private static AwsSigV4TargetClassification ClassifyTarget(
