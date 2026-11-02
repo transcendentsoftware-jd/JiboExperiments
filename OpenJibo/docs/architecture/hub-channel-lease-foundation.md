@@ -88,8 +88,9 @@ co-presence or physical ownership is enabled here.
 PostgreSQL tests use independent pools and 24 concurrent acquisitions, verifying
 unique increasing generations and exactly one current owner. They cover channel
 coexistence, stale-owner renewal/release, owner reuse, expiry, expiry during a lock
-wait, malformed calls, overflow rollback and function-only privilege isolation
-with a shadowing temporary table. Adapter tests reject invalid inputs and insecure
+wait, malformed calls, overflow rollback, denied execution before an explicit
+grant and function-only privilege isolation with a shadowing temporary table.
+Adapter tests reject invalid inputs and insecure
 remote connections before opening a database, and honor pre-cancellation.
 Database tests run in the nonparallel shared-schema collection; local skips are
 not database acceptance. CI supplies disposable PostgreSQL.

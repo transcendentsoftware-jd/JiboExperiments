@@ -40,8 +40,11 @@ public sealed class PostgreSqlHubChannelLeaseTests
         var oldOwner = Guid.NewGuid(); var nextOwner = Guid.NewGuid();
         var listen = await store.AcquireAsync(digest, HubChannel.Listen, oldOwner);
         var proactive = await store.AcquireAsync(digest, HubChannel.Proactive, oldOwner);
+        var otherDigest = database.NewDigest();
+        var other = await store.AcquireAsync(otherDigest, HubChannel.Listen, oldOwner);
         var replacement = await store.AcquireAsync(digest, HubChannel.Listen, nextOwner);
         Assert.True(await store.IsCurrentAsync(digest, HubChannel.Proactive, oldOwner, proactive.Generation));
+        Assert.True(await store.IsCurrentAsync(otherDigest, HubChannel.Listen, oldOwner, other.Generation));
         Assert.False(await store.IsCurrentAsync(digest, HubChannel.Listen, oldOwner, listen.Generation));
         Assert.Null(await store.TryRenewAsync(digest, HubChannel.Listen, oldOwner, listen.Generation));
         Assert.False(await store.TryReleaseAsync(digest, HubChannel.Listen, oldOwner, listen.Generation));
@@ -151,7 +154,7 @@ public sealed class PostgreSqlHubChannelLeaseTests
         await using var database = await Database.CreateAsync("OPENJIBO_TEST_POSTGRES_PRIVILEGED_CONNECTION_STRING");
         var role = "hub_lease_test_" + Guid.NewGuid().ToString("N");
         const string signature = "public.ManageHubChannelLease(SMALLINT,BYTEA,SMALLINT,UUID,BIGINT)";
-        await database.Execute($"CREATE ROLE {role} NOLOGIN; GRANT USAGE ON SCHEMA public TO {role}; GRANT EXECUTE ON FUNCTION {signature} TO {role}");
+        await database.Execute($"CREATE ROLE {role} NOLOGIN; GRANT USAGE ON SCHEMA public TO {role}");
         try
         {
             await using var connection = new NpgsqlConnection(new NpgsqlConnectionStringBuilder(database.Connection) { Pooling = false }.ConnectionString);
@@ -160,6 +163,14 @@ public sealed class PostgreSqlHubChannelLeaseTests
             await using (var set = new NpgsqlCommand($"CREATE TEMP TABLE HubChannelLeases(WrongColumn INTEGER); SET ROLE {role}", connection))
                 await set.ExecuteNonQueryAsync();
             var digest = database.NewDigest();
+            await using (var ungranted = new NpgsqlCommand(
+                "SELECT * FROM public.ManageHubChannelLease(1::smallint,@digest,1::smallint,@owner,0::bigint)", connection))
+            {
+                ungranted.Parameters.AddWithValue("digest", digest);
+                ungranted.Parameters.AddWithValue("owner", Guid.NewGuid());
+                Assert.Equal("42501", (await Assert.ThrowsAsync<PostgresException>(() => ungranted.ExecuteNonQueryAsync())).SqlState);
+            }
+            await database.Execute($"GRANT EXECUTE ON FUNCTION {signature} TO {role}");
             await using (var acquire = new NpgsqlCommand(
                 "SELECT LeaseGeneration FROM public.ManageHubChannelLease(1::smallint,@digest,1::smallint,@owner,0::bigint)", connection))
             {
