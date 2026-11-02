@@ -47,8 +47,16 @@ arrives after the old local deadline cannot revive the handle. Wall-clock jumps
 cannot extend local authority. A process that resumes after its deadline fails
 at the next lease guard; this is not hard real-time scheduling.
 
-Guards check the exact owner/generation before inbound processing and each idle
-watchdog iteration. Every final or ambient progress reply is checked again after
+Guards check the exact owner/generation before inbound processing. The 50-ms idle
+watchdog may reuse its own successful check for at most one monotonic second,
+measured from the start of that check. Provider latency counts against this
+window. No positive idle result is shared with another connection/channel or
+used by an inbound/reply guard. Cancellation, a failed renewal/check or the local
+25-second deadline overrides a cached positive result immediately. Each idle
+iteration still checks those local conditions. A replacement may therefore
+remain unobserved by idle processing for this explicit reuse window plus the
+bounded provider wait and scheduling; idle work is not atomically fenced.
+Every final or ambient progress reply is freshly checked again after
 any reply delay and before sending. A failed guard cancels/aborts immediately.
 There remains a race between a successful check and later work or send. Socket
 abort stops delivery, while cancellation of application work is cooperative.
@@ -72,6 +80,11 @@ channels keep the shared entry alive. Leased teardown still skips premature-loop
 completion, which can mutate shared turn state after a lost lease.
 
 This is not a repair of existing stock Word of the Day behavior.
+Setup after local ownership, including identity lookups, connection-open telemetry
+and presence/notification registration, is inside the cleanup boundary. If it fails
+or observes request cancellation after acceptance, local channel markers and
+presence are removed and exact-handle lease release still runs. A failed
+proactive setup preserves the existing listen channel and its audio.
 Exact-handle lease release is attempted once with a
 bounded wait; if unavailable, the lease expires. Stale release cannot erase a
 successor's durable generation.
@@ -85,10 +98,12 @@ and EXECUTE-only identity, and preserve generation tombstones. Prove replacement
 expiry, revocation, database loss, delayed replies and reconnects in staging with
 an image/configuration rollback. No new role or grant is provisioned automatically.
 
-The current guards can perform one database check per 50-ms idle iteration,
-plus inbound/reply checks and five-second renewals. Measure this load and pool
-contention before rollout; this implementation is not a capacity acceptance claim.
-Any optimization must preserve explicit validation/expiry bounds.
+Successful idle guards now require about one database check per second per
+connection instead of one per 50-ms iteration, plus fresh inbound/reply checks
+and five-second renewals. A deterministic simulated ten-second test executes
+200 idle ticks with ten database checks, a 95% reduction in those idle checks.
+This is a query-count test, not a throughput or live capacity result. Measure
+combined load, provider latency and pool contention before rollout.
 
 Durable application writes, buffered-media persistence, background turn work and
 Home Assistant command dispatch still need commit-boundary generation semantics.
@@ -97,9 +112,11 @@ turn-state concurrency and durable state retention also remain work.
 Managed pairing descriptors, physical co-presence, attestation invocation and
 entitlements remain disabled/unimplemented at their existing boundaries.
 
-Tests cover rejected admission, idle replacement on both channels, stale inbound
+Tests cover the idle reuse/query budget, provider latency, cache invalidation,
+setup telemetry failure/cancellation, rejected admission, idle replacement on both channels, stale inbound
 frames, channel-safe teardown, per-reply guards, independent stalled renewal,
-normal cancellation, monotonic expiry and late-response rejection. A PostgreSQL
-case exercises runtime handles on two independent pools and verifies stale
-dispose cannot affect the replacement or the other channel. CI database tests,
+normal cancellation, monotonic expiry and late-response rejection. PostgreSQL
+cases exercise runtime handles on two independent pools, verify the explicit idle
+reuse window plus immediate fresh-guard rejection after replacement, and verify
+stale dispose cannot affect the replacement or the other channel. CI database tests,
 not local skips, are the database acceptance evidence.

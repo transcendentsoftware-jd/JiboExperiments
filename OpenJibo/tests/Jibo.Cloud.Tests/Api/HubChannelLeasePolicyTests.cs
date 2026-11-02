@@ -14,6 +14,83 @@ public sealed class HubChannelLeasePolicyTests
     private static HubChannelLease Grant(long generation = 1) => new(generation, DateTimeOffset.UtcNow.AddSeconds(30));
 
     [Fact]
+    public async Task TwoHundredIdleTicksUseTenChecks_WhileInboundAndReplyChecksRemainFresh()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        using var policy = new HubChannelLeasePolicy(store.Object, Key, clock);
+        await using var lease = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        for (var tick = 0; tick < 200; tick++)
+        {
+            Assert.True(await lease.CheckIdleAsync(default));
+            clock.Advance(TimeSpan.FromMilliseconds(50));
+        }
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), HubChannel.Listen, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Exactly(10));
+        Assert.True(await lease.CheckAsync(default)); Assert.True(await lease.CheckAsync(default));
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), HubChannel.Listen, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Exactly(12));
+    }
+
+    [Fact]
+    public async Task ProviderLatencyCountsAgainstIdleReuseWindow()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        var pending = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        store.SetupSequence(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()))
+            .Returns(pending.Task).ReturnsAsync(true);
+        using var policy = new HubChannelLeasePolicy(store.Object, Key, clock);
+        await using var lease = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        var first = lease.CheckIdleAsync(default);
+        clock.Advance(TimeSpan.FromMilliseconds(900)); pending.SetResult(true); Assert.True(await first);
+        clock.Advance(TimeSpan.FromMilliseconds(200)); Assert.True(await lease.CheckIdleAsync(default));
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task PositiveIdleCacheCannotBypassCancellationExpiryOrRenewalFailure()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        using var policy = new HubChannelLeasePolicy(store.Object, Key, clock);
+        await using var expired = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        Assert.True(await expired.CheckIdleAsync(default));
+        using var cancellation = new CancellationTokenSource(); cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => expired.CheckIdleAsync(cancellation.Token));
+        clock.Advance(TimeSpan.FromSeconds(25)); Assert.False(await expired.CheckIdleAsync(default));
+        Assert.Equal("lease-expired", expired.FailureReason);
+        await using var replaced = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        Assert.True(await replaced.CheckIdleAsync(default));
+        store.Setup(s => s.TryRenewAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>())).ReturnsAsync((HubChannelLease?)null);
+        Assert.False(await replaced.RenewAsync(default)); Assert.False(await replaced.CheckIdleAsync(default));
+        Assert.Equal("lease-invalid", replaced.FailureReason);
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task FailedIdleRefreshInvalidatesPositiveCacheWithoutRetry()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        store.SetupSequence(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true).ThrowsAsync(new InvalidOperationException("private-provider-details"));
+        using var policy = new HubChannelLeasePolicy(store.Object, Key, clock);
+        await using var lease = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        Assert.True(await lease.CheckIdleAsync(default)); clock.Advance(TimeSpan.FromSeconds(1));
+        Assert.False(await lease.CheckIdleAsync(default)); Assert.False(await lease.CheckIdleAsync(default));
+        Assert.Equal("lease-unavailable", lease.FailureReason);
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task IdleReuseIsConnectionLocalAndDoesNotCrossChannels()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        using var policy = new HubChannelLeasePolicy(store.Object, Key, clock);
+        await using var listen = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        await using var proactive = (await policy.AcquireAsync("opaque", HubChannel.Proactive, default))!;
+        Assert.True(await listen.CheckIdleAsync(default)); Assert.True(await listen.CheckIdleAsync(default));
+        Assert.True(await proactive.CheckIdleAsync(default));
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), HubChannel.Listen, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(), HubChannel.Proactive, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task DigestIsStableDomainSeparatedAndOpaque_WhileOwnersAreUniqueAndChannelsRemainDistinct()
     {
         var observed = new List<(byte[] Digest, HubChannel Channel, Guid Owner)>();

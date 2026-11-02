@@ -270,38 +270,8 @@ internal sealed class WebSocketRequestCoordinator(
                 session.Metadata[ownershipKey] = connectionId;
             }
         }
-        var initialRobotKeys = ResolveRobotKeys(token, session);
-        logger.LogInformation(
-            "WebSocket connection accepted connectionId={ConnectionId} traceId={TraceId} kind={Kind} " +
-            "tokenFingerprint={TokenFingerprint} sessionId={SessionId} deviceId={DeviceId} " +
-            "robotId={RobotId} friendlyName={FriendlyName} robotKeyCount={RobotKeyCount}",
-            connectionId,
-            context.TraceIdentifier,
-            kind,
-            tokenFingerprint,
-            session.SessionId,
-            session.DeviceId,
-            ReadSessionMetadata(session, "registeredRobotId") ?? ReadSessionMetadata(session, "robotId"),
-            ReadSessionMetadata(session, "robotFriendlyId") ?? ReadSessionMetadata(session, "friendlyId"),
-            initialRobotKeys.Count);
-        await telemetrySink.RecordConnectionOpenedAsync(openEnvelope, session, context.RequestAborted);
-
         var registeredApiSocket = false;
-        var presenceConnectionId = robotPresenceRegistry.Register(kind, socket, initialRobotKeys);
-        if (string.Equals(kind, "api-socket", StringComparison.OrdinalIgnoreCase))
-        {
-            var robotKeys = ResolveRobotKeys(token, session);
-            robotNotificationRegistry.Register(robotKeys, socket);
-            registeredApiSocket = true;
-            var drained = await robotNotificationRegistry.DrainPendingAsync(
-                robotKeys,
-                socket,
-                context.RequestAborted);
-            logger.LogInformation(
-                "api-socket registered for LoopUpdated push keyCount={KeyCount} pendingDrained={PendingDrained}",
-                robotKeys.Count,
-                drained);
-        }
+        var presenceConnectionId = Guid.Empty;
 
         var isPrematureClose = false;
         var loopTransId = session.TurnState.TransId;
@@ -317,19 +287,57 @@ internal sealed class WebSocketRequestCoordinator(
             ? new HubChannelLeaseMonitor(LeaseRenewalInterval).RunAsync(socket, channelLease, connectionLifetime)
             : Task.CompletedTask;
 
-        async Task GuardLeaseAsync(CancellationToken cancellation)
+        Task GuardLeaseAsync(CancellationToken cancellation) => GuardConnectionLeaseAsync(cancellation, idle: false);
+
+        async Task GuardConnectionLeaseAsync(CancellationToken cancellation, bool idle)
         {
             connectionCancellation.ThrowIfCancellationRequested();
             cancellation.ThrowIfCancellationRequested();
             if (channelLease is null) return;
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellation, connectionCancellation);
-            if (await channelLease.CheckAsync(linked.Token)) return;
+            var current = idle ? await channelLease.CheckIdleAsync(linked.Token) : await channelLease.CheckAsync(linked.Token);
+            if (current) return;
             connectionLifetime.Cancel(); socket.Abort();
             throw new OperationCanceledException(connectionCancellation);
         }
 
         try
         {
+            // All setup after claiming local ownership participates in cleanup,
+            // including identity lookups, telemetry and notification registration.
+            connectionCancellation.ThrowIfCancellationRequested();
+            var initialRobotKeys = ResolveRobotKeys(token, session);
+            logger.LogInformation(
+                "WebSocket connection accepted connectionId={ConnectionId} traceId={TraceId} kind={Kind} " +
+                "tokenFingerprint={TokenFingerprint} sessionId={SessionId} deviceId={DeviceId} " +
+                "robotId={RobotId} friendlyName={FriendlyName} robotKeyCount={RobotKeyCount}",
+                connectionId,
+                context.TraceIdentifier,
+                kind,
+                tokenFingerprint,
+                session.SessionId,
+                session.DeviceId,
+                ReadSessionMetadata(session, "registeredRobotId") ?? ReadSessionMetadata(session, "robotId"),
+                ReadSessionMetadata(session, "robotFriendlyId") ?? ReadSessionMetadata(session, "friendlyId"),
+                initialRobotKeys.Count);
+            await telemetrySink.RecordConnectionOpenedAsync(openEnvelope, session, connectionCancellation);
+            connectionCancellation.ThrowIfCancellationRequested();
+            presenceConnectionId = robotPresenceRegistry.Register(kind, socket, initialRobotKeys);
+            if (string.Equals(kind, "api-socket", StringComparison.OrdinalIgnoreCase))
+            {
+                var robotKeys = ResolveRobotKeys(token, session);
+                robotNotificationRegistry.Register(robotKeys, socket);
+                registeredApiSocket = true;
+                var drained = await robotNotificationRegistry.DrainPendingAsync(
+                    robotKeys,
+                    socket,
+                    context.RequestAborted);
+                logger.LogInformation(
+                    "api-socket registered for LoopUpdated push keyCount={KeyCount} pendingDrained={PendingDrained}",
+                    robotKeys.Count,
+                    drained);
+            }
+
             Task<ReceivedSocketMessage>? pendingReceive = null;
             var watchdogDelay = Task.Delay(TurnWatchdogInterval, connectionLifetime.Token);
             while (socket.State == WebSocketState.Open)
@@ -343,7 +351,7 @@ internal sealed class WebSocketRequestCoordinator(
                     if (completedTask != pendingReceive)
                     {
                         watchdogDelay = Task.Delay(TurnWatchdogInterval, connectionLifetime.Token);
-                        await GuardLeaseAsync(connectionLifetime.Token);
+                        await GuardConnectionLeaseAsync(connectionLifetime.Token, idle: true);
                         var idleEnvelope = CreateEnvelope(context, kind, token, connectionId);
                         var idleReplies = await webSocketService.HandleIdleAsync(
                             session,
@@ -449,7 +457,7 @@ internal sealed class WebSocketRequestCoordinator(
             await leaseMonitor;
             if (registeredApiSocket)
                 robotNotificationRegistry.Remove(socket);
-            robotPresenceRegistry.Remove(presenceConnectionId);
+            if (presenceConnectionId != Guid.Empty) robotPresenceRegistry.Remove(presenceConnectionId);
             using (var gateLease = AcquireSessionGate(sessionKey))
             {
                 lock (gateLease.Gate.SyncRoot)

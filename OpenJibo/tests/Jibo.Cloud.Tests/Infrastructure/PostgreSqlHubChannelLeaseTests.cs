@@ -13,6 +13,37 @@ public sealed class PostgreSqlHubChannelLeaseTests
 {
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
+    public async Task IdleReuseHasAnExplicitWindow_WhileFreshGuardsDetectCrossPoolReplacementImmediately()
+    {
+        await using var database = await Database.CreateAsync();
+        await using var first = new PostgreSqlHubChannelLeaseStore(database.Connection);
+        await using var second = new PostgreSqlHubChannelLeaseStore(database.Connection);
+        var key = RandomNumberGenerator.GetBytes(32); var clock = new LeaseTestClock();
+        using var replicaA = new HubChannelLeasePolicy(first, key, clock);
+        using var replicaB = new HubChannelLeasePolicy(second, key);
+        var firstToken = "test-bearer-" + Guid.NewGuid().ToString("N");
+        var secondToken = "test-bearer-" + Guid.NewGuid().ToString("N");
+        foreach (var token in new[] { firstToken, secondToken })
+            database.TrackDigest(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(HubChannelLeasePolicy.DigestDomain + token)));
+        await using var old = (await replicaA.AcquireAsync(firstToken, HubChannel.Listen, default))!;
+        Assert.True(await old.CheckIdleAsync(default));
+        await using var replacement = (await replicaB.AcquireAsync(firstToken, HubChannel.Listen, default))!;
+        Assert.True(await old.CheckIdleAsync(default)); // the documented idle-only window is still open
+        Assert.False(await old.CheckAsync(default)); // inbound/reply guards never use that cache
+        Assert.False(await old.CheckIdleAsync(default)); // failure overrides the positive cache
+        Assert.True(await replacement.CheckAsync(default));
+
+        await using var expiringCache = (await replicaA.AcquireAsync(secondToken, HubChannel.Listen, default))!;
+        Assert.True(await expiringCache.CheckIdleAsync(default));
+        await using var next = (await replicaB.AcquireAsync(secondToken, HubChannel.Listen, default))!;
+        clock.Advance(HubChannelLeaseHandle.IdleValidationWindow);
+        Assert.False(await expiringCache.CheckIdleAsync(default)); // expiry requires an authoritative refresh
+        Assert.Equal("lease-invalid", expiringCache.FailureReason);
+        Assert.True(await next.CheckAsync(default));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
     public async Task RuntimeHandlesAcrossIndependentPoolsDetectReplacement_AndStaleDisposePreservesSuccessor()
     {
         await using var database = await Database.CreateAsync();
@@ -238,6 +269,14 @@ public sealed class PostgreSqlHubChannelLeaseTests
         foreach (var mode in new[] { "Disable", "Prefer", "Require", "VerifyCA" })
             Assert.Throws<ArgumentException>(() => new PostgreSqlHubChannelLeaseStore($"Host=remote.example;SslMode={mode};Database=unused;Username=unused"));
         await using var verified = new PostgreSqlHubChannelLeaseStore("Host=remote.example;SslMode=VerifyFull;Database=unused;Username=unused");
+    }
+
+    private sealed class LeaseTestClock : TimeProvider
+    {
+        private long _timestamp;
+        public override long TimestampFrequency => 1000;
+        public override long GetTimestamp() => Interlocked.Read(ref _timestamp);
+        public void Advance(TimeSpan value) => Interlocked.Add(ref _timestamp, (long)value.TotalMilliseconds);
     }
 
     private sealed class Database(string connection) : IAsyncDisposable

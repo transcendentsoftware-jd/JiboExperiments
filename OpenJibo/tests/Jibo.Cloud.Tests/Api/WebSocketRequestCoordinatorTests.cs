@@ -17,6 +17,60 @@ namespace Jibo.Cloud.Tests.Api;
 public sealed class WebSocketRequestCoordinatorTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OpenTelemetryFailureOrCancellationReleasesLocalStateAndExactLease(bool cancel)
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        using var request = new CancellationTokenSource();
+        var telemetry = new RecordingWebSocketTelemetrySink
+        {
+            OnOpen = cancellation =>
+            {
+                if (!cancel) return Task.FromException(new IOException("synthetic-telemetry-failure"));
+                request.Cancel(); return Task.FromCanceled(cancellation);
+            }
+        };
+        var socket = new FakeWebSocket(); var context = LeaseContext(socket, token, "/listen");
+        context.RequestAborted = request.Token;
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store) { LeasePolicy = policy };
+        if (cancel) await coordinator.HandleAsync(context).WaitAsync(TimeSpan.FromSeconds(5));
+        else await Assert.ThrowsAsync<IOException>(() => coordinator.HandleAsync(context));
+        Assert.True(socket.Accepted); Assert.Null(store.FindActiveSessionByToken(token));
+        Assert.NotNull(store.FindIssuedToken(token));
+        leaseStore.Verify(s => s.TryReleaseAsync(It.IsAny<byte[]>(), HubChannel.Listen, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task FailedProactiveSetupPreservesExistingListenSessionAndAudio()
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var listen = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
+        { PauseBeforeReceiveNumber = 1, ReceiveGate = gate, FirstFrameReceived = entered };
+        var listening = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store)
+        { LeasePolicy = policy }.HandleAsync(LeaseContext(listen, token, "/listen"));
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var shared = store.FindActiveSessionByToken(token)!; shared.TurnState.BufferedAudioBytes = 4096;
+        var telemetry = new RecordingWebSocketTelemetrySink
+        { OnOpen = _ => Task.FromException(new IOException("synthetic-telemetry-failure")) };
+        var proactive = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store) { LeasePolicy = policy };
+        await Assert.ThrowsAsync<IOException>(() => proactive.HandleAsync(LeaseContext(new FakeWebSocket(), token, "/v1/proactive")));
+        Assert.Same(shared, store.FindActiveSessionByToken(token)); Assert.Equal(4096, shared.TurnState.BufferedAudioBytes);
+        leaseStore.Verify(s => s.TryReleaseAsync(It.IsAny<byte[]>(), HubChannel.Proactive, It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
+        gate.SetResult(true); await listening.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Null(store.FindActiveSessionByToken(token));
+    }
+
+    [Theory]
     [InlineData("unbound", StatusCodes.Status401Unauthorized)]
     [InlineData("invalid-config", StatusCodes.Status503ServiceUnavailable)]
     [InlineData("store-failure", StatusCodes.Status503ServiceUnavailable)]
@@ -599,6 +653,7 @@ public sealed class WebSocketRequestCoordinatorTests
 
     private sealed class RecordingWebSocketTelemetrySink : IWebSocketTelemetrySink
     {
+        public Func<CancellationToken, Task>? OnOpen { get; init; }
         public List<string> Events { get; } = [];
 
         public string? FirstConnectionId { get; private set; }
@@ -613,7 +668,7 @@ public sealed class WebSocketRequestCoordinatorTests
             Events.Add("opened");
             FirstConnectionId ??= envelope.ConnectionId;
             LastConnectionId = envelope.ConnectionId;
-            return Task.CompletedTask;
+            return OnOpen?.Invoke(cancellationToken) ?? Task.CompletedTask;
         }
 
         public Task RecordInboundAsync(WebSocketMessageEnvelope envelope, CloudSession session, string? messageType,

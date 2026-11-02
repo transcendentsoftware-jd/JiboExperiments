@@ -621,7 +621,9 @@ These are the carryover items that need a clean proof pass first:
     generations and rejects stale-owner renewals/releases; a default-disabled
     [coordinator lifecycle](architecture/hub-channel-lease-lifecycle.md) acquires/renews
     those slots and guards processing/replies, while durable side-effect fencing
-    remain unimplemented; local session cleanup waits for both channel markers
+    remain unimplemented; local session cleanup waits for both channel markers,
+    setup telemetry failures release ownership, and idle checks have a one-second
+    reuse budget while inbound/reply checks remain fresh
   - raw binary WebSocket audio is normalized into a single browser-playable Ogg/Opus stream
   - the status page distinguishes observed runtime IDs from explicit links and reports artifact coverage
 - Remaining proof:
