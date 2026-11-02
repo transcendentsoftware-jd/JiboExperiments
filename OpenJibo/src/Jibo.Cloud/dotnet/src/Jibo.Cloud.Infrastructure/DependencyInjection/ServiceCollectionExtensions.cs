@@ -357,6 +357,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRuntimePairingAttestationIssuer>(
             _ => runtimePairingAttestationIssuer);
         HubTokenReplayAdmissionRegistration.Add(services, configuration);
+        var pairingEvidenceOptions = new RuntimePairingCredentialEvidenceOptions();
+        configuration?.GetSection(RuntimePairingCredentialEvidenceOptions.SectionName).Bind(pairingEvidenceOptions);
+        var pairingEvidenceKey = RuntimePairingCredentialEvidenceKey.Create(pairingEvidenceOptions);
+        pairingEvidenceOptions.HmacKey = null;
+        services.AddSingleton<RuntimePairingCredentialEvidenceKey>(_ => pairingEvidenceKey);
         services.AddSingleton<ICloudAuthProtocolHandler, CloudAuthProtocolHandler>();
         services.AddSingleton<IPersonalMemoryStore>(provider =>
         {

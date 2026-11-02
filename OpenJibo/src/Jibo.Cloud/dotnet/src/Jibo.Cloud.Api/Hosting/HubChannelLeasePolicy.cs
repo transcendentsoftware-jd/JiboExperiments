@@ -89,6 +89,22 @@ internal sealed class HubChannelLeaseHandle(
     internal Task<bool> CheckAsync(CancellationToken cancellation) => ValidateAsync(false, cancellation);
     internal Task<bool> RenewAsync(CancellationToken cancellation) => ValidateAsync(true, cancellation);
 
+    // Pairing is initiated through the active Listen connection. Never accept a
+    // caller-supplied owner/generation, proactive lease or token-only hash here.
+    internal async Task<byte[]?> CreatePairingSessionBindingAsync(CancellationToken cancellation)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        if (channel != HubChannel.Listen || !await CheckAsync(cancellation)) return null;
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true))
+        {
+            writer.Write("openjibo-managed-pairing-live-session-v1\0");
+            writer.Write(digest.Length); writer.Write(digest);
+            writer.Write((short)channel); writer.Write(owner.ToByteArray()); writer.Write(generation);
+        }
+        return LocallyCurrent() ? SHA256.HashData(stream.ToArray()) : null;
+    }
+
     // Only the serial idle/watchdog path may reuse a recent positive check.
     // Inbound work and every reply still use CheckAsync without this cache.
     internal async Task<bool> CheckIdleAsync(CancellationToken cancellation)

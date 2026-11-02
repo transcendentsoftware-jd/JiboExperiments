@@ -47,7 +47,8 @@ public interface ICloudStateStore
     IReadOnlyList<DeviceRegistration> GetDevicesForUser(string userId);
     string? GetUserIdForDevice(string deviceId);
     string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
-        HubTokenCredentialBinding? credentialBinding = null);
+        HubTokenCredentialBinding? credentialBinding = null,
+        RuntimePairingCredentialEvidence? pairingEvidence = null);
     string IssueRobotToken(string deviceId);
     string IssueDeploymentSmokeRobotToken(string deviceId);
     string IssueDeploymentSmokeHubToken(string deviceId);
@@ -65,6 +66,17 @@ public interface ICloudStateStore
         return Task.FromResult(issued is not null &&
             string.Equals(issued.Kind, "hub", StringComparison.OrdinalIgnoreCase) &&
             HubTokenCredentialBinding.TryRead(issued.Metadata, out var current) && current == expected);
+    }
+    /// <summary>
+    /// Reads original pairing evidence and current account/token state authoritatively.
+    /// Default implementations cannot authorize pairing from compatibility metadata.
+    /// </summary>
+    Task<RuntimePairingCredentialEvidence?> ReadHubPairingCredentialEvidenceAsync(string token,
+        HubTokenCredentialBinding expected, RuntimePairingCredentialEvidenceKey key,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<RuntimePairingCredentialEvidence?>(null);
     }
     CloudSession OpenSession(string kind, string? deviceId, string? token, string? hostName, string? path);
     void CloseSession(string sessionId);

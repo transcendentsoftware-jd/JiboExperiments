@@ -60,11 +60,12 @@ public sealed record AwsSigV4Credential(string AccessKeyId, string SecretAccessK
 
 /// <summary>
 /// Ephemeral proof material emitted only after a legacy SigV4 signature verifies.
-/// Raw fields remain private; callers can derive only the environment-keyed replay digest.
+/// Raw fields remain private; callers can derive only environment-keyed replay or credential evidence.
 /// </summary>
 public sealed class AwsSigV4VerifiedProof
 {
     private readonly string _accessKeyId;
+    private readonly byte[]? _credentialIdentity;
     private readonly string _credentialDate;
     private readonly string _region;
     private readonly string _service;
@@ -78,9 +79,11 @@ public sealed class AwsSigV4VerifiedProof
         string service,
         DateTimeOffset signedAt,
         ReadOnlySpan<byte> signature,
-        string? authenticatedOperation = null)
+        string? authenticatedOperation = null,
+        byte[]? credentialIdentity = null)
     {
         _accessKeyId = accessKeyId;
+        _credentialIdentity = credentialIdentity?.ToArray();
         _credentialDate = credentialDate;
         _region = region;
         _service = service;
@@ -89,6 +92,9 @@ public sealed class AwsSigV4VerifiedProof
         SignedAt = signedAt.ToUniversalTime();
         AuthenticatedOperation = authenticatedOperation;
     }
+
+    public RuntimePairingCredentialEvidence? CreatePairingCredentialEvidence(RuntimePairingCredentialEvidenceKey key) =>
+        _credentialIdentity is null ? null : key.Protect(_credentialIdentity);
 
     public DateTimeOffset SignedAt { get; }
     public string? AuthenticatedOperation { get; }
@@ -267,7 +273,8 @@ public sealed partial class AwsSigV4RequestVerifier(
                 service,
                 signedAt,
                 presentedSignatureBytes,
-                fullyBound && policy is not null ? policy.Operation : null));
+                fullyBound && policy is not null ? policy.Operation : null,
+                RuntimePairingCredentialEvidenceKey.CredentialIdentity(accessKeyId, secretAccessKey)));
     }
 
     private static AwsSigV4TargetClassification ClassifyTarget(

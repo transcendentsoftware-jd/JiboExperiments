@@ -406,7 +406,8 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             claimSource));
 
     public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
-        HubTokenCredentialBinding? credentialBinding = null)
+        HubTokenCredentialBinding? credentialBinding = null,
+        RuntimePairingCredentialEvidence? pairingEvidence = null)
     {
         var account = GetAccount();
         var resolvedDeviceId = !string.IsNullOrWhiteSpace(deviceId)
@@ -416,7 +417,7 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
                 : null;
         var token = $"hub-{account.AccountId}-{Guid.NewGuid():N}";
         RegisterIssuedToken(token, "hub", account.AccountId, resolvedDeviceId, _hubTokenLifetime,
-            credentialBinding);
+            credentialBinding, pairingEvidence);
         return token;
     }
 
@@ -572,6 +573,24 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), StringComparison.Ordinal);
     }
 
+    public async Task<RuntimePairingCredentialEvidence?> ReadHubPairingCredentialEvidenceAsync(string token,
+        HubTokenCredentialBinding expected, RuntimePairingCredentialEvidenceKey key,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!key.IsReady || string.IsNullOrWhiteSpace(token) || token.Length > 4096 || token != token.Trim()) return null;
+        // No session or account cache, body/CONTEXT identity, or short fingerprint lookup.
+        var stored = await _authTokens.FindValidAsync(token, cancellationToken: cancellationToken);
+        if (stored is null || stored.TokenKind != "hub" || string.IsNullOrWhiteSpace(stored.AccountId) ||
+            !HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) || original != expected) return null;
+        var evidence = RuntimePairingCredentialEvidence.Read(stored.Metadata);
+        if (evidence is null) return null;
+        var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey)
+            ? evidence : null;
+    }
+
     public CloudSession? FindSessionByToken(string token) =>
         string.IsNullOrWhiteSpace(token) ? null : _sessions.FindActive(token.Trim()) ?? FindIssuedToken(token);
 
@@ -653,11 +672,13 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
     }
 
     private void RegisterIssuedToken(string token, string kind, string accountId, string? deviceId,
-        TimeSpan lifetime, HubTokenCredentialBinding? credentialBinding = null)
+        TimeSpan lifetime, HubTokenCredentialBinding? credentialBinding = null,
+        RuntimePairingCredentialEvidence? pairingEvidence = null)
     {
         var expiresUtc = DateTimeOffset.UtcNow.Add(lifetime);
         var metadata = BuildSessionMetadata(accountId, deviceId);
         credentialBinding?.WriteTo(metadata);
+        pairingEvidence?.WriteTo(metadata);
         var registered = ResolveRegisteredDevice(deviceId);
         if (registered is not null)
         {
