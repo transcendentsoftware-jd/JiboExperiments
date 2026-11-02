@@ -69,7 +69,10 @@ internal sealed class HubChannelLeaseHandle(
     long started, TimeProvider clock, TimeSpan timeout) : IAsyncDisposable
 {
     internal static readonly TimeSpan SafeLifetime = TimeSpan.FromSeconds(25);
+    internal static readonly TimeSpan IdleValidationWindow = TimeSpan.FromSeconds(1);
     private long _grantStarted = started;
+    private long _idleCheckedAt;
+    private int _hasIdleCheck;
     private string? _failure;
     private int _disposed;
     public string? FailureReason => Volatile.Read(ref _failure);
@@ -85,6 +88,23 @@ internal sealed class HubChannelLeaseHandle(
 
     internal Task<bool> CheckAsync(CancellationToken cancellation) => ValidateAsync(false, cancellation);
     internal Task<bool> RenewAsync(CancellationToken cancellation) => ValidateAsync(true, cancellation);
+
+    // Only the serial idle/watchdog path may reuse a recent positive check.
+    // Inbound work and every reply still use CheckAsync without this cache.
+    internal async Task<bool> CheckIdleAsync(CancellationToken cancellation)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        if (!LocallyCurrent()) return false;
+        if (Volatile.Read(ref _hasIdleCheck) != 0 &&
+            clock.GetElapsedTime(Volatile.Read(ref _idleCheckedAt)) < IdleValidationWindow)
+            return LocallyCurrent();
+        var requestStarted = clock.GetTimestamp();
+        if (!await CheckAsync(cancellation)) return false;
+        // Count provider latency against the reuse window, not in addition to it.
+        Volatile.Write(ref _idleCheckedAt, requestStarted);
+        Volatile.Write(ref _hasIdleCheck, 1);
+        return LocallyCurrent();
+    }
 
     private async Task<bool> ValidateAsync(bool renew, CancellationToken cancellation)
     {
