@@ -770,7 +770,7 @@ public sealed class AwsSigV4RequestVerifierTests
         Assert.Equal(0, observationStore.Calls);
     }
 
-    private static ProtocolEnvelope Sign(
+    internal static ProtocolEnvelope Sign(
         AccountProfile account,
         string body,
         DateTimeOffset signedAt,

@@ -100,7 +100,8 @@ public sealed class JiboCloudProtocolService(
         };
     }
 
-    public Task<ProtocolDispatchResult> DispatchAsync(ProtocolEnvelope envelope)
+    public Task<ProtocolDispatchResult> DispatchAsync(ProtocolEnvelope envelope,
+        CancellationToken cancellationToken = default)
     {
         ObserveIdentityCandidates(envelope);
 
@@ -152,7 +153,7 @@ public sealed class JiboCloudProtocolService(
             return Task.FromResult(HandleBackup(operation, envelope));
 
         if (servicePrefix.StartsWith("Account_", StringComparison.OrdinalIgnoreCase))
-            return Task.FromResult(HandleAccount(operation, envelope));
+            return _authHandler.HandleAccountAsync(operation, envelope, cancellationToken);
 
         if (servicePrefix.StartsWith("Notification_", StringComparison.OrdinalIgnoreCase))
             return Task.FromResult(HandleNotification(operation, envelope));
@@ -227,11 +228,6 @@ public sealed class JiboCloudProtocolService(
 
         result = ProtocolDispatchResult.Ok(new { });
         return false;
-    }
-
-    private ProtocolDispatchResult HandleAccount(string operation, ProtocolEnvelope envelope)
-    {
-        return _authHandler.HandleAccount(operation, envelope);
     }
 
     private ProtocolDispatchResult HandleNotification(string operation, ProtocolEnvelope envelope)

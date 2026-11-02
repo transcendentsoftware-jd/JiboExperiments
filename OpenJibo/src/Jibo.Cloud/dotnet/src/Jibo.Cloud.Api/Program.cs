@@ -262,7 +262,7 @@ app.MapMethods("/{**path}", ["GET", "POST", "PUT"], async (HttpContext context, 
          string.Equals(envelope.Operation, "RemoveUpdate", StringComparison.OrdinalIgnoreCase));
     var result = isPublicUpdateMutation
         ? ProtocolDispatchResult.Raw(StatusCodes.Status403Forbidden, """{"error":"forbidden"}""", "application/json")
-        : await service.DispatchAsync(envelope);
+        : await service.DispatchAsync(envelope, cancellationToken);
     if (isPublicUpdateMutation) result.Headers["Cache-Control"] = "no-store";
     transportMetrics.HttpPayload("in", "protocol", envelope.Method, result.StatusCode, envelope.BodyBytes?.Length ?? 0);
     transportMetrics.HttpPayload("out", "protocol", envelope.Method, result.StatusCode,

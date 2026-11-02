@@ -12,7 +12,8 @@ public sealed class CloudAuthProtocolHandler(
     RobotIdentitySuggestionStore? identitySuggestionStore = null,
     ReleaseSmokeAuthorizationOptions? releaseSmokeAuthorization = null,
     AwsSigV4RequestVerifier? awsSigV4Verifier = null,
-    IAwsSigV4ReplayObservationPublisher? awsSigV4ReplayObservationPublisher = null) : ICloudAuthProtocolHandler
+    IAwsSigV4ReplayObservationPublisher? awsSigV4ReplayObservationPublisher = null,
+    IHubTokenReplayAdmission? hubTokenReplayAdmission = null) : ICloudAuthProtocolHandler
 {
     private static readonly AwsSigV4OperationPolicy CreateHubTokenPolicy = new(
         "Account.CreateHubToken",
@@ -33,8 +34,15 @@ public sealed class CloudAuthProtocolHandler(
         awsSigV4Verifier ?? new AwsSigV4RequestVerifier(stateStore);
     private readonly IAwsSigV4ReplayObservationPublisher _awsSigV4ReplayObservationPublisher =
         awsSigV4ReplayObservationPublisher ?? NullAwsSigV4ReplayObservationPublisher.Instance;
-    public ProtocolDispatchResult HandleAccount(string operation, ProtocolEnvelope envelope)
+    private readonly IHubTokenReplayAdmission _hubTokenReplayAdmission = hubTokenReplayAdmission ??
+        new FixedHubTokenReplayAdmission(HubTokenReplayAdmissionOutcome.Disabled);
+    public ProtocolDispatchResult HandleAccount(string operation, ProtocolEnvelope envelope) =>
+        HandleAccountAsync(operation, envelope).GetAwaiter().GetResult();
+
+    public async Task<ProtocolDispatchResult> HandleAccountAsync(string operation, ProtocolEnvelope envelope,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var account = stateStore.GetAccount();
         var body = envelope.TryParseBody();
 
@@ -54,6 +62,12 @@ public sealed class CloudAuthProtocolHandler(
                 CreateHubTokenPolicy,
                 TryGetReplayProbeCredential(deviceId, registrationSource, envelope));
             var credentialBinding = HubTokenCredentialBinding.FromVerification(credentialVerification);
+            var admission = await _hubTokenReplayAdmission.AdmitAsync(credentialVerification, cancellationToken).ConfigureAwait(false);
+            if (admission == HubTokenReplayAdmissionOutcome.Rejected)
+                return ProtocolDispatchResult.Raw(401, "{\"message\":\"Request authentication required\"}", "application/json");
+            if (admission is not (HubTokenReplayAdmissionOutcome.Disabled or HubTokenReplayAdmissionOutcome.Admitted))
+                return ProtocolDispatchResult.Raw(503, "{\"message\":\"Token issuance temporarily unavailable\"}", "application/json");
+            cancellationToken.ThrowIfCancellationRequested();
 
             var defaultRobotIsSynthetic = RobotRegistrationSources.IsSynthetic(
                 RobotRegistrationSources.Normalize(stateStore.GetRobot().RegistrationSource,

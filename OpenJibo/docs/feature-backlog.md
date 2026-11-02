@@ -614,10 +614,14 @@ These are the carryover items that need a clean proof pass first:
   - credential-bound Hub sockets now revalidate durable token/account state while
     open; invalid or unavailable validation cancels their work and aborts the
     socket, without promoting compatibility tokens or runtime IDs into ownership
+  - a default-disabled [strict Hub issuance profile](architecture/hub-token-replay-admission.md) now awaits atomic replay
+    admission before issuing a token; it reserves overlapping-key slots together
+    through a separate PostgreSQL boundary and rejects uncertain checks
   - raw binary WebSocket audio is normalized into a single browser-playable Ogg/Opus stream
   - the status page distinguishes observed runtime IDs from explicit links and reports artifact coverage
 - Remaining proof:
-  - keep this observation out of robot identity and ownership decisions; add synchronous replay consumption,
+  - keep this observation out of robot identity and ownership decisions; validate strict replay admission
+    without enabling it for stock body-unbound traffic, then add compatibility-safe replay policy,
     durable live-socket fencing, managed pairing descriptor acquisition, and physical co-presence before the
     disabled issuer can be called or enabled
   - deploy and verify attribution survives restart/reconnect on the Azure state backend
