@@ -18,12 +18,15 @@ internal sealed class WebSocketRequestCoordinator(
     ITransportMetrics transportMetrics,
     SingleRobotHttpHubAccessGuard singleRobotHttpHubAccessGuard,
     WebSocketTransportPolicy transportPolicy,
-    ILogger<WebSocketRequestCoordinator> logger)
+    ILogger<WebSocketRequestCoordinator> logger,
+    HubChannelLeasePolicy? channelLeases = null)
 {
     private static readonly TimeSpan TurnWatchdogInterval = TimeSpan.FromMilliseconds(50);
     private const string ActiveConnectionIdMetadataKey = "openjibo.activeWebSocketConnectionId";
     private static readonly object SessionGateRegistryLock = new();
     private static readonly Dictionary<string, SessionGate> SessionGates = new(StringComparer.OrdinalIgnoreCase);
+    internal HubChannelLeasePolicy LeasePolicy { get; init; } = channelLeases ?? HubChannelLeasePolicy.Disabled;
+    internal TimeSpan LeaseRenewalInterval { get; init; } = TimeSpan.FromSeconds(5);
     internal TimeSpan CredentialRevalidationInterval { get; init; } = HubTokenContinuityMonitor.DefaultInterval;
 
     /// <summary>
@@ -175,6 +178,7 @@ internal sealed class WebSocketRequestCoordinator(
                 break;
         }
 
+        using var singleRobotHttpHubLeaseScope = singleRobotHttpHubLease;
         HubTokenCredentialBinding? credentialBinding = null;
         if (!string.IsNullOrWhiteSpace(token) && TryResolveRequiredTokenKind(kind, out var requiredTokenKind))
         {
@@ -198,7 +202,47 @@ internal sealed class WebSocketRequestCoordinator(
             }
         }
 
-        using var singleRobotHttpHubLeaseScope = singleRobotHttpHubLease;
+        var useChannelLease = LeasePolicy.Enabled && kind is ("neo-hub-listen" or "neo-hub-proactive");
+        if (useChannelLease && !LeasePolicy.IsReady)
+        {
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return;
+        }
+        if (useChannelLease && credentialBinding is null)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+        if (useChannelLease)
+        {
+            using var validation = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+            validation.CancelAfter(TimeSpan.FromSeconds(2));
+            try
+            {
+                if (!await cloudStateStore.IsHubTokenCredentialBindingCurrentAsync(token!, credentialBinding!, validation.Token)
+                        .WaitAsync(TimeSpan.FromSeconds(2), context.RequestAborted))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { throw; }
+            catch (Exception)
+            {
+                validation.Cancel();
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return;
+            }
+        }
+        await using var channelLease = useChannelLease
+            ? await LeasePolicy.AcquireAsync(token!, kind == "neo-hub-listen" ? HubChannel.Listen : HubChannel.Proactive,
+                context.RequestAborted) : null;
+        if (useChannelLease && channelLease is null)
+        {
+            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return;
+        }
+        var ownershipKey = channelLease is null ? ActiveConnectionIdMetadataKey : ActiveConnectionIdMetadataKey + "." + kind;
 
         // Stock OS 1.9's Neo Hub client closes when ASP.NET sends a WebSocket
         // control-frame keepalive: first at the default two-minute interval,
@@ -223,7 +267,7 @@ internal sealed class WebSocketRequestCoordinator(
                 session = webSocketService.GetOrCreateSession(openEnvelope);
                 // Replacement sockets for one token share the active session. Record ownership
                 // so an older socket cannot tear down state established by its successor.
-                session.Metadata[ActiveConnectionIdMetadataKey] = connectionId;
+                session.Metadata[ownershipKey] = connectionId;
             }
         }
         var initialRobotKeys = ResolveRobotKeys(token, session);
@@ -263,11 +307,26 @@ internal sealed class WebSocketRequestCoordinator(
         var loopTransId = session.TurnState.TransId;
         var sessionStateOwnedOnClose = false;
         using var connectionLifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+        var connectionCancellation = connectionLifetime.Token;
         var continuity = credentialBinding is not null
             ? new HubTokenContinuityMonitor(cloudStateStore, CredentialRevalidationInterval)
                 .RunAsync(socket, token!, credentialBinding, connectionLifetime)
             : Task.FromResult<string?>(null);
         string? credentialFailure = null;
+        var leaseMonitor = channelLease is not null
+            ? new HubChannelLeaseMonitor(LeaseRenewalInterval).RunAsync(socket, channelLease, connectionLifetime)
+            : Task.CompletedTask;
+
+        async Task GuardLeaseAsync(CancellationToken cancellation)
+        {
+            connectionCancellation.ThrowIfCancellationRequested();
+            cancellation.ThrowIfCancellationRequested();
+            if (channelLease is null) return;
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellation, connectionCancellation);
+            if (await channelLease.CheckAsync(linked.Token)) return;
+            connectionLifetime.Cancel(); socket.Abort();
+            throw new OperationCanceledException(connectionCancellation);
+        }
 
         try
         {
@@ -284,6 +343,7 @@ internal sealed class WebSocketRequestCoordinator(
                     if (completedTask != pendingReceive)
                     {
                         watchdogDelay = Task.Delay(TurnWatchdogInterval, connectionLifetime.Token);
+                        await GuardLeaseAsync(connectionLifetime.Token);
                         var idleEnvelope = CreateEnvelope(context, kind, token, connectionId);
                         var idleReplies = await webSocketService.HandleIdleAsync(
                             session,
@@ -297,7 +357,7 @@ internal sealed class WebSocketRequestCoordinator(
                                 kind,
                                 idleReplies.Count);
                             await SendRepliesAsync(socket, idleReplies, kind, transportMetrics,
-                                connectionLifetime.Token);
+                                connectionLifetime.Token, GuardLeaseAsync);
                             await telemetrySink.RecordOutboundAsync(
                                 idleEnvelope,
                                 session,
@@ -333,6 +393,7 @@ internal sealed class WebSocketRequestCoordinator(
                     break;
                 }
 
+                await GuardLeaseAsync(connectionLifetime.Token);
                 var envelope = CreateEnvelope(
                     context,
                     kind,
@@ -351,7 +412,7 @@ internal sealed class WebSocketRequestCoordinator(
                 IReadOnlyList<WebSocketReply> replies;
                 using (AmbientTurnProgressPublisher.Begin(
                            (reply, cancellationToken) => SendRepliesAsync(socket, [reply], kind, transportMetrics,
-                               cancellationToken)))
+                               cancellationToken, GuardLeaseAsync)))
                 {
                     replies = await webSocketService.HandleMessageAsync(envelope, connectionLifetime.Token);
                 }
@@ -370,7 +431,7 @@ internal sealed class WebSocketRequestCoordinator(
                     replies.Count);
                 await telemetrySink.RecordInboundAsync(envelope, session, SocketMessageTypeReader.Read(envelope.Text),
                     connectionLifetime.Token);
-                await SendRepliesAsync(socket, replies, kind, transportMetrics, connectionLifetime.Token);
+                await SendRepliesAsync(socket, replies, kind, transportMetrics, connectionLifetime.Token, GuardLeaseAsync);
 
                 await telemetrySink.RecordOutboundAsync(envelope, session, replies, connectionLifetime.Token);
             }
@@ -385,6 +446,7 @@ internal sealed class WebSocketRequestCoordinator(
         {
             connectionLifetime.Cancel();
             credentialFailure = await continuity;
+            await leaseMonitor;
             if (registeredApiSocket)
                 robotNotificationRegistry.Remove(socket);
             robotPresenceRegistry.Remove(presenceConnectionId);
@@ -392,12 +454,21 @@ internal sealed class WebSocketRequestCoordinator(
             {
                 lock (gateLease.Gate.SyncRoot)
                 {
-                    sessionStateOwnedOnClose = OwnsSessionState(session, connectionId);
-                    if (sessionStateOwnedOnClose)
+                    var ownsLocalState = session.Metadata.TryGetValue(ownershipKey, out var localOwner) &&
+                        string.Equals(localOwner?.ToString(), connectionId, StringComparison.Ordinal);
+                    if (ownsLocalState)
                     {
-                        WebSocketTurnFinalizationService.ReleaseBufferedAudio(session);
-                        session.Metadata.Remove(ActiveConnectionIdMetadataKey);
-                        cloudStateStore.CloseSession(session.SessionId);
+                        // The leased channels share a token-keyed session. Proactive
+                        // teardown must not release listen audio. Durable session close
+                        // requires its own generation predicate and remains deferred.
+                        if (channelLease is null || kind == "neo-hub-listen")
+                            WebSocketTurnFinalizationService.ReleaseBufferedAudio(session);
+                        session.Metadata.Remove(ownershipKey);
+                        if (channelLease is null)
+                        {
+                            sessionStateOwnedOnClose = true;
+                            cloudStateStore.CloseSession(session.SessionId);
+                        }
                     }
                 }
             }
@@ -408,8 +479,9 @@ internal sealed class WebSocketRequestCoordinator(
         if (isPrematureClose && sessionStateOwnedOnClose && credentialFailure is null)
             webSocketService.MarkPrematureSocketLoopEnded(session, loopTransId);
 
-        var closeReason = credentialFailure is not null
-            ? $"socket-loop-ended-{credentialFailure}"
+        var continuityFailure = credentialFailure ?? channelLease?.FailureReason;
+        var closeReason = continuityFailure is not null
+            ? $"socket-loop-ended-{continuityFailure}"
             : $"socket-loop-ended{(isPrematureClose ? "-prematurely" : string.Empty)}";
         await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, session, closeReason, context.RequestAborted);
         logger.LogInformation(
@@ -422,7 +494,7 @@ internal sealed class WebSocketRequestCoordinator(
             session.DeviceId,
             tokenFingerprint,
             isPrematureClose,
-            credentialFailure ?? "not-failed");
+            continuityFailure ?? "not-failed");
     }
 
     private HashSet<string> ResolveRobotKeys(string? token, CloudSession session)
@@ -590,18 +662,20 @@ internal sealed class WebSocketRequestCoordinator(
         return new ReceivedSocketMessage(result.MessageType, ms.ToArray());
     }
 
-    private static async Task SendRepliesAsync(
+    internal static async Task SendRepliesAsync(
         WebSocket socket,
         IReadOnlyList<WebSocketReply> replies,
         string socketKind,
         ITransportMetrics transportMetrics,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Func<CancellationToken, Task>? beforeSend = null)
     {
         foreach (var reply in replies)
         {
             if (string.IsNullOrWhiteSpace(reply.Text)) continue;
             if (reply.DelayMs > 0) await Task.Delay(reply.DelayMs, cancellationToken);
 
+            if (beforeSend is not null) await beforeSend(cancellationToken);
             var payload = Encoding.UTF8.GetBytes(reply.Text);
             await socket.SendAsync(payload, WebSocketMessageType.Text, true, cancellationToken);
             transportMetrics.WebSocketMessage("out", socketKind, "text-json",

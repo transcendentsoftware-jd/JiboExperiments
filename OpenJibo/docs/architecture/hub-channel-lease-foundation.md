@@ -1,8 +1,9 @@
 # Hub channel lease foundation
 
-The durable lease primitive is implemented but is not registered with dependency
-injection or called by the WebSocket coordinator. No socket is fenced by this
-change. The existing credential continuity monitor remains the active boundary.
+The durable lease primitive now has a default-disabled
+[coordinator transport lifecycle](hub-channel-lease-lifecycle.md). This page
+describes the storage contract and integration limits; the lifecycle page records
+the caller, configuration, conservative deadlines and remaining activation gates.
 
 ## Storage contract
 
@@ -13,7 +14,8 @@ does not replace the proactive slot. A token digest must be an environment-scope
 domain-separated HMAC of the exact bearer, with the same stable key on every
 participating replica. The caller must authenticate the token before acquisition.
 The adapter accepts only a 32-byte digest; it does not authenticate its provenance
-or derive one from a bearer. There is no configured HMAC key or live caller yet.
+or derive one from a bearer. The opt-in coordinator policy performs that derivation;
+no production key or enabled live profile is installed by source implementation.
 
 The single `public.ManageHubChannelLease` function exposes four operations through
 a dedicated function-only connection:
@@ -54,9 +56,11 @@ uncertain and stop protected work. Acquisition is deliberately not idempotent:
 repeating it increments the generation again. A successful check is only a
 point-in-time observation; it cannot fence a later side effect on its own.
 
-## Required coordinator integration
+## Coordinator integration requirements
 
-The next implementation must handle the entire connection lifecycle, including:
+The opt-in lifecycle implements bounded acquisition, monitoring, transport checks
+and channel-local teardown. Complete activation still requires the following
+end-to-end contract, especially generation predicates at durable commit boundaries:
 
 1. Revalidate the durable Hub-token binding, derive the opaque token digest and
    acquire the correct channel slot before accepting protected work. Reject
@@ -79,9 +83,9 @@ The next implementation must handle the entire connection lifecycle, including:
 Activation still requires rollout policy, all-replica namespace coordination,
 load/failure measurements, staging replacement/reconnect tests and stock-device
 acceptance. Tokenless isolated mode, unbound compatibility tokens, API sockets and
-Home Assistant need an explicit compatibility decision. No deployment, new
-configuration switch, database grant, managed pairing, attestation invocation,
-co-presence or physical ownership is enabled here.
+Home Assistant have explicit compatibility boundaries in the opt-in lifecycle.
+No live deployment/configuration change, database grant, managed pairing,
+attestation invocation, co-presence or physical ownership accompanies this source.
 
 ## Validation
 

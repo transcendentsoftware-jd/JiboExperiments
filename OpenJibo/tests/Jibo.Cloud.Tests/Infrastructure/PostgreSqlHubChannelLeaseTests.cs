@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using System.Text;
+using Jibo.Cloud.Api.Hosting;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Npgsql;
@@ -9,6 +11,30 @@ namespace Jibo.Cloud.Tests.Infrastructure;
 [Collection(PostgreSqlPrivilegedIntegrationCollection.Name)]
 public sealed class PostgreSqlHubChannelLeaseTests
 {
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task RuntimeHandlesAcrossIndependentPoolsDetectReplacement_AndStaleDisposePreservesSuccessor()
+    {
+        await using var database = await Database.CreateAsync();
+        await using var first = new PostgreSqlHubChannelLeaseStore(database.Connection);
+        await using var second = new PostgreSqlHubChannelLeaseStore(database.Connection);
+        var key = RandomNumberGenerator.GetBytes(32); var token = "test-bearer-" + Guid.NewGuid().ToString("N");
+        database.TrackDigest(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(HubChannelLeasePolicy.DigestDomain + token)));
+        using var replicaA = new HubChannelLeasePolicy(first, key);
+        using var replicaB = new HubChannelLeasePolicy(second, key);
+        await using var oldListen = (await replicaA.AcquireAsync(token, HubChannel.Listen, default))!;
+        await using var proactive = (await replicaA.AcquireAsync(token, HubChannel.Proactive, default))!;
+        Assert.True(await oldListen.CheckAsync(default)); Assert.True(await proactive.CheckAsync(default));
+        await using var newListen = (await replicaB.AcquireAsync(token, HubChannel.Listen, default))!;
+        Assert.False(await oldListen.RenewAsync(default));
+        Assert.False(await oldListen.CheckAsync(default));
+        await oldListen.DisposeAsync();
+        Assert.True(await newListen.CheckAsync(default));
+        Assert.True(await proactive.RenewAsync(default));
+        await newListen.DisposeAsync(); Assert.False(await newListen.CheckAsync(default));
+        Assert.True(await proactive.CheckAsync(default));
+    }
+
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
     public async Task IndependentReplicasSerializeConcurrentReplacements_AndOnlyNewestGenerationIsCurrent()
@@ -218,6 +244,7 @@ public sealed class PostgreSqlHubChannelLeaseTests
     {
         public string Connection { get; } = connection;
         private readonly List<byte[]> _owned = [];
+        public void TrackDigest(byte[] digest) => _owned.Add(digest);
         public byte[] NewDigest() { var digest = RandomNumberGenerator.GetBytes(32); _owned.Add(digest); return digest; }
         public static async Task<Database> CreateAsync(string variable = "OPENJIBO_TEST_POSTGRES_CONNECTION_STRING")
         {
