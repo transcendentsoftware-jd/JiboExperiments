@@ -21,8 +21,15 @@ public sealed record RuntimePairingInitiationResult(RuntimePairingInitiationOutc
 public interface IRuntimePairingInitiationClient
 {
     bool IsReady { get; }
+    bool IsStatusReady => false;
     Task<RuntimePairingInitiationResult> BeginAsync(RuntimePairingCredentialEvidence credential,
         byte[] sessionBinding, CancellationToken cancellation = default);
+    Task<RuntimePairingStatusResult> ReadStatusAsync(RuntimePairingCredentialEvidence credential,
+        byte[] sessionBinding, RuntimePairingStatusBinding binding, CancellationToken cancellation = default)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        return Task.FromResult(new RuntimePairingStatusResult(RuntimePairingStatusOutcome.Unavailable));
+    }
 }
 public sealed class RejectingRuntimePairingInitiationClient : IRuntimePairingInitiationClient
 {
@@ -37,6 +44,7 @@ public sealed class RuntimePairingInitiationClientOptions
 {
     public const string SectionName = "OpenJibo:ManagedPairingInitiation";
     public bool Enabled { get; set; }
+    public bool StatusReadsEnabled { get; set; }
     public string ManagedOrigin { get; set; } = "";
     public string Issuer { get; set; } = "";
     public string Audience { get; set; } = "";
@@ -55,14 +63,17 @@ public sealed class RuntimePairingInitiationIssuer : IDisposable
 {
     public const string Type = "openjibo-runtime-pairing-initiation+jwt";
     public const string Purpose = "openjibo-managed-pairing-initiation";
+    public const string StatusType = "openjibo-runtime-pairing-status+jwt";
+    public const string StatusPurpose = "openjibo-managed-pairing-status";
     private readonly ECDsa _key;
     private readonly string _issuer, _audience, _keyId;
     private readonly int _lifetime;
     private readonly TimeProvider _clock;
+    private readonly bool _statusEnabled;
     private readonly object _gate = new();
     private bool _disposed;
     private RuntimePairingInitiationIssuer(RuntimePairingInitiationClientOptions options, ECDsa key, TimeProvider clock)
-    { _key = key; _issuer = options.Issuer; _audience = options.Audience; _keyId = options.KeyId; _lifetime = options.LifetimeSeconds; _clock = clock; }
+    { _key = key; _issuer = options.Issuer; _audience = options.Audience; _keyId = options.KeyId; _lifetime = options.LifetimeSeconds; _clock = clock; _statusEnabled = options.StatusReadsEnabled; }
     public static bool TryCreate(RuntimePairingInitiationClientOptions options, TimeProvider clock,
         out RuntimePairingInitiationIssuer? issuer)
     {
@@ -100,6 +111,30 @@ public sealed class RuntimePairingInitiationIssuer : IDisposable
             return new(input + "." + Encode(signature), Encode(SHA256.HashData(jti)));
         }
     }
+    public RuntimePairingStatusAssertion? IssueStatus(RuntimePairingCredentialEvidence credential, byte[] session,
+        RuntimePairingStatusBinding binding)
+    {
+        if (!_statusEnabled || session.Length != 32 || binding.PairingId == Guid.Empty || binding.DeviceKeyId == Guid.Empty ||
+            binding.CredentialVersion < 1 || binding.SessionBinding != Encode(session) ||
+            !RuntimePairingCredentialEvidence.TryDecode(binding.ChallengeHash, out var challenge) || challenge.Length != 32)
+            return null;
+        lock (_gate)
+        {
+            if (_disposed || binding.ExpiresAt <= _clock.GetUtcNow()) return null;
+            var now = _clock.GetUtcNow(); var nonce = RandomNumberGenerator.GetBytes(32);
+            var header = Encode(JsonSerializer.SerializeToUtf8Bytes(new { alg = "ES256", kid = _keyId, typ = StatusType }));
+            var payload = Encode(JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                version = 1, purpose = StatusPurpose, iss = _issuer, aud = _audience,
+                pairing_id = binding.PairingId.ToString("D"), credential_binding = credential.Binding,
+                session_binding = Encode(session), challenge_hash = binding.ChallengeHash,
+                iat = now.ToUnixTimeSeconds(), exp = now.AddSeconds(_lifetime).ToUnixTimeSeconds(), jti = Encode(nonce)
+            }));
+            var input = header + "." + payload;
+            var signature = _key.SignData(Encoding.ASCII.GetBytes(input), HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
+            return new(input + "." + Encode(signature), Encode(SHA256.HashData(nonce)));
+        }
+    }
     public override string ToString() => "RuntimePairingInitiationIssuer { redacted }";
     public void Dispose() { lock (_gate) { if (_disposed) return; _disposed = true; _key.Dispose(); } }
     private static bool Exact(string? s) => s is not null && s.Length is > 0 and <= 200 && s == s.Trim() && !s.Any(char.IsControl);
@@ -109,6 +144,11 @@ public sealed class RuntimePairingInitiationIssuer : IDisposable
 public interface IRuntimePairingSession
 {
     Task<RuntimePairingInitiationResult> BeginAsync(CancellationToken cancellation = default);
+    Task<RuntimePairingStatusResult> ReadStatusAsync(CancellationToken cancellation = default)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        return Task.FromResult(new RuntimePairingStatusResult(RuntimePairingStatusOutcome.Unavailable));
+    }
 }
 public interface IRuntimePairingSessionAccessor { IRuntimePairingSession? Current { get; } }
 
