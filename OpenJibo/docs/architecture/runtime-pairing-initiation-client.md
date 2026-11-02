@@ -95,6 +95,10 @@ The existing token-only completion helper is not an active-generation substitute
 
 ## Acceptance and next product work
 
+The separately opt-in [status client](runtime-pairing-status-client.md) now reads
+pending/browser-authorized snapshots through the retained connection binding.
+It adds no polling loop, physical confirmation, completion or assignment.
+
 Tests cover actual signature/claim construction, separate purposes, malformed
 configuration/keys/origins, exact response/request joins, unknown-length bodies,
 redirect refusal, no retry, bounded waits, late resolver/client responses,

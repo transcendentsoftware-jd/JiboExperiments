@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Jibo.Cloud.Infrastructure.ManagedPairing;
 
-public sealed class RuntimePairingInitiationClient : IRuntimePairingInitiationClient, IDisposable
+public sealed partial class RuntimePairingInitiationClient : IRuntimePairingInitiationClient, IDisposable
 {
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
     private readonly RuntimePairingInitiationIssuer _issuer;
@@ -17,9 +17,11 @@ public sealed class RuntimePairingInitiationClient : IRuntimePairingInitiationCl
     private readonly Uri _endpoint;
     private readonly TimeProvider _clock;
     private int _disposed;
+    private readonly bool _statusEnabled;
     public bool IsReady => Volatile.Read(ref _disposed) == 0;
-    private RuntimePairingInitiationClient(RuntimePairingInitiationIssuer issuer, HttpMessageHandler handler, Uri endpoint, TimeProvider clock)
-    { _issuer = issuer; _http = new(handler) { Timeout = Timeout.InfiniteTimeSpan }; _endpoint = endpoint; _clock = clock; }
+    public bool IsStatusReady => IsReady && _statusEnabled;
+    private RuntimePairingInitiationClient(RuntimePairingInitiationIssuer issuer, HttpMessageHandler handler, Uri endpoint, TimeProvider clock, bool statusEnabled)
+    { _issuer = issuer; _http = new(handler) { Timeout = Timeout.InfiniteTimeSpan }; _endpoint = endpoint; _clock = clock; _statusEnabled = statusEnabled; }
     public static IRuntimePairingInitiationClient Create(RuntimePairingInitiationClientOptions options, TimeProvider clock) =>
         Create(options, clock, null);
     internal static IRuntimePairingInitiationClient Create(RuntimePairingInitiationClientOptions options, TimeProvider clock, HttpMessageHandler? testHandler)
@@ -29,7 +31,7 @@ public sealed class RuntimePairingInitiationClient : IRuntimePairingInitiationCl
         // No HTTP factory logging/retry handlers, cookies, redirects, custom trust or credential fallback.
         var handler = testHandler ?? new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false,
             UseDefaultCredentials = false, CheckCertificateRevocationList = true, AutomaticDecompression = DecompressionMethods.None };
-        return new RuntimePairingInitiationClient(issuer!,handler,new Uri(origin!,"/v1/runtime/pairing-challenges"),clock);
+        return new RuntimePairingInitiationClient(issuer!,handler,new Uri(origin!,"/v1/runtime/pairing-challenges"),clock,options.StatusReadsEnabled);
     }
     internal static bool TryOrigin(string? value, out Uri? origin)
     {

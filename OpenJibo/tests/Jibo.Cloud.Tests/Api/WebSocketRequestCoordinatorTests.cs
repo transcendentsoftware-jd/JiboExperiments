@@ -35,9 +35,14 @@ public sealed class WebSocketRequestCoordinatorTests
         var leases=HubChannelLeasePolicyTests.WorkingStore();
         using var policy=scenario=="lease-disabled" ? HubChannelLeasePolicy.Disabled : new HubChannelLeasePolicy(leases.Object,new byte[32]);
         var client=new Mock<IRuntimePairingInitiationClient>(); client.SetupGet(c => c.IsReady).Returns(scenario!="client-disabled");
+        client.SetupGet(c => c.IsStatusReady).Returns(scenario=="eligible");
         client.Setup(c => c.BeginAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<CancellationToken>()))
             .Returns((RuntimePairingCredentialEvidence observed,byte[] session,CancellationToken ct) =>
             { Assert.Equal(evidence,observed); Assert.Equal(32,session.Length); return Task.FromResult(HubRuntimePairingSessionTests.Client.Created(session)); });
+        client.Setup(c => c.ReadStatusAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<RuntimePairingStatusBinding>(),It.IsAny<CancellationToken>()))
+            .Returns((RuntimePairingCredentialEvidence observed,byte[] session,RuntimePairingStatusBinding binding,CancellationToken ct) =>
+            { Assert.Equal(evidence,observed); return Task.FromResult(new RuntimePairingStatusResult(RuntimePairingStatusOutcome.Read,
+                new(binding.PairingId,binding.DeviceKeyId,binding.CredentialVersion,binding.SessionBinding,"query","pending",binding.ExpiresAt))); });
         var accessor=new AmbientRuntimePairingSession(); IRuntimePairingSession? retained=null;
         var closed=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously); Task<IRuntimePairingSession?>? inherited=null;
         var telemetry=new RecordingWebSocketTelemetrySink { OnOpen=async ct =>
@@ -48,6 +53,7 @@ public sealed class WebSocketRequestCoordinatorTests
             inherited=Task.Run(async () => { await closed.Task; return accessor.Current; });
             var result=await retained.BeginAsync(ct); Assert.Equal(RuntimePairingInitiationOutcome.Created,result.Outcome);
             Assert.NotNull(result.Descriptor);
+            Assert.Equal("pending",(await retained.ReadStatusAsync(ct)).Snapshot!.Status);
         } };
         var socket=new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close,[]));
         var coordinator=new WebSocketRequestCoordinator(service,
@@ -56,9 +62,11 @@ public sealed class WebSocketRequestCoordinatorTests
         await coordinator.HandleAsync(LeaseContext(socket,token,scenario=="proactive" ? "/v1/proactive" : "/listen"));
         Assert.True(socket.Accepted); Assert.Null(accessor.Current);
         client.Verify(c => c.BeginAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<CancellationToken>()),scenario=="eligible" ? Times.Once() : Times.Never());
+        client.Verify(c => c.ReadStatusAsync(It.IsAny<RuntimePairingCredentialEvidence>(),It.IsAny<byte[]>(),It.IsAny<RuntimePairingStatusBinding>(),It.IsAny<CancellationToken>()),scenario=="eligible" ? Times.Once() : Times.Never());
         if(retained is not null)
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => retained.BeginAsync());
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => retained.ReadStatusAsync());
             closed.SetResult(true); Assert.Null(await inherited!.WaitAsync(TimeSpan.FromSeconds(5)));
         }
     }
