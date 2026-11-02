@@ -58,6 +58,7 @@ builder.Services.AddSingleton<HomeAssistantWebSocketHandler>();
 builder.Services.AddSingleton<SingleRobotHttpHubAccessGuard>();
 builder.Services.AddSingleton<WebSocketTransportPolicy>();
 builder.Services.AddSingleton<WebSocketRequestCoordinator>();
+builder.Services.AddHubChannelLeases(builder.Configuration);
 builder.Services.AddHttpClient("OpenJiboFleetPeerSync", client => client.Timeout = TimeSpan.FromSeconds(10));
 builder.Services.AddHostedService<FleetPeerSyncService>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>

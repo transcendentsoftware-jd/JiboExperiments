@@ -16,6 +16,145 @@ namespace Jibo.Cloud.Tests.Api;
 
 public sealed class WebSocketRequestCoordinatorTests
 {
+    [Theory]
+    [InlineData("unbound", StatusCodes.Status401Unauthorized)]
+    [InlineData("invalid-config", StatusCodes.Status503ServiceUnavailable)]
+    [InlineData("store-failure", StatusCodes.Status503ServiceUnavailable)]
+    [InlineData("binding-invalid", StatusCodes.Status401Unauthorized)]
+    [InlineData("binding-unavailable", StatusCodes.Status503ServiceUnavailable)]
+    public async Task EnabledLeaseProfileRejectsIneligibleOrUnavailableHandshakeBeforeAccept(string scenario, int status)
+    {
+        var service = CreateWebSocketService(out var store);
+        var token = IssueLeaseBoundToken(store, scenario != "unbound");
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        if (scenario == "store-failure")
+            leaseStore.Setup(s => s.AcquireAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("private-connection-data"));
+        using var policy = scenario == "invalid-config" ? HubChannelLeasePolicy.Unavailable :
+            new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        ICloudStateStore authoritativeStore = store;
+        if (scenario.StartsWith("binding-", StringComparison.Ordinal))
+        {
+            var observed = new Mock<ICloudStateStore>();
+            observed.Setup(s => s.FindIssuedToken(token)).Returns(() => store.FindIssuedToken(token));
+            var check = observed.Setup(s => s.IsHubTokenCredentialBindingCurrentAsync(token,
+                It.IsAny<HubTokenCredentialBinding>(), It.IsAny<CancellationToken>()));
+            if (scenario == "binding-invalid") check.ReturnsAsync(false);
+            else check.ThrowsAsync(new InvalidOperationException("private-provider-details"));
+            authoritativeStore = observed.Object;
+        }
+        var socket = new FakeWebSocket(); var context = LeaseContext(socket, token, "/listen");
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), authoritativeStore)
+        { LeasePolicy = policy };
+        await coordinator.HandleAsync(context);
+        Assert.False(socket.Accepted); Assert.Equal(status, context.Response.StatusCode);
+        Assert.Null(store.FindActiveSessionByToken(token));
+        if (scenario.StartsWith("binding-", StringComparison.Ordinal))
+            leaseStore.Verify(s => s.AcquireAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("/listen")]
+    [InlineData("/v1/proactive")]
+    public async Task LeaseLossAbortsAnIdleReceive_WithoutClosingSharedDurableSession(string path)
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore(); var renewals = 0;
+        leaseStore.Setup(s => s.TryRenewAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()))
+            .Returns(() => Task.FromResult<HubChannelLease?>(Interlocked.Increment(ref renewals) == 1
+                ? new HubChannelLease(1, DateTimeOffset.UtcNow.AddSeconds(30)) : null));
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        var received = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
+        {
+            PauseBeforeReceiveNumber = 1, ReceiveGate = new(TaskCreationOptions.RunContinuationsAsynchronously), FirstFrameReceived = received
+        };
+        var telemetry = new RecordingWebSocketTelemetrySink();
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store)
+        { LeasePolicy = policy, LeaseRenewalInterval = TimeSpan.FromMilliseconds(10) };
+        var handling = coordinator.HandleAsync(LeaseContext(socket, token, path));
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(5)); await handling.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(WebSocketState.Aborted, socket.State); Assert.Empty(socket.SentPayloads);
+        Assert.DoesNotContain(telemetry.Events, e => e.StartsWith("inbound:", StringComparison.Ordinal));
+        Assert.Contains("closed:socket-loop-ended-lease-invalid", telemetry.Events);
+        Assert.NotNull(store.FindActiveSessionByToken(token));
+        leaseStore.Verify(s => s.TryReleaseAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task StaleLeaseCannotProcessAnInboundFrame()
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        leaseStore.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Text,
+            Encoding.UTF8.GetBytes("{\"type\":\"LISTEN\",\"transID\":\"must-not-process\"}")));
+        var telemetry = new RecordingWebSocketTelemetrySink();
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store) { LeasePolicy = policy };
+        await coordinator.HandleAsync(LeaseContext(socket, token, "/listen"));
+        Assert.Equal(WebSocketState.Aborted, socket.State); Assert.Empty(socket.SentPayloads);
+        Assert.False(store.FindActiveSessionByToken(token)!.TurnState.SawListen);
+        Assert.DoesNotContain(telemetry.Events, e => e.StartsWith("inbound:", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ProactiveTeardownCannotReleaseListenAudioOrCloseTheSharedSession()
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        var received = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var listen = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
+        { PauseBeforeReceiveNumber = 1, ReceiveGate = gate, FirstFrameReceived = received };
+        var listenCoordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store) { LeasePolicy = policy };
+        var listening = listenCoordinator.HandleAsync(LeaseContext(listen, token, "/listen"));
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        var shared = store.FindActiveSessionByToken(token)!; shared.TurnState.BufferedAudioBytes = 4096;
+        var proactive = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
+        var proactiveCoordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store) { LeasePolicy = policy };
+        await proactiveCoordinator.HandleAsync(LeaseContext(proactive, token, "/v1/proactive"));
+        Assert.Same(shared, store.FindActiveSessionByToken(token)); Assert.Equal(4096, shared.TurnState.BufferedAudioBytes);
+        Assert.Equal(WebSocketState.Open, listen.State);
+        gate.SetResult(true); await listening.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(0, shared.TurnState.BufferedAudioBytes);
+        Assert.Same(shared, store.FindActiveSessionByToken(token)); // durable closure is deferred for leased connections
+    }
+
+    [Fact]
+    public async Task EveryReplyChecksLeaseAgainBeforeSend()
+    {
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore(); var checks = 0;
+        leaseStore.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()))
+            .Returns(() => Task.FromResult(Interlocked.Increment(ref checks) == 1));
+        using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
+        await using var lease = (await policy.AcquireAsync("opaque", HubChannel.Listen, default))!;
+        var socket = new FakeWebSocket();
+        async Task Guard(CancellationToken cancellation)
+        { if (!await lease.CheckAsync(cancellation)) throw new OperationCanceledException(); }
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => WebSocketRequestCoordinator.SendRepliesAsync(socket,
+            [new WebSocketReply { Text = "first" }, new WebSocketReply { Text = "second", DelayMs = 1 }],
+            "neo-hub-listen", NullTransportMetrics.Instance, default, Guard));
+        Assert.Single(socket.SentPayloads); Assert.Equal("first", Encoding.UTF8.GetString(socket.SentPayloads[0]));
+        Assert.Equal(2, checks);
+    }
+
+    private static string IssueLeaseBoundToken(InMemoryCloudStateStore store, bool bound = true) =>
+        store.IssueHubToken("lease-robot", useDefaultRobot: false, credentialBinding: bound
+            ? new HubTokenCredentialBinding(AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(store.GetAccount().AccessKeyId), DateTimeOffset.UtcNow, false) : null);
+
+    private static DefaultHttpContext LeaseContext(FakeWebSocket socket, string token, string path)
+    {
+        var context = CreateContext(socket); context.Request.Host = new HostString("neo-hub.jibo.com");
+        context.Request.Path = path; context.Request.Headers.Authorization = "Bearer " + token; return context;
+    }
+
     [Fact]
     public async Task UnboundCompatibilitySocket_DoesNotStartCredentialMonitor()
     {
