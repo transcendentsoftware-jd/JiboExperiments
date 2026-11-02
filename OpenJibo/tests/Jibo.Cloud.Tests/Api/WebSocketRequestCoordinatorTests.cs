@@ -10,11 +10,79 @@ using Jibo.Cloud.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace Jibo.Cloud.Tests.Api;
 
 public sealed class WebSocketRequestCoordinatorTests
 {
+    [Fact]
+    public async Task UnboundCompatibilitySocket_DoesNotStartCredentialMonitor()
+    {
+        var service = CreateWebSocketService(out var store);
+        var token = store.IssueHubToken("compatibility-robot", useDefaultRobot: false);
+        var observedStore = new Mock<ICloudStateStore>();
+        observedStore.Setup(s => s.FindIssuedToken(token)).Returns(() => store.FindIssuedToken(token));
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
+        var context = CreateContext(socket);
+        context.Request.Host = new HostString("neo-hub.jibo.com");
+        context.Request.Path = "/listen";
+        context.Request.Headers.Authorization = "Bearer " + token;
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()),
+            new RecordingWebSocketTelemetrySink(), observedStore.Object);
+
+        await coordinator.HandleAsync(context);
+
+        Assert.True(socket.Accepted);
+        Assert.Equal(WebSocketState.Closed, socket.State);
+        observedStore.Verify(s => s.IsHubTokenCredentialBindingCurrentAsync(It.IsAny<string>(),
+            It.IsAny<HubTokenCredentialBinding>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("/listen", "remove")]
+    [InlineData("/v1/proactive", "remove")]
+    [InlineData("/listen", "replace")]
+    [InlineData("/v1/proactive", "replace")]
+    public async Task BoundIdleSocket_AbortsAndReleasesSessionWhenOriginalBindingChanges(string path, string change)
+    {
+        var receiveEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Text, Encoding.UTF8.GetBytes("{}")))
+        {
+            PauseBeforeReceiveNumber = 1,
+            ReceiveGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously),
+            FirstFrameReceived = receiveEntered
+        };
+        var context = CreateContext(socket);
+        context.Request.Host = new HostString("neo-hub.jibo.com");
+        context.Request.Path = path;
+        var service = CreateWebSocketService(out var store);
+        var telemetry = new RecordingWebSocketTelemetrySink();
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), telemetry, store)
+        { CredentialRevalidationInterval = TimeSpan.FromMilliseconds(10) };
+        var account = store.GetAccount();
+        var binding = new HubTokenCredentialBinding(
+            AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), DateTimeOffset.UtcNow, false);
+        var token = store.IssueHubToken("bound-robot", useDefaultRobot: false, credentialBinding: binding);
+        context.Request.Headers.Authorization = "Bearer " + token;
+        var issued = store.FindIssuedToken(token)!;
+        var handling = coordinator.HandleAsync(context);
+        await receiveEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        if (change == "remove") issued.Metadata.Clear();
+        else new HubTokenCredentialBinding(binding.CredentialFingerprint, binding.SignedAt.AddSeconds(1), true)
+            .WriteTo(issued.Metadata);
+
+        await handling.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(WebSocketState.Aborted, socket.State);
+        Assert.Empty(socket.SentPayloads);
+        Assert.DoesNotContain(telemetry.Events, e => e.StartsWith("inbound:", StringComparison.Ordinal));
+        Assert.Contains("closed:socket-loop-ended-credential-invalid", telemetry.Events);
+        Assert.Null(store.FindActiveSessionByToken(token));
+    }
+
     [Theory]
     [InlineData("openjibo.com", "/", StatusCodes.Status404NotFound)]
     [InlineData("api.openjibo.com", "/", StatusCodes.Status404NotFound)]

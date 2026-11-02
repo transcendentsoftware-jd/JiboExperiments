@@ -24,6 +24,7 @@ internal sealed class WebSocketRequestCoordinator(
     private const string ActiveConnectionIdMetadataKey = "openjibo.activeWebSocketConnectionId";
     private static readonly object SessionGateRegistryLock = new();
     private static readonly Dictionary<string, SessionGate> SessionGates = new(StringComparer.OrdinalIgnoreCase);
+    internal TimeSpan CredentialRevalidationInterval { get; init; } = HubTokenContinuityMonitor.DefaultInterval;
 
     /// <summary>
     /// Test helper constructor. Production DI injects the full primary constructor.
@@ -174,6 +175,7 @@ internal sealed class WebSocketRequestCoordinator(
                 break;
         }
 
+        HubTokenCredentialBinding? credentialBinding = null;
         if (!string.IsNullOrWhiteSpace(token) && TryResolveRequiredTokenKind(kind, out var requiredTokenKind))
         {
             var issuedToken = cloudStateStore.FindIssuedToken(token);
@@ -186,6 +188,12 @@ internal sealed class WebSocketRequestCoordinator(
                     "requiredTokenKind={RequiredTokenKind} host={Host} path={Path} remoteIp={RemoteIp}",
                     kind, tokenFingerprint, requiredTokenKind, context.Request.Host.Host, safePath,
                     context.Connection.RemoteIpAddress?.ToString());
+                return;
+            }
+            if (requiredTokenKind == "hub" && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
+                !HubTokenCredentialBinding.TryRead(issuedToken.Metadata, out credentialBinding))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
         }
@@ -254,26 +262,33 @@ internal sealed class WebSocketRequestCoordinator(
         var isPrematureClose = false;
         var loopTransId = session.TurnState.TransId;
         var sessionStateOwnedOnClose = false;
+        using var connectionLifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+        var continuity = credentialBinding is not null
+            ? new HubTokenContinuityMonitor(cloudStateStore, CredentialRevalidationInterval)
+                .RunAsync(socket, token!, credentialBinding, connectionLifetime)
+            : Task.FromResult<string?>(null);
+        string? credentialFailure = null;
 
         try
         {
             Task<ReceivedSocketMessage>? pendingReceive = null;
-            var watchdogDelay = Task.Delay(TurnWatchdogInterval, context.RequestAborted);
+            var watchdogDelay = Task.Delay(TurnWatchdogInterval, connectionLifetime.Token);
             while (socket.State == WebSocketState.Open)
             {
+                connectionLifetime.Token.ThrowIfCancellationRequested();
                 ReceivedSocketMessage received;
                 try
                 {
-                    pendingReceive ??= ReceiveAsync(socket, context.RequestAborted);
+                    pendingReceive ??= ReceiveAsync(socket, connectionLifetime.Token);
                     var completedTask = await Task.WhenAny(pendingReceive, watchdogDelay);
                     if (completedTask != pendingReceive)
                     {
-                        watchdogDelay = Task.Delay(TurnWatchdogInterval, context.RequestAborted);
+                        watchdogDelay = Task.Delay(TurnWatchdogInterval, connectionLifetime.Token);
                         var idleEnvelope = CreateEnvelope(context, kind, token, connectionId);
                         var idleReplies = await webSocketService.HandleIdleAsync(
                             session,
                             idleEnvelope,
-                            context.RequestAborted);
+                            connectionLifetime.Token);
                         if (idleReplies.Count > 0)
                         {
                             logger.LogInformation(
@@ -282,12 +297,12 @@ internal sealed class WebSocketRequestCoordinator(
                                 kind,
                                 idleReplies.Count);
                             await SendRepliesAsync(socket, idleReplies, kind, transportMetrics,
-                                context.RequestAborted);
+                                connectionLifetime.Token);
                             await telemetrySink.RecordOutboundAsync(
                                 idleEnvelope,
                                 session,
                                 idleReplies,
-                                context.RequestAborted);
+                                connectionLifetime.Token);
                         }
                         continue;
                     }
@@ -302,7 +317,7 @@ internal sealed class WebSocketRequestCoordinator(
                         received.Buffer.Length);
                     if (received.MessageType == WebSocketMessageType.Close)
                     {
-                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", context.RequestAborted);
+                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", connectionLifetime.Token);
                         logger.LogInformation("WebSocket close frame received connectionId={ConnectionId} kind={Kind}",
                             connectionId, kind);
                         break;
@@ -338,7 +353,7 @@ internal sealed class WebSocketRequestCoordinator(
                            (reply, cancellationToken) => SendRepliesAsync(socket, [reply], kind, transportMetrics,
                                cancellationToken)))
                 {
-                    replies = await webSocketService.HandleMessageAsync(envelope, context.RequestAborted);
+                    replies = await webSocketService.HandleMessageAsync(envelope, connectionLifetime.Token);
                 }
 
                 robotPresenceRegistry.UpdateRobotKeys(presenceConnectionId, ResolveRobotKeys(token, session));
@@ -354,14 +369,22 @@ internal sealed class WebSocketRequestCoordinator(
                     SocketMessageTypeReader.Read(envelope.Text),
                     replies.Count);
                 await telemetrySink.RecordInboundAsync(envelope, session, SocketMessageTypeReader.Read(envelope.Text),
-                    context.RequestAborted);
-                await SendRepliesAsync(socket, replies, kind, transportMetrics, context.RequestAborted);
+                    connectionLifetime.Token);
+                await SendRepliesAsync(socket, replies, kind, transportMetrics, connectionLifetime.Token);
 
-                await telemetrySink.RecordOutboundAsync(envelope, session, replies, context.RequestAborted);
+                await telemetrySink.RecordOutboundAsync(envelope, session, replies, connectionLifetime.Token);
             }
+        }
+        catch (OperationCanceledException) when (connectionLifetime.IsCancellationRequested)
+        {
+        }
+        catch (WebSocketException) when (connectionLifetime.IsCancellationRequested)
+        {
         }
         finally
         {
+            connectionLifetime.Cancel();
+            credentialFailure = await continuity;
             if (registeredApiSocket)
                 robotNotificationRegistry.Remove(socket);
             robotPresenceRegistry.Remove(presenceConnectionId);
@@ -382,20 +405,24 @@ internal sealed class WebSocketRequestCoordinator(
         }
 
         var closeEnvelope = CreateEnvelope(context, kind, token, connectionId);
-        if (isPrematureClose && sessionStateOwnedOnClose)
+        if (isPrematureClose && sessionStateOwnedOnClose && credentialFailure is null)
             webSocketService.MarkPrematureSocketLoopEnded(session, loopTransId);
 
-        await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, session,
-            $"socket-loop-ended{(isPrematureClose ? "-prematurely" : string.Empty)}", context.RequestAborted);
+        var closeReason = credentialFailure is not null
+            ? $"socket-loop-ended-{credentialFailure}"
+            : $"socket-loop-ended{(isPrematureClose ? "-prematurely" : string.Empty)}";
+        await telemetrySink.RecordConnectionClosedAsync(closeEnvelope, session, closeReason, context.RequestAborted);
         logger.LogInformation(
             "WebSocket connection closed connectionId={ConnectionId} kind={Kind} sessionId={SessionId} " +
-            "deviceId={DeviceId} tokenFingerprint={TokenFingerprint} prematureClose={PrematureClose}",
+            "deviceId={DeviceId} tokenFingerprint={TokenFingerprint} prematureClose={PrematureClose} " +
+            "credentialContinuity={CredentialContinuity}",
             connectionId,
             kind,
             session.SessionId,
             session.DeviceId,
             tokenFingerprint,
-            isPrematureClose);
+            isPrematureClose,
+            credentialFailure ?? "not-failed");
     }
 
     private HashSet<string> ResolveRobotKeys(string? token, CloudSession session)

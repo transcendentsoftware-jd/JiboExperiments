@@ -53,6 +53,19 @@ public interface ICloudStateStore
     string IssueDeploymentSmokeHubToken(string deviceId);
     void RevokeDeploymentSmokeTokens(string deviceId);
     CloudSession? FindIssuedToken(string token);
+    /// <summary>
+    /// Revalidates the original credential binding for an already-open Hub socket.
+    /// Persistent stores must read authoritative token and account state, not a session cache.
+    /// </summary>
+    Task<bool> IsHubTokenCredentialBindingCurrentAsync(string token, HubTokenCredentialBinding expected,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var issued = FindIssuedToken(token);
+        return Task.FromResult(issued is not null &&
+            string.Equals(issued.Kind, "hub", StringComparison.OrdinalIgnoreCase) &&
+            HubTokenCredentialBinding.TryRead(issued.Metadata, out var current) && current == expected);
+    }
     CloudSession OpenSession(string kind, string? deviceId, string? token, string? hostName, string? path);
     void CloseSession(string sessionId);
     CloudSession? FindActiveSessionByToken(string token);

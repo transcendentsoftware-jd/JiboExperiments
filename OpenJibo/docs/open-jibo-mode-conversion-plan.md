@@ -129,6 +129,13 @@ robot. The current slice provides the persistence and enforcement seam. Secret-o
 access-key identifier must explicitly revoke existing Hub tokens until a future transactionally authoritative
 credential-generation workflow exists.
 
+The [active Hub continuity monitor](architecture/hub-token-live-continuity.md)
+now revalidates the original binding during an open credential-bound socket,
+including idle receives and long-running turns. Revocation, expiry, binding
+replacement/removal, access-key-ID changes or unavailable validation abort that
+connection. It does not establish co-presence, managed ownership or distributed
+one-socket fencing; unbound compatibility sockets retain their existing path.
+
 The neutral runtime also contains a default-disabled ES256/P-256 attestation issuer foundation. It emits the
 exact managed-service claim contract only from explicit trusted pairing, device-key, credential-version,
 challenge, and live-session inputs. The session binding is
