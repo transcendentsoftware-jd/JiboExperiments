@@ -14,6 +14,68 @@ public sealed class HubChannelLeasePolicyTests
     private static HubChannelLease Grant(long generation = 1) => new(generation, DateTimeOffset.UtcNow.AddSeconds(30));
 
     [Fact]
+    public async Task CancellationDuringPositiveLeaseResponseCannotProducePairingBinding()
+    {
+        var store = WorkingStore(); using var cancelled = new CancellationTokenSource();
+        store.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>()))
+            .Returns(() => { cancelled.Cancel(); return Task.FromResult(true); });
+        using var policy = new HubChannelLeasePolicy(store.Object,Key);
+        await using var lease = (await policy.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => lease.CreatePairingSessionBindingAsync(cancelled.Token));
+    }
+
+    [Fact]
+    public async Task PairingBindingPinsGenerationEvenForSameOwnerAndSurvivesRenewal()
+    {
+        var store = WorkingStore(); var clock = new ManualClock(); var owner = Guid.NewGuid();
+        store.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,owner,2,It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        await using var first = new HubChannelLeaseHandle(store.Object,new byte[32],HubChannel.Listen,owner,1,clock.GetTimestamp(),clock,TimeSpan.FromSeconds(2));
+        await using var next = new HubChannelLeaseHandle(store.Object,new byte[32],HubChannel.Listen,owner,2,clock.GetTimestamp(),clock,TimeSpan.FromSeconds(2));
+        var binding = await first.CreatePairingSessionBindingAsync(default);
+        Assert.NotNull(binding); Assert.NotEqual(binding,await next.CreatePairingSessionBindingAsync(default));
+        clock.Advance(TimeSpan.FromSeconds(5)); Assert.True(await first.RenewAsync(default));
+        Assert.Equal(binding,await first.CreatePairingSessionBindingAsync(default));
+    }
+
+    [Fact]
+    public async Task PairingBindingRequiresFreshListenLeaseAndChangesOnReplacement()
+    {
+        var store = WorkingStore(); using var policy = new HubChannelLeasePolicy(store.Object, Key);
+        await using var first = (await policy.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        var binding = await first.CreatePairingSessionBindingAsync(default);
+        Assert.NotNull(binding); Assert.Equal(32,binding.Length);
+        Assert.Equal(binding,await first.CreatePairingSessionBindingAsync(default));
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>()),Times.Exactly(2));
+        await using var replacement = (await policy.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        Assert.NotEqual(binding,await replacement.CreatePairingSessionBindingAsync(default));
+        await using var proactive = (await policy.AcquireAsync("opaque",HubChannel.Proactive,default))!;
+        Assert.Null(await proactive.CreatePairingSessionBindingAsync(default));
+        store.Verify(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Proactive,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>()),Times.Never);
+        store.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        Assert.Null(await first.CreatePairingSessionBindingAsync(default));
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => replacement.CreatePairingSessionBindingAsync(cancelled.Token));
+    }
+
+    [Fact]
+    public async Task PairingBindingCannotReuseIdleSuccessOrSurviveExpiryDisposalOrProviderFailure()
+    {
+        var clock = new ManualClock(); var store = WorkingStore();
+        using var policy = new HubChannelLeasePolicy(store.Object,Key,clock);
+        await using var lease = (await policy.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        Assert.True(await lease.CheckIdleAsync(default));
+        store.Setup(s => s.IsCurrentAsync(It.IsAny<byte[]>(),HubChannel.Listen,It.IsAny<Guid>(),1,It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("private-details"));
+        Assert.Null(await lease.CreatePairingSessionBindingAsync(default));
+        Assert.Equal("lease-unavailable",lease.FailureReason);
+        store = WorkingStore(); using var second = new HubChannelLeasePolicy(store.Object,Key,clock);
+        await using var expired = (await second.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        clock.Advance(TimeSpan.FromSeconds(25)); Assert.Null(await expired.CreatePairingSessionBindingAsync(default));
+        var disposed = (await second.AcquireAsync("opaque",HubChannel.Listen,default))!;
+        await disposed.DisposeAsync(); Assert.Null(await disposed.CreatePairingSessionBindingAsync(default));
+    }
+
+    [Fact]
     public async Task TwoHundredIdleTicksUseTenChecks_WhileInboundAndReplyChecksRemainFresh()
     {
         var clock = new ManualClock(); var store = WorkingStore();

@@ -13,7 +13,8 @@ public sealed class CloudAuthProtocolHandler(
     ReleaseSmokeAuthorizationOptions? releaseSmokeAuthorization = null,
     AwsSigV4RequestVerifier? awsSigV4Verifier = null,
     IAwsSigV4ReplayObservationPublisher? awsSigV4ReplayObservationPublisher = null,
-    IHubTokenReplayAdmission? hubTokenReplayAdmission = null) : ICloudAuthProtocolHandler
+    IHubTokenReplayAdmission? hubTokenReplayAdmission = null,
+    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null) : ICloudAuthProtocolHandler
 {
     private static readonly AwsSigV4OperationPolicy CreateHubTokenPolicy = new(
         "Account.CreateHubToken",
@@ -91,7 +92,9 @@ public sealed class CloudAuthProtocolHandler(
                 token = stateStore.IssueHubToken(
                     deviceId,
                     useDefaultRobot: !defaultRobotIsSynthetic,
-                    credentialBinding: credentialBinding),
+                    credentialBinding: credentialBinding,
+                    pairingEvidence: credentialVerification.CredentialAuthenticated && pairingCredentialKey is not null
+                        ? credentialVerification.VerifiedProof?.CreatePairingCredentialEvidence(pairingCredentialKey) : null),
                 expires = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeMilliseconds()
             });
         }

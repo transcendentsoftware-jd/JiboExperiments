@@ -12,6 +12,55 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
+    public async Task PairingCredentialEvidenceRequiresOriginalProofAndUncachedCurrentSecretRevision()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        using var key = Protocol.RuntimePairingCredentialEvidenceTests.Key();
+        using var otherKey = Protocol.RuntimePairingCredentialEvidenceTests.Key(43);
+        var verified = Protocol.RuntimePairingCredentialEvidenceTests.Verify(first);
+        var binding = HubTokenCredentialBinding.FromVerification(verified)!;
+        var evidence = verified.VerifiedProof!.CreatePairingCredentialEvidence(key)!;
+        var old = first.IssueHubToken("old", false, binding);
+        Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(old,binding,key));
+        foreach (var change in new[] { "revoked", "expired", "removed", "malformed", "substituted", "account", "kind" })
+        {
+            var token = first.IssueHubToken("evidence-"+change,false,binding,evidence);
+            Assert.NotNull(second.FindIssuedToken(token)); // populate facade caches
+            Assert.Equal(evidence,await second.ReadHubPairingCredentialEvidenceAsync(token,binding,key));
+            Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(token,binding,otherKey));
+            Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(" "+token,binding,key));
+            Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(token.ToUpperInvariant(),binding,key));
+            var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))).ToLowerInvariant();
+            var update = change switch
+            {
+                "revoked" => "RevokedUtc=NOW()",
+                "expired" => "ExpiresUtc=NOW()-INTERVAL '1 second'",
+                "removed" => "Metadata=Metadata-'runtimePairingCredentialBinding'",
+                "malformed" => "Metadata=jsonb_set(Metadata,'{runtimePairingCredentialVersion}','\"2\"'::jsonb)",
+                "substituted" => "Metadata=jsonb_set(Metadata,'{runtimePairingCredentialBinding}','\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"'::jsonb)",
+                "account" => "AccountId=NULL",
+                _ => "TokenKind='robot'"
+            };
+            await database.ExecuteAsync($"UPDATE CloudAuthTokens SET {update} WHERE TokenHash='{hash}'");
+            Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(token,binding,key));
+            Assert.Null(await first.ReadHubPairingCredentialEvidenceAsync(token,binding,key));
+        }
+        var rotated = first.IssueHubToken("same-id-secret-rotation",false,binding,evidence);
+        Assert.NotNull(second.FindIssuedToken(rotated));
+        Assert.Equal(evidence,await second.ReadHubPairingCredentialEvidenceAsync(rotated,binding,key));
+        await database.ExecuteAsync("UPDATE Accounts SET SecretAccessKeyCiphertext=convert_to('rotated-secret','UTF8') WHERE AccountId='usr_openjibo_owner'");
+        Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(rotated,binding,key));
+        Assert.Null(await first.ReadHubPairingCredentialEvidenceAsync(rotated,binding,key));
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => second.ReadHubPairingCredentialEvidenceAsync(rotated,binding,key,cancelled.Token));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
     public async Task OpenHubBindingValidation_RechecksRemoteRevocationExpiryAndMetadataWithoutCacheDowngrade()
     {
         await using var database = await CloudStateTestDatabase.CreateAsync();

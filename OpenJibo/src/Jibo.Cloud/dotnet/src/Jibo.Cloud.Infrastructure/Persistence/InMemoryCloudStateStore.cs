@@ -1006,7 +1006,8 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     }
 
     public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
-        HubTokenCredentialBinding? credentialBinding = null)
+        HubTokenCredentialBinding? credentialBinding = null,
+        RuntimePairingCredentialEvidence? pairingEvidence = null)
     {
         var resolvedDeviceId = !string.IsNullOrWhiteSpace(deviceId)
             ? deviceId.Trim()
@@ -1016,6 +1017,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         var token = $"hub-{_account.AccountId}-{Guid.NewGuid():N}";
         var metadata = BuildSessionMetadata(_account.AccountId, resolvedDeviceId, ResolveDefaultLoopId());
         credentialBinding?.WriteTo(metadata);
+        pairingEvidence?.WriteTo(metadata);
         RegisterIssuedSession(token, new CloudSession
         {
             Kind = "hub",
@@ -1028,6 +1030,22 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
 
         TouchState();
         return token;
+    }
+
+    public Task<RuntimePairingCredentialEvidence?> ReadHubPairingCredentialEvidenceAsync(string token,
+        HubTokenCredentialBinding expected, RuntimePairingCredentialEvidenceKey key,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!key.IsReady || string.IsNullOrWhiteSpace(token) || token.Length > 4096 || token != token.Trim())
+            return Task.FromResult<RuntimePairingCredentialEvidence?>(null);
+        var stored = _sessions.FindDurable(token);
+        var evidence = stored is null ? null : RuntimePairingCredentialEvidence.Read(stored.Metadata);
+        return Task.FromResult(stored is not null && stored.Token == token && stored.Kind == "hub" &&
+            stored.AccountId == _account.AccountId && stored.ExpiresUtc > DateTimeOffset.UtcNow &&
+            HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) && original == expected &&
+            evidence is not null && key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey)
+                ? evidence : null);
     }
 
     public string IssueRobotToken(string deviceId)

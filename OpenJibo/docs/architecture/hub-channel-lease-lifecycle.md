@@ -123,3 +123,10 @@ cases exercise runtime handles on two independent pools, verify the explicit idl
 reuse window plus immediate fresh-guard rejection after replacement, and verify
 stale dispose cannot affect the replacement or the other channel. CI database tests,
 not local skips, are the database acceptance evidence.
+
+## Pairing input preparation
+
+The [credential/session evidence contract](runtime-pairing-credential-evidence.md)
+adds full verified-credential capture and a fresh Listen-generation binding for
+future pairing integration. These primitives do not invoke a managed endpoint,
+register credentials, establish co-presence or enable assignment.
