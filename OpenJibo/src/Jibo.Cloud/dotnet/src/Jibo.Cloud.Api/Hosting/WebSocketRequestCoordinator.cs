@@ -201,7 +201,8 @@ internal sealed class WebSocketRequestCoordinator(
                 return;
             }
             issuedBearer = issuedToken.Token;
-            pairingEvidence = RuntimePairingCredentialEvidence.Read(issuedToken.Metadata);
+            if (kind == "neo-hub-listen" && PairingClient.IsReady && PairingCredentialKey?.IsReady == true)
+                pairingEvidence = RuntimePairingCredentialEvidence.Read(issuedToken.Metadata);
             if (requiredTokenKind == "hub" && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
                 !HubTokenCredentialBinding.TryRead(issuedToken.Metadata, out credentialBinding))
             {
