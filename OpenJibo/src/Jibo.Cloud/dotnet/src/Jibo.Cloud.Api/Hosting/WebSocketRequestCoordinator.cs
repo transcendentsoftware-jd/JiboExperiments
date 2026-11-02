@@ -180,6 +180,7 @@ internal sealed class WebSocketRequestCoordinator(
 
         using var singleRobotHttpHubLeaseScope = singleRobotHttpHubLease;
         HubTokenCredentialBinding? credentialBinding = null;
+        string? issuedBearer = null;
         if (!string.IsNullOrWhiteSpace(token) && TryResolveRequiredTokenKind(kind, out var requiredTokenKind))
         {
             var issuedToken = cloudStateStore.FindIssuedToken(token);
@@ -194,6 +195,7 @@ internal sealed class WebSocketRequestCoordinator(
                     context.Connection.RemoteIpAddress?.ToString());
                 return;
             }
+            issuedBearer = issuedToken.Token;
             if (requiredTokenKind == "hub" && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
                 !HubTokenCredentialBinding.TryRead(issuedToken.Metadata, out credentialBinding))
             {
@@ -208,7 +210,9 @@ internal sealed class WebSocketRequestCoordinator(
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             return;
         }
-        if (useChannelLease && credentialBinding is null)
+        // Some compatibility stores accept case-insensitive aliases. Strict lease
+        // keys must use one authoritative bearer spelling across all replicas.
+        if (useChannelLease && (credentialBinding is null || !string.Equals(token, issuedBearer, StringComparison.Ordinal)))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;

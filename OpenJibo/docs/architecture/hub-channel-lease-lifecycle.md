@@ -10,7 +10,10 @@ No deployment or configuration change accompanies this implementation.
 With `OpenJibo:Security:HubChannelLeases:Enabled` omitted/false, existing stock,
 unbound, tokenless isolated, API and Home Assistant behavior remains unchanged.
 When enabled, Hub listen/proactive handshakes require a valid credential-bound
-Hub token. Unbound/tokenless Hub requests are rejected with 401; invalid enabled
+Hub token with the exact authoritative issued bearer spelling. Case-insensitive
+aliases accepted by compatibility stores cannot create separate lease namespaces:
+the enabled profile rejects them with 401 before acquisition. Disabled compatibility
+behavior is unchanged. Unbound/tokenless Hub requests are rejected with 401; invalid enabled
 configuration or unavailable/uncertain acquisition returns 503 before accepting
 the socket. API and Home Assistant sockets do not acquire channel leases.
 Before acquisition, the original token/account binding is authoritatively checked

@@ -19,6 +19,27 @@ public sealed class WebSocketRequestCoordinatorTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task LeaseProfileRejectsCaseAliasesWithoutChangingDisabledCompatibility(bool enabled)
+    {
+        var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var alias = token.ToUpperInvariant(); Assert.NotEqual(token, alias);
+        Assert.NotNull(store.FindIssuedToken(alias)); // compatibility store deliberately accepts this alias
+        var leaseStore = HubChannelLeasePolicyTests.WorkingStore();
+        using var policy = enabled ? new HubChannelLeasePolicy(leaseStore.Object, new byte[32]) : HubChannelLeasePolicy.Disabled;
+        var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []));
+        var context = LeaseContext(socket, alias, "/listen");
+        var coordinator = new WebSocketRequestCoordinator(service,
+            new HomeAssistantWebSocketHandler(new HomeAssistantConnectionRegistry()), new RecordingWebSocketTelemetrySink(), store)
+        { LeasePolicy = policy };
+        await coordinator.HandleAsync(context);
+        Assert.Equal(!enabled, socket.Accepted);
+        if (enabled) Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+        leaseStore.Verify(s => s.AcquireAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task OpenTelemetryFailureOrCancellationReleasesLocalStateAndExactLease(bool cancel)
     {
         var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
