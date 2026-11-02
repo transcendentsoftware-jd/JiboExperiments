@@ -68,7 +68,10 @@ Section: `OpenJibo:Security:HubTokenReplayAdmission`.
 Enabled but incomplete/invalid bound configuration resolves to unavailable,
 never disabled compatibility. Normal configuration-binding errors may prevent
 startup. The dedicated pool has at most two connections and bounded connection/
-command timeouts; non-loopback connections require TLS.
+command timeouts; non-loopback connections require `SSL Mode=VerifyFull`.
+Encryption alone does not authenticate the database server; the
+[Npgsql security contract](https://www.npgsql.org/doc/security.html#encryption-ssltls)
+distinguishes `Require` from certificate-and-hostname verification.
 
 The function is `SECURITY DEFINER`, has a restricted search path and qualifies
 its objects. Migration grants no table/function access to PUBLIC and creates

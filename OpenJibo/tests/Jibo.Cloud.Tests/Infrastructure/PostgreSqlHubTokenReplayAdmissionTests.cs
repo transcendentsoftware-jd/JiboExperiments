@@ -132,7 +132,9 @@ public sealed class PostgreSqlHubTokenReplayAdmissionTests
         await Assert.ThrowsAsync<ArgumentException>(()=>store.TryConsumeAsync([new byte[31]],[1],DateTimeOffset.UtcNow));
         await Assert.ThrowsAsync<ArgumentException>(()=>store.TryConsumeAsync([new byte[32]],[0],DateTimeOffset.UtcNow));
         await Assert.ThrowsAsync<ArgumentException>(()=>store.TryConsumeAsync([new byte[32],new byte[32]],[1,2],DateTimeOffset.UtcNow));
-        Assert.Throws<ArgumentException>(()=>new PostgreSqlHubTokenReplayAdmissionStore("Host=remote.example;SslMode=Disable;Database=unused;Username=unused"));
+        foreach(var mode in new[]{"Disable","Prefer","Require","VerifyCA"})
+            Assert.Throws<ArgumentException>(()=>new PostgreSqlHubTokenReplayAdmissionStore($"Host=remote.example;SslMode={mode};Database=unused;Username=unused"));
+        await using var verified=new PostgreSqlHubTokenReplayAdmissionStore("Host=remote.example;SslMode=VerifyFull;Database=unused;Username=unused");
     }
 
     private sealed class Database(string connection) : IAsyncDisposable

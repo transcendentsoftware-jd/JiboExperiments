@@ -16,8 +16,8 @@ public sealed class PostgreSqlHubTokenReplayAdmissionStore : IHubTokenReplayAdmi
             MaxPoolSize = 2, Timeout = 2, CommandTimeout = 2,
             ApplicationName = "OpenJibo.HubTokenReplayAdmission"
         };
-        if (options.SslMode < SslMode.Require && options.Host is not ("localhost" or "127.0.0.1" or "::1"))
-            throw new ArgumentException("Admission connection requires TLS outside loopback.");
+        if (options.SslMode != SslMode.VerifyFull && options.Host is not ("localhost" or "127.0.0.1" or "::1"))
+            throw new ArgumentException("Admission connection requires verified TLS outside loopback.");
         _source = NpgsqlDataSource.Create(options.ConnectionString);
     }
 
