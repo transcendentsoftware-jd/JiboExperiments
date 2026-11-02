@@ -617,6 +617,9 @@ These are the carryover items that need a clean proof pass first:
   - a default-disabled [strict Hub issuance profile](architecture/hub-token-replay-admission.md) now awaits atomic replay
     admission before issuing a token; it reserves overlapping-key slots together
     through a separate PostgreSQL boundary and rejects uncertain checks
+  - a [durable channel lease primitive](architecture/hub-channel-lease-foundation.md) now separates listen/proactive
+    generations and rejects stale-owner renewals/releases; it has no coordinator
+    caller or runtime registration, so live-socket fencing remains unimplemented
   - raw binary WebSocket audio is normalized into a single browser-playable Ogg/Opus stream
   - the status page distinguishes observed runtime IDs from explicit links and reports artifact coverage
 - Remaining proof:

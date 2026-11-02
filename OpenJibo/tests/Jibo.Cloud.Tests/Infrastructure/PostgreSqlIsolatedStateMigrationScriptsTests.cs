@@ -15,6 +15,8 @@ public sealed class PostgreSqlIsolatedStateMigrationScriptsTests
                 "014_harden_sigv4_replay_observer.state.sql", StringComparison.OrdinalIgnoreCase))
             .Where(path => !Path.GetFileName(path).Equals(
                 "017_hub_token_replay_admission.state.sql", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !Path.GetFileName(path).Equals(
+                "018_hub_channel_leases.state.sql", StringComparison.OrdinalIgnoreCase))
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase);
 
         Assert.Equal(expected, selected);
