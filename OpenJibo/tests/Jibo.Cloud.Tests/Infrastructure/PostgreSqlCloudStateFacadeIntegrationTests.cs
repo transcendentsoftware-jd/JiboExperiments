@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.Persistence;
@@ -10,6 +11,104 @@ namespace Jibo.Cloud.Tests.Infrastructure;
 
 public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task UpdateRobotPersistsOnePrimaryAcrossIndependentFacades()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        first.UpdateRobot(new DeviceRegistration { DeviceId = "durable-primary", RobotId = "robot-primary" });
+        Assert.Equal("durable-primary", first.GetRobot().DeviceId);
+        Assert.Equal("durable-primary", second.GetRobot().DeviceId);
+        first.UpsertDevice(new DeviceRegistration { DeviceId = "additional", RobotId = "robot-additional" });
+        Assert.Equal("durable-primary", second.GetRobot().DeviceId);
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Devices WHERE IsDefault"));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task RobotLoopsHaveDistinctAutomaticMembersAndRetainTheAccountOwner()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var source = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var store = new PostgreSqlCloudStateStore(source, new PlaintextTestProtector());
+        var owner = store.GetAccount().AccountId;
+        var before = store.GetLoops().SelectMany(loop => store.GetLoopMembers(loop.LoopId)).Select(member => member.Id).ToArray();
+        var seen = new HashSet<string>(before);
+        foreach (var id in new[] { "synthetic-a", "synthetic-b" })
+        {
+            var device = store.GetOrCreateDevice(id, null, null);
+            var loop = store.AddLoop(null, owner, device.RobotId, device.DeviceId);
+            var members = store.GetLoopMembers(loop.LoopId);
+            var ownerMember = Assert.Single(members, member => member.Type == "owner");
+            var robotMember = Assert.Single(members, member => member.Type == "robot");
+            Assert.Equal(owner, ownerMember.AccountId);
+            Assert.Equal(device.RobotId, robotMember.AccountId);
+            Assert.True(seen.Add(ownerMember.Id)); Assert.True(seen.Add(robotMember.Id));
+            Assert.Equal(loop.LoopId, store.AddLoop(null, owner, device.RobotId, device.DeviceId).LoopId);
+            Assert.Equal(2, store.GetLoopMembers(loop.LoopId).Count);
+        }
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task OobePrimarySelectionPersistsWhileAdditionalRobotsAndRetriesRemainScoped()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        var service = new JiboCloudProtocolService(first);
+
+        async Task<JsonElement> Call(string operation, object body)
+        {
+            var response = await service.DispatchAsync(new ProtocolEnvelope
+            {
+                ServicePrefix = "OOBE_20161026", Operation = operation,
+                HostName = "api.openjibo.com", BodyText = JsonSerializer.Serialize(body)
+            });
+            Assert.Equal(200, response.StatusCode);
+            using var document = JsonDocument.Parse(response.BodyText);
+            return document.RootElement.Clone();
+        }
+
+        async Task<JsonElement> Setup(string id)
+        {
+            var prepared = await Call("PrepareRobot", new { deviceId = id, rollbackSnapshotId = "synthetic-recovery" });
+            return await Call("SetupRobot", new { id, token = prepared.GetProperty("token").GetString() });
+        }
+
+        await Setup("synthetic-primary");
+        Assert.Equal("synthetic-primary", first.GetRobot().DeviceId);
+        Assert.Equal("synthetic-primary", second.GetRobot().DeviceId);
+        var profile = JsonSerializer.Serialize(second.GetRobotProfile());
+        var people = JsonSerializer.Serialize(second.GetPeople());
+        var firstRobot = await Setup("synthetic-incoming-a");
+        var secondRobot = await Setup("synthetic-incoming-b");
+        Assert.Equal("synthetic-primary", first.GetRobot().DeviceId);
+        Assert.Equal("synthetic-primary", second.GetRobot().DeviceId);
+        Assert.Equal(profile, JsonSerializer.Serialize(second.GetRobotProfile()));
+        Assert.Equal(people, JsonSerializer.Serialize(second.GetPeople()));
+        Assert.Equal(1, await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM Devices WHERE IsDefault"));
+
+        // A new facade/service has no old token state but sees the same durable
+        // registrations and robot-specific loops.
+        service = new JiboCloudProtocolService(second);
+        foreach (var (id, previous) in new[] { ("synthetic-incoming-a", firstRobot), ("synthetic-incoming-b", secondRobot) })
+        {
+            var retried = await Setup(id);
+            Assert.Equal(previous.GetProperty("deviceId").GetString(), retried.GetProperty("deviceId").GetString());
+            Assert.Equal(previous.GetProperty("robotId").GetString(), retried.GetProperty("robotId").GetString());
+            Assert.Equal(previous.GetProperty("loopId").GetString(), retried.GetProperty("loopId").GetString());
+            Assert.Single(first.GetLoops(), item => item.RobotFriendlyId == id);
+        }
+        Assert.Equal("synthetic-primary", first.GetRobot().DeviceId);
+    }
+
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
     public async Task PairingCredentialEvidenceRequiresOriginalProofAndUncachedCurrentSecretRevision()

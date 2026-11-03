@@ -52,7 +52,6 @@ public sealed partial class PostgreSqlCloudStateStore
             device is null ? [] : [new LoopDeviceLink(device.DeviceId, true, now)])));
         Sync(members.UpsertAsync(owner, new LoopMemberRecord
         {
-            Id = owner,
             LoopId = loopId,
             AccountId = owner,
             FirstName = GetAccount().FirstName,
@@ -63,7 +62,6 @@ public sealed partial class PostgreSqlCloudStateStore
         if (!string.IsNullOrWhiteSpace(resolvedRobotId))
             Sync(members.UpsertAsync(owner, new LoopMemberRecord
             {
-                Id = resolvedRobotId,
                 LoopId = loopId,
                 AccountId = resolvedRobotId,
                 FirstName = string.IsNullOrWhiteSpace(resolvedFriendlyId) ? resolvedRobotId : resolvedFriendlyId,
