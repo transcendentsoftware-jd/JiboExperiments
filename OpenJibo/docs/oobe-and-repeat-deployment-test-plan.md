@@ -52,9 +52,12 @@ provider switch, factory reset and recovery are different cases.
 ## Current implementation gaps
 
 The offline AutoMod v2 review requires a credential file containing a matching
-region. Fresh OOBE may have missing/empty credentials. That case needs a separate
-typed intake/provisioning contract; do not relax the current validator, manufacture
-credentials or default the region to `api`. Actual firmware/native routing must
+region. Fresh OOBE may have missing/empty credentials. AutoMod's separate
+`oobe_intake.py` source contract observes absent, empty, blank, partial and populated
+fields without establishing factory/OOBE state. See its `Docs/oobe-storage-intake.md`;
+the original preview.1 archive does not contain that newer tool. This is intake,
+not provisioning: do not relax the credentialed validator, manufacture credentials
+or default the region to `api`. Actual firmware/native routing must
 determine any region/host policy. The source-documented paths are not a substitute
 for the arriving robot's retained mount/release evidence.
 
@@ -63,6 +66,31 @@ exports a selected isolated target. `/health/self-hosted` does not query the
 database or certify migrations, persistence, image provenance or robot protocols.
 The existing tokenless compatibility guard admits one client address only. Three
 robots require issued-token acceptance or deliberately separate isolated servers.
+
+## Server setup retry behavior
+
+The server accepts explicit setup/reconnect tokens only when issued by
+`PrepareRobot`. Legacy tokenless setup is a separate compatibility path; its
+implicit state cannot be presented as a prepared token. A successful first setup
+binds the completed token to that device. A first-setup planning alias remains
+compatible; attempts to move a completed token to another device are rejected.
+
+Verified serial conflicts are checked before registration or loop mutation.
+Completion is recorded only after the synchronous registration operations succeed.
+Existing state-store loop reuse is retained for fresh tokens and retries. OOBE
+operations are serialized inside the service singleton, including status/proof
+observations; this is not a cross-instance lock or database transaction. A storage
+failure can leave partial registration/loop records even though the token remains
+incomplete. Preserve the failed attempt, then reconcile/retry; do not call this an
+atomic rollback or a completed provisioning result.
+
+The first robot can replace the synthetic bootstrap primary. Onboarding another
+robot preserves an established primary/profile/people graph and updates only the
+selected registration. Prepared connection proof requires the exact device record;
+it cannot borrow the primary or a matching friendly name. These server-state tests
+use synthetic identities. They do not establish owner authorization, credential
+issuance/isolation, physical identity, native OOBE compatibility or a working robot
+connection. Tokens are in-memory and expire; server restart requires a new prepare.
 
 ## Run records and promotion
 
