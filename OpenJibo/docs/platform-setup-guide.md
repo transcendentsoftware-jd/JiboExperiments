@@ -68,6 +68,13 @@ for a redacted report that can accompany a support request.
 
 ## Start self-hosting
 
+After starting a source build containing the self-hosted profile endpoint, use
+the [setup observation and target export flow](self-hosted-readiness.md). It
+connects host checks and a redacted runtime configuration snapshot to an AutoMod
+target, while retaining the unverified installation/robot gates. The
+[OOBE/repeat deployment laboratory plan](oobe-and-repeat-deployment-test-plan.md)
+tracks first and repeated deployment separately from real device acceptance.
+
 Continue with the [self-hosted runbook](self-hosted-runbook.md) to initialize
 per-install encryption values, set the database password, retain recovery
 material and choose source or digest mode. The existing startup commands are:

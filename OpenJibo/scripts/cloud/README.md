@@ -2,6 +2,12 @@
 
 These scripts help exercise the new .NET hosted cloud locally.
 
+- `prepare-self-hosted-readiness.py` joins read-only Docker/Compose prerequisites
+  and `/health/self-hosted` configuration observations, then exports a selected
+  isolated conversion target when those conditions pass. See
+  [readiness and target export](../../docs/self-hosted-readiness.md); it does not
+  install, certify persistence, enroll robots or apply conversion changes.
+
 - `prepare-openjibo-starter-bundle.py`
   Prepares an offline, allowlisted standalone isolated starter ZIP for a supplied
   digest-pinned runtime image. Does not publish, pull or deploy. See the

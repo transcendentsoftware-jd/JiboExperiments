@@ -24,7 +24,20 @@ jobs:
           python-version: '3.9'
       - name: Validate read-only host prerequisites without Docker or credentials
         working-directory: OpenJibo
-        run: python -B -m unittest discover -s tests -p test_inspect_openjibo_host.py
+        shell: pwsh
+        run: |
+          foreach ($pattern in @('test_inspect_openjibo_host.py','test_self_hosted_readiness.py')) {
+            python -B -m unittest discover -s tests -p $pattern
+            if ($LASTEXITCODE -ne 0) { throw "Setup contract failed: $pattern" }
+          }
+          python -I -B tests/check_self_hosted_readiness.py --output "$env:RUNNER_TEMP/self-hosted-readiness" --source-revision '${{ github.sha }}'
+          if ($LASTEXITCODE -ne 0) { throw 'Readiness packet export failed.' }
+      - name: Retain synthetic self-hosted setup evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: SelfHostedReadiness-${{ runner.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/self-hosted-readiness
+          if-no-files-found: error
 
   test:
     runs-on: ubuntu-latest
@@ -200,6 +213,9 @@ jobs:
         shell: bash
         run: docker compose exec -T api test ! -x /usr/bin/whisper.cpp/build/bin/whisper-cli
 
+      - name: Check readiness against the running disposable stack
+        run: python3 -I -B tests/check_self_hosted_readiness.py --live-origin http://127.0.0.1:8080 --output "${{ runner.temp }}/readiness-before-restart" --source-revision '${{ github.sha }}'
+
       - name: Run smoke checks
         shell: bash
         run: bash ./scripts/cloud/invoke-cloud-smoke.sh
@@ -231,6 +247,18 @@ jobs:
           docker compose ps
           docker compose logs --no-color --tail 200
           exit 1
+
+      - name: Check readiness after repeat startup
+        run: python3 -I -B tests/check_self_hosted_readiness.py --live-origin http://127.0.0.1:8080 --output "${{ runner.temp }}/readiness-after-restart" --source-revision '${{ github.sha }}'
+
+      - name: Retain disposable runtime readiness observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: SelfHostedRuntimeReadiness-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/readiness-before-restart
+            ${{ runner.temp }}/readiness-after-restart
+          if-no-files-found: error
 
       - name: Capture logs
         if: always()
