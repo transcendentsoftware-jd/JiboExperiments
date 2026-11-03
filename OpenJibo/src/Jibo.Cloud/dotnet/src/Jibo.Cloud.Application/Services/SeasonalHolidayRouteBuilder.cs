@@ -410,7 +410,7 @@ internal static class SeasonalHolidayRouteBuilder
         IJiboRandomizer randomizer,
         Func<string, string> holidayTemplateRenderer,
         DateTimeOffset? referenceLocalTime,
-        IReadOnlyList<string> todaysHolidayNames,
+        Func<IReadOnlyList<string>> resolveTodaysHolidayNames,
         out JiboInteractionDecision? decision)
     {
         if (semanticIntent.StartsWith(SeasonalAdviceIntentPrefix, StringComparison.OrdinalIgnoreCase))
@@ -478,7 +478,7 @@ internal static class SeasonalHolidayRouteBuilder
                 randomizer,
                 loweredTranscript,
                 referenceLocalTime,
-                todaysHolidayNames,
+                resolveTodaysHolidayNames(),
                 semanticIntent),
             "seasonal_holidays" => BuildHolidayTemplateDecision(
                 catalog,

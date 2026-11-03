@@ -37,6 +37,48 @@ public sealed class JiboInteractionServiceTests
     private const string GreetingLastProactiveUtcKey = "greetingsLastProactiveUtc";
     private const string GreetingLastReactiveUtcKey = "greetingsLastReactiveUtc";
 
+    [Theory]
+    [InlineData("tell me a joke", "joke")]
+    [InlineData("what time is it", "time")]
+    [InlineData("what are your plans for christmas", "seasonal_plans_for_christmas")]
+    public async Task BuildDecisionAsync_HolidayLookupIsNotRequiredForUnrelatedTurns(string transcript, string intent)
+    {
+        var store = new Mock<ICloudStateStore>();
+        store.Setup(value => value.GetHolidays(It.IsAny<string?>()))
+            .Throws(new InvalidOperationException("An unrelated turn must not wait for the holiday provider."));
+        var service = CreateService(cloudStateStore: store.Object);
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = transcript, NormalizedTranscript = transcript,
+            Attributes = new Dictionary<string, object?> { ["accountId"] = "test-account", ["loopId"] = "test-loop" }
+        });
+        Assert.Equal(intent, decision.IntentName);
+        store.Verify(value => value.GetHolidays(It.IsAny<string?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task BuildDecisionAsync_HolidayLookupRemainsScopedForGreeting()
+    {
+        var store = new Mock<ICloudStateStore>();
+        store.Setup(value => value.GetHolidays("test-loop")).Returns([
+            new HolidayRecord { Name = "Christmas Day", Date = new DateOnly(2026,12,25), IsEnabled = true }
+        ]);
+        var service = CreateService(cloudStateStore: store.Object);
+        var decision = await service.BuildDecisionAsync(new TurnContext
+        {
+            RawTranscript = "merry christmas", NormalizedTranscript = "merry christmas",
+            Attributes = new Dictionary<string, object?>
+            {
+                ["accountId"] = "test-account", ["loopId"] = "test-loop",
+                ["context"] = """{"runtime":{"location":{"iso":"2026-12-25T12:00:00-05:00"}}}"""
+            }
+        });
+        Assert.Equal("seasonal_holiday_greeting", decision.IntentName);
+        Assert.Equal("HolidayResponse", decision.ContextUpdates![ChitchatRouteKey]);
+        store.Verify(value => value.GetHolidays("test-loop"), Times.Once);
+        store.Verify(value => value.GetHolidays(It.Is<string?>(id => id != "test-loop")), Times.Never);
+    }
+
     [Fact]
     public async Task BuildDecisionAsync_Joke_UsesCatalogBackedRandomContent()
     {

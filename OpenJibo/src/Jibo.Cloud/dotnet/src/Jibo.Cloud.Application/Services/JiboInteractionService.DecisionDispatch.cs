@@ -132,7 +132,7 @@ public sealed partial class JiboInteractionService
                 randomizer,
                 selected => RenderHolidayTemplate(selected, turn, greetingPresence),
                 referenceLocalTime,
-                ResolveTodaysHolidayNames(turn, referenceLocalTime),
+                () => ResolveTodaysHolidayNames(turn, referenceLocalTime),
                 out var seasonalHolidayDecision))
             return seasonalHolidayDecision!;
 

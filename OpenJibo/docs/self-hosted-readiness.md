@@ -11,6 +11,14 @@ or apply conversion changes. It needs Python 3.9+ and the existing Docker/Compos
 host path. Continue to use the [self-hosted runbook](self-hosted-runbook.md) for
 installation, secrets, persistence and recovery.
 
+The API loads its bundled experience catalog before accepting requests. Startup
+may take longer on a cold host while that local content is read; loading progress
+appears in the API logs. A successful `/health` response comes after this warmup,
+so the first interaction does not perform that catalog load. Unrelated turns do
+not fetch the holiday calendar; holiday greetings still use the selected loop's
+calendar. This initialization does not change the configuration-only scope of
+`/health/self-hosted` or certify a database, provider, robot or conversion.
+
 ## Run
 
 Use a runtime built from source containing `GET /health/self-hosted`. Older
