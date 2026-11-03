@@ -54,6 +54,7 @@ builder.Host.UseSerilog((context, _, loggerConfiguration) =>
 });
 
 builder.Services.AddOpenJiboCloud(builder.Configuration);
+builder.Services.AddHostedService<ExperienceContentWarmupService>();
 builder.Services.AddSingleton<HomeAssistantWebSocketHandler>();
 builder.Services.AddSingleton<SingleRobotHttpHubAccessGuard>();
 builder.Services.AddSingleton<WebSocketTransportPolicy>();
