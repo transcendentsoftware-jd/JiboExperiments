@@ -102,4 +102,8 @@ loopback-only ports and robot traffic disconnected:
 
 This procedure does not restore robot-local calibration, firmware, enrollment
 tokens held only in API process memory, external services or provider state.
+It does not capture the container writable layer outside `/data`. For example,
+the runtime's default user-integrations JSON path is under `/app/App_Data`,
+unless explicitly configured elsewhere. Retain any such files separately;
+this packet does not establish their durability across container replacement.
 Physical OOBE compatibility and live robot recovery need separate validation.
