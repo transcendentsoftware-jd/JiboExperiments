@@ -161,6 +161,7 @@ jobs:
     needs: test
     env:
       OPENJIBO_ENABLE_LOCAL_WHISPER: "false"
+      COMPOSE_PROFILES: self-hosted
     defaults:
       run:
         working-directory: OpenJibo
@@ -233,8 +234,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          previous_api=$(docker compose ps --quiet api)
+          test -n "$previous_api"
           docker compose down
           bash ./scripts/cloud/invoke-openjibo-self-hosted-stack.sh --skip-build
+          current_api=$(docker compose ps --quiet api)
+          test -n "$current_api"
+          test "$current_api" != "$previous_api"
 
           for i in $(seq 1 60); do
             if curl -fsS http://localhost:8080/health; then
