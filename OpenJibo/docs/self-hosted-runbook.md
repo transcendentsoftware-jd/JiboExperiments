@@ -12,6 +12,10 @@ This is the single starting point for self-hosting the OpenJibo cloud with Docke
 
 ## 1. Prerequisites
 
+Once the server is running, follow the [readiness observation flow](self-hosted-readiness.md)
+to export configuration observations and a selected conversion target. For new
+OOBE hardware and repeat deployment, use the [separate test plan](oobe-and-repeat-deployment-test-plan.md).
+
 Check the [OS/architecture matrix and read-only host checker](platform-setup-guide.md#check-prerequisites-first)
 before installation. Windows and macOS have Compose script paths, but still
 need complete host acceptance; the published-preview Python launcher is native

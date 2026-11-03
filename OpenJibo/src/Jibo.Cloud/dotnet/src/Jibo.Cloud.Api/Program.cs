@@ -188,6 +188,13 @@ app.MapGet("/health/replica", (HttpContext context, ReleaseSmokeAuthorizationOpt
     });
 });
 
+app.MapGet("/health/self-hosted", (HttpContext context, IConfiguration configuration) =>
+{
+    var profile = SelfHostedConfigurationProfile.FromConfiguration(configuration);
+    context.Response.Headers.CacheControl = "no-store";
+    return profile is null ? Results.NotFound() : Results.Json(profile);
+});
+
 app.MapPost("/health/sigv4-replay-proof", async (
     HttpContext context,
     IServiceProvider services,
