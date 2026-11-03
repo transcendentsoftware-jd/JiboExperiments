@@ -80,20 +80,39 @@ class VerifyStarterBundleTests(unittest.TestCase):
         self.assertEqual(report["declared_cpu_profile"], "portable")
 
     def test_legacy_bundle_has_no_cpu_claim(self):
+        removed = {"CPU-PROFILE.json", "scripts/cloud/backup-self-hosted.py", "docs/self-hosted-recovery.md"}
         def legacy(entries):
             result = []
             for name, data in entries:
-                if name == "CPU-PROFILE.json":
+                if name in removed:
                     continue
                 if name == "MANIFEST.json":
                     manifest = json.loads(data)
-                    manifest["sha256"].pop("CPU-PROFILE.json")
+                    for member in removed:
+                        manifest["sha256"].pop(member)
                     data = json.dumps(manifest).encode()
                 result.append((name, data))
             return result
         report = self.check(self.rewrite(legacy))
         self.assertEqual(report.returncode, 0, report.stderr)
         self.assertIsNone(json.loads(report.stdout)["declared_cpu_profile"])
+
+    def test_previous_profile_bundle_still_verifies_and_partial_recovery_is_refused(self):
+        removed = {"scripts/cloud/backup-self-hosted.py", "docs/self-hosted-recovery.md"}
+        def previous(entries):
+            values = dict(entries)
+            manifest = json.loads(values["MANIFEST.json"])
+            for name in removed:
+                values.pop(name)
+                manifest["sha256"].pop(name)
+            values["MANIFEST.json"] = json.dumps(manifest).encode()
+            return list(values.items())
+        result = self.check(self.rewrite(previous))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["declared_cpu_profile"], "portable")
+        def partial(entries):
+            return [(n, d) for n, d in entries if n != "docs/self-hosted-recovery.md"]
+        self.assertNotEqual(self.check(self.rewrite(partial)).returncode, 0)
 
     def test_cpu_declaration_rejects_invalid_requirements_even_with_updated_hash(self):
         def invalid(entries):

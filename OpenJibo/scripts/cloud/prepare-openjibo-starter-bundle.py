@@ -18,6 +18,8 @@ IMAGE_PATTERN = re.compile(
     r"(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+@sha256:[0-9a-f]{64}\Z"
 )
 SOURCES = (
+    ("OpenJibo/scripts/cloud/backup-self-hosted.py", "scripts/cloud/backup-self-hosted.py"),
+    ("OpenJibo/docs/self-hosted-recovery.md", "docs/self-hosted-recovery.md"),
     ("OpenJibo/docker-compose.yml", "docker-compose.yml"),
     ("OpenJibo/.env.example", ".env.example"),
     ("OpenJibo/scripts/cloud/Initialize-OpenJiboComposeEnv.ps1", "scripts/cloud/Initialize-OpenJiboComposeEnv.ps1"),
@@ -110,6 +112,11 @@ before using it. PostgreSQL (`postgres:16-alpine`) and the optional smoke image
 contains no container images and Docker will need network access to pull them.
 The included MIT license covers this project's files; third-party image and
 dependency license notices and an SBOM have not been certified for this preview.
+
+The included `scripts/cloud/backup-self-hosted.py` captures and verifies private
+recovery packets with Python 3.9+. Follow `docs/self-hosted-recovery.md` before
+an upgrade; rehearse restore into a separate project. It does not perform
+automatic restoration or establish upgrade compatibility.
 
 Prerequisites: Docker with Compose v2; Bash plus OpenSSL for the Bash path, or
 PowerShell for the Windows path. Extract the archive to a new directory.

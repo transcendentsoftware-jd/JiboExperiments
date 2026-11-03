@@ -70,6 +70,9 @@ using the supplied initializer, set a strong database password, retain the
 generated encryption keys, and then use the bundle's start entry point.
 Docker/Compose and the relevant shell are required; Bash initialization also
 requires OpenSSL. Python is needed to prepare or verify the ZIP, not to run the starter.
+Newly prepared bundles also include a Python 3.9+ private
+[backup capture/verifier and recovery guide](self-hosted-recovery.md). Backup
+capture requires stopped writers and does not implement automatic restoration.
 
 This configuration serves the API over HTTP on loopback. A physical robot cannot
 reach it until you deliberately change the binding and configure a trusted-LAN
