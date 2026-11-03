@@ -235,12 +235,18 @@ jobs:
         run: |
           set -euo pipefail
           previous_api=$(docker compose ps --quiet api)
+          previous_postgres=$(docker compose ps --quiet postgres)
           test -n "$previous_api"
+          test -n "$previous_postgres"
           docker compose down
           bash ./scripts/cloud/invoke-openjibo-self-hosted-stack.sh --skip-build
           current_api=$(docker compose ps --quiet api)
+          current_postgres=$(docker compose ps --quiet postgres)
           test -n "$current_api"
+          test -n "$current_postgres"
           test "$current_api" != "$previous_api"
+          test "$current_postgres" != "$previous_postgres"
+          printf '{"sourceRevision":"%s","previousApiContainerId":"%s","currentApiContainerId":"%s","previousPostgresContainerId":"%s","currentPostgresContainerId":"%s","volumeDeletionRequested":false}\n' "$GITHUB_SHA" "$previous_api" "$current_api" "$previous_postgres" "$current_postgres" > "$RUNNER_TEMP/runtime-restart.json"
 
           for i in $(seq 1 60); do
             if curl -fsS http://localhost:8080/health; then
@@ -264,6 +270,7 @@ jobs:
           path: |
             ${{ runner.temp }}/readiness-before-restart
             ${{ runner.temp }}/readiness-after-restart
+            ${{ runner.temp }}/runtime-restart.json
           if-no-files-found: error
 
       - name: Capture logs
