@@ -9,6 +9,7 @@ This is the single starting point for self-hosting the OpenJibo cloud with Docke
 - [docs/local-cloud-quickstart.md](local-cloud-quickstart.md) — running the `.NET` cloud directly with `dotnet run` instead of Docker, useful for development.
 - [docs/device-bootstrap.md](device-bootstrap.md) — pointing a physical Jibo at your self-hosted server.
 - [Standalone starter packaging preview](standalone-starter-packaging.md) — offline preparation for a fresh digest-pinned installation; not yet an official download or verified upgrade path.
+- [Current experimental setup/recovery preview](durable-runtime-preview-20261103.md) — explicit signed package selection and exact acceptance scope; fresh installs only.
 
 ## 1. Prerequisites
 
@@ -106,6 +107,12 @@ Check Docker/Compose availability, YAML syntax, referenced files and required
 variables first. Redact credentials before sharing any diagnostics.
 
 - Use `-SkipBuild` / `--skip-build` on later runs if you have not changed the Dockerfile, `.env` whisper settings, or source.
+
+When controlling the stack manually, select its profile as well as the original
+project/files. For example, `docker compose --profile self-hosted down` removes
+the service containers while retaining volumes. Without an active profile,
+Compose can leave these services running. The launchers start named services
+explicitly; merely rerunning a launcher does not prove the API was replaced.
 - Migrations are a required, idempotent startup dependency: Compose runs `migrate` before `api` on every stack startup, and already-applied migration scripts are skipped by the migration ledger.
 - `-RunMigration` / `--run-migration` explicitly targets the migration service for visibility and compatibility with the initial bring-up/retry procedure; it is not a switch that disables migrations. Use `-SkipBuild` / `--skip-build` for repeat starts when the image does not need rebuilding.
 
