@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using Jibo.Cloud.Domain.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -28,29 +29,40 @@ public sealed class EncryptedUserDataSnapshotStore
         _logger = logger ?? NullLogger<EncryptedUserDataSnapshotStore>.Instance;
     }
 
-    public UserIntegrationSnapshot LoadOrReset()
+    // Compatibility entry point: unreadable existing data now throws instead of resetting.
+    public UserIntegrationSnapshot LoadOrReset() => Load();
+
+    public UserIntegrationSnapshot Load()
     {
-        if (string.IsNullOrWhiteSpace(_persistencePath) || !File.Exists(_persistencePath))
+        if (string.IsNullOrWhiteSpace(_persistencePath))
             return CreateEmptySnapshot();
 
         try
         {
-            var envelope = JsonSerializer.Deserialize<UserDataEncryptedEnvelope>(
-                File.ReadAllText(_persistencePath),
-                JsonOptions);
-            if (envelope is null)
-                return ResetAndSave("User integration file was empty.");
+            using var stream = File.OpenRead(_persistencePath);
+            var envelope = JsonSerializer.Deserialize<UserDataEncryptedEnvelope>(stream, JsonOptions);
+            if (envelope is null || envelope.Version != 1)
+                throw new InvalidDataException();
 
             var plaintext = _encryptionService.Decrypt(new UserDataEncryptionService.EncryptedPayload(
                 envelope.Version,
                 envelope.Nonce,
                 envelope.Ciphertext));
 
-            var snapshot = JsonSerializer.Deserialize<UserIntegrationSnapshot>(plaintext, JsonOptions);
+            using var document = JsonDocument.Parse(plaintext);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                throw new InvalidDataException();
+            var versions = document.RootElement.EnumerateObject()
+                .Where(property => property.Name.Equals("SchemaVersion", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (versions.Length != 1 || versions[0].Value.ValueKind != JsonValueKind.Number
+                || !versions[0].Value.TryGetInt32(out _))
+                throw new InvalidDataException();
+            var snapshot = document.Deserialize<UserIntegrationSnapshot>(JsonOptions);
             if (snapshot is null ||
                 snapshot.SchemaVersion < UserIntegrationSnapshot.MinimumSupportedSchemaVersion ||
                 snapshot.SchemaVersion > UserIntegrationSnapshot.CurrentSchemaVersion)
-                return ResetAndSave("User integration schema is unsupported.");
+                throw new InvalidDataException();
 
             // v1 snapshots omit MemberCalendarFeeds; normalize to current schema on load.
             if (snapshot.SchemaVersion < UserIntegrationSnapshot.CurrentSchemaVersion)
@@ -61,15 +73,26 @@ public sealed class EncryptedUserDataSnapshotStore
                     MemberCalendarFeeds = snapshot.MemberCalendarFeeds ?? []
                 };
 
+            if (snapshot.HomeAssistantLinks is null || snapshot.MemberCalendarFeeds is null)
+                throw new InvalidDataException();
             return snapshot;
         }
-        catch (Exception exception)
+        catch (FileNotFoundException)
         {
-            _logger.LogWarning(
-                exception,
-                "Failed to decrypt or parse user integration data at {Path}. Resetting to empty state.",
-                _persistencePath);
-            return ResetAndSave("User integration data could not be decrypted.");
+            return CreateEmptySnapshot();
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return CreateEmptySnapshot();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
+                                         or JsonException or CryptographicException or FormatException or ArgumentException)
+        {
+            _logger.LogError("User integration state could not be loaded ({FailureType}). Existing data was preserved.",
+                exception.GetType().Name);
+            throw new InvalidDataException(
+                "Existing user integration state could not be loaded. The file was preserved. " +
+                "Restore the matching encryption keys or a valid backup before retrying.");
         }
     }
 
@@ -106,14 +129,6 @@ public sealed class EncryptedUserDataSnapshotStore
         {
             if (File.Exists(tempPath)) File.Delete(tempPath);
         }
-    }
-
-    private UserIntegrationSnapshot ResetAndSave(string reason)
-    {
-        _logger.LogWarning("Resetting user integration store: {Reason}", reason);
-        var snapshot = CreateEmptySnapshot();
-        Save(snapshot);
-        return snapshot;
     }
 
     private static UserIntegrationSnapshot CreateEmptySnapshot()

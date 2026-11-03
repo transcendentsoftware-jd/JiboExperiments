@@ -62,6 +62,13 @@ by initialization. Restore the matching original keys when restoring a database.
 Inherited process environment can override Compose's `.env`; ensure it does not
 silently supply different encryption values.
 
+Fresh `.env` files also place encrypted Home Assistant/calendar integration
+state at `/data/user-integrations.json` in the persistent API volume. Existing
+`.env` files are preserved. Before adding that path to an older installation,
+follow the [credential-preservation procedure](self-hosted-recovery.md#preserve-existing-integration-credentials-before-changing-their-path)
+while the old API container still exists; copying a new template can strand
+its existing file and change its encryption keys.
+
 Speech-to-text options (see [section 4](#4-speech-to-text-local-whisper-vs-azure-speech) below):
 
 - `OPENJIBO_ENABLE_LOCAL_WHISPER` — defaults to `true`. Set to `false` if you only plan to use Azure Speech.

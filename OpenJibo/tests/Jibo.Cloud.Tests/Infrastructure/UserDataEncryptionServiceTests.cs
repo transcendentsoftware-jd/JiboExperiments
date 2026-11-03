@@ -27,7 +27,7 @@ public sealed class UserDataEncryptionServiceTests
     }
 
     [Fact]
-    public void EncryptedStore_LoadOrReset_ResetsWhenEncryptedDataIsInvalid()
+    public void EncryptedStore_LoadOrReset_PreservesInvalidExistingData()
     {
         var path = Path.Combine(Path.GetTempPath(), $"openjibo-user-data-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, "{ not valid encrypted json");
@@ -38,10 +38,8 @@ public sealed class UserDataEncryptionServiceTests
                 path,
                 new UserDataEncryptionService("test-passphrase", "test-salt"));
 
-            var snapshot = store.LoadOrReset();
-
-            Assert.Empty(snapshot.HomeAssistantLinks);
-            Assert.True(File.Exists(path));
+            Assert.Throws<InvalidDataException>(() => store.LoadOrReset());
+            Assert.Equal("{ not valid encrypted json", File.ReadAllText(path));
         }
         finally
         {
