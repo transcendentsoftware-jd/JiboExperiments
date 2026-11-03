@@ -160,6 +160,11 @@ trusted-network enrollment, mirror selection or unattended updates.
 
 ## 4. Database backups and migrations
 
+For a recovery packet covering both databases, encryption/configuration and
+the API data/media volume, follow [capture and verify a recovery backup](self-hosted-recovery.md).
+Keep all writers stopped during capture and rehearse restoration into a separate
+project before an upgrade. The SQL-only examples below do not include media or keys.
+
 The PostgreSQL volume is persistent. Before applying a schema migration or restoring data, make a plain-SQL backup of both databases and keep the files outside Docker's managed volumes:
 
 ```powershell

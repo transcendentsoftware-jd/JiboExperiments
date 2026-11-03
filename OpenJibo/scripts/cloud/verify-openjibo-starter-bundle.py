@@ -25,6 +25,7 @@ MEMBERS = frozenset({
     "scripts/cloud/postgres-init/01-create-databases.sh",
 })
 PROFILE_MEMBERS = MEMBERS | {"CPU-PROFILE.json"}
+RECOVERY_MEMBERS = PROFILE_MEMBERS | {"scripts/cloud/backup-self-hosted.py", "docs/self-hosted-recovery.md"}
 HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 IMAGE = re.compile(
     r"(?:localhost(?::[0-9]+)?|[a-z0-9]+(?:[.-][a-z0-9]+)*(?::[0-9]+)?)"
@@ -76,7 +77,7 @@ def verify_bundle(path: Path, expected_sha256: str) -> dict:
         names = [info.filename for info in infos]
         if len(names) != len(set(names)):
             raise ValueError("Duplicate archive member")
-        if set(names) not in (MEMBERS, PROFILE_MEMBERS):
+        if set(names) not in (MEMBERS, PROFILE_MEMBERS, RECOVERY_MEMBERS):
             raise ValueError("Archive member set differs from the starter allowlist")
         if archive.comment:
             raise ValueError("Archive comment is not permitted")

@@ -26,7 +26,7 @@ jobs:
         working-directory: OpenJibo
         shell: pwsh
         run: |
-          foreach ($pattern in @('test_inspect_openjibo_host.py','test_self_hosted_readiness.py')) {
+          foreach ($pattern in @('test_inspect_openjibo_host.py','test_self_hosted_readiness.py','test_self_hosted_backup.py')) {
             python -B -m unittest discover -s tests -p $pattern
             if ($LASTEXITCODE -ne 0) { throw "Setup contract failed: $pattern" }
           }
