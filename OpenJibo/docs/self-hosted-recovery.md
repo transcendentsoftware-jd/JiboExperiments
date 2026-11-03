@@ -103,7 +103,69 @@ loopback-only ports and robot traffic disconnected:
 This procedure does not restore robot-local calibration, firmware, enrollment
 tokens held only in API process memory, external services or provider state.
 It does not capture the container writable layer outside `/data`. For example,
-the runtime's default user-integrations JSON path is under `/app/App_Data`,
-unless explicitly configured elsewhere. Retain any such files separately;
-this packet does not establish their durability across container replacement.
+older installations may keep user-integrations JSON under `/app/App_Data`.
+Fresh `.env` files prepared from the current template select
+`OpenJibo__UserIntegrations__PersistencePath=/data/user-integrations.json`,
+which is covered by the API volume backup. Initialization preserves existing
+`.env` files and does not silently relocate their integration state. Retain
+container-local files separately and migrate them before replacement as below.
 Physical OOBE compatibility and live robot recovery need separate validation.
+
+## Preserve existing integration credentials before changing their path
+
+This is an operator migration for the standard Linux Compose API image, not an
+automatic upgrade. It changes no database schema. Keep the old container until
+the original file and configuration have been retained and the new copy has
+been checked. Do not run `down`, recreate the API, or replace `.env` first.
+
+1. Stop application, migration and external writers using the installation's
+   project/files. Leave PostgreSQL running for the full backup. Identify the
+   existing API container with `docker compose ps --all --quiet api` using those
+   same project/files. Inspect its effective integration path and encryption
+   configuration privately. An unset integration path uses
+   `/app/App_Data/user-integrations.json`; a custom path needs separate review.
+2. Copy the existing encrypted file to a **new private host destination** with
+   `docker cp STOPPED_API_ID:/app/App_Data/user-integrations.json PRIVATE_ORIGINAL`.
+   If this fails, stop: a failed copy does not establish that no credentials
+   exist. Resolve the source path/access first. If this is a fresh installation
+   with independently confirmed absent integration state, use the fresh setup
+   flow instead of inventing an empty replacement for an unknown file.
+3. Retain a full backup and its effective configuration/keys. Record the original
+   encrypted file's SHA-256 privately with `Get-FileHash` on Windows or
+   `sha256sum`/`shasum -a 256` on Linux/macOS. Do not print its contents or paste
+   the effective environment into support reports.
+4. Confirm `/data` is the existing API named volume and that its proposed
+   `user-integrations.json` destination is absent. For the standard image, the
+   following check uses its exact locally installed image ID and the stopped
+   API's mounts; replace the placeholders and run as one line:
+
+   ```text
+   docker run --rm --pull=never --network none --volumes-from STOPPED_API_ID --entrypoint /bin/sh EXACT_LOCAL_IMAGE_ID -c 'test -d /data && test -r /data && test -x /data && test ! -e /data/user-integrations.json && test ! -L /data/user-integrations.json'
+   ```
+
+   Any failure means stop and inspect privately. Do not overwrite an existing
+   destination, including a dangling link. If a destination already exists,
+   retain it separately and resolve which state is authoritative. Keep all
+   writers stopped between this check and the copy.
+5. Copy the retained original to the existing mounted volume:
+   `docker cp PRIVATE_ORIGINAL STOPPED_API_ID:/data/user-integrations.json`.
+   Copy it back to another new private host file and compare its SHA-256 with
+   the retained original. Continue only on an exact match. The original
+   container-local file and private export remain untouched.
+6. Add `OpenJibo__UserIntegrations__PersistencePath=/data/user-integrations.json`
+   to the existing `.env`, keeping the original encryption passphrase and salt.
+   Review inherited process overrides too. Capture another full backup so the
+   staged file and changed configuration are retained. Then start/recreate the
+   API with the reviewed image and normal launcher, preserving project/volumes.
+7. Verify the existing Home Assistant link/command secret and calendar feeds
+   through the application, then repeat after container replacement. Rehearse
+   restoring that volume and the original keys into a separate installation.
+   Retain all exports until this succeeds; do not reconnect real integrations
+   merely to fabricate a successful test.
+
+Current source refuses to load an existing unreadable integration file. Wrong
+keys, invalid ciphertext, unsupported schema or malformed data produce a load
+error and preserve the original bytes. Restore matching keys or a known-good
+backup and retry. A genuinely missing file starts empty without writing until
+an explicit integration change. Older runtime images may still reset unreadable
+files; the configuration setting alone does not change their loading behavior.

@@ -14,7 +14,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     public InMemoryUserIntegrationStore(EncryptedUserDataSnapshotStore snapshotStore)
     {
         _snapshotStore = snapshotStore;
-        var snapshot = snapshotStore.LoadOrReset();
+        var snapshot = snapshotStore.Load();
         _links = snapshot.HomeAssistantLinks.ToList();
         _calendarFeeds = snapshot.MemberCalendarFeeds.ToList();
     }
