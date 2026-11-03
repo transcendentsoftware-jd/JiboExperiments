@@ -666,7 +666,11 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
 
     public void UpdateRobot(DeviceRegistration registration)
     {
-        var robot = UpsertDevice(registration);
+        ArgumentNullException.ThrowIfNull(registration);
+        RejectUnauthenticatedSmokeCreation(registration);
+        // UpdateRobot explicitly selects the primary; ordinary registration upserts
+        // preserve it, matching the in-memory facade's distinction.
+        var robot = Sync(_devices.UpsertAsync(registration, GetAccount().AccountId, isDefault: true));
         if (_robotProfiles is not null)
             Sync(_robotProfiles.UpsertAsync(BuildDefaultRobotProfile(robot), robot.DeviceId));
     }

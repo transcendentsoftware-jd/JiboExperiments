@@ -92,6 +92,16 @@ use synthetic identities. They do not establish owner authorization, credential
 issuance/isolation, physical identity, native OOBE compatibility or a working robot
 connection. Tokens are in-memory and expire; server restart requires a new prepare.
 
+PostgreSQL must persist the explicit primary selection made by `UpdateRobot`;
+ordinary registration upserts preserve that selection. Automatic owner/robot
+members use distinct member IDs for each new loop, while their `AccountId` fields
+retain the owner/robot association. Account identity is not a globally reusable
+loop-member ID. Database integration cases exercise first OOBE setup, additional
+robots, repeat preparation and rehydration through independent state facades.
+Existing partial loops from failed older attempts require inspection/reconciliation;
+these changes do not silently repair historical records or add a transaction
+covering all provisioning operations.
+
 ## Run records and promotion
 
 For every attempt retain a unique case/attempt ID, robot role, source/image and
