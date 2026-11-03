@@ -48,6 +48,8 @@ public sealed class JiboCloudProtocolService(
     private readonly RobotNotificationRegistry? _robotNotificationRegistry = robotNotificationRegistry;
     private readonly LoopUpdatedPushService? _loopUpdatedPushService = loopUpdatedPushService;
     private readonly ConcurrentDictionary<string, OobeTokenState> _oobeTokens = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, OobeTokenState> _implicitOobeStates = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Lock _oobeLock = new();
     private readonly Lock _schedulerLock = new();
     private readonly SchedulerRuntimeState _schedulerState = new();
 
@@ -237,6 +239,14 @@ public sealed class JiboCloudProtocolService(
 
     private ProtocolDispatchResult HandleOobe(string operation, ProtocolEnvelope envelope)
     {
+        // Tokens live in this singleton. Serialize their observation and mutation with
+        // synchronous registration operations; this is not a database transaction.
+        lock (_oobeLock)
+            return HandleOobeCore(operation, envelope);
+    }
+
+    private ProtocolDispatchResult HandleOobeCore(string operation, ProtocolEnvelope envelope)
+    {
         var body = envelope.TryParseBody();
         var token = ReadString(body, "token");
 
@@ -357,8 +367,9 @@ public sealed class JiboCloudProtocolService(
             var expired = hasTokenState && current!.ExpiresUtc <= DateTimeOffset.UtcNow;
             // OOBE verification is scoped to its prepared robot. Do not read the service-wide
             // primary registration here: deployment smoke must not take ownership of it.
-            var robot = hasTokenState && !string.IsNullOrWhiteSpace(current!.DeviceId)
-                ? stateStore.FindDeviceByFriendlyId(current.DeviceId) ?? stateStore.GetRobot()
+            var robot = hasTokenState
+                ? stateStore.GetDevices().SingleOrDefault(device =>
+                    string.Equals(device.DeviceId, current!.DeviceId, StringComparison.OrdinalIgnoreCase))
                 : stateStore.GetRobot();
             var targetMode = hasTokenState ? current!.TargetMode : "open-jibo";
             var targetHost = hasTokenState
@@ -366,7 +377,7 @@ public sealed class JiboCloudProtocolService(
                 : ResolveOpenJiboTargetHost("open-jibo", null, envelope.HostName);
             var hostMappings = hasTokenState
                 ? BuildRobotHostMappings(current!.TargetMode, current.TargetHost, envelope.HostName)
-                : robot.HostMappings;
+                : robot!.HostMappings;
             var readiness = EvaluateConversionReadiness(hasTokenState ? current : null, expired, envelope.HostName);
             var reportedConnectionHost = ReadReportedConnectionHost(body);
             var reportedHostMappings = ReadReportedHostMappings(body);
@@ -391,6 +402,8 @@ public sealed class JiboCloudProtocolService(
             var connectionBlockers = BuildConnectionBlockers(hasTokenState, current, expired, robot, hostMappings,
                 targetHost, reportedConnectionHost, reportedHostMappings, requiresReportedConnectionProof,
                 requiresFreshConnectionProof, proofObservedAt, proofFreshnessPolicy);
+            if (token is not null && !hasTokenState)
+                connectionBlockers.Add("missing-prepared-oobe-token");
 
             return ProtocolDispatchResult.Ok(new
             {
@@ -398,11 +411,11 @@ public sealed class JiboCloudProtocolService(
                 operation,
                 connected = connectionBlockers.Count == 0,
                 prepared = hasTokenState,
-                complete = hasTokenState ? current!.Complete : robot.IsActive,
+                complete = hasTokenState ? !expired && current!.Complete : token is null && robot?.IsActive == true,
                 expired,
                 cloudVersion = OpenJiboCloudBuildInfo.Version,
-                robotId = robot.RobotId,
-                deviceId = hasTokenState ? current!.DeviceId : robot.DeviceId,
+                robotId = robot?.RobotId,
+                deviceId = hasTokenState ? current!.DeviceId : robot?.DeviceId,
                 loopId = hasTokenState ? current!.LoopId : stateStore.GetLoops().FirstOrDefault()?.LoopId,
                 targetMode,
                 targetHost,
@@ -411,7 +424,7 @@ public sealed class JiboCloudProtocolService(
                     ? current!.BaselineEvidence.ToResponse()
                     : new OobeBaselineEvidence().ToResponse(),
                 hostMappings,
-                storedHostMappings = robot.HostMappings,
+                storedHostMappings = robot?.HostMappings ?? new Dictionary<string, string>(),
                 reportedConnectionHost,
                 reportedConnectionHostMatches = string.IsNullOrWhiteSpace(reportedConnectionHost) ||
                                                 string.Equals(reportedConnectionHost, targetHost,
@@ -461,21 +474,32 @@ public sealed class JiboCloudProtocolService(
                 "{\"message\":\"Deployment smoke identities cannot be created through OOBE.\"}",
                 "application/x-amz-json-1.1");
 
-        var state = _oobeTokens.GetOrAdd(token ?? $"oobe-implicit-{robotId}", _ => new OobeTokenState
+        OobeTokenState? state;
+        var hasPreparedToken = token is not null;
+        if (hasPreparedToken && !_oobeTokens.TryGetValue(token!, out state))
+            return ProtocolDispatchResult.Raw(409, "{\"error\":\"unknown prepared OOBE token\"}", "application/json");
+        if (!hasPreparedToken && !_implicitOobeStates.TryGetValue(robotId, out state))
         {
-            DeviceId = robotId,
-            LoopId = ReadString(body, "loopId"),
-            TargetMode = ResolveOpenJiboTargetMode(ReadString(body, "targetMode") ?? ReadString(body, "mode")),
-            TargetHost = ReadTargetHost(body),
-            RollbackSnapshotId = ReadString(body, "rollbackSnapshotId") ?? ReadString(body, "rollbackSnapshot"),
-            BaselineEvidence = ReadBaselineEvidence(body, envelope),
-            VerifiedSerialEvidence = ReadVerifiedSerialEvidence(body),
-            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
-        });
+            state = new OobeTokenState
+            {
+                DeviceId = robotId,
+                LoopId = ReadString(body, "loopId"),
+                TargetMode = ResolveOpenJiboTargetMode(ReadString(body, "targetMode") ?? ReadString(body, "mode")),
+                TargetHost = ReadTargetHost(body),
+                RollbackSnapshotId = ReadString(body, "rollbackSnapshotId") ?? ReadString(body, "rollbackSnapshot"),
+                BaselineEvidence = ReadBaselineEvidence(body, envelope),
+                VerifiedSerialEvidence = ReadVerifiedSerialEvidence(body),
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
+            };
+            _implicitOobeStates[robotId] = state;
+        }
+        // Each branch above either resolves or creates the state.
+        state = hasPreparedToken ? _oobeTokens[token!] : _implicitOobeStates[robotId];
         if (state.ExpiresUtc <= DateTimeOffset.UtcNow)
             return ProtocolDispatchResult.Raw(410, "{\"error\":\"oobe token expired\"}", "application/json");
 
-        var hasPreparedToken = token is not null && _oobeTokens.ContainsKey(token);
+        if (state.Complete && !string.Equals(state.DeviceId, robotId, StringComparison.OrdinalIgnoreCase))
+            return ProtocolDispatchResult.Raw(409, "{\"error\":\"completed OOBE token belongs to another robot\"}", "application/json");
         var setupState = BuildTentativeSetupState(state, body, envelope, robotId);
         var setupReadiness =
             EvaluateConversionReadiness(hasPreparedToken ? setupState : null, false, envelope.HostName);
@@ -490,36 +514,30 @@ public sealed class JiboCloudProtocolService(
             return ProtocolDispatchResult.Raw(409,
                 "{\"error\":\"verified serial evidence requires a prepared OOBE token\"}", "application/json");
 
-        state.Complete = true;
-        state.DeviceId = setupState.DeviceId;
-        state.LoopId = setupState.LoopId;
-        state.TargetMode = setupState.TargetMode;
-        state.TargetHost = setupState.TargetHost;
-        state.RollbackSnapshotId = setupState.RollbackSnapshotId;
-        state.BaselineEvidence = setupState.BaselineEvidence;
+        var existingDevice = stateStore.GetDevices().SingleOrDefault(device =>
+            string.Equals(device.DeviceId, robotId, StringComparison.OrdinalIgnoreCase));
+        if (setupState.VerifiedSerialEvidence is not null &&
+            !string.IsNullOrWhiteSpace(existingDevice?.VerifiedSerialNumber) &&
+            !existingDevice.VerifiedSerialNumber.Equals(setupState.VerifiedSerialEvidence.SerialNumber,
+                StringComparison.OrdinalIgnoreCase))
+            return ProtocolDispatchResult.Raw(409,
+                "{\"error\":\"verified serial evidence conflicts with the registered robot\"}", "application/json");
 
         var registeredDevice = stateStore.GetOrCreateDevice(robotId, envelope.FirmwareVersion,
             envelope.ApplicationVersion,
             envelope.Headers.TryGetValue("X-OpenJibo-Registration-Source", out var sourceHeader)
                 ? sourceHeader
                 : null);
-        if (string.IsNullOrWhiteSpace(state.LoopId))
+        if (string.IsNullOrWhiteSpace(setupState.LoopId))
         {
             var robotLoop = stateStore.AddLoop(null, stateStore.GetAccount().AccountId, registeredDevice.RobotId,
                 registeredDevice.DeviceId);
-            state.LoopId = robotLoop.LoopId;
+            setupState.LoopId = robotLoop.LoopId;
         }
 
         var isDeploymentSmoke = RobotRegistrationSources.Normalize(registeredDevice.RegistrationSource,
             registeredDevice.DeviceId).Equals(RobotRegistrationSources.DeploymentSmoke,
             StringComparison.OrdinalIgnoreCase);
-        if (setupState.VerifiedSerialEvidence is not null &&
-            !string.IsNullOrWhiteSpace(registeredDevice.VerifiedSerialNumber) &&
-            !registeredDevice.VerifiedSerialNumber.Equals(setupState.VerifiedSerialEvidence.SerialNumber,
-                StringComparison.OrdinalIgnoreCase))
-            return ProtocolDispatchResult.Raw(409,
-                "{\"error\":\"verified serial evidence conflicts with the registered robot\"}", "application/json");
-
         var updatedRegistration = new DeviceRegistration
         {
             DeviceId = registeredDevice.DeviceId,
@@ -538,13 +556,26 @@ public sealed class JiboCloudProtocolService(
             RegistrationSource = registeredDevice.RegistrationSource,
             IsHidden = registeredDevice.IsHidden,
             ArchivedUtc = registeredDevice.ArchivedUtc,
-            HostMappings = BuildRobotHostMappings(state.TargetMode, state.TargetHost, envelope.HostName)
+            HostMappings = BuildRobotHostMappings(setupState.TargetMode, setupState.TargetHost, envelope.HostName)
         };
 
-        if (isDeploymentSmoke)
-            stateStore.UpsertDevice(updatedRegistration);
-        else
+        var primary = stateStore.GetRobot();
+        if (!isDeploymentSmoke &&
+            (string.Equals(primary.DeviceId, registeredDevice.DeviceId, StringComparison.OrdinalIgnoreCase) ||
+             RobotRegistrationSources.Normalize(primary.RegistrationSource, primary.DeviceId) == RobotRegistrationSources.Bootstrap))
             stateStore.UpdateRobot(updatedRegistration);
+        else
+            stateStore.UpsertDevice(updatedRegistration);
+
+        // Publish completion only after registration and loop operations succeed.
+        state.DeviceId = registeredDevice.DeviceId;
+        state.LoopId = setupState.LoopId;
+        state.TargetMode = setupState.TargetMode;
+        state.TargetHost = setupState.TargetHost;
+        state.RollbackSnapshotId = setupState.RollbackSnapshotId;
+        state.BaselineEvidence = setupState.BaselineEvidence;
+        state.VerifiedSerialEvidence = setupState.VerifiedSerialEvidence;
+        state.Complete = true;
 
         var acceptedReadiness = EvaluateConversionReadiness(state, false, envelope.HostName);
         var acceptedTargetHost = ResolveOpenJiboTargetHost(state.TargetMode, state.TargetHost, envelope.HostName);
@@ -604,13 +635,16 @@ public sealed class JiboCloudProtocolService(
             "missing-reported-connection-host" or "missing-reported-host-mappings" or
             "incomplete-reported-host-mappings" or "reported-connection-host-mismatch" or
             "reported-host-mapping-mismatch" or "host-mapping-mismatch" => "release-gate",
-        "expired-prepared-oobe-token" or "setup-incomplete" or "robot-inactive" => "setup-gate",
+        "expired-prepared-oobe-token" or "missing-prepared-oobe-token" or "prepared-device-not-registered" or
+            "setup-incomplete" or "robot-inactive" => "setup-gate",
         _ => "needs-review"
     };
 
     private static string ConnectionBlockerOwnerAction(string blocker) => blocker switch
     {
         "expired-prepared-oobe-token" => "Prepare a fresh OOBE token, then rerun SetupRobot before verifying the connection.",
+        "missing-prepared-oobe-token" => "Use a token issued by PrepareRobot; an unknown explicit token is not a prepared session.",
+        "prepared-device-not-registered" => "Reconcile the exact prepared device registration before verifying; the primary robot cannot substitute for it.",
         "setup-incomplete" => "Complete SetupRobot or ReconnectRobot with the prepared token before using VerifyConnection as release proof.",
         "robot-inactive" => "Register or reactivate the robot identity before relying on stored cloud state for connection proof.",
         "host-mapping-mismatch" => "Rerun setup with the intended target mode/host so stored api.jibo.com, api-socket.jibo.com, open-jibo-socket.openjibo.com, and neohub.openjibo.com mappings match the proof target.",
@@ -628,7 +662,7 @@ public sealed class JiboCloudProtocolService(
         bool hasTokenState,
         OobeTokenState? state,
         bool expired,
-        DeviceRegistration robot,
+        DeviceRegistration? robot,
         IDictionary<string, string> expectedHostMappings,
         string expectedConnectionHost,
         string? reportedConnectionHost,
@@ -643,9 +677,11 @@ public sealed class JiboCloudProtocolService(
             blockers.Add("expired-prepared-oobe-token");
         if (hasTokenState && state?.Complete != true)
             blockers.Add("setup-incomplete");
-        if (!hasTokenState && !robot.IsActive)
+        if (robot is null)
+            blockers.Add("prepared-device-not-registered");
+        else if (!robot.IsActive)
             blockers.Add("robot-inactive");
-        if (!HostMappingsMatch(robot.HostMappings, expectedHostMappings))
+        if (robot is not null && !HostMappingsMatch(robot.HostMappings, expectedHostMappings))
             blockers.Add("host-mapping-mismatch");
         if (requiresReportedConnectionProof && string.IsNullOrWhiteSpace(reportedConnectionHost))
             blockers.Add("missing-reported-connection-host");
