@@ -71,8 +71,40 @@ recorded speech turns passed local Whisper with Azure Speech disabled, including
 after restart and restore, returning expected transcript and cloud-version
 instructions in 4,063–4,826 ms. These bounded observations are not an SLA.
 
-New-digest native Linux and AVX2 runtime acceptance remain pending independent
-host availability. No physical robot, OOBE hardware or playback was tested.
+Both exact signed packages also passed on a separate native Ubuntu 24.04.5
+x86_64 host with an Intel i5-8250U, Docker 29.8.2 and Compose 5.6.0:
+
+| Profile | Passed checks | Recorded speech turns | Observed turn time |
+| --- | ---: | ---: | --- |
+| Portable | 33 | 7 | 6,088–6,625 ms |
+| AVX2 | 35 | 13 | Single client: 520–1,070 ms; overlapping clients: 573–948 ms |
+
+The native runs used source-bound signed preparation, the native launcher and,
+for AVX2, its explicit local-daemon/CPU feature gate. Both passed fresh
+migrations, issued-token sockets, actual replacement of both API and PostgreSQL
+containers, retention of three synthetic device/loop identities and primary
+selection, and bundled backup verification. Separate-volume restores retained
+synthetic personal memory and a binary API-volume fixture. A read-only database
+audit compared restored canonical robot IDs and original creation times with
+the archived database. The OOBE response's `robotId` echoes the requested device
+alias; it is not the canonical database robot ID.
+
+All 20 native recorded speech turns returned the expected transcript and
+cloud-version instruction through local Whisper with Azure Speech disabled,
+including after restart and restore. AVX2 additionally passed two simultaneous
+speech clients with three turns each. These fixture timings are bounded host
+observations, not an SLA. All new test services stopped, with keys, volumes and
+private backups retained. All 18 previously running containers remained running
+without restart.
+
+The release's supplemental [native acceptance report](https://github.com/transcendentsoftware-jd/JiboExperiments/releases/download/runtime-preview-41729015780/native-linux-acceptance.json)
+and `NATIVE-LINUX-SHA256SUMS` record these results. The original
+`acceptance-summary.json` remains the initial Windows-only snapshot; its pending
+native flags describe that earlier snapshot. All 18 original assets and their
+checksums remain unchanged. Acceptance reports are supplemental records, not
+additional signed attestation subjects.
+
+No physical robot, OOBE hardware or playback was tested.
 macOS/ARM/emulation, owner isolation, upgrade compatibility and stable
 license/notice readiness are not certified. Fresh keys/data were synthetic;
 test services stopped with volumes and recovery material retained. Earlier
@@ -80,6 +112,7 @@ previews and unpromoted distro-profile run 41728295466 were not substituted for
 this audio preview's exact identities.
 
 Local evidence is under
-`artifact-output/integration-preservation-evidence-20261103/`. Only redacted
+`artifact-output/integration-preservation-evidence-20261103/` and
+`artifact-output/native-current-runtime-20261103/`. Only redacted
 acceptance metadata and CI build/source evidence are public release assets;
 private environments, SQL dumps and local volume archives are excluded.
