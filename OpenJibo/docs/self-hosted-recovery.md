@@ -82,6 +82,27 @@ agreement with the separately retained checksum, not publisher identity or
 restorability. Keep a protected offline copy; a checksum stored only beside a
 rewritable backup does not provide independent integrity evidence.
 
+Capture and offline verification also return `integrationCoverage`. An exact
+effective environment setting of
+`OpenJibo__UserIntegrations__PersistencePath=/data/user-integrations.json` reports
+`standard-volume-path-configured`. Missing, blank, relative or custom settings
+report `separate-retention-review-required` and
+`separateRetentionReviewRequired: true`. Resolve that warning and retain the
+actual integration file separately before replacing an older API container;
+use the legacy retention procedure below. A successful capture or byte check
+alone does not resolve it. Verification recomputes this observation from the
+retained private environment, including for older v1 backup manifests.
+
+This is an environment configuration observation, not a file-content test.
+`fileContentsVerified` stays false: image configuration, command-line overrides,
+links inside the volume, encryption readability and restoration still require
+inspection and a separate restore rehearsal. Only the exact standard path is
+recognized automatically; a custom path inside `/data` also requires review.
+The public result contains no configured path or credential values. The private
+runtime configuration remains sensitive. Published starter archives retain their
+original backup scripts; this reporting applies to updated trusted source and
+future bundles.
+
 ## Rehearse recovery into a separate installation
 
 The command deliberately provides no automatic restore. Before an upgrade,

@@ -54,9 +54,9 @@ class BackupTests(unittest.TestCase):
                                        compose_file=[str(self.compose)], project_name="test",
                                        output=str(self.output), timeout=10, writers_stopped=True)
 
-    def capture(self, after=None, failure=None):
+    def capture(self, after=None, failure=None, before=None):
         self.calls = []
-        before = containers()
+        before = before or containers()
 
         def transfer(args, output=None, timeout=None):
             self.calls.append(args)
@@ -89,6 +89,78 @@ class BackupTests(unittest.TestCase):
             self.capture(failure="--dbname=openjibo_memory")
         self.assertTrue(self.output.is_dir())
         self.assertFalse((self.output / "manifest.json").exists())
+
+    def test_legacy_capture_and_verify_flag_separate_integration_retention(self):
+        result = self.capture()
+        expected = {"status": "separate-retention-review-required", "fileContentsVerified": False,
+                    "separateRetentionReviewRequired": True}
+        self.assertEqual(result["integrationCoverage"], expected)
+        manifest = json.loads((self.output / "manifest.json").read_bytes())
+        self.assertEqual(manifest["integrationCoverage"], expected)
+        report = backup.verify(self.output, result["manifestSha256"])
+        self.assertEqual(report["integrationCoverage"], expected)
+
+    def test_standard_path_reports_configuration_only(self):
+        before = containers()
+        before["api"]["Config"]["Env"].append(
+            "OpenJibo__UserIntegrations__PersistencePath=/data/user-integrations.json")
+        result = self.capture(before=before)
+        self.assertEqual(result["integrationCoverage"]["status"], "standard-volume-path-configured")
+        report = backup.verify(self.output, result["manifestSha256"])
+        self.assertEqual(report["integrationCoverage"]["status"], "standard-volume-path-configured")
+        self.assertFalse(report["integrationCoverage"]["fileContentsVerified"])
+        self.assertFalse(report["integrationCoverage"]["separateRetentionReviewRequired"])
+
+    def test_custom_blank_relative_and_ambiguous_paths_require_review_without_path_disclosure(self):
+        for values in ([], [""], ["/app/api/App_Data/private-name.json"],
+                       ["/data/../private-name.json"], ["/data/other.json"],
+                       ["data/user-integrations.json"], ["/data/user-integrations.json", "/private-name.json"]):
+            api = containers()["api"]
+            for index, value in enumerate(values):
+                key = "OpenJibo__UserIntegrations__PersistencePath"
+                api["Config"]["Env"].append((key if index == 0 else key.upper()) + "=" + value)
+            with self.subTest(values=values):
+                result = backup.integration_coverage(api)
+                self.assertTrue(result["separateRetentionReviewRequired"])
+                self.assertFalse(result["fileContentsVerified"])
+                self.assertNotIn("private-name", json.dumps(result))
+
+    def test_old_manifest_recomputed_and_false_coverage_refused(self):
+        self.capture()
+        path = self.output / "manifest.json"
+        manifest = json.loads(path.read_bytes())
+        del manifest["integrationCoverage"]
+        path.write_text(json.dumps(manifest))
+        with mock.patch.object(backup, "command", side_effect=AssertionError("Offline verify invoked Docker")):
+            report = backup.verify(self.output, backup.digest(path))
+        self.assertTrue(report["integrationCoverage"]["separateRetentionReviewRequired"])
+        manifest["integrationCoverage"] = {"status": "standard-volume-path-configured",
+                                           "fileContentsVerified": False,
+                                           "separateRetentionReviewRequired": False}
+        path.write_text(json.dumps(manifest))
+        with self.assertRaises(backup.BackupError):
+            backup.verify(self.output, backup.digest(path))
+
+    def test_environment_provider_aliases_cannot_hide_another_path(self):
+        api = containers()["api"]
+        api["Config"]["Env"].append("OPENJIBO__USERINTEGRATIONS__PERSISTENCEPATH=/data/user-integrations.json")
+        self.assertFalse(backup.integration_coverage(api)["separateRetentionReviewRequired"])
+        api["Config"]["Env"].append("OpenJibo:UserIntegrations:PersistencePath=/private-name.json")
+        report = backup.integration_coverage(api)
+        self.assertTrue(report["separateRetentionReviewRequired"])
+        self.assertNotIn("private-name", json.dumps(report))
+
+    def test_oversized_retained_configuration_refused(self):
+        self.capture()
+        runtime_path = self.output / "runtime-private.json"
+        runtime_path.write_bytes(b" " * 1048577)
+        path = self.output / "manifest.json"
+        manifest = json.loads(path.read_bytes())
+        manifest["files"]["runtime-private.json"] = {
+            "sha256": backup.digest(runtime_path), "bytes": runtime_path.stat().st_size}
+        path.write_text(json.dumps(manifest))
+        with self.assertRaises(backup.BackupError):
+            backup.verify(self.output, backup.digest(path))
 
     def test_restart_during_capture_refuses_completion(self):
         after = containers()
