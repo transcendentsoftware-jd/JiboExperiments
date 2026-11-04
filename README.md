@@ -21,6 +21,10 @@ its instructions. [Older preview evidence](OpenJibo/docs/guarded-source-preview-
 remains historical. Start with the [platform setup guide](OpenJibo/docs/platform-setup-guide.md)
 for hosting choices, recovery and conversion limits.
 
+Try the separate [offline conversion-review demo](OpenJibo/docs/offline-conversion-review-preview-20261104.md)
+on Windows, Linux or macOS with Python 3.9+. It uses fake data and requires no
+robot or Docker; physical apply remains unavailable.
+
 Repo hygiene: keep generated scratch output, temp captures, and local workspace state out of Git. The `.codex/` tree is ignored by default, and only intentionally shared configuration should be promoted to tracked files.
 
 Start here:

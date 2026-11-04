@@ -23,7 +23,11 @@ Shared `1.0.20` priorities remain here:
 5. define conversion profiles with JiboAutoMod for managed, community-hosted, owner-managed, hybrid, isolated, and developer choices
 6. keep OpenJibo.com neutral and clearly identify every hosted provider/operator
 
-Transcendent Software's `$5/month/robot` managed membership, billing, entitlements, hosted backup policy, customer site, support, funds transparency, and paid pilot are implemented privately and represented publicly by [cloud.openjibo.com](https://cloud.openjibo.com).
+Transcendent Software's managed membership, billing, entitlements, hosted backup
+policy, customer site, support, funds transparency and paid pilot are tracked
+privately and represented publicly by [cloud.openjibo.com](https://cloud.openjibo.com).
+The operator owns its pricing and enrollment status; this neutral runtime backlog
+does not publish an adopted price or imply that paid enrollment is open.
 
 Status key:
 
