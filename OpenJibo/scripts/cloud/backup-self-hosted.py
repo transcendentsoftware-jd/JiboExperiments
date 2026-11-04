@@ -72,6 +72,19 @@ def environment(container):
     return result
 
 
+def integration_coverage(api):
+    """Describe configuration coverage only; never infer file contents or absence."""
+    settings = environment(api)
+    paths = [value for key, value in settings.items()
+             if key.replace("__", ":").lower() == "openjibo:userintegrations:persistencepath"]
+    standard = paths == ["/data/user-integrations.json"]
+    return {
+        "status": "standard-volume-path-configured" if standard else "separate-retention-review-required",
+        "fileContentsVerified": False,
+        "separateRetentionReviewRequired": not standard,
+    }
+
+
 def validate_containers(containers, project):
     if set(containers) != {"api", "migrate", "postgres"}:
         raise BackupError("Expected exactly one api, migrate and postgres container")
@@ -168,6 +181,7 @@ def capture(args):
         compose += ["--file", str(file)]
     compose += ["--profile", "self-hosted"]
     before = observe(compose, args.project_name)
+    coverage = integration_coverage(before["api"])
     configuration = env.read_bytes()
     output = Path(args.output).absolute()
     if not output.parent.is_dir():
@@ -198,13 +212,14 @@ def capture(args):
         "schema": SCHEMA, "createdUtc": datetime.now(timezone.utc).isoformat(),
         "applicationWritersObservedStopped": True, "externalWritersStoppedAcknowledged": True,
         "crossDatabaseAtomicSnapshot": False, "restoreVerified": False,
+        "integrationCoverage": coverage,
         "files": {name: {"sha256": digest(output / name), "bytes": (output / name).stat().st_size}
                   for name in sorted(FILES)},
     }
     with (output / "manifest.json").open("x", encoding="utf-8") as stream:
         stream.write(json.dumps(manifest, indent=2) + "\n")
     return {"backupCompleted": True, "manifestSha256": digest(output / "manifest.json"),
-            "containsSecrets": True, "restoreVerified": False}
+            "containsSecrets": True, "restoreVerified": False, "integrationCoverage": coverage}
 
 
 def unique_object(pairs):
@@ -241,7 +256,18 @@ def verify(directory, expected):
                 or (directory / name).stat().st_size != record["bytes"]
                 or digest(directory / name) != record.get("sha256")):
             raise BackupError("Backup member checksum or size mismatch")
-    return {"backupBytesVerified": True, "containsSecrets": True, "restoreVerified": False}
+    # Recompute from retained effective configuration, including for older v1
+    # backups. A manifest annotation alone cannot establish integration coverage.
+    with (directory / "runtime-private.json").open("rb") as stream:
+        runtime_bytes = stream.read(1048577)
+    if len(runtime_bytes) > 1048576:
+        raise BackupError("Retained runtime configuration exceeds the review limit")
+    runtime = json.loads(runtime_bytes, object_pairs_hook=unique_object)
+    coverage = integration_coverage({"Config": {"Env": runtime["containers"]["api"]["environment"]}})
+    if "integrationCoverage" in manifest and manifest["integrationCoverage"] != coverage:
+        raise BackupError("Integration coverage does not match retained configuration")
+    return {"backupBytesVerified": True, "containsSecrets": True, "restoreVerified": False,
+            "integrationCoverage": coverage}
 
 
 def main():
