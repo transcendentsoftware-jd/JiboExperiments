@@ -1,5 +1,7 @@
 """Mocked fresh-launch contracts; no Docker resources are created by these tests."""
 import copy
+import contextlib
+import io
 import hashlib
 import importlib.util
 import json
@@ -150,7 +152,8 @@ class LauncherTests(unittest.TestCase):
         for updates, endpoint, expected in (({}, "npipe:////./pipe/dockerDesktopLinuxEngine", True),
                 ({"OSType": "windows"}, "npipe:////./pipe/docker_engine", False),
                 ({"OperatingSystem": "Remote Linux"}, "npipe:////./pipe/docker_engine", False),
-                ({}, "ssh://another-machine", False)):
+                ({}, "ssh://another-machine", False),
+                ({}, "npipe:////another-machine/pipe/docker_engine", False)):
             with self.subTest(updates=updates, endpoint=endpoint), \
                  patch.object(launcher, "windows_memory_available", return_value=2 * 1024**3), \
                  patch.object(launcher, "run", side_effect=[json.dumps({**good, **updates}), endpoint, "5.6.0"]):
@@ -171,6 +174,22 @@ class LauncherTests(unittest.TestCase):
         command.assert_not_called()
         self.assertFalse((target / ".env").exists())
         self.assertFalse((target / ".preview-launch.lock").exists())
+
+    def test_cli_explains_resource_failure_and_redacts_untrusted_errors(self):
+        for error, visible in ((launcher.LaunchCheckError("Need at least 3 GiB free"), True),
+                               (ValueError("SECRET_OWNER_FAILURE_TEXT"), False)):
+            output = io.StringIO()
+            argv = ["launch", "--directory", str(self.target), "--project", "openjibo-check", "--port", "19997"]
+            with self.subTest(error=type(error).__name__), \
+                 patch.object(launcher.sys, "argv", argv), \
+                 patch.object(launcher.os, "geteuid", return_value=1000, create=True), \
+                 patch.object(launcher, "check", side_effect=error), \
+                 patch.object(launcher, "run") as command, contextlib.redirect_stderr(output):
+                self.assertEqual(launcher.main(), 1)
+            self.assertEqual("3 GiB" in output.getvalue(), visible)
+            self.assertNotIn("SECRET_OWNER_FAILURE_TEXT", output.getvalue())
+            command.assert_not_called()
+            self.assertFalse((self.target / ".env").exists())
 
     def test_project_and_port_parameters(self):
         for project, port in (("prod", 8084), ("openjibo-a;echo", 8084), ("openjibo-a", 80), ("openjibo-a", 65536)):
