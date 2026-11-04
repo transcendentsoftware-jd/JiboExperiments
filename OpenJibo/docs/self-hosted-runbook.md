@@ -292,6 +292,10 @@ Invoke-RestMethod http://localhost:8080/health
 
 ## 7. Point a physical Jibo at the stack
 
+Before replacing an existing preview, use the
+[upgrade and separate-project recovery rehearsal](preview-upgrade-recovery-20261103.md).
+Fresh preparation and startup do not upgrade existing data or establish rollback.
+
 See [docs/single-robot-http-self-hosting.md](single-robot-http-self-hosting.md) for the robot-side override JSON, the tokenless single-robot compatibility flag, and common `WebSocket Exception: Not authorized` / DNS troubleshooting. See [docs/device-bootstrap.md](device-bootstrap.md) for the device bootstrap steps themselves.
 
 ## Troubleshooting
