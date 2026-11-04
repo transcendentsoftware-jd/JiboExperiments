@@ -31,7 +31,7 @@ OPENJIBO_PORTAL_SESSION_SIGNING_KEY=YOUR_PRIVATE_RANDOM_KEY
 
 The configuration equivalent is `OpenJibo:Portal:SessionSigningKey`. Explicit
 signing-key configuration takes precedence over the status-password fallback.
-The existing private `OpenJibo:Portal:StatusPassword` / 
+The existing private `OpenJibo:Portal:StatusPassword` /
 `OPENJIBO_PORTAL_STATUS_PASSWORD` remains a fallback when no signing key is set.
 Administrator login still requires that separately configured status password;
 setting a signing key does not enable passwordless administrator login.
