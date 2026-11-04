@@ -38,6 +38,11 @@ PORTAL_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:7a6b86
 PORTAL_AVX2_MANIFEST_SHA256 = "4f4983b9c840e292478ab95b895a6899b02a86e373ab51ba0e2373e3abdc95e8"
 PORTAL_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:c33cc7c29ff23366fd1cb75d34f86145783246a4911509207f143225198dfc8a"
 
+PRIVACY_MANIFEST_SHA256 = "be0bcd741718d2b4bc7bddec64bac3ddb262bbbefc6abcac113760c7b7026ed4"
+PRIVACY_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:e624e4b665c671270ce9ce1f7368799c61c6111e2156fd9049fa9845c6a81d5a"
+PRIVACY_AVX2_MANIFEST_SHA256 = "5a2ee392d24973e238213d57ab042c86d94965892a3cbb65fc245c95137955bc"
+PRIVACY_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:0751de785ba77dd15725ba76ec5cee6c83624b1946c03eab6c212f64205abe92"
+
 
 def manifest_identity(raw):
     approved = {
@@ -47,6 +52,8 @@ def manifest_identity(raw):
         AUDIO_AVX2_MANIFEST_SHA256: ("runtime-preview-38139481435", AUDIO_AVX2_IMAGE),
         GUARDED_MANIFEST_SHA256: ("runtime-preview-38165346370", GUARDED_IMAGE),
         GUARDED_AVX2_MANIFEST_SHA256: ("runtime-preview-38165346370", GUARDED_AVX2_IMAGE),
+        PRIVACY_MANIFEST_SHA256: ("runtime-preview-41768412801", PRIVACY_IMAGE),
+        PRIVACY_AVX2_MANIFEST_SHA256: ("runtime-preview-41768412801", PRIVACY_AVX2_IMAGE),
         PORTAL_MANIFEST_SHA256: ("runtime-preview-41757874916", PORTAL_IMAGE),
         PORTAL_AVX2_MANIFEST_SHA256: ("runtime-preview-41757874916", PORTAL_AVX2_IMAGE),
         DURABLE_MANIFEST_SHA256: ("runtime-preview-41729015780", DURABLE_IMAGE),
@@ -151,7 +158,7 @@ def check(directory, project, port, docker, env, avx2_local_daemon=False):
     report = collect_preflight(docker, env)
     if not report["preflight_passed"]:
         raise ValueError("Host preflight failed: " + ",".join(report["issues"]))
-    if image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE, PORTAL_AVX2_IMAGE):
+    if image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE, PORTAL_AVX2_IMAGE, PRIVACY_AVX2_IMAGE):
         check_avx2_daemon(docker, env, avx2_local_daemon)
     server = report["docker_server"]
     if server["architecture"].lower() not in ("x86_64", "amd64"):

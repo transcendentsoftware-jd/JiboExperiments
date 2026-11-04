@@ -58,3 +58,5 @@ legacy path `/app/api/App_Data/user-integrations.json` for standard images.
 These source changes do not alter already published image digests. In
 particular, `runtime-preview-41757874916` predates this integration-transfer
 policy. Native acceptance of that preview does not certify these new changes.
+
+The [explicit integration-transfer runtime preview](integration-transfer-runtime-preview-20261103.md) contains this policy and records acceptance for its new digests.
