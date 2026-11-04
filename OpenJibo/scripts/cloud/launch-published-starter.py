@@ -33,6 +33,11 @@ DURABLE_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:be8d1
 DURABLE_AVX2_MANIFEST_SHA256 = "6886a6fc9d561ff3b11f000024ffe8f470a4a4617f402a1dc52987f6d1a3ffb5"
 DURABLE_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:964fc94249f91f9d78dbf6dba2e8bb8c7740de1019772a70e1f01acdec9cf24f"
 
+PORTAL_MANIFEST_SHA256 = "145774383d9c56e543de4f1d1642f2d7e1bc7a62515f8c348b65e7b2d5a5c2f1"
+PORTAL_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:7a6b86f60204c18e97fe870c68f26cb94c52a9c143738b840b937d0fc5956758"
+PORTAL_AVX2_MANIFEST_SHA256 = "4f4983b9c840e292478ab95b895a6899b02a86e373ab51ba0e2373e3abdc95e8"
+PORTAL_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:c33cc7c29ff23366fd1cb75d34f86145783246a4911509207f143225198dfc8a"
+
 
 def manifest_identity(raw):
     approved = {
@@ -42,6 +47,8 @@ def manifest_identity(raw):
         AUDIO_AVX2_MANIFEST_SHA256: ("runtime-preview-38139481435", AUDIO_AVX2_IMAGE),
         GUARDED_MANIFEST_SHA256: ("runtime-preview-38165346370", GUARDED_IMAGE),
         GUARDED_AVX2_MANIFEST_SHA256: ("runtime-preview-38165346370", GUARDED_AVX2_IMAGE),
+        PORTAL_MANIFEST_SHA256: ("runtime-preview-41757874916", PORTAL_IMAGE),
+        PORTAL_AVX2_MANIFEST_SHA256: ("runtime-preview-41757874916", PORTAL_AVX2_IMAGE),
         DURABLE_MANIFEST_SHA256: ("runtime-preview-41729015780", DURABLE_IMAGE),
         DURABLE_AVX2_MANIFEST_SHA256: ("runtime-preview-41729015780", DURABLE_AVX2_IMAGE),
     }
@@ -144,7 +151,7 @@ def check(directory, project, port, docker, env, avx2_local_daemon=False):
     report = collect_preflight(docker, env)
     if not report["preflight_passed"]:
         raise ValueError("Host preflight failed: " + ",".join(report["issues"]))
-    if image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE):
+    if image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE, PORTAL_AVX2_IMAGE):
         check_avx2_daemon(docker, env, avx2_local_daemon)
     server = report["docker_server"]
     if server["architecture"].lower() not in ("x86_64", "amd64"):

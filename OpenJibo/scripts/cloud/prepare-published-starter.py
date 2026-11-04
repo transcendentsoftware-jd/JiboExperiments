@@ -42,6 +42,13 @@ DURABLE_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:be8d1
 DURABLE_AVX2_SHA256 = "b8a0ece11ecdd393af0c7522dcf10e5daf9a4e9a4d4fb9dfd3922ec5bd78be7f"
 DURABLE_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:964fc94249f91f9d78dbf6dba2e8bb8c7740de1019772a70e1f01acdec9cf24f"
 
+PORTAL_VERSION = "runtime-preview-41757874916"
+PORTAL_SOURCE_COMMIT = "2a0cc6fdf718ffcb60399770ce9d4118e54720f8"
+PORTAL_SHA256 = "a23c0b1f19619e29dc8e669a0ff3dbd9591fb2e85e466163c64cbac646ca5816"
+PORTAL_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:7a6b86f60204c18e97fe870c68f26cb94c52a9c143738b840b937d0fc5956758"
+PORTAL_AVX2_SHA256 = "9baf78173db0d1c98adc255a932454aedf1eac10bc03a8be9e8bf493c55c3e65"
+PORTAL_AVX2_IMAGE = "ghcr.io/transcendent-software-llc/openjibo-runtime@sha256:c33cc7c29ff23366fd1cb75d34f86145783246a4911509207f143225198dfc8a"
+
 
 class ProvenancePrerequisiteError(ValueError):
     pass
@@ -62,6 +69,12 @@ def check_provenance_cli():
 def release_identity(version, cpu_profile="portable"):
     if cpu_profile not in ("portable", "avx2"):
         raise ValueError("Unreviewed CPU profile")
+    if version == PORTAL_VERSION:
+        avx2 = cpu_profile == "avx2"
+        return dict(version=version, archive_sha256=PORTAL_AVX2_SHA256 if avx2 else PORTAL_SHA256,
+                    runtime_image=PORTAL_AVX2_IMAGE if avx2 else PORTAL_IMAGE,
+                    source_commit=PORTAL_SOURCE_COMMIT, release_zip_attested=True,
+                    url=f"https://github.com/transcendentsoftware-jd/JiboExperiments/releases/download/{version}/starter-{cpu_profile}-preview.zip")
     if version == DURABLE_VERSION:
         avx2 = cpu_profile == "avx2"
         return dict(version=version, archive_sha256=DURABLE_AVX2_SHA256 if avx2 else DURABLE_SHA256,
@@ -195,7 +208,7 @@ def prepare(data, destination, require_provenance=False, attestation=None, versi
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--channel", required=True, choices=["preview"])
-    parser.add_argument("--version", required=True, choices=[VERSION, SIGNED_VERSION, AUDIO_VERSION, GUARDED_VERSION, DURABLE_VERSION])
+    parser.add_argument("--version", required=True, choices=[VERSION, SIGNED_VERSION, AUDIO_VERSION, GUARDED_VERSION, DURABLE_VERSION, PORTAL_VERSION])
     parser.add_argument("--cpu-profile", choices=["portable", "avx2"], default="portable",
                         help="Explicit profile; AVX2 daemon-host compatibility is checked separately at launch")
     parser.add_argument("--destination", required=True, type=Path)
