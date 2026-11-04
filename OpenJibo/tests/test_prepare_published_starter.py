@@ -24,6 +24,31 @@ builder = load("published_builder", ROOT / "OpenJibo/scripts/cloud/prepare-openj
 
 
 class PublishedStarterTests(unittest.TestCase):
+    def test_privacy_preview_exact_archives_require_signature_for_both_profiles(self):
+        for profile in ('portable', 'avx2'):
+            identity = installer.release_identity(installer.PRIVACY_VERSION, profile)
+            self.assertEqual(identity['source_commit'], installer.PRIVACY_SOURCE_COMMIT)
+            self.assertTrue(identity['release_zip_attested'])
+            with tempfile.TemporaryDirectory() as temp:
+                base = Path(temp)
+                data = (ROOT / 'OpenJibo/tests/fixtures/published-starters' / identity['version'] /
+                        f'starter-{profile}-preview.zip').read_bytes()
+                # Actual immutable release bytes; current bundled documentation may evolve.
+                self.assertEqual(hashlib.sha256(data).hexdigest(), identity['archive_sha256'])
+                with patch.object(installer, 'verify_provenance', side_effect=ValueError('invalid signature')):
+                    with self.assertRaises(ValueError):
+                        installer.prepare(data, base / 'refused', version=installer.PRIVACY_VERSION, cpu_profile=profile)
+                self.assertFalse((base / 'refused').exists())
+                with patch.object(installer, 'verify_provenance') as verify:
+                    report = installer.prepare(data, base / 'prepared', version=installer.PRIVACY_VERSION, cpu_profile=profile)
+                verify.assert_called_once()
+                self.assertTrue(report['provenance_verified'])
+                self.assertEqual(report['runtime_image'], identity['runtime_image'])
+                self.assertFalse((base / 'prepared' / '.env').exists())
+        self.assertEqual(installer.release_identity(installer.VERSION)['runtime_image'], installer.IMAGE)
+        with self.assertRaises(ValueError):
+            installer.release_identity(installer.PRIVACY_VERSION, 'auto')
+
     def test_portal_preview_exact_archives_require_signature_for_both_profiles(self):
         for profile in ('portable', 'avx2'):
             identity = installer.release_identity(installer.PORTAL_VERSION, profile)

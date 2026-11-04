@@ -28,6 +28,24 @@ REPORT = {"preflight_passed": True, "issues": [], "compose_version": "5.5.1",
 
 
 class LauncherTests(unittest.TestCase):
+    def test_privacy_exact_manifests_preserve_explicit_avx2_host_gate(self):
+        for profile in ('portable', 'avx2'):
+            image = launcher.PRIVACY_AVX2_IMAGE if profile == 'avx2' else launcher.PRIVACY_IMAGE
+            archive = self.base / ('privacy-' + profile + '.zip')
+            archive.write_bytes((ROOT / 'OpenJibo/tests/fixtures/published-starters' /
+                                 'runtime-preview-41768412801' / f'starter-{profile}-preview.zip').read_bytes())
+            self.target = self.base / ('privacy-' + profile)
+            with zipfile.ZipFile(archive) as source:
+                source.extractall(self.target)
+            raw = (self.target / 'MANIFEST.json').read_bytes()
+            expected = launcher.PRIVACY_AVX2_MANIFEST_SHA256 if profile == 'avx2' else launcher.PRIVACY_MANIFEST_SHA256
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), expected)
+            with patch.object(launcher, 'check_avx2_daemon') as gate:
+                _, report = self.check_with()
+            self.assertEqual(report['version'], 'runtime-preview-41768412801')
+            self.assertEqual(report['runtime_image'], image)
+            self.assertEqual(gate.call_count, 1 if profile == 'avx2' else 0)
+
     def test_portal_exact_manifests_preserve_explicit_avx2_host_gate(self):
         for profile in ('portable', 'avx2'):
             image = launcher.PORTAL_AVX2_IMAGE if profile == 'avx2' else launcher.PORTAL_IMAGE

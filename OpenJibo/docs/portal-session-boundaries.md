@@ -70,6 +70,6 @@ committed ownership link across instances without relying on a local blacklist.
 The [explicit portal runtime preview](portal-runtime-preview-20261103.md) is built
 from the earlier session-purpose changes and records that digest's native
 acceptance. It does not contain the ownership-generation and integration-transfer
-policy described above; that requires a later explicitly published runtime. Results do
+policy described above. The [integration-transfer preview](integration-transfer-runtime-preview-20261103.md) contains that policy and records its own new-digest acceptance. Results do
 not transfer to older published images; earlier digest-pinned previews remain
 unchanged.

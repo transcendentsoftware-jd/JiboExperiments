@@ -23,3 +23,8 @@ contract tests. Do not regenerate these files from a newer checkout.
 | runtime-preview-41729015780 | avx2 | `b8a0ece11ecdd393af0c7522dcf10e5daf9a4e9a4d4fb9dfd3922ec5bd78be7f` |
 | runtime-preview-41757874916 | portable | `a23c0b1f19619e29dc8e669a0ff3dbd9591fb2e85e466163c64cbac646ca5816` |
 | runtime-preview-41757874916 | avx2 | `9baf78173db0d1c98adc255a932454aedf1eac10bc03a8be9e8bf493c55c3e65` |
+
+Ownership-transfer preview: `runtime-preview-41768412801`, source `cb33f0c46aacfa062e3fb351196f6e3be2641d8a`. Actual signed publisher archive bytes, independently reconstructed and verified; no initialized environment or private acceptance state.
+
+- `runtime-preview-41768412801/starter-portable-preview.zip`: `376fc6636319a7819125edb44ba4e0bc3813d483ad127f2ae9e44743d0feb857`
+- `runtime-preview-41768412801/starter-avx2-preview.zip`: `6124c5876c6f3fb4230ddea4c7a3129c16ede5d63bfb8fb87d255959006f9e50`
