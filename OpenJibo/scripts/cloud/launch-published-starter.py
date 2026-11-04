@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check, then explicitly launch a fresh reviewed preview on native Linux only."""
+"""Check, then explicitly launch a reviewed preview on Linux or Windows Desktop."""
 import argparse
 import hashlib
 import importlib.util
@@ -65,6 +65,10 @@ def manifest_identity(raw):
     return identity
 
 
+class LaunchCheckError(ValueError):
+    """A curated prerequisite message that contains no caller secrets."""
+
+
 def clean_environment():
     # Do not let caller variables select a different daemon, Compose file,
     # image, project, password, profile or secret value.
@@ -102,7 +106,7 @@ def checked_files(directory):
                 raise ValueError("Non-regular prepared file")
             found.add(entry.relative_to(directory).as_posix())
     if found != expected:
-        raise ValueError("Fresh prepared directory required; existing environment or extra files refused")
+        raise LaunchCheckError("Fresh prepared directory required; existing environment or extra files refused")
     for name, digest in record["sha256"].items():
         path = directory / name
         if path.stat().st_size > 512 * 1024 or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
@@ -117,7 +121,41 @@ def parameters(project, port):
         raise ValueError("Choose an unprivileged TCP port")
 
 
+def windows_memory_available():
+    import ctypes
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [("length", ctypes.c_uint32), ("load", ctypes.c_uint32)] + [
+            (name, ctypes.c_uint64) for name in ("total_phys", "avail_phys", "total_page", "avail_page",
+                                               "total_virtual", "avail_virtual", "avail_extended")]
+    status = MemoryStatus()
+    status.length = ctypes.sizeof(status)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        raise ValueError("Windows available memory could not be inspected")
+    return status.avail_phys
+
+
+def windows_preflight(docker, env):
+    info = json.loads(run(docker + ["info", "--format", "{{json .}}"], env))
+    if not isinstance(info, dict):
+        raise ValueError("Invalid Docker Desktop server response")
+    endpoint = run(docker + ["context", "inspect", "--format", "{{.Endpoints.docker.Host}}"], env)
+    issues = []
+    if info.get("OSType") != "linux":
+        issues.append("docker_server_not_linux")
+    if "docker desktop" not in str(info.get("OperatingSystem", "")).lower():
+        issues.append("windows_docker_desktop_required")
+    if not endpoint.lower().startswith("npipe:////./pipe/"):
+        issues.append("windows_local_named_pipe_context_required")
+    return {"preflight_passed": not issues, "issues": issues,
+            "compose_version": run(docker + ["compose", "version", "--short"], env),
+            "docker_server": {"architecture": info.get("Architecture", ""),
+                              "memory_total_bytes": info.get("MemTotal", 0)},
+            "host": {"memory_available_bytes": windows_memory_available()}}
+
+
 def collect_preflight(docker, env):
+    if platform.system() == "Windows":
+        return windows_preflight(docker, env)
     spec = importlib.util.spec_from_file_location("launcher_preflight", Path(__file__).with_name("preflight-native-linux-starter.py"))
     preflight = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(preflight)
@@ -150,15 +188,20 @@ def check(directory, project, port, docker, env, avx2_local_daemon=False):
     parameters(project, port)
     directory = checked_files(directory)
     version, image = manifest_identity((directory / "MANIFEST.json").read_bytes())
-    if platform.system() != "Linux" or platform.machine().lower() not in ("x86_64", "amd64"):
-        raise ValueError("This launcher supports native Linux x86_64 only")
-    for binary in ("docker", "bash", "openssl"):
+    system = platform.system()
+    if system not in ("Linux", "Windows") or platform.machine().lower() not in ("x86_64", "amd64"):
+        raise LaunchCheckError("Launcher requires native x86_64 Linux or Windows with Linux Docker Desktop")
+    avx2_image = image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE, PORTAL_AVX2_IMAGE, PRIVACY_AVX2_IMAGE)
+    if system == "Windows" and avx2_image:
+        raise LaunchCheckError("AVX2 requires the confirmed native Linux daemon host; use portable on Windows")
+    binaries = ("docker", "powershell.exe") if system == "Windows" else ("docker", "bash", "openssl")
+    for binary in binaries:
         if not shutil.which(binary):
-            raise ValueError("Required executable missing")
+            raise LaunchCheckError("Required executable missing")
     report = collect_preflight(docker, env)
     if not report["preflight_passed"]:
         raise ValueError("Host preflight failed: " + ",".join(report["issues"]))
-    if image in (AUDIO_AVX2_IMAGE, GUARDED_AVX2_IMAGE, DURABLE_AVX2_IMAGE, PORTAL_AVX2_IMAGE, PRIVACY_AVX2_IMAGE):
+    if avx2_image:
         check_avx2_daemon(docker, env, avx2_local_daemon)
     server = report["docker_server"]
     if server["architecture"].lower() not in ("x86_64", "amd64"):
@@ -167,9 +210,9 @@ def check(directory, project, port, docker, env, avx2_local_daemon=False):
     if not compose_version or tuple(map(int, compose_version.groups())) < (2, 24, 4):
         raise ValueError("Docker Compose 2.24.4 or newer is required")
     if server["memory_total_bytes"] < 4 * 1024**3 or report["host"]["memory_available_bytes"] < 1024**3:
-        raise ValueError("Need at least 4 GiB daemon RAM and 1 GiB available host RAM")
+        raise LaunchCheckError("Need at least 4 GiB daemon RAM and 1 GiB available host RAM")
     if shutil.disk_usage(directory).free < 3 * 1024**3:
-        raise ValueError("Need at least 3 GiB free in the prepared directory filesystem")
+        raise LaunchCheckError("Need at least 3 GiB free in the prepared directory filesystem")
     for resource, args in (("containers", ["ps", "-aq"]), ("volumes", ["volume", "ls", "-q"]), ("networks", ["network", "ls", "-q"])):
         if run(docker + args + ["--filter", f"label=com.docker.compose.project={project}"], env):
             raise ValueError("Project already has " + resource)
@@ -211,7 +254,11 @@ def start(directory, project, port, docker, env, avx2_local_daemon=False):
     with lock.open("x") as stream:
         stream.write("Fresh launch attempted; preserve environment and volumes.\n")
     init_env = dict(env, OPENJIBO_POSTGRES_PASSWORD=secrets.token_hex(32))
-    run(["bash", str(directory / "scripts/cloud/initialize-openjibo-compose-env.sh")], init_env)
+    if platform.system() == "Windows":
+        run(["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
+             str(directory / "scripts/cloud/Initialize-OpenJiboComposeEnv.ps1"), "-RepoRoot", str(directory)], init_env)
+    else:
+        run(["bash", str(directory / "scripts/cloud/initialize-openjibo-compose-env.sh")], init_env)
     (directory / ".env").chmod(0o600)
     override = directory / "preview-launch.compose.yaml"
     with override.open("x") as stream:
@@ -247,7 +294,8 @@ def main():
         print(json.dumps(result, sort_keys=True))
         return 0
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
-        print(f"Launch failed ({type(error).__name__}). Check prerequisites, unchanged prepared files, unused project/port and Docker access. Any created files/volumes are retained; never delete keys to retry.", file=sys.stderr)
+        detail = str(error) if isinstance(error, LaunchCheckError) else "Check prerequisites, unchanged prepared files, unused project/port and Docker access"
+        print(f"Launch failed ({type(error).__name__}): {detail}. Any created files/volumes are retained; never delete keys to retry.", file=sys.stderr)
         return 1
 
 

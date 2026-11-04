@@ -24,7 +24,8 @@ attestation verification. From `OpenJibo`, prepare a fresh portable folder:
 python3 -I -B scripts/cloud/prepare-published-starter.py --channel preview --version runtime-preview-41768412801 --cpu-profile portable --destination /private/openjibo-transfer-preview
 ```
 
-Use the appropriate local Python command on Windows, such as `py -3`. Preparation
+For Windows portable, use `py -3` with a local Docker Desktop Linux daemon; see
+[Windows launch and acceptance](windows-portable-runtime-preview-20261103.md). Preparation
 verifies the exact archive hash and source-bound signature before extraction;
 it does not initialize private keys or start Docker. Keep the archive,
 attestation and `SHA256SUMS` together when supplying local archive/attestation
@@ -81,8 +82,8 @@ Twenty recorded synthetic local-Whisper turns passed with Azure Speech disabled,
 including restart/restore and overlapping AVX2 clients. Verification codes came
 from synthetic typed hub turns. These are fixture observations, not a performance
 SLA, physical microphone test or robot playback proof. Both actual signed
-preparations passed on Windows; new-image Windows runtime, macOS/ARM/emulation
-and physical OOBE/repeat deployment acceptance remain separate gates.
+preparations passed on Windows. The [Windows portable runtime acceptance](windows-portable-runtime-preview-20261103.md) subsequently passed 38 parent checks and seven recorded-speech turns.
+macOS/ARM/emulation and physical OOBE/repeat deployment acceptance remain separate gates.
 
 The initial AVX2 restore hit the host's exhausted Docker default address pools.
 Its failure and logs were retained. The case resumed from the same verified
