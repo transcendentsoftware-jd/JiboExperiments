@@ -32,7 +32,8 @@ class LauncherTests(unittest.TestCase):
         for profile in ('portable', 'avx2'):
             image = launcher.PORTAL_AVX2_IMAGE if profile == 'avx2' else launcher.PORTAL_IMAGE
             archive = self.base / ('portal-' + profile + '.zip')
-            builder.write_bundle(ROOT, image, archive, cpu_profile=profile)
+            archive.write_bytes((ROOT / 'OpenJibo/tests/fixtures/published-starters' /
+                                 'runtime-preview-41757874916' / f'starter-{profile}-preview.zip').read_bytes())
             self.target = self.base / ('portal-' + profile)
             with zipfile.ZipFile(archive) as source:
                 source.extractall(self.target)
@@ -49,7 +50,8 @@ class LauncherTests(unittest.TestCase):
         for profile in ('portable', 'avx2'):
             image = launcher.DURABLE_AVX2_IMAGE if profile == 'avx2' else launcher.DURABLE_IMAGE
             archive = self.base / ('durable-' + profile + '.zip')
-            builder.write_bundle(ROOT, image, archive, cpu_profile=profile)
+            archive.write_bytes((ROOT / 'OpenJibo/tests/fixtures/published-starters' /
+                                 'runtime-preview-41729015780' / f'starter-{profile}-preview.zip').read_bytes())
             self.target = self.base / ('durable-' + profile)
             with zipfile.ZipFile(archive) as source:
                 source.extractall(self.target)

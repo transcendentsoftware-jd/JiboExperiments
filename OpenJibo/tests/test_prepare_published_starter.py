@@ -31,10 +31,9 @@ class PublishedStarterTests(unittest.TestCase):
             self.assertTrue(identity['release_zip_attested'])
             with tempfile.TemporaryDirectory() as temp:
                 base = Path(temp)
-                archive = base / 'fixture.zip'
-                builder.write_bundle(ROOT, identity['runtime_image'], archive, cpu_profile=profile)
-                data = archive.read_bytes()
-                # This source reconstructs the actual published bytes; no checksum override.
+                data = (ROOT / 'OpenJibo/tests/fixtures/published-starters' / identity['version'] /
+                        f'starter-{profile}-preview.zip').read_bytes()
+                # Actual immutable release bytes; current bundled documentation may evolve.
                 self.assertEqual(hashlib.sha256(data).hexdigest(), identity['archive_sha256'])
                 with patch.object(installer, 'verify_provenance', side_effect=ValueError('invalid signature')):
                     with self.assertRaises(ValueError):
@@ -57,10 +56,9 @@ class PublishedStarterTests(unittest.TestCase):
             self.assertTrue(identity['release_zip_attested'])
             with tempfile.TemporaryDirectory() as temp:
                 base = Path(temp)
-                archive = base / 'fixture.zip'
-                builder.write_bundle(ROOT, identity['runtime_image'], archive, cpu_profile=profile)
-                data = archive.read_bytes()
-                # This source reconstructs the actual published bytes; no checksum override.
+                data = (ROOT / 'OpenJibo/tests/fixtures/published-starters' / identity['version'] /
+                        f'starter-{profile}-preview.zip').read_bytes()
+                # Actual immutable release bytes; current bundled documentation may evolve.
                 self.assertEqual(hashlib.sha256(data).hexdigest(), identity['archive_sha256'])
                 with patch.object(installer, 'verify_provenance', side_effect=ValueError('invalid signature')):
                     with self.assertRaises(ValueError):
