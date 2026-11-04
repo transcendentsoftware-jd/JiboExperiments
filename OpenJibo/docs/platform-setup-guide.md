@@ -123,6 +123,12 @@ are separate choices described in the [single-robot guide](single-robot-http-sel
 
 ## Conversion and device preparation
 
+To try the current interface without a robot, use the
+[released offline conversion-review demo](offline-conversion-review-preview-20261104.md).
+It includes the v3 backup-GPT/MBR review and separate blank-credential intake.
+The guide gives exact release/hash and OS entry points, and explains why Apply
+is unavailable. It performs no robot conversion.
+
 JiboAutoMod owns USB/device mutation; this runtime repository owns server and
 protocol configuration. Start from its [repository and current instructions](https://github.com/Jibo-Revival-Group/JiboAutoMod)
 and this repository's [device bootstrap](device-bootstrap.md) and

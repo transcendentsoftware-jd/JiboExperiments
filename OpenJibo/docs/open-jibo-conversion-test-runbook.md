@@ -1,5 +1,15 @@
 # Open Jibo Conversion Test Runbook
 
+**Historical staged-helper procedure.** The steps below describe an older
+mounted-root experiment, not the current JiboAutoMod offline-review release or
+a general supported conversion path. Do not use its `CanApply` expectation or
+read/write mount instruction as approval for a new robot or tool version.
+Start with the [current offline review demo](offline-conversion-review-preview-20261104.md),
+[platform choices](platform-setup-guide.md#conversion-and-device-preparation)
+and [OOBE/repeat device test plan](oobe-and-repeat-deployment-test-plan.md).
+The portable review has no physical apply capability; preserve this procedure
+only as historical evidence for its original helper/profile.
+
 Use this checklist for the next robot session after the Linux-first conversion helper update.
 
 ## Goal
