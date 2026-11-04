@@ -1062,6 +1062,10 @@ These are the carryover items that need a clean proof pass first:
   and remaining calendar gaps in [calendar-architecture.md](calendar-architecture.md).
   This is source-tested; the current published runtime and live robot have not
   yet been updated with this calendar change.
+- Follow-up (`2026-11-04`): calendar feed and manual-event/holiday reports honor
+  the supplied turn time zone; cached reports expire at local midnight and cannot
+  be reused for another zone. Missing/invalid zones use the server-local fallback.
+  Stock-robot zone forwarding and live behavior remain acceptance items.
 - Tags: `protocol`, `content`, `storage`, `docs`
 - Why now:
   - personal report is a core Jibo charm surface and currently split between implemented weather speech and placeholder calendar/commute/news content

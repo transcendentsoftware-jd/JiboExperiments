@@ -124,6 +124,7 @@ public sealed class IcalCalendarReportProviderTests
 
             var report = await provider.GetReportAsync(new TurnContext
             {
+                TimeZone = "UTC",
                 Attributes = new Dictionary<string, object?>
                 {
                     ["loopId"] = loopId,
