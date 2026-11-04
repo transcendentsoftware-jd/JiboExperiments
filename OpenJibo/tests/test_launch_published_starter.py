@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
@@ -110,6 +111,66 @@ class LauncherTests(unittest.TestCase):
         digest = hashlib.sha256((self.target / "MANIFEST.json").read_bytes()).hexdigest()
         self.addCleanup(patch.stopall)
         patch.object(launcher, "MANIFEST_SHA256", digest).start()
+
+    def test_windows_portable_read_only_check_is_supported(self):
+        with patch.object(launcher.platform, "system", return_value="Windows"), \
+             patch.object(launcher.platform, "machine", return_value="AMD64"), \
+             patch.object(launcher.shutil, "which", return_value="tool.exe"), \
+             patch.object(launcher, "collect_preflight", return_value=REPORT), \
+             patch.object(launcher.shutil, "disk_usage", return_value=MagicMock(free=10 * 1024**3)), \
+             patch.object(launcher, "run", return_value=""), \
+             patch.object(launcher.socket, "socket"):
+            _, result = launcher.check(self.target, "openjibo-windows-test", 19997, ["docker"], {})
+        self.assertFalse(result["docker_started"])
+        self.assertFalse((self.target / ".env").exists())
+        self.assertFalse((self.target / ".preview-launch.lock").exists())
+
+    def test_windows_explicit_start_uses_shipped_powershell_initializer(self):
+        calls = []
+        def command(args, env, timeout=15):
+            calls.append((args, env))
+            if args[0] == "powershell.exe":
+                self.assertIn("Initialize-OpenJiboComposeEnv.ps1", str(args))
+                self.assertRegex(env["OPENJIBO_POSTGRES_PASSWORD"], r"^[0-9a-f]{64}$")
+                (self.target / ".env").write_text("windows-private-environment")
+            return ""
+        with patch.object(launcher.platform, "system", return_value="Windows"), \
+             patch.object(launcher, "check", return_value=(self.target, {})), \
+             patch.object(launcher, "run", side_effect=command), \
+             patch.object(launcher, "wait_health"):
+            result = launcher.start(self.target, "openjibo-windows-test", 19997, ["docker"], {})
+        self.assertTrue(result["health_passed"])
+        self.assertEqual(calls[0][0][0], "powershell.exe")
+        self.assertIn("127.0.0.1:19997:8080", (self.target / "preview-launch.compose.yaml").read_text())
+        self.assertIn("--no-build", calls[-1][0])
+        self.assertNotIn("OPENJIBO_POSTGRES_PASSWORD", calls[-1][1])
+
+    def test_windows_preflight_requires_local_linux_docker_desktop(self):
+        good = {"OSType": "linux", "Architecture": "x86_64", "OperatingSystem": "Docker Desktop", "MemTotal": 8 * 1024**3}
+        for updates, endpoint, expected in (({}, "npipe:////./pipe/dockerDesktopLinuxEngine", True),
+                ({"OSType": "windows"}, "npipe:////./pipe/docker_engine", False),
+                ({"OperatingSystem": "Remote Linux"}, "npipe:////./pipe/docker_engine", False),
+                ({}, "ssh://another-machine", False)):
+            with self.subTest(updates=updates, endpoint=endpoint), \
+                 patch.object(launcher, "windows_memory_available", return_value=2 * 1024**3), \
+                 patch.object(launcher, "run", side_effect=[json.dumps({**good, **updates}), endpoint, "5.6.0"]):
+                result = launcher.windows_preflight(["docker"], {})
+                self.assertEqual(result["preflight_passed"], expected)
+                self.assertEqual(result["host"]["memory_available_bytes"], 2 * 1024**3)
+
+    def test_windows_avx2_refused_before_any_initialization(self):
+        archive = ROOT / "OpenJibo/tests/fixtures/published-starters/runtime-preview-41768412801/starter-avx2-preview.zip"
+        target = self.base / "windows-avx2"
+        with zipfile.ZipFile(archive) as source:
+            source.extractall(target)
+        with patch.object(launcher.platform, "system", return_value="Windows"), \
+             patch.object(launcher.platform, "machine", return_value="AMD64"), \
+             patch.object(launcher, "run") as command:
+            with self.assertRaisesRegex(ValueError, "AVX2 requires"):
+                launcher.check(target, "openjibo-windows-avx2", 19997, ["docker"], {}, True)
+        command.assert_not_called()
+        self.assertFalse((target / ".env").exists())
+        self.assertFalse((target / ".preview-launch.lock").exists())
 
     def test_project_and_port_parameters(self):
         for project, port in (("prod", 8084), ("openjibo-a;echo", 8084), ("openjibo-a", 80), ("openjibo-a", 65536)):
@@ -252,7 +313,8 @@ class LauncherTests(unittest.TestCase):
                 (self.target / ".env").write_text("generated-private-environment")
                 self.assertRegex(env["OPENJIBO_POSTGRES_PASSWORD"], r"^[0-9a-f]{64}$")
             return ""
-        with patch.object(launcher, "check", return_value=(self.target, {"docker_started": False})), \
+        with patch.object(launcher.platform, "system", return_value="Linux"), \
+             patch.object(launcher, "check", return_value=(self.target, {"docker_started": False})), \
              patch.object(launcher, "run", side_effect=command), \
              patch.object(launcher, "wait_health") as health:
             result = launcher.start(self.target, "openjibo-launch-test", 8084, ["docker"], {})
@@ -270,7 +332,7 @@ class LauncherTests(unittest.TestCase):
                 (self.target / ".env").write_text("preserved")
             else:
                 raise ValueError("failure")
-        with patch.object(launcher, "check", return_value=(self.target, {})), patch.object(launcher, "run", side_effect=command):
+        with patch.object(launcher.platform, "system", return_value="Linux"), patch.object(launcher, "check", return_value=(self.target, {})), patch.object(launcher, "run", side_effect=command):
             with self.assertRaises(ValueError):
                 launcher.start(self.target, "openjibo-launch-test", 8084, ["docker"], {})
         self.assertEqual((self.target / ".env").read_text(), "preserved")
