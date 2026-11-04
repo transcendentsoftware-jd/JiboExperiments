@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Application.Services;
@@ -16,6 +18,107 @@ namespace Jibo.Cloud.Tests.Api;
 
 public sealed class PortalAccountApiTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Pairing_PrivateIntegrationsStayOnlyWhenAccountIsUnchanged(bool sameAccount)
+    {
+        await using var factory = CreateFactory();
+        var first = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
+        var firstRobot = await PairAndSelectAsync(factory, first);
+        var store = factory.Services.GetRequiredService<ICloudStateStore>();
+        var loop = store.AddLoop(null, null, "isolation-jibo", "isolation-jibo");
+        store.SyncPeopleFromLoopUsers(loop.LoopId, "isolation-jibo",
+            [new LoopUserSnapshot("private-member", "Private Household", Type: "member")]);
+        var saved = await firstRobot.PutAsJsonAsync("/api/portal/calendar-feeds/private-member", new
+        {
+            icalUrl = "https://old-private-calendar.example.com/private-token/basic.ics", isEnabled = true
+        });
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        Assert.Contains("old-private-calendar.example.com",
+            await firstRobot.GetStringAsync("/api/portal/calendar-feeds"));
+        using var ha = await factory.Server.CreateWebSocketClient().ConnectAsync(
+            new Uri("wss://localhost/v1/homeassistant/ws"), CancellationToken.None);
+        await ha.SendAsync(Encoding.UTF8.GetBytes("""{"type":"register","instanceId":"private-owner-ha"}"""),
+            WebSocketMessageType.Text, true, CancellationToken.None);
+        var verification = await ReadIntegrationFrameAsync(ha);
+        var linked = await firstRobot.PostAsJsonAsync("/api/portal/home-assistant/link",
+            new { haCode = verification.GetProperty("code").GetString() });
+        Assert.Equal(HttpStatusCode.OK, linked.StatusCode);
+        var paired = await ReadIntegrationFrameAsync(ha);
+        Assert.Equal("paired", paired.GetProperty("type").GetString());
+
+        var target = sameAccount ? first : await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
+        var selected = await PairAndSelectAsync(factory, target);
+        var links = await selected.GetFromJsonAsync<JsonElement>("/api/portal/home-assistant/links");
+        var calendars = await selected.GetStringAsync("/api/portal/calendar-feeds");
+
+        if (sameAccount)
+        {
+            Assert.Equal(HttpStatusCode.OK, (await firstRobot.GetAsync("/api/portal/dashboard")).StatusCode);
+            Assert.Equal(paired.GetProperty("linkId").GetString(),
+                Assert.Single(links.GetProperty("links").EnumerateArray()).GetProperty("linkId").GetString());
+            Assert.Contains("old-private-calendar.example.com", calendars);
+            Assert.True(factory.Services.GetRequiredService<HomeAssistantConnectionRegistry>()
+                .IsInstanceConnected("private-owner-ha"));
+        }
+        else
+        {
+            Assert.Empty(links.GetProperty("links").EnumerateArray());
+            Assert.DoesNotContain("old-private-calendar.example.com", calendars);
+            Assert.False(factory.Services.GetRequiredService<HomeAssistantConnectionRegistry>()
+                .IsInstanceConnected("private-owner-ha"));
+            using var reconnect = await factory.Server.CreateWebSocketClient().ConnectAsync(
+                new Uri("wss://localhost/v1/homeassistant/ws"), CancellationToken.None);
+            await reconnect.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+            {
+                type = "register", instanceId = "private-owner-ha", linkId = paired.GetProperty("linkId").GetString()
+            })), WebSocketMessageType.Text, true, CancellationToken.None);
+            var freshCode = await ReadIntegrationFrameAsync(reconnect);
+            Assert.Equal("verification_code", freshCode.GetProperty("type").GetString());
+            Assert.False(freshCode.TryGetProperty("commandSecret", out _));
+            Assert.Equal(HttpStatusCode.OK, (await selected.PostAsJsonAsync("/api/portal/home-assistant/link",
+                new { haCode = freshCode.GetProperty("code").GetString() })).StatusCode);
+            var newPairing = await ReadIntegrationFrameAsync(reconnect);
+            Assert.NotEqual(paired.GetProperty("linkId").GetString(), newPairing.GetProperty("linkId").GetString());
+            Assert.NotEqual(paired.GetProperty("commandSecret").GetString(), newPairing.GetProperty("commandSecret").GetString());
+
+        }
+    }
+
+    [Fact]
+    public async Task OwnershipReturnedToPreviousAccount_DoesNotReviveOldProofOrIntegrations()
+    {
+        await using var factory = CreateFactory();
+        var first = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
+        var original = await PairAndSelectAsync(factory, first);
+        factory.Services.GetRequiredService<IUserIntegrationStore>()
+            .AddHomeAssistantLink("isolation-jibo", "isolation-jibo", "original-private-ha");
+        var second = await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
+        await PairAndSelectAsync(factory, second);
+        var returned = await PairAndSelectAsync(factory, first);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await original.GetAsync("/api/portal/dashboard")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await returned.GetAsync("/api/portal/dashboard")).StatusCode);
+        var links = await returned.GetFromJsonAsync<JsonElement>("/api/portal/home-assistant/links");
+        Assert.Empty(links.GetProperty("links").EnumerateArray());
+    }
+
+    private static async Task<JsonElement> ReadIntegrationFrameAsync(WebSocket socket)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var data = new MemoryStream();
+        var buffer = new byte[8192];
+        WebSocketReceiveResult received;
+        do
+        {
+            received = await socket.ReceiveAsync(buffer, timeout.Token);
+            if (received.MessageType == WebSocketMessageType.Close) throw new IOException("Synthetic integration closed");
+            data.Write(buffer, 0, received.Count);
+        } while (!received.EndOfMessage);
+        return JsonDocument.Parse(data.ToArray()).RootElement.Clone();
+    }
+
     [Fact]
     public async Task CodeOnlySession_IsInvalidatedByFirstClaimAndLaterTransfer()
     {
@@ -113,9 +216,10 @@ public sealed class PortalAccountApiTests
         var firstAccount = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
         var firstRobot = await PairAndSelectAsync(factory, firstAccount);
         var integrations = factory.Services.GetRequiredService<IUserIntegrationStore>();
-        var link = integrations.AddHomeAssistantLink("isolation-jibo", "isolation-jibo", "synthetic-instance");
         var secondAccount = await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
         var secondRobot = await PairAndSelectAsync(factory, secondAccount);
+
+        var link = integrations.AddHomeAssistantLink("isolation-jibo", "isolation-jibo", "synthetic-instance");
 
         Assert.Equal(HttpStatusCode.Unauthorized,
             (await firstRobot.DeleteAsync("/api/portal/home-assistant/link")).StatusCode);

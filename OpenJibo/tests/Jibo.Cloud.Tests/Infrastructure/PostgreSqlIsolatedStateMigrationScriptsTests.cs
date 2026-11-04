@@ -23,6 +23,10 @@ public sealed class PostgreSqlIsolatedStateMigrationScriptsTests
         Assert.Contains(selected, path => Path.GetFileName(path).Equals(
             "013_create_sigv4_replay_observations.state.sql", StringComparison.OrdinalIgnoreCase));
 
+        // Ownership columns touch only the fixture's UserDevices table and run in parallel schemas.
+        Assert.Contains(selected, path => Path.GetFileName(path).Equals(
+            "019_portal_ownership_epochs.state.sql", StringComparison.OrdinalIgnoreCase));
+
         // A future state migration that explicitly touches public must receive its
         // own isolation decision before it can run in parallel fixture schemas.
         foreach (var path in selected)

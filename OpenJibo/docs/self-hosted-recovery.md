@@ -13,6 +13,16 @@ requests mode 0700 when creating it; on Windows, secure the parent with Windows
 permissions. It does not encrypt backups, configure ACLs or upload anything.
 Do not commit the directory or attach it to a public support request.
 
+Ownership-generation runtimes use integration snapshot schema 3 and require one
+fresh portal login after upgrade. Pairing a robot to a different account hides
+the previous generation's calendar and Home Assistant connections; the new owner
+sets them up again. Re-pairing to the same account preserves settings. Older
+runtimes supporting only schema 2 cannot read a schema 3 file. For rollback,
+restore the complete pre-upgrade database and integration backup with matching
+keys and runtime. Stop every API writer first; do not mix old and new ownership
+logic against shared live state. Already published older image digests are
+unchanged by this source update.
+
 ## Capture
 
 Schedule downtime. Stop robot traffic, any external database clients and other

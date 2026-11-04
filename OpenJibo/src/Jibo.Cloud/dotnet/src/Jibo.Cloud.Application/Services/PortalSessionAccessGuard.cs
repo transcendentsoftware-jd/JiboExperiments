@@ -14,7 +14,9 @@ public static class PortalSessionAccessGuard
 
         // Re-read the durable link on each request, including for code-only sessions.
         // A transfer invalidates the old owner's proof across replicas, without token blacklists.
-        if (!string.Equals(store.GetUserIdForDevice(session.DeviceId), session.OwnerUserId,
+        var ownership = store.GetUserDeviceLink(session.DeviceId);
+        if (!string.Equals(ownership?.EffectiveOwnershipEpoch, session.OwnershipEpoch, StringComparison.Ordinal)) return false;
+        if (!string.Equals(ownership?.UserId, session.OwnerUserId,
                 StringComparison.OrdinalIgnoreCase)) return false;
         if (session.UserId is not null && !string.Equals(session.UserId, session.OwnerUserId,
                 StringComparison.OrdinalIgnoreCase)) return false;

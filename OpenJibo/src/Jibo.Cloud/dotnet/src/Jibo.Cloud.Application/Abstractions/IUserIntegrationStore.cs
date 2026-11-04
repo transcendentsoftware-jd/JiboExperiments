@@ -7,12 +7,12 @@ public interface IUserIntegrationStore
     IReadOnlyList<HomeAssistantLinkRecord> GetHomeAssistantLinks();
     HomeAssistantLinkRecord? FindLinkByHaInstanceId(string haInstanceId);
     HomeAssistantLinkRecord? FindLinkByLinkId(string linkId);
-    HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId);
+    HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId, string? expectedOwnershipEpoch = null);
 
     HomeAssistantLinkRecord AddHomeAssistantLink(
         string jiboDeviceId,
         string jiboFriendlyName,
-        string haInstanceId);
+        string haInstanceId, string? expectedOwnershipEpoch = null);
 
     HomeAssistantLinkRecord? RemoveHomeAssistantLink(string linkId);
     void UpdateHomeAssistantLastSeen(string linkId, DateTimeOffset lastSeenUtc);
@@ -27,20 +27,20 @@ public interface IUserIntegrationStore
     /// </summary>
     HomeAssistantLinkRecord? EnsureHomeAssistantCommandSecret(string linkId);
 
-    IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null);
-    MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId);
+    IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null, string? expectedOwnershipEpoch = null);
+    MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null);
 
     MemberCalendarFeedRecord UpsertMemberCalendarFeed(
         string loopId,
         string memberId,
         string icalUrl,
-        bool isEnabled = true);
+        bool isEnabled = true, string? expectedOwnershipEpoch = null);
 
-    MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId);
+    MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null);
 
     MemberCalendarFeedRecord? UpdateMemberCalendarFeedSyncStatus(
         string loopId,
         string memberId,
         DateTimeOffset? lastSuccessUtc,
-        string? lastError);
+        string? lastError, string? expectedFeedId = null);
 }

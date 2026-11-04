@@ -44,17 +44,17 @@ public sealed class PortalSessionService
     }
 
     public PortalSession CreateSession(string deviceId, string friendlyId, string? userId = null,
-        string? ownerUserId = null) =>
-        CreateSessionCore(deviceId, friendlyId, userId, RobotSessionKind, userId ?? ownerUserId);
+        string? ownerUserId = null, string? ownershipEpoch = null) =>
+        CreateSessionCore(deviceId, friendlyId, userId, RobotSessionKind, userId ?? ownerUserId, ownershipEpoch);
 
     public PortalSession CreateAccountSession(string email, string userId) =>
-        CreateSessionCore("portal-account", email, RequireValue(userId, nameof(userId)), AccountSessionKind, null);
+        CreateSessionCore("portal-account", email, RequireValue(userId, nameof(userId)), AccountSessionKind, null, null);
 
     public PortalSession CreateAdministratorSession() =>
-        CreateSessionCore("portal-admin", "Portal Admin", null, AdministratorSessionKind, null);
+        CreateSessionCore("portal-admin", "Portal Admin", null, AdministratorSessionKind, null, null);
 
     private PortalSession CreateSessionCore(string deviceId, string friendlyId, string? userId,
-        string kind, string? ownerUserId)
+        string kind, string? ownerUserId, string? ownershipEpoch)
     {
         PurgeRevocations();
 
@@ -67,11 +67,11 @@ public sealed class PortalSessionService
             expiresAt.ToUnixTimeSeconds(),
             Guid.NewGuid().ToString("N"),
             string.IsNullOrWhiteSpace(userId) ? null : userId.Trim(),
-            kind, 2, string.IsNullOrWhiteSpace(ownerUserId) ? null : ownerUserId.Trim());
+            kind, 3, string.IsNullOrWhiteSpace(ownerUserId) ? null : ownerUserId.Trim(), ownershipEpoch);
 
         var token = BuildToken(payload);
         return new PortalSession(token, payload.DeviceId, payload.FriendlyId, expiresAt, payload.UserId,
-            payload.Kind!, payload.OwnerUserId);
+            payload.Kind!, payload.OwnerUserId, payload.OwnershipEpoch);
     }
 
     public PortalSession? TryGetSession(string? token)
@@ -96,7 +96,7 @@ public sealed class PortalSessionService
             payload.DeviceId,
             payload.FriendlyId,
             DateTimeOffset.FromUnixTimeSeconds(payload.ExpiresAtUtc),
-            payload.UserId, payload.Kind!, payload.OwnerUserId);
+            payload.UserId, payload.Kind!, payload.OwnerUserId, payload.OwnershipEpoch);
     }
 
     public void RevokeSession(string? token)
@@ -192,7 +192,7 @@ public sealed class PortalSessionService
         {
             payload = JsonSerializer.Deserialize<SessionTokenPayload>(payloadBytes, JsonOptions)
                       ?? throw new JsonException();
-            return payload.Version == 2 &&
+            return payload.Version == 3 &&
                    payload.Kind is RobotSessionKind or AccountSessionKind or AdministratorSessionKind &&
                    (payload.Kind != AccountSessionKind || !string.IsNullOrWhiteSpace(payload.UserId)) &&
                    !string.IsNullOrWhiteSpace(payload.DeviceId) &&
@@ -269,7 +269,8 @@ public sealed class PortalSessionService
         string? UserId,
         string? Kind,
         int Version,
-        string? OwnerUserId);
+        string? OwnerUserId,
+        string? OwnershipEpoch);
 
     private sealed record RobotMergePreviewTokenPayload(
         string Kind,
@@ -295,5 +296,6 @@ public sealed class PortalSessionService
         DateTimeOffset ExpiresAtUtc,
         string? UserId = null,
         string Kind = RobotSessionKind,
-        string? OwnerUserId = null);
+        string? OwnerUserId = null,
+        string? OwnershipEpoch = null);
 }

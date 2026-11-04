@@ -49,7 +49,7 @@ public sealed class IcalCalendarReportProvider(
                     loopId,
                     memberId,
                     null,
-                    fetch.Error ?? "fetch_failed");
+                    fetch.Error ?? "fetch_failed", feed.FeedId);
                 var failureSnapshot = new CalendarReportSnapshot([], [], [], HasServiceError: true);
                 _cache[cacheKey] = new CacheEntry(failureSnapshot, DateTimeOffset.UtcNow.Add(FailureCacheTtl));
                 return failureSnapshot;
@@ -67,7 +67,7 @@ public sealed class IcalCalendarReportProvider(
                 todayEvents.Select(static item => item.TimeLabel).ToArray(),
                 tomorrowEvents.Select(static item => item.Summary).ToArray());
 
-            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, DateTimeOffset.UtcNow, null);
+            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, DateTimeOffset.UtcNow, null, feed.FeedId);
             _cache[cacheKey] = new CacheEntry(snapshot, DateTimeOffset.UtcNow.Add(SuccessCacheTtl));
             return snapshot;
         }
@@ -78,7 +78,7 @@ public sealed class IcalCalendarReportProvider(
         catch (Exception exception)
         {
             logger.LogWarning(exception, "iCal calendar parse failed for loop {LoopId}", loopId);
-            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, null, "parse_failed");
+            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, null, "parse_failed", feed.FeedId);
             var failureSnapshot = new CalendarReportSnapshot([], [], [], HasServiceError: true);
             _cache[cacheKey] = new CacheEntry(failureSnapshot, DateTimeOffset.UtcNow.Add(FailureCacheTtl));
             return failureSnapshot;

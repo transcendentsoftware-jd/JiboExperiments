@@ -46,6 +46,7 @@ public interface ICloudStateStore
     UserDeviceLink LinkUserToDevice(string userId, string deviceId, string claimSource);
     IReadOnlyList<DeviceRegistration> GetDevicesForUser(string userId);
     string? GetUserIdForDevice(string deviceId);
+    UserDeviceLink? GetUserDeviceLink(string deviceId);
     string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,
         HubTokenCredentialBinding? credentialBinding = null,
         RuntimePairingCredentialEvidence? pairingEvidence = null);

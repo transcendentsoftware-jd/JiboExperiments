@@ -7,13 +7,15 @@ namespace Jibo.Cloud.Infrastructure.Persistence;
 public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
 {
     private readonly EncryptedUserDataSnapshotStore _snapshotStore;
+    private readonly ICloudStateStore? _cloudStateStore;
     private readonly Lock _syncRoot = new();
     private List<HomeAssistantLinkRecord> _links;
     private List<MemberCalendarFeedRecord> _calendarFeeds;
 
-    public InMemoryUserIntegrationStore(EncryptedUserDataSnapshotStore snapshotStore)
+    public InMemoryUserIntegrationStore(EncryptedUserDataSnapshotStore snapshotStore, ICloudStateStore? cloudStateStore = null)
     {
         _snapshotStore = snapshotStore;
+        _cloudStateStore = cloudStateStore;
         var snapshot = snapshotStore.Load();
         _links = snapshot.HomeAssistantLinks.ToList();
         _calendarFeeds = snapshot.MemberCalendarFeeds.ToList();
@@ -23,7 +25,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         lock (_syncRoot)
         {
-            return _links.ToArray();
+            return _links.Where(IsActive).ToArray();
         }
     }
 
@@ -32,7 +34,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         lock (_syncRoot)
         {
             return _links.FirstOrDefault(link =>
-                link.HaInstanceId.Equals(haInstanceId, StringComparison.OrdinalIgnoreCase));
+                link.HaInstanceId.Equals(haInstanceId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
         }
     }
 
@@ -41,27 +43,32 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         lock (_syncRoot)
         {
             return _links.FirstOrDefault(link =>
-                link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase));
+                link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
         }
     }
 
-    public HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId)
+    public HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId, string? expectedOwnershipEpoch = null)
     {
         lock (_syncRoot)
         {
-            return _links.FirstOrDefault(link => MatchesJiboIdentity(link, jiboDeviceId, jiboFriendlyId));
+            return _links.FirstOrDefault(link => MatchesJiboIdentity(link, jiboDeviceId, jiboFriendlyId) && IsActive(link) &&
+                (expectedOwnershipEpoch is null || (link.OwnershipEpoch ?? ResolveDeviceScope(link.JiboDeviceId).Legacy) == expectedOwnershipEpoch));
         }
     }
 
     public HomeAssistantLinkRecord AddHomeAssistantLink(
         string jiboDeviceId,
         string jiboFriendlyName,
-        string haInstanceId)
+        string haInstanceId, string? expectedOwnershipEpoch = null)
     {
         lock (_syncRoot)
         {
+            var scope = ResolveDeviceScope(jiboDeviceId);
+            RequireEpoch(expectedOwnershipEpoch, scope.Current);
             var existing = _links.FirstOrDefault(link =>
-                link.HaInstanceId.Equals(haInstanceId, StringComparison.OrdinalIgnoreCase));
+                link.HaInstanceId.Equals(haInstanceId, StringComparison.OrdinalIgnoreCase) &&
+                (link.OwnershipEpoch ?? scope.Legacy) == scope.Current &&
+                ResolveDeviceScope(link.JiboDeviceId).DeviceId.Equals(scope.DeviceId, StringComparison.OrdinalIgnoreCase));
             if (existing is not null)
             {
                 var updated = CloneLink(
@@ -83,7 +90,8 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
 
             var record = new HomeAssistantLinkRecord
             {
-                JiboDeviceId = jiboDeviceId,
+                OwnershipEpoch = expectedOwnershipEpoch ?? scope.Current,
+                JiboDeviceId = scope.DeviceId,
                 JiboFriendlyName = jiboFriendlyName,
                 HaInstanceId = haInstanceId,
                 CommandSecret = HomeAssistantCommandAuthentication.GenerateCommandSecret()
@@ -98,7 +106,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         lock (_syncRoot)
         {
-            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase));
+            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
             if (index < 0) return;
 
             _links[index] = CloneLink(_links[index], lastSeenUtc: lastSeenUtc);
@@ -113,7 +121,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         lock (_syncRoot)
         {
-            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase));
+            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
             if (index < 0) return null;
 
             var updated = CloneLink(
@@ -130,7 +138,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         lock (_syncRoot)
         {
-            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase));
+            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
             if (index < 0) return null;
 
             var current = _links[index];
@@ -150,7 +158,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         lock (_syncRoot)
         {
-            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase));
+            var index = _links.FindIndex(link => link.LinkId.Equals(linkId, StringComparison.OrdinalIgnoreCase) && IsActive(link));
             if (index < 0) return null;
 
             var removed = _links[index];
@@ -160,24 +168,25 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         }
     }
 
-    public IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null)
+    public IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null, string? expectedOwnershipEpoch = null)
     {
         lock (_syncRoot)
         {
             if (string.IsNullOrWhiteSpace(loopId))
-                return _calendarFeeds.ToArray();
+                return _calendarFeeds.Where(feed => IsActive(feed) && MatchesEpoch(feed, expectedOwnershipEpoch)).ToArray();
 
             return _calendarFeeds
-                .Where(feed => feed.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase))
+                .Where(feed => feed.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase) && IsActive(feed) && MatchesEpoch(feed, expectedOwnershipEpoch))
                 .ToArray();
         }
     }
 
-    public MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId)
+    public MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null)
     {
         lock (_syncRoot)
         {
-            return FindFeedLocked(loopId, memberId);
+            var feed = FindFeedLocked(loopId, memberId);
+            return feed is not null && MatchesEpoch(feed, expectedOwnershipEpoch) ? feed : null;
         }
     }
 
@@ -185,7 +194,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         string loopId,
         string memberId,
         string icalUrl,
-        bool isEnabled = true)
+        bool isEnabled = true, string? expectedOwnershipEpoch = null)
     {
         if (string.IsNullOrWhiteSpace(loopId))
             throw new ArgumentException("Loop id is required.", nameof(loopId));
@@ -196,10 +205,16 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
 
         lock (_syncRoot)
         {
-            var existing = FindFeedLocked(loopId, memberId);
+            var scope = ResolveLoopScope(loopId);
+            RequireEpoch(expectedOwnershipEpoch, scope.Current);
+            var existing = _calendarFeeds.FirstOrDefault(feed =>
+                feed.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase) &&
+                feed.MemberId.Equals(memberId, StringComparison.OrdinalIgnoreCase) &&
+                (feed.OwnershipEpoch ?? scope.Legacy) == scope.Current);
             var now = DateTimeOffset.UtcNow;
             var record = new MemberCalendarFeedRecord
             {
+                OwnershipEpoch = expectedOwnershipEpoch ?? scope.Current,
                 FeedId = existing?.FeedId ?? Guid.NewGuid().ToString("N"),
                 LoopId = loopId.Trim(),
                 MemberId = memberId.Trim(),
@@ -223,11 +238,16 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         }
     }
 
-    public MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId)
+    public MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null)
     {
         lock (_syncRoot)
         {
-            var existing = FindFeedLocked(loopId, memberId);
+            var scope = ResolveLoopScope(loopId);
+            RequireEpoch(expectedOwnershipEpoch, scope.Current);
+            var existing = _calendarFeeds.FirstOrDefault(feed =>
+                feed.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase) &&
+                feed.MemberId.Equals(memberId, StringComparison.OrdinalIgnoreCase) &&
+                (feed.OwnershipEpoch ?? scope.Legacy) == scope.Current);
             if (existing is null) return null;
 
             _calendarFeeds.RemoveAll(feed => feed.FeedId == existing.FeedId);
@@ -240,15 +260,16 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
         string loopId,
         string memberId,
         DateTimeOffset? lastSuccessUtc,
-        string? lastError)
+        string? lastError, string? expectedFeedId = null)
     {
         lock (_syncRoot)
         {
             var existing = FindFeedLocked(loopId, memberId);
-            if (existing is null) return null;
+            if (existing is null || (expectedFeedId is not null && existing.FeedId != expectedFeedId)) return null;
 
             var updated = new MemberCalendarFeedRecord
             {
+                OwnershipEpoch = existing.OwnershipEpoch,
                 FeedId = existing.FeedId,
                 LoopId = existing.LoopId,
                 MemberId = existing.MemberId,
@@ -272,7 +293,51 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         return _calendarFeeds.FirstOrDefault(feed =>
             feed.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase) &&
-            feed.MemberId.Equals(memberId, StringComparison.OrdinalIgnoreCase));
+            feed.MemberId.Equals(memberId, StringComparison.OrdinalIgnoreCase) && IsActive(feed));
+    }
+
+    private sealed record OwnershipScope(string DeviceId, string Current, string Legacy);
+
+    private OwnershipScope ResolveDeviceScope(string deviceId)
+    {
+        var candidates = _cloudStateStore?.FindVisibleIdentityCandidates(deviceId) ?? [];
+        var exact = candidates.Where(device => device.DeviceId.Equals(deviceId, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (exact.Length == 0)
+            exact = candidates.Where(device => device.RobotId.Equals(deviceId, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (_cloudStateStore is not null && exact.Length != 1)
+            return new OwnershipScope(deviceId, "unresolved-device:" + deviceId, "unresolved-legacy");
+        var canonical = exact.FirstOrDefault()?.DeviceId ?? deviceId;
+        var ownership = _cloudStateStore?.GetUserDeviceLink(canonical);
+        return new OwnershipScope(canonical, ownership?.EffectiveOwnershipEpoch ?? "unowned",
+            ownership?.EffectiveLegacyIntegrationEpoch ?? "unowned");
+    }
+
+    private OwnershipScope ResolveLoopScope(string loopId)
+    {
+        var loop = _cloudStateStore?.GetLoops().FirstOrDefault(item =>
+            item.LoopId.Equals(loopId, StringComparison.OrdinalIgnoreCase));
+        return ResolveDeviceScope(loop?.RobotId ?? string.Empty);
+    }
+
+    private bool IsActive(HomeAssistantLinkRecord link)
+    {
+        var scope = ResolveDeviceScope(link.JiboDeviceId);
+        return (link.OwnershipEpoch ?? scope.Legacy) == scope.Current;
+    }
+
+    private bool MatchesEpoch(MemberCalendarFeedRecord feed, string? expected) =>
+        expected is null || (feed.OwnershipEpoch ?? ResolveLoopScope(feed.LoopId).Legacy) == expected;
+
+    private bool IsActive(MemberCalendarFeedRecord feed)
+    {
+        var scope = ResolveLoopScope(feed.LoopId);
+        return (feed.OwnershipEpoch ?? scope.Legacy) == scope.Current;
+    }
+
+    private static void RequireEpoch(string? expected, string current)
+    {
+        if (expected is not null && expected != current)
+            throw new UnauthorizedAccessException("Robot ownership has changed. Pair again.");
     }
 
     private void PersistLocked()
@@ -297,6 +362,7 @@ public sealed class InMemoryUserIntegrationStore : IUserIntegrationStore
     {
         return new HomeAssistantLinkRecord
         {
+            OwnershipEpoch = source.OwnershipEpoch,
             LinkId = source.LinkId,
             JiboDeviceId = jiboDeviceId ?? source.JiboDeviceId,
             JiboFriendlyName = jiboFriendlyName ?? source.JiboFriendlyName,

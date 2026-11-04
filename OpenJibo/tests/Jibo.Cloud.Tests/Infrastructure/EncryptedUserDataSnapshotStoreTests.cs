@@ -56,6 +56,8 @@ public sealed class EncryptedUserDataSnapshotStoreTests : IDisposable
     [InlineData("{}")]
     [InlineData("{\"SchemaVersion\":2,\"HomeAssistantLinks\":null}")]
     [InlineData("{\"SchemaVersion\":2,\"MemberCalendarFeeds\":null}")]
+    [InlineData("{\"SchemaVersion\":3,\"HomeAssistantLinks\":null}")]
+    [InlineData("{\"SchemaVersion\":3,\"MemberCalendarFeeds\":null}")]
     [InlineData("{\"SchemaVersion\":2,\"schemaVersion\":1}")]
     public void UnsupportedDecryptedSnapshot_IsPreserved(string plaintext)
     {

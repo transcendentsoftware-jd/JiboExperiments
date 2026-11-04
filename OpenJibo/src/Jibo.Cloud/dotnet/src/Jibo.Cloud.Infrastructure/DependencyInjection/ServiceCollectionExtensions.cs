@@ -202,7 +202,8 @@ public static class ServiceCollectionExtensions
                 userIntegrationsPersistencePath,
                 provider.GetRequiredService<UserDataEncryptionService>()));
         services.AddSingleton<IUserIntegrationStore>(provider =>
-            new InMemoryUserIntegrationStore(provider.GetRequiredService<EncryptedUserDataSnapshotStore>()));
+            new InMemoryUserIntegrationStore(provider.GetRequiredService<EncryptedUserDataSnapshotStore>(),
+                provider.GetRequiredService<ICloudStateStore>()));
         if (stateBackendKind == PersistenceBackendKind.PostgreSql)
         {
             var maxPoolSize = configuration?.GetValue<int?>("OpenJibo:State:PostgreSql:MaxPoolSize") ?? 8;

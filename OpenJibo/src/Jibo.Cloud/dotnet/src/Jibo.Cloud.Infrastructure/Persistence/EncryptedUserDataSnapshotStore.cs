@@ -64,6 +64,11 @@ public sealed class EncryptedUserDataSnapshotStore
                 snapshot.SchemaVersion > UserIntegrationSnapshot.CurrentSchemaVersion)
                 throw new InvalidDataException();
 
+            // v2 and later require both collections, including when migrating to v3.
+            if (snapshot.SchemaVersion >= 2 &&
+                (snapshot.HomeAssistantLinks is null || snapshot.MemberCalendarFeeds is null))
+                throw new InvalidDataException();
+
             // v1 snapshots omit MemberCalendarFeeds; normalize to current schema on load.
             if (snapshot.SchemaVersion < UserIntegrationSnapshot.CurrentSchemaVersion)
                 return new UserIntegrationSnapshot

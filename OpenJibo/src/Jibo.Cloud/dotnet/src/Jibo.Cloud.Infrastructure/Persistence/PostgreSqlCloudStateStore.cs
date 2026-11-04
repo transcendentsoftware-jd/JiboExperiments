@@ -241,8 +241,10 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             .ToArray();
     }
 
-    public string? GetUserIdForDevice(string deviceId) =>
-        Sync(Require(_userDeviceLinks, "user-device links").FindUserIdByDeviceAsync(deviceId));
+    public string? GetUserIdForDevice(string deviceId) => GetUserDeviceLink(deviceId)?.UserId;
+
+    public UserDeviceLink? GetUserDeviceLink(string deviceId) =>
+        Sync(Require(_userDeviceLinks, "user-device links").FindByDeviceAsync(deviceId));
 
     private ICloudUserRepository RequireUsers() => _users ??
         throw new InvalidOperationException("The normalized user repository is not configured.");

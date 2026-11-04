@@ -140,11 +140,12 @@ public sealed class PortalCalendarFeedApiTests
             secondLoop.LoopId,
             "Jibo-Two",
             [new LoopUserSnapshot("person-two", "Second Household", Type: "owner")]);
-        integrations.AddHomeAssistantLink("DEVICE-ONE", "Jibo-One", "ha-one");
-        integrations.AddHomeAssistantLink("DEVICE-TWO", "Jibo-Two", "ha-two");
 
         await AuthorizeAsync(firstClient, factory, "Jibo-One", "DEVICE-ONE");
         await AuthorizeAsync(secondClient, factory, "Jibo-Two", "DEVICE-TWO");
+
+        integrations.AddHomeAssistantLink("DEVICE-ONE", "Jibo-One", "ha-one");
+        integrations.AddHomeAssistantLink("DEVICE-TWO", "Jibo-Two", "ha-two");
 
         var firstDashboard =
             await (await firstClient.GetAsync("/api/portal/dashboard")).Content.ReadFromJsonAsync<JsonElement>();
