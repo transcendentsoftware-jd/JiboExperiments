@@ -4,14 +4,16 @@ using Jibo.Runtime.Abstractions;
 
 namespace Jibo.Cloud.Infrastructure.Calendar;
 
-public sealed class CloudStateCalendarReportProvider(ICloudStateStore cloudStateStore) : ICalendarReportProvider
+public sealed class CloudStateCalendarReportProvider(ICloudStateStore cloudStateStore, TimeProvider? timeProvider = null) : ICalendarReportProvider
 {
+    private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
     public Task<CalendarReportSnapshot?> GetReportAsync(
         TurnContext turn,
         CancellationToken cancellationToken = default)
     {
         var loopId = ResolveLoopId(turn);
-        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.Date);
+        var zone = CalendarLocalTime.ResolveZone(turn.TimeZone);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(_clock.GetUtcNow(), zone).DateTime);
         var tomorrow = today.AddDays(1);
 
         var calendarEvents = cloudStateStore.GetCalendarEvents(loopId)

@@ -12,8 +12,10 @@ public sealed class IcalCalendarReportProvider(
     ICloudStateStore cloudStateStore,
     IIcalFeedFetcher feedFetcher,
     ICalendarReportProvider fallbackProvider,
-    ILogger<IcalCalendarReportProvider> logger) : ICalendarReportProvider
+    ILogger<IcalCalendarReportProvider> logger,
+    TimeProvider? timeProvider = null) : ICalendarReportProvider
 {
+    private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
     private static readonly TimeSpan SuccessCacheTtl = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan FailureCacheTtl = TimeSpan.FromSeconds(45);
 
@@ -32,8 +34,13 @@ public sealed class IcalCalendarReportProvider(
         if (feed is null || !feed.IsEnabled || string.IsNullOrWhiteSpace(feed.IcalUrl))
             return await fallbackProvider.GetReportAsync(turn, cancellationToken);
 
+        var now = _clock.GetUtcNow();
+        var localZone = CalendarLocalTime.ResolveZone(turn.TimeZone);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, localZone).DateTime);
+        var tomorrow = today.AddDays(1);
         var cacheKey = BuildCacheKey(feed.FeedId, feed.UpdatedUtc);
-        if (_cache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > DateTimeOffset.UtcNow)
+        if (_cache.TryGetValue(cacheKey, out var cached) && cached.ExpiresUtc > now &&
+            cached.LocalDate == today && cached.ZoneId == localZone.Id)
             return cached.Snapshot;
 
         try
@@ -51,13 +58,10 @@ public sealed class IcalCalendarReportProvider(
                     null,
                     fetch.Error ?? "fetch_failed", feed.FeedId);
                 var failureSnapshot = new CalendarReportSnapshot([], [], [], HasServiceError: true);
-                _cache[cacheKey] = new CacheEntry(failureSnapshot, DateTimeOffset.UtcNow.Add(FailureCacheTtl));
+                _cache[cacheKey] = new CacheEntry(failureSnapshot, now.Add(FailureCacheTtl), today, localZone.Id);
                 return failureSnapshot;
             }
 
-            var localZone = TimeZoneInfo.Local;
-            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, localZone).DateTime);
-            var tomorrow = today.AddDays(1);
             var events = IcalCalendarParser.ParseEventsForWindow(fetch.Body, today, tomorrow, localZone);
 
             var todayEvents = events.Where(item => item.Date == today).ToArray();
@@ -67,8 +71,8 @@ public sealed class IcalCalendarReportProvider(
                 todayEvents.Select(static item => item.TimeLabel).ToArray(),
                 tomorrowEvents.Select(static item => item.Summary).ToArray());
 
-            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, DateTimeOffset.UtcNow, null, feed.FeedId);
-            _cache[cacheKey] = new CacheEntry(snapshot, DateTimeOffset.UtcNow.Add(SuccessCacheTtl));
+            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, _clock.GetUtcNow(), null, feed.FeedId);
+            _cache[cacheKey] = new CacheEntry(snapshot, now.Add(SuccessCacheTtl), today, localZone.Id);
             return snapshot;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -80,7 +84,7 @@ public sealed class IcalCalendarReportProvider(
             logger.LogWarning(exception, "iCal calendar parse failed for loop {LoopId}", loopId);
             integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, memberId, null, "parse_failed", feed.FeedId);
             var failureSnapshot = new CalendarReportSnapshot([], [], [], HasServiceError: true);
-            _cache[cacheKey] = new CacheEntry(failureSnapshot, DateTimeOffset.UtcNow.Add(FailureCacheTtl));
+            _cache[cacheKey] = new CacheEntry(failureSnapshot, now.Add(FailureCacheTtl), today, localZone.Id);
             return failureSnapshot;
         }
     }
@@ -187,5 +191,8 @@ public sealed class IcalCalendarReportProvider(
         return Convert.ToHexString(hash);
     }
 
-    private sealed record CacheEntry(CalendarReportSnapshot Snapshot, DateTimeOffset ExpiresUtc);
+    // Keep one view per feed revision; another zone/day replaces it instead of
+    // adding an unbounded set of date/zone keys. Always recheck ownership above.
+    private sealed record CacheEntry(CalendarReportSnapshot Snapshot, DateTimeOffset ExpiresUtc,
+        DateOnly LocalDate, string ZoneId);
 }

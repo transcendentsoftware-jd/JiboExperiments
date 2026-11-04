@@ -53,8 +53,8 @@ series is declined. This is a bounded subset, not a complete RFC recurrence engi
 
 Remaining gaps:
 
-- the report provider still chooses the server's local zone for today/tomorrow;
-  robot/household zone selection needs a separate change
+- stock robot time-zone forwarding and end-to-end local-day behavior still need
+  live capture; the provider honors the turn zone when supplied (see below)
 - custom `VTIMEZONE` definitions, `EXDATE`, `RDATE`, recurrence overrides and
   recurring multi-day spans are not implemented by this change
 - daily and monthly expansion retain their existing implementation and limits
@@ -65,3 +65,24 @@ Remaining gaps:
 Regression coverage includes multiple weekdays, interval/week-start boundaries,
 count exhaustion, long-running series, UTC day shifts, named-zone daylight-saving
 transitions, inclusive end limits, all-day dates and unsupported-rule refusal.
+
+## Robot-local report windows (2026-11-04)
+
+The iCalendar and manual-event/holiday providers now use `TurnContext.TimeZone`
+when it names a zone supported by the host. Missing or invalid zones explicitly
+fall back to the server's local zone. The window uses the provider's current UTC
+clock converted to that zone; a replayed turn timestamp does not choose the day.
+Feed inspection without a turn still uses the server's local zone.
+
+Cached success and failure snapshots are valid only for their original zone and
+local date, as well as their existing TTL and feed revision. Crossing midnight
+refreshes the view immediately. Switching zones replaces the one cached view for
+that feed revision, avoiding an accumulating set of zone/date cache keys. The
+integration-store ownership check still happens before reading the cache.
+
+An optional `TimeProvider` constructor parameter supports deterministic tests;
+normal service construction uses the system clock. Regression cases cover a
+robot behind UTC, two zones sharing a feed, local midnight during the success
+and failure TTLs, manual events/birthdays and missing/invalid-zone fallback.
+These are software boundary tests; stock robot context forwarding remains a
+physical acceptance item, and the published preview has not yet been updated.
