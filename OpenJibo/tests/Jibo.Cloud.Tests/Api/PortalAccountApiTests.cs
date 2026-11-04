@@ -17,6 +17,128 @@ namespace Jibo.Cloud.Tests.Api;
 public sealed class PortalAccountApiTests
 {
     [Fact]
+    public async Task CodeOnlySession_IsInvalidatedByFirstClaimAndLaterTransfer()
+    {
+        await using var factory = CreateFactory();
+        async Task<HttpClient> CodeLogin()
+        {
+            var code = factory.Services.GetRequiredService<JiboVerificationService>()
+                .IssueCodeForDevice("isolation-jibo", "device-isolation");
+            var client = factory.CreateClient();
+            var response = await client.PostAsJsonAsync("/api/portal/jibo-verification/confirm", new { code });
+            response.EnsureSuccessStatusCode();
+            var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+                payload.GetProperty("portalSessionToken").GetString());
+            return client;
+        }
+
+        var unclaimedProof = await CodeLogin();
+        Assert.Equal(HttpStatusCode.OK, (await unclaimedProof.GetAsync("/api/portal/dashboard")).StatusCode);
+        var first = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
+        await PairAndSelectAsync(factory, first);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await unclaimedProof.GetAsync("/api/portal/dashboard")).StatusCode);
+        var firstOwnersProof = await CodeLogin();
+        Assert.Equal(HttpStatusCode.OK, (await firstOwnersProof.GetAsync("/api/portal/dashboard")).StatusCode);
+
+        var second = await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
+        var secondRobot = await PairAndSelectAsync(factory, second);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await firstOwnersProof.GetAsync("/api/portal/dashboard")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await secondRobot.GetAsync("/api/portal/dashboard")).StatusCode);
+    }
+
+    [Fact]
+    public async Task RobotNamedPortalAdmin_DoesNotGrantAdministratorAccess()
+    {
+        await using var factory = CreateFactory();
+        var verification = factory.Services.GetRequiredService<JiboVerificationService>();
+        var code = verification.IssueCodeForDevice("ordinary-robot", "portal-admin");
+        var client = factory.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/portal/jibo-verification/confirm", new { code });
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            payload.GetProperty("portalSessionToken").GetString());
+
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await client.GetAsync("/api/portal/status/summary")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/portal/dashboard")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/api/portal/dashboard")]
+    [InlineData("/api/portal/calendar-feeds")]
+    [InlineData("/api/portal/loop-members")]
+    [InlineData("/api/portal/home-assistant/links")]
+    [InlineData("/api/portal/admin/summary")]
+    public async Task AccountOnlySession_CannotReadRobotResourcesOrCreateTopology(string path)
+    {
+        await using var factory = CreateFactory();
+        var client = await RegisterAndAuthenticateAsync(factory, "unpaired@example.invalid");
+        var store = factory.Services.GetRequiredService<ICloudStateStore>();
+        var loops = store.GetLoops().Select(loop => loop.LoopId).ToArray();
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(path)).StatusCode);
+        Assert.Equal(loops, store.GetLoops().Select(loop => loop.LoopId));
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/portal/account")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/api/portal/dashboard")]
+    [InlineData("/api/portal/calendar-feeds")]
+    [InlineData("/api/portal/loop-members")]
+    [InlineData("/api/portal/home-assistant/links")]
+    [InlineData("/api/portal/admin/summary")]
+    public async Task TransferredRobot_RejectsPreviousOwnersSelectedSession(string path)
+    {
+        await using var factory = CreateFactory();
+        var firstAccount = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
+        var firstRobot = await PairAndSelectAsync(factory, firstAccount);
+        Assert.Equal(HttpStatusCode.OK, (await firstRobot.GetAsync(path)).StatusCode);
+
+        var secondAccount = await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
+        var secondRobot = await PairAndSelectAsync(factory, secondAccount);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await firstRobot.GetAsync(path)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await secondRobot.GetAsync(path)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await firstAccount.PostAsJsonAsync(
+            "/api/portal/robots/select", new { deviceId = "device-isolation" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await firstAccount.GetAsync("/api/portal/account")).StatusCode);
+    }
+
+    [Fact]
+    public async Task TransferredRobot_PreviousOwnerCannotDeleteNewOwnersIntegration()
+    {
+        await using var factory = CreateFactory();
+        var firstAccount = await RegisterAndAuthenticateAsync(factory, "first@example.invalid");
+        var firstRobot = await PairAndSelectAsync(factory, firstAccount);
+        var integrations = factory.Services.GetRequiredService<IUserIntegrationStore>();
+        var link = integrations.AddHomeAssistantLink("isolation-jibo", "isolation-jibo", "synthetic-instance");
+        var secondAccount = await RegisterAndAuthenticateAsync(factory, "second@example.invalid");
+        var secondRobot = await PairAndSelectAsync(factory, secondAccount);
+
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await firstRobot.DeleteAsync("/api/portal/home-assistant/link")).StatusCode);
+        Assert.Equal(link.LinkId, integrations.FindLinkForJibo("isolation-jibo", "isolation-jibo")?.LinkId);
+        Assert.Equal(HttpStatusCode.OK,
+            (await secondRobot.DeleteAsync("/api/portal/home-assistant/link")).StatusCode);
+    }
+
+    private static async Task<HttpClient> PairAndSelectAsync(WebApplicationFactory<Program> factory,
+        HttpClient account)
+    {
+        var verification = factory.Services.GetRequiredService<JiboVerificationService>();
+        var code = verification.IssueCodeForDevice("isolation-jibo", "device-isolation");
+        var response = await account.PostAsJsonAsync("/api/portal/robots/pair", new { code });
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",
+            payload.GetProperty("portalSessionToken").GetString());
+        return client;
+    }
+
+    [Fact]
     public async Task Register_RejectsPasswordsOutsideEightToThirtyTwoCharacters()
     {
         await using var factory = CreateFactory();

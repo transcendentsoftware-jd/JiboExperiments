@@ -292,6 +292,11 @@ Invoke-RestMethod http://localhost:8080/health
 
 ## 7. Point a physical Jibo at the stack
 
+See [portal sessions and ownership transfers](portal-session-boundaries.md) for
+robot selection, administrator access and private signing-key configuration.
+Upgrading to session-purpose tokens requires signing in again once. Retain a
+configured signing key for continuity across later restarts or replicas.
+
 Before replacing an existing preview, use the
 [upgrade and separate-project recovery rehearsal](preview-upgrade-recovery-20261103.md).
 Fresh preparation and startup do not upgrade existing data or establish rollback.

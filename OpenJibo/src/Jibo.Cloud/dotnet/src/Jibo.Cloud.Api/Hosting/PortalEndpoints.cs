@@ -17,7 +17,6 @@ namespace Jibo.Cloud.Api.Hosting;
 
 internal static class PortalEndpoints
 {
-    private const string AdminSessionDeviceId = "portal-admin";
     private static readonly TimeSpan StatusHeartbeatWindow = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan StatusActiveActivityWindow = TimeSpan.FromMinutes(2);
     private static readonly string[] RequiredLegacyHostMappings =
@@ -315,7 +314,7 @@ internal static class PortalEndpoints
             PortalSessionService portalSessionService,
             ICloudStateStore cloudStateStore) =>
         {
-            var session = ResolvePortalSession(request, null, portalSessionService);
+            var session = ResolvePortalSession(request, null, portalSessionService, allowAccountSession: true);
             if (session?.UserId is null)
                 return Results.Unauthorized();
 
@@ -334,7 +333,7 @@ internal static class PortalEndpoints
             ICloudStateStore cloudStateStore) =>
         {
             var accountSession = ResolvePortalSession(httpRequest, request.PortalSessionToken,
-                portalSessionService);
+                portalSessionService, allowAccountSession: true);
             if (accountSession?.UserId is null)
                 return Results.Unauthorized();
 
@@ -369,7 +368,7 @@ internal static class PortalEndpoints
             ICloudStateStore cloudStateStore) =>
         {
             var accountSession = ResolvePortalSession(httpRequest, request.PortalSessionToken,
-                portalSessionService);
+                portalSessionService, allowAccountSession: true);
             if (accountSession?.UserId is null)
                 return Results.Unauthorized();
 
@@ -404,7 +403,7 @@ internal static class PortalEndpoints
             ICloudStateStore cloudStateStore) =>
         {
             var accountSession = ResolvePortalSession(httpRequest, request.PortalSessionToken,
-                portalSessionService);
+                portalSessionService, allowAccountSession: true);
             if (accountSession?.UserId is null)
                 return Results.Unauthorized();
 
@@ -449,8 +448,9 @@ internal static class PortalEndpoints
             if (!result.Ok)
                 return Results.BadRequest(new { error = result.Error });
 
-            var session = portalSessionService.CreateSession(result.DeviceId!, result.FriendlyId!);
             RegisterVerifiedRobotIdentity(cloudStateStore, result.DeviceId!, result.FriendlyId!);
+            var session = portalSessionService.CreateSession(result.DeviceId!, result.FriendlyId!,
+                ownerUserId: cloudStateStore.GetUserIdForDevice(result.DeviceId!));
 
             return Results.Json(new
             {
@@ -1059,7 +1059,7 @@ internal static class PortalEndpoints
             if (!PasswordsMatch(request.Password, configuredPassword))
                 return Results.Unauthorized();
 
-            var session = portalSessionService.CreateSession(AdminSessionDeviceId, "Portal Admin");
+            var session = portalSessionService.CreateAdministratorSession();
             return Results.Json(new
             {
                 portalSessionToken = session.Token,
@@ -2989,9 +2989,13 @@ internal static class PortalEndpoints
     private static PortalSessionService.PortalSession? ResolvePortalSession(
         HttpRequest request,
         string? portalSessionToken,
-        PortalSessionService portalSessionService)
+        PortalSessionService portalSessionService,
+        bool allowAccountSession = false)
     {
-        return portalSessionService.TryGetSession(ResolvePortalSessionToken(request, portalSessionToken));
+        var session = portalSessionService.TryGetSession(ResolvePortalSessionToken(request, portalSessionToken));
+        if (session is null) return null;
+        var store = request.HttpContext.RequestServices.GetRequiredService<ICloudStateStore>();
+        return PortalSessionAccessGuard.CanAccess(session, store, allowAccountSession) ? session : null;
     }
 
     private static object BuildAccountSessionPayload(
@@ -2999,7 +3003,7 @@ internal static class PortalEndpoints
         ICloudStateStore cloudStateStore,
         UserRecord user)
     {
-        var session = portalSessionService.CreateSession("portal-account", user.Email, user.Id);
+        var session = portalSessionService.CreateAccountSession(user.Email, user.Id);
         return new
         {
             portalSessionToken = session.Token,
@@ -3053,7 +3057,7 @@ internal static class PortalEndpoints
 
     private static bool IsAdminSession(PortalSessionService.PortalSession session)
     {
-        return string.Equals(session.DeviceId, AdminSessionDeviceId, StringComparison.OrdinalIgnoreCase);
+        return session.Kind == PortalSessionService.AdministratorSessionKind;
     }
 
     private static string? ResolvePortalSessionToken(

@@ -1,10 +1,59 @@
 using Jibo.Cloud.Application.Services;
 using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace Jibo.Cloud.Tests.Application;
 
 public sealed class PortalSessionServiceTests
 {
+    [Fact]
+    public void UnconfiguredInstances_DoNotShareSessionSigningKeys()
+    {
+        var configuration = new ConfigurationBuilder().Build();
+        var first = new PortalSessionService(configuration);
+        var second = new PortalSessionService(configuration);
+        var session = first.CreateSession("synthetic-device", "synthetic-robot");
+
+        Assert.NotNull(first.TryGetSession(session.Token));
+        Assert.Null(second.TryGetSession(session.Token));
+    }
+
+    [Fact]
+    public void ConfiguredInstances_CanShareSessionsAndRejectDifferentSigningKeys()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["OpenJibo:Portal:SessionSigningKey"] = "shared-test-key" }).Build();
+        var first = new PortalSessionService(configuration);
+        var second = new PortalSessionService(configuration);
+        var other = new PortalSessionService(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["OpenJibo:Portal:SessionSigningKey"] = "other-test-key" }).Build());
+        var session = first.CreateSession("synthetic-device", "synthetic-robot", "synthetic-user");
+
+        Assert.NotNull(second.TryGetSession(session.Token));
+        Assert.Null(other.TryGetSession(session.Token));
+    }
+
+    [Fact]
+    public void SignedLegacyTokenWithoutPurpose_IsRejected()
+    {
+        const string signingKey = "legacy-test-key";
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["OpenJibo:Portal:SessionSigningKey"] = signingKey }).Build();
+        var service = new PortalSessionService(configuration);
+        var now = DateTimeOffset.UtcNow;
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            deviceId = "portal-admin", friendlyId = "Portal Admin", issuedAtUtc = now.ToUnixTimeSeconds(),
+            expiresAtUtc = now.AddHours(1).ToUnixTimeSeconds(), nonce = "legacy-fixture", userId = (string?)null
+        });
+        string Encode(byte[] value) => Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var signature = HMACSHA256.HashData(SHA256.HashData(Encoding.UTF8.GetBytes(signingKey)), bytes);
+
+        Assert.Null(service.TryGetSession(Encode(bytes) + "." + Encode(signature)));
+    }
+
     [Fact]
     public void RobotMergePreviewToken_BindsSessionRouteSnapshotAndExpiry()
     {
