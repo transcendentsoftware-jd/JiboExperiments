@@ -23,7 +23,7 @@ files and `--profile self-hosted`. Keep PostgreSQL running for the backup. Do
 not run `down` or replace the API before exporting any container-local files.
 Follow [backup and recovery](self-hosted-recovery.md), including the separate
 encrypted integration-file export. A backup of `/data` does not capture the old
-API's `/app/App_Data/user-integrations.json` writable-layer file.
+API's `/app/api/App_Data/user-integrations.json` writable-layer file.
 
 Export that file to a new private destination. Verify the proposed volume
 destination is absent, stage the original bytes into `/data`, copy them back
@@ -149,3 +149,30 @@ This guide does not certify general upgrade compatibility,
 owner isolation, physical OOBE deployment, robot playback or stable release
 readiness. A synthetic credential read is not an end-to-end Home Assistant or
 calendar integration test.
+
+### Correction: the old API's default integration-file directory
+
+The standard image resolves its unset integration path from the API assembly's
+`AppContext.BaseDirectory`, so the legacy path is
+`/app/api/App_Data/user-integrations.json`. The shell working directory `/app`
+does not determine this default. The earlier rehearsal injected a valid
+encrypted fixture under `/app/App_Data` and read it through persistence helpers;
+that did not prove the old API loaded its default file. Its export/staging and
+store-compatibility results remain bounded to that supplied fixture.
+
+A fresh portable correction rehearsal used the exact old
+`runtime-preview-38165346370` package and current
+`runtime-preview-41757874916` image. The old API itself created and read a link
+through real HTTP/WebSocket routes with an unset persistence path. Export from
+`/app/api/App_Data` succeeded; the previously documented `/app/App_Data` path
+was absent. Staging was byte-identical, overwrite refusal and full backup
+verification passed, and the upgraded API read the original link and command
+secret after a fresh code login. All 19 checks passed. The new services stopped
+with keys, exports, backup and volumes retained; all 18 older running containers
+remained running without restart. No physical robot or production cloud changed.
+
+Local redacted evidence is under
+`artifact-output/legacy-integration-path-evidence-20261103/`. This corrected
+portable API/default-path check does not add AVX2, physical, all-version upgrade
+or rollback certification. Existing signed ZIPs and historical evidence assets
+remain unchanged; follow the corrected current guide before operating them.

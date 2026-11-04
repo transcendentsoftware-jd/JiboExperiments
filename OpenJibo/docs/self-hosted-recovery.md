@@ -103,7 +103,12 @@ loopback-only ports and robot traffic disconnected:
 This procedure does not restore robot-local calibration, firmware, enrollment
 tokens held only in API process memory, external services or provider state.
 It does not capture the container writable layer outside `/data`. For example,
-older installations may keep user-integrations JSON under `/app/App_Data`.
+older installations may keep user-integrations JSON under `/app/api/App_Data`.
+The default follows `AppContext.BaseDirectory`, which is the API assembly's
+directory, not the shell working directory. In the standard image the API is
+under `/app/api` even though `WORKDIR` is `/app`. An explicit persistence-path
+override takes precedence; resolve that path privately before any export. A
+custom image or service layout requires its own path check.
 Fresh `.env` files prepared from the current template select
 `OpenJibo__UserIntegrations__PersistencePath=/data/user-integrations.json`,
 which is covered by the API volume backup. Initialization preserves existing
@@ -123,9 +128,9 @@ been checked. Do not run `down`, recreate the API, or replace `.env` first.
    existing API container with `docker compose ps --all --quiet api` using those
    same project/files. Inspect its effective integration path and encryption
    configuration privately. An unset integration path uses
-   `/app/App_Data/user-integrations.json`; a custom path needs separate review.
+   `/app/api/App_Data/user-integrations.json`; a custom path needs separate review.
 2. Copy the existing encrypted file to a **new private host destination** with
-   `docker cp STOPPED_API_ID:/app/App_Data/user-integrations.json PRIVATE_ORIGINAL`.
+   `docker cp STOPPED_API_ID:/app/api/App_Data/user-integrations.json PRIVATE_ORIGINAL`.
    If this fails, stop: a failed copy does not establish that no credentials
    exist. Resolve the source path/access first. If this is a fresh installation
    with independently confirmed absent integration state, use the fresh setup
