@@ -967,11 +967,16 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             if (device is null)
                 throw new KeyNotFoundException("Robot record was not found.");
 
+            var previous = _userDeviceLinks.FirstOrDefault(item =>
+                item.DeviceId.Equals(device.DeviceId, StringComparison.OrdinalIgnoreCase));
+            if (previous is not null && previous.UserId.Equals(user.Id, StringComparison.OrdinalIgnoreCase))
+                return previous;
             _userDeviceLinks.RemoveAll(item =>
                 item.DeviceId.Equals(device.DeviceId, StringComparison.OrdinalIgnoreCase));
             var link = new UserDeviceLink(user.Id, device.DeviceId,
                 string.IsNullOrWhiteSpace(claimSource) ? "portal-pairing" : claimSource.Trim(),
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow, previous is null ? "unowned" : Guid.NewGuid().ToString("N"),
+                previous?.EffectiveLegacyIntegrationEpoch ?? "unowned");
             _userDeviceLinks.Add(link);
             TouchState();
             return link;
@@ -997,12 +1002,14 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         }
     }
 
-    public string? GetUserIdForDevice(string deviceId)
+    public string? GetUserIdForDevice(string deviceId) => GetUserDeviceLink(deviceId)?.UserId;
+
+    public UserDeviceLink? GetUserDeviceLink(string deviceId)
     {
         if (string.IsNullOrWhiteSpace(deviceId)) return null;
         lock (_syncRoot)
             return _userDeviceLinks.FirstOrDefault(item =>
-                item.DeviceId.Equals(deviceId.Trim(), StringComparison.OrdinalIgnoreCase))?.UserId;
+                item.DeviceId.Equals(deviceId.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     public string IssueHubToken(string? deviceId = null, bool useDefaultRobot = true,

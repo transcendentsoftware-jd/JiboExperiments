@@ -2,6 +2,7 @@ namespace Jibo.Cloud.Domain.Models;
 
 public sealed class MemberCalendarFeedRecord
 {
+    public string? OwnershipEpoch { get; init; }
     public string FeedId { get; init; } = Guid.NewGuid().ToString("N");
     public string LoopId { get; init; } = "openjibo-default-loop";
     public string MemberId { get; init; } = string.Empty;

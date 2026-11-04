@@ -115,11 +115,6 @@ public sealed class HomeAssistantPortalApiTests
         await using var factory = CreateFactory();
         var client = factory.CreateClient();
         var integrationStore = factory.Services.GetRequiredService<IUserIntegrationStore>();
-        integrationStore.AddHomeAssistantLink(
-            "BOJW-1000-0017-0820-0020",
-            "Ghost-Instance-Onion-Silk",
-            "ha-instance-1");
-
         var verificationService = factory.Services.GetRequiredService<JiboVerificationService>();
         var spokenCode =
             verificationService.IssueCodeForDevice("Ghost-Instance-Onion-Silk", "BOJW-1000-0017-0820-0020");
@@ -129,6 +124,11 @@ public sealed class HomeAssistantPortalApiTests
 
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", confirmPayload.GetProperty("portalSessionToken").GetString());
+
+        integrationStore.AddHomeAssistantLink(
+            "BOJW-1000-0017-0820-0020",
+            "Ghost-Instance-Onion-Silk",
+            "ha-instance-1");
 
         var unlinkResponse = await client.DeleteAsync("/api/portal/home-assistant/link");
         Assert.Equal(HttpStatusCode.OK, unlinkResponse.StatusCode);
@@ -212,7 +212,7 @@ public sealed class HomeAssistantPortalApiTests
     }
 
     [Fact]
-    public async Task Register_ReconnectsAsPaired_WhenOnlyInstanceIdIsKnown()
+    public async Task Register_RequiresFreshPairing_WhenOnlyInstanceIdIsKnown()
     {
         await using var factory = CreateFactory();
         var client = factory.CreateClient();
@@ -268,7 +268,8 @@ public sealed class HomeAssistantPortalApiTests
             CancellationToken.None);
 
         var reconnectPayload = await ReadJsonFrameAsync(reconnectedSocket);
-        Assert.Equal("paired", reconnectPayload.GetProperty("type").GetString());
+        Assert.Equal("verification_code", reconnectPayload.GetProperty("type").GetString());
+        Assert.False(reconnectPayload.TryGetProperty("commandSecret", out _));
     }
 
 

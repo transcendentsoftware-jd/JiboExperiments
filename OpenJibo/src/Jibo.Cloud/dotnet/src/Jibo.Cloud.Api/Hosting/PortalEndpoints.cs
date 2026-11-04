@@ -330,7 +330,8 @@ internal static class PortalEndpoints
             HttpRequest httpRequest,
             JiboVerificationService verificationService,
             PortalSessionService portalSessionService,
-            ICloudStateStore cloudStateStore) =>
+            ICloudStateStore cloudStateStore,
+            HomeAssistantConnectionRegistry integrationConnections) =>
         {
             var accountSession = ResolvePortalSession(httpRequest, request.PortalSessionToken,
                 portalSessionService, allowAccountSession: true);
@@ -349,8 +350,10 @@ internal static class PortalEndpoints
                 return Results.BadRequest(new { error = result.Error });
 
             RegisterVerifiedRobotIdentity(cloudStateStore, result.DeviceId!, result.FriendlyId!);
-            cloudStateStore.LinkUserToDevice(user.Id, result.DeviceId!, "portal-pairing");
-            var session = portalSessionService.CreateSession(result.DeviceId!, result.FriendlyId!, user.Id);
+            var ownership = cloudStateStore.LinkUserToDevice(user.Id, result.DeviceId!, "portal-pairing");
+            integrationConnections.RevokeInactiveConnections();
+            var session = portalSessionService.CreateSession(result.DeviceId!, result.FriendlyId!, user.Id,
+                ownershipEpoch: ownership.EffectiveOwnershipEpoch);
 
             return Results.Json(new
             {
@@ -385,7 +388,7 @@ internal static class PortalEndpoints
                 return Results.NotFound(new { error = "That robot is not paired to this account." });
 
             var session = portalSessionService.CreateSession(robot.DeviceId, robot.RobotId,
-                accountSession.UserId);
+                accountSession.UserId, ownershipEpoch: cloudStateStore.GetUserDeviceLink(robot.DeviceId)?.EffectiveOwnershipEpoch);
             return Results.Json(new
             {
                 portalSessionToken = session.Token,
@@ -449,8 +452,9 @@ internal static class PortalEndpoints
                 return Results.BadRequest(new { error = result.Error });
 
             RegisterVerifiedRobotIdentity(cloudStateStore, result.DeviceId!, result.FriendlyId!);
+            var ownership = cloudStateStore.GetUserDeviceLink(result.DeviceId!);
             var session = portalSessionService.CreateSession(result.DeviceId!, result.FriendlyId!,
-                ownerUserId: cloudStateStore.GetUserIdForDevice(result.DeviceId!));
+                ownerUserId: ownership?.UserId, ownershipEpoch: ownership?.EffectiveOwnershipEpoch);
 
             return Results.Json(new
             {
@@ -472,7 +476,7 @@ internal static class PortalEndpoints
             if (session is null)
                 return Results.Unauthorized();
 
-            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId);
+            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId, session.OwnershipEpoch ?? "unowned");
             return Results.Json(BuildDashboardPayload(session, link, registry, cloudStateStore, integrationStore));
         });
 
@@ -512,11 +516,14 @@ internal static class PortalEndpoints
             if (member is null)
                 return Results.NotFound(new { error = "Loop member not found." });
 
-            var feed = integrationStore.UpsertMemberCalendarFeed(
-                loopId,
-                member.MemberId,
-                request.IcalUrl!.Trim(),
-                request.IsEnabled ?? true);
+            MemberCalendarFeedRecord feed;
+            try
+            {
+                feed = integrationStore.UpsertMemberCalendarFeed(
+                    loopId, member.MemberId, request.IcalUrl!.Trim(),
+                    request.IsEnabled ?? true, session.OwnershipEpoch ?? "unowned");
+            }
+            catch (UnauthorizedAccessException) { return Results.Unauthorized(); }
 
             return Results.Json(BuildMemberCalendarFeedStatus(member, feed));
         });
@@ -533,7 +540,9 @@ internal static class PortalEndpoints
                 return Results.Unauthorized();
 
             var loopId = ResolvePortalLoopId(cloudStateStore, session);
-            var removed = integrationStore.ClearMemberCalendarFeed(loopId, memberId);
+            MemberCalendarFeedRecord? removed;
+            try { removed = integrationStore.ClearMemberCalendarFeed(loopId, memberId, session.OwnershipEpoch ?? "unowned"); }
+            catch (UnauthorizedAccessException) { return Results.Unauthorized(); }
             if (removed is null)
                 return Results.NotFound(new { error = "No calendar feed is configured for that member." });
 
@@ -676,9 +685,11 @@ internal static class PortalEndpoints
             if (member is null)
                 return Results.NotFound(new { error = "Loop member not found." });
 
+            var configuredFeed = integrationStore.FindMemberCalendarFeed(loopId, member.MemberId,
+                session.OwnershipEpoch ?? "unowned");
             var icalUrl = request.IcalUrl;
             if (string.IsNullOrWhiteSpace(icalUrl))
-                icalUrl = integrationStore.FindMemberCalendarFeed(loopId, member.MemberId)?.IcalUrl;
+                icalUrl = configuredFeed?.IcalUrl;
 
             if (string.IsNullOrWhiteSpace(icalUrl))
                 return Results.BadRequest(new { error = "iCal URL is required." });
@@ -689,7 +700,8 @@ internal static class PortalEndpoints
             var probe = await feedInspector.ProbeAsync(icalUrl);
             if (!probe.Ok)
             {
-                integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, member.MemberId, null, probe.Error);
+                if (configuredFeed is not null)
+                    integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, member.MemberId, null, probe.Error, configuredFeed.FeedId);
                 return Results.Json(new
                 {
                     ok = false,
@@ -698,7 +710,8 @@ internal static class PortalEndpoints
                 });
             }
 
-            integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, member.MemberId, DateTimeOffset.UtcNow, null);
+            if (configuredFeed is not null)
+                integrationStore.UpdateMemberCalendarFeedSyncStatus(loopId, member.MemberId, DateTimeOffset.UtcNow, null, configuredFeed.FeedId);
             return Results.Json(new
             {
                 ok = true,
@@ -863,10 +876,14 @@ internal static class PortalEndpoints
                 return Results.BadRequest(new
                     { error = "Home Assistant verification code is invalid or has expired." });
 
-            var link = integrationStore.AddHomeAssistantLink(
-                session.FriendlyId,
-                session.FriendlyId,
-                pendingHa.InstanceId);
+            HomeAssistantLinkRecord link;
+            try
+            {
+                link = integrationStore.AddHomeAssistantLink(
+                    session.DeviceId, session.FriendlyId,
+                    pendingHa.InstanceId, session.OwnershipEpoch ?? "unowned");
+            }
+            catch (UnauthorizedAccessException) { return Results.Unauthorized(); }
 
             var delivered = await registry.SendPairedAsync(
                 pendingHa.InstanceId,
@@ -896,7 +913,7 @@ internal static class PortalEndpoints
             if (session is null)
                 return Results.Unauthorized();
 
-            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId);
+            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId, session.OwnershipEpoch ?? "unowned");
             if (link is null)
                 return Results.NotFound(new { error = "No Home Assistant link exists for this Jibo." });
 
@@ -921,7 +938,7 @@ internal static class PortalEndpoints
             if (session is null)
                 return Results.Unauthorized();
 
-            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId);
+            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId, session.OwnershipEpoch ?? "unowned");
             if (link is null)
                 return Results.NotFound(new { error = "No Home Assistant link exists for this Jibo." });
 
@@ -962,7 +979,7 @@ internal static class PortalEndpoints
             var updates = cloudStateStore.ListUpdates();
             var media = cloudStateStore.ListMedia([loopId]);
             var people = graph.People;
-            var haLink = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId);
+            var haLink = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId, session.OwnershipEpoch ?? "unowned");
             var robotKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 { session.DeviceId, session.FriendlyId };
             var trustedServerAdmissions = cloudStateStore.GetTrustedServerAdmissions()
@@ -1968,7 +1985,7 @@ internal static class PortalEndpoints
             if (session is null)
                 return Results.Unauthorized();
 
-            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId);
+            var link = integrationStore.FindLinkForJibo(session.FriendlyId, session.FriendlyId, session.OwnershipEpoch ?? "unowned");
             return Results.Json(new
             {
                 links = link is null
@@ -3231,7 +3248,7 @@ internal static class PortalEndpoints
         PortalSessionService.PortalSession session)
     {
         var loopId = ResolvePortalLoopId(cloudStateStore, session);
-        var feeds = integrationStore.GetMemberCalendarFeeds(loopId);
+        var feeds = integrationStore.GetMemberCalendarFeeds(loopId, session.OwnershipEpoch ?? "unowned");
         // Query GetPeople(loopId) for this robot's loop only — never merge another Jibo's household.
         var members = EnumerateCalendarFeedPeople(cloudStateStore, loopId, session)
             .Select(person =>

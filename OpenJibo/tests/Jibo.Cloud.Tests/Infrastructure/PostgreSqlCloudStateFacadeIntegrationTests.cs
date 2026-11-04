@@ -35,19 +35,58 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
         var replica = new PortalSessionService(config);
         var unclaimed = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot");
         Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(unclaimed.Token)!, second));
-        first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "synthetic-claim");
+        var firstOwnership = first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "synthetic-claim");
+        Assert.Equal(firstOwnership.EffectiveOwnershipEpoch,
+            second.LinkUserToDevice(ownerA.Id, "PORTAL-TRANSFER-DEVICE", "same-owner").EffectiveOwnershipEpoch);
         Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(unclaimed.Token)!, second));
-        var accountProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerA.Id);
-        var codeProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerUserId: ownerA.Id);
+        var accountProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerA.Id,
+            ownershipEpoch: first.GetUserDeviceLink("portal-transfer-device")!.EffectiveOwnershipEpoch);
+        var codeProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerUserId: ownerA.Id,
+            ownershipEpoch: first.GetUserDeviceLink("portal-transfer-device")!.EffectiveOwnershipEpoch);
         Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(accountProof.Token)!, second));
         Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(codeProof.Token)!, second));
 
-        first.LinkUserToDevice(ownerB.Id, "portal-transfer-device", "synthetic-transfer");
+        var secondOwnership = first.LinkUserToDevice(ownerB.Id, "portal-transfer-device", "synthetic-transfer");
+        var concurrent = await Task.WhenAll(Enumerable.Range(0, 8).Select(index => Task.Run(() =>
+            (index % 2 == 0 ? first : second).LinkUserToDevice(ownerB.Id, "portal-transfer-device", "concurrent-repeat"))));
+        Assert.All(concurrent, link => Assert.Equal(secondOwnership.EffectiveOwnershipEpoch, link.EffectiveOwnershipEpoch));
 
         Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(accountProof.Token)!, second));
         Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(codeProof.Token)!, second));
-        var fresh = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerB.Id);
+        var fresh = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerB.Id,
+            ownershipEpoch: first.GetUserDeviceLink("portal-transfer-device")!.EffectiveOwnershipEpoch);
         Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(fresh.Token)!, second));
+        first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "returned-owner");
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(accountProof.Token)!, second));
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(codeProof.Token)!, second));
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(fresh.Token)!, second));
+        Assert.NotEqual(firstOwnership.EffectiveOwnershipEpoch,
+            second.GetUserDeviceLink("portal-transfer-device")!.EffectiveOwnershipEpoch);
+
+
+        // A migrated pre-epoch database row and schema-2 encrypted record stay bound to their original owner.
+        await database.ExecuteAsync("UPDATE UserDevices SET OwnershipEpoch = NULL, LegacyIntegrationEpoch = NULL WHERE DeviceId = 'portal-transfer-device'");
+        var legacy = second.GetUserDeviceLink("portal-transfer-device")!;
+        var path = Path.Combine(Path.GetTempPath(), $"openjibo-legacy-owner-{Guid.NewGuid():N}.json");
+        var encrypted = new EncryptedUserDataSnapshotStore(path, new UserDataEncryptionService());
+        encrypted.Save(new UserIntegrationSnapshot
+        {
+            SchemaVersion = 2,
+            HomeAssistantLinks = [new HomeAssistantLinkRecord
+            {
+                LinkId = "legacy-replica-link", JiboDeviceId = "portal-transfer-device",
+                JiboFriendlyName = "portal-transfer-robot", HaInstanceId = "legacy-replica-ha", CommandSecret = "legacy-private-secret"
+            }]
+        });
+        var integrations = new InMemoryUserIntegrationStore(encrypted, second);
+        Assert.Equal("legacy-private-secret", integrations.FindLinkByLinkId("legacy-replica-link")!.CommandSecret);
+        Assert.Equal(legacy.EffectiveOwnershipEpoch,
+            first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "legacy-repeat").EffectiveOwnershipEpoch);
+        var transfer = first.LinkUserToDevice(ownerB.Id, "portal-transfer-device", "legacy-transfer");
+        Assert.Equal(legacy.EffectiveOwnershipEpoch, transfer.EffectiveLegacyIntegrationEpoch);
+        Assert.Null(integrations.FindLinkByLinkId("legacy-replica-link"));
+        first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "legacy-return");
+        Assert.Null(new InMemoryUserIntegrationStore(encrypted, second).FindLinkByLinkId("legacy-replica-link"));
     }
 
     [PostgreSqlIntegrationFact]

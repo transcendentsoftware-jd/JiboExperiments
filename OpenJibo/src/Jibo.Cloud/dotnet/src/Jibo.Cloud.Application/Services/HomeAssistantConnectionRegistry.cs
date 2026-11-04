@@ -8,7 +8,7 @@ using Jibo.Cloud.Application.Abstractions;
 
 namespace Jibo.Cloud.Application.Services;
 
-public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transportMetrics = null)
+public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transportMetrics = null, IUserIntegrationStore? integrationStore = null)
 {
     private static readonly TimeSpan VerificationLifetime = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan CommandResultTimeout = TimeSpan.FromSeconds(3);
@@ -24,7 +24,7 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
     private readonly ConcurrentDictionary<string, PendingHomeAssistantVerification> _pendingByCode =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<HomeAssistantCommandResult>>
+    private readonly ConcurrentDictionary<string, PendingCommand>
         _pendingCommandResults = new(StringComparer.OrdinalIgnoreCase);
 
     public PendingHomeAssistantVerification RegisterConnection(string instanceId, WebSocket socket)
@@ -37,7 +37,8 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
             code,
             DateTimeOffset.UtcNow.Add(VerificationLifetime));
 
-        _connections[instanceId] = new HomeAssistantConnection(instanceId, socket);
+        if (_connections.TryGetValue(instanceId, out var previous)) RemovePending(previous);
+        _connections[instanceId] = new HomeAssistantConnection(instanceId, socket, PendingCode: code);
         _pendingByCode[code] = pending;
         _codeByInstanceId[instanceId] = code;
 
@@ -46,24 +47,53 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
 
     public void RegisterPairedConnection(string instanceId, WebSocket socket)
     {
+        if (_connections.TryGetValue(instanceId, out var previous)) RemovePending(previous);
         _connections[instanceId] = new HomeAssistantConnection(instanceId, socket);
-
-        if (_codeByInstanceId.TryRemove(instanceId, out var code))
-            _pendingByCode.TryRemove(code, out _);
     }
 
     public bool IsInstanceConnected(string instanceId)
     {
-        return _connections.TryGetValue(instanceId, out var connection) &&
+        return _connections.TryGetValue(instanceId, out var connection) && IsActive(connection) &&
                connection.Socket.State == WebSocketState.Open;
     }
 
     public void RemoveConnection(string instanceId)
     {
-        _connections.TryRemove(instanceId, out _);
+        if (_connections.TryRemove(instanceId, out var connection)) RemovePending(connection);
+    }
 
-        if (_codeByInstanceId.TryRemove(instanceId, out var code))
-            _pendingByCode.TryRemove(code, out _);
+    public void RemoveConnection(string instanceId, WebSocket socket)
+    {
+        if (_connections.TryGetValue(instanceId, out var connection) && ReferenceEquals(connection.Socket, socket) &&
+            _connections.TryRemove(new KeyValuePair<string, HomeAssistantConnection>(instanceId, connection)))
+        {
+            RemovePending(connection);
+        }
+    }
+
+    private void RemovePending(HomeAssistantConnection connection)
+    {
+        if (connection.PendingCode is not { } code) return;
+        _codeByInstanceId.TryRemove(new KeyValuePair<string, string>(connection.InstanceId, code));
+        _pendingByCode.TryRemove(code, out _);
+    }
+
+    public void RevokeInactiveConnections()
+    {
+        foreach (var connection in _connections.Values) IsActive(connection);
+    }
+
+    public bool IsCurrentConnection(string instanceId, WebSocket socket) =>
+        _connections.TryGetValue(instanceId, out var connection) && ReferenceEquals(connection.Socket, socket) &&
+        IsActive(connection);
+
+    private bool IsActive(HomeAssistantConnection connection)
+    {
+        if (connection.LinkId is null || integrationStore is null ||
+            integrationStore.FindLinkByLinkId(connection.LinkId) is not null) return true;
+        RemoveConnection(connection.InstanceId, connection.Socket);
+        connection.Socket.Abort();
+        return false;
     }
 
     public PendingHomeAssistantVerification? TryGetPendingByCode(string code)
@@ -86,8 +116,11 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
     {
         if (!_connections.TryGetValue(instanceId, out var connection)) return false;
 
-        if (_codeByInstanceId.TryRemove(instanceId, out var code))
-            _pendingByCode.TryRemove(code, out _);
+        if (integrationStore is not null && integrationStore.FindLinkByLinkId(linkId) is null) return false;
+        var pairedConnection = connection with { LinkId = linkId };
+        if (!_connections.TryUpdate(instanceId, pairedConnection, connection)) return false;
+        RemovePending(connection);
+        connection = pairedConnection;
 
         await SendJsonAsync(connection.Socket, new
         {
@@ -136,7 +169,8 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
         CancellationToken cancellationToken = default)
     {
         if (!_connections.TryGetValue(instanceId, out var connection)) return false;
-        if (string.IsNullOrWhiteSpace(commandSecret)) return false;
+        if (string.IsNullOrWhiteSpace(commandSecret) || !IsActive(connection) ||
+            (integrationStore is not null && (connection.LinkId != linkId || integrationStore.FindLinkByLinkId(linkId) is null))) return false;
 
         var payload = BuildCommandPayload(command, parameters, requestId: null, linkId, commandSecret);
         await SendJsonAsync(connection.Socket, payload, "command", cancellationToken);
@@ -152,12 +186,13 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
         CancellationToken cancellationToken = default)
     {
         if (!_connections.TryGetValue(instanceId, out var connection)) return null;
-        if (string.IsNullOrWhiteSpace(commandSecret)) return null;
+        if (string.IsNullOrWhiteSpace(commandSecret) || !IsActive(connection) ||
+            (integrationStore is not null && (connection.LinkId != linkId || integrationStore.FindLinkByLinkId(linkId) is null))) return null;
 
         var requestId = Guid.NewGuid().ToString("N");
         var completion = new TaskCompletionSource<HomeAssistantCommandResult>(
             TaskCreationOptions.RunContinuationsAsynchronously);
-        _pendingCommandResults[requestId] = completion;
+        _pendingCommandResults[requestId] = new PendingCommand(connection, linkId, completion);
 
         try
         {
@@ -169,7 +204,9 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
 
             try
             {
-                return await completion.Task.WaitAsync(timeoutCts.Token);
+                var result = await completion.Task.WaitAsync(timeoutCts.Token);
+                return IsActive(connection) && (integrationStore is null || integrationStore.FindLinkByLinkId(linkId) is not null)
+                    ? result : null;
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
@@ -182,15 +219,18 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
         }
     }
 
-    public bool TryCompleteCommandResult(JsonElement root)
+    public bool TryCompleteCommandResult(JsonElement root, string? instanceId = null, WebSocket? socket = null)
     {
         var result = HomeAssistantCommandResult.FromJson(root);
         if (string.IsNullOrWhiteSpace(result.RequestId)) return false;
 
-        if (!_pendingCommandResults.TryRemove(result.RequestId, out var completion))
-            return false;
-
-        return completion.TrySetResult(result);
+        if (!_pendingCommandResults.TryGetValue(result.RequestId, out var pending) ||
+            (instanceId is not null && !pending.Connection.InstanceId.Equals(instanceId, StringComparison.OrdinalIgnoreCase)) ||
+            (socket is not null && !ReferenceEquals(pending.Connection.Socket, socket)) ||
+            !IsActive(pending.Connection) ||
+            (integrationStore is not null && integrationStore.FindLinkByLinkId(pending.LinkId) is null)) return false;
+        if (!_pendingCommandResults.TryRemove(new KeyValuePair<string, PendingCommand>(result.RequestId, pending))) return false;
+        return pending.Completion.TrySetResult(result);
     }
 
     public async Task SendUnpairedAsync(
@@ -200,8 +240,7 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
     {
         if (!_connections.TryGetValue(instanceId, out var connection)) return;
 
-        if (_codeByInstanceId.TryRemove(instanceId, out var code))
-            _pendingByCode.TryRemove(code, out _);
+        RemovePending(connection);
 
         await SendJsonAsync(connection.Socket, new
         {
@@ -262,7 +301,7 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
         {
             if (pair.Value.ExpiresAtUtc > now) continue;
             _pendingByCode.TryRemove(pair.Key, out _);
-            _codeByInstanceId.TryRemove(pair.Value.InstanceId, out _);
+            _codeByInstanceId.TryRemove(new KeyValuePair<string, string>(pair.Value.InstanceId, pair.Key));
         }
     }
 
@@ -289,5 +328,8 @@ public sealed class HomeAssistantConnectionRegistry(ITransportMetrics? transport
         string Code,
         DateTimeOffset ExpiresAtUtc);
 
-    private sealed record HomeAssistantConnection(string InstanceId, WebSocket Socket);
+    private sealed record PendingCommand(HomeAssistantConnection Connection, string LinkId,
+        TaskCompletionSource<HomeAssistantCommandResult> Completion);
+
+    private sealed record HomeAssistantConnection(string InstanceId, WebSocket Socket, string? LinkId = null, string? PendingCode = null);
 }

@@ -55,6 +55,24 @@ public sealed class PortalSessionServiceTests
     }
 
     [Fact]
+    public void SignedVersionTwoOwnershipToken_IsRejected()
+    {
+        const string signingKey = "legacy-owner-test-key";
+        var service = new PortalSessionService(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["OpenJibo:Portal:SessionSigningKey"] = signingKey }).Build());
+        var now = DateTimeOffset.UtcNow;
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            deviceId = "synthetic-device", friendlyId = "synthetic-robot", issuedAtUtc = now.ToUnixTimeSeconds(),
+            expiresAtUtc = now.AddHours(1).ToUnixTimeSeconds(), nonce = "v2-fixture", userId = "old-owner",
+            ownerUserId = "old-owner", kind = "robot", version = 2
+        });
+        string Encode(byte[] value) => Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var signature = HMACSHA256.HashData(SHA256.HashData(Encoding.UTF8.GetBytes(signingKey)), bytes);
+        Assert.Null(service.TryGetSession(Encode(bytes) + "." + Encode(signature)));
+    }
+
+    [Fact]
     public void RobotMergePreviewToken_BindsSessionRouteSnapshotAndExpiry()
     {
         var clock = new ManualTimeProvider(DateTimeOffset.Parse("2026-09-10T12:00:00Z"));

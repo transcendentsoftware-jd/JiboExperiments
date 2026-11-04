@@ -63,7 +63,7 @@ public interface IUserDeviceLinkRepository
         CancellationToken cancellationToken = default);
     Task<IReadOnlyList<string>> ListDeviceIdsForUserAsync(string userId,
         CancellationToken cancellationToken = default);
-    Task<string?> FindUserIdByDeviceAsync(string deviceId,
+    Task<UserDeviceLink?> FindByDeviceAsync(string deviceId,
         CancellationToken cancellationToken = default);
 }
 

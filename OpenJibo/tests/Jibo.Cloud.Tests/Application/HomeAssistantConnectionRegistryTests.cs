@@ -129,6 +129,25 @@ public sealed class HomeAssistantConnectionRegistryTests
         Assert.Equal(TestCommandSecret, socket.LastPayload.Value.GetProperty("commandSecret").GetString());
     }
 
+    [Fact]
+    public async Task CommandResult_IsBoundToItsOriginalSocketAndReplacementSurvivesOldCleanup()
+    {
+        var registry = new HomeAssistantConnectionRegistry();
+        using var original = new CapturingWebSocket();
+        using var unrelated = new CapturingWebSocket();
+        registry.RegisterConnection("original-instance", original);
+        var command = registry.SendCommandAndWaitAsync("original-instance", TestLinkId, TestCommandSecret, "lights_off");
+        var requestId = original.LastPayload!.Value.GetProperty("requestId").GetString();
+        var result = JsonSerializer.SerializeToElement(new { type = "command_result", requestId, status = "ok" });
+        Assert.False(registry.TryCompleteCommandResult(result, "original-instance", unrelated));
+        Assert.False(registry.TryCompleteCommandResult(result, "unrelated-instance", original));
+        Assert.True(registry.TryCompleteCommandResult(result, "original-instance", original));
+        Assert.NotNull(await command);
+        registry.RegisterConnection("original-instance", unrelated);
+        registry.RemoveConnection("original-instance", original);
+        Assert.True(registry.IsCurrentConnection("original-instance", unrelated));
+    }
+
     private static Dictionary<string, string> PayloadToFields(JsonElement payload)
     {
         var fields = new Dictionary<string, string>(StringComparer.Ordinal);

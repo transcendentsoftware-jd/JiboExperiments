@@ -45,6 +45,8 @@ internal sealed class HomeAssistantWebSocketHandler(
                 var message = await ReceiveTextAsync(socket, context.RequestAborted);
                 if (message is null) break;
 
+                if (instanceId is not null && !registry.IsCurrentConnection(instanceId, socket)) break;
+
                 using var document = JsonDocument.Parse(message);
                 var root = document.RootElement;
                 var type = root.TryGetProperty("type", out var typeElement)
@@ -86,9 +88,8 @@ internal sealed class HomeAssistantWebSocketHandler(
                             integrationStore.UpdateHomeAssistantLastSeen(
                                 existingLink.LinkId,
                                 DateTimeOffset.UtcNow);
-                            var linkWithSecret = integrationStore.EnsureHomeAssistantCommandSecret(
-                                                   existingLink.LinkId) ??
-                                               existingLink;
+                            var linkWithSecret = integrationStore.EnsureHomeAssistantCommandSecret(existingLink.LinkId);
+                            if (linkWithSecret is null) break;
                             await registry.SendPairedAsync(
                                 instanceId,
                                 linkWithSecret.JiboFriendlyName,
@@ -113,7 +114,7 @@ internal sealed class HomeAssistantWebSocketHandler(
                         await registry.SendPongAsync(socket, context.RequestAborted);
                         break;
                     case "command_result":
-                        if (!registry.TryCompleteCommandResult(root))
+                        if (!registry.TryCompleteCommandResult(root, instanceId, socket))
                             logger.LogDebug("Ignored unmatched Home Assistant command_result");
                         break;
                     default:
@@ -125,7 +126,7 @@ internal sealed class HomeAssistantWebSocketHandler(
         finally
         {
             if (!string.IsNullOrWhiteSpace(instanceId))
-                registry.RemoveConnection(instanceId);
+                registry.RemoveConnection(instanceId, socket);
             transportMetrics.WebSocketConnectionClosed("home-assistant");
 
             logger.LogInformation(
@@ -137,12 +138,9 @@ internal sealed class HomeAssistantWebSocketHandler(
 
     private HomeAssistantLinkRecord? TryResolveExistingLink(string instanceId, string? linkId)
     {
-        HomeAssistantLinkRecord? link = null;
-
-        if (!string.IsNullOrWhiteSpace(linkId))
-            link = integrationStore.FindLinkByLinkId(linkId);
-
-        link ??= integrationStore.FindLinkByHaInstanceId(instanceId);
+        // Instance IDs are public labels. Only the saved opaque link ID may resume pairing.
+        if (string.IsNullOrWhiteSpace(linkId)) return null;
+        var link = integrationStore.FindLinkByLinkId(linkId);
         if (link is null) return null;
 
         if (!link.HaInstanceId.Equals(instanceId, StringComparison.OrdinalIgnoreCase)) return null;
@@ -197,7 +195,7 @@ internal sealed class HomeAssistantWebSocketHandler(
             return null;
         }
 
-        public HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId)
+        public HomeAssistantLinkRecord? FindLinkForJibo(string? jiboDeviceId, string? jiboFriendlyId, string? expectedOwnershipEpoch = null)
         {
             return null;
         }
@@ -205,7 +203,7 @@ internal sealed class HomeAssistantWebSocketHandler(
         public HomeAssistantLinkRecord AddHomeAssistantLink(
             string jiboDeviceId,
             string jiboFriendlyName,
-            string haInstanceId)
+            string haInstanceId, string? expectedOwnershipEpoch = null)
         {
             throw new NotSupportedException();
         }
@@ -232,12 +230,12 @@ internal sealed class HomeAssistantWebSocketHandler(
             return null;
         }
 
-        public IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null)
+        public IReadOnlyList<MemberCalendarFeedRecord> GetMemberCalendarFeeds(string? loopId = null, string? expectedOwnershipEpoch = null)
         {
             return [];
         }
 
-        public MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId)
+        public MemberCalendarFeedRecord? FindMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null)
         {
             return null;
         }
@@ -246,12 +244,12 @@ internal sealed class HomeAssistantWebSocketHandler(
             string loopId,
             string memberId,
             string icalUrl,
-            bool isEnabled = true)
+            bool isEnabled = true, string? expectedOwnershipEpoch = null)
         {
             throw new NotSupportedException();
         }
 
-        public MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId)
+        public MemberCalendarFeedRecord? ClearMemberCalendarFeed(string loopId, string memberId, string? expectedOwnershipEpoch = null)
         {
             return null;
         }
@@ -260,7 +258,7 @@ internal sealed class HomeAssistantWebSocketHandler(
             string loopId,
             string memberId,
             DateTimeOffset? lastSuccessUtc,
-            string? lastError)
+            string? lastError, string? expectedFeedId = null)
         {
             return null;
         }
