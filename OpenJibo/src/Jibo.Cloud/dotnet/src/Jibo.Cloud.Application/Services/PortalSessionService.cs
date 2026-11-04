@@ -8,6 +8,9 @@ namespace Jibo.Cloud.Application.Services;
 
 public sealed class PortalSessionService
 {
+    public const string RobotSessionKind = "robot";
+    public const string AccountSessionKind = "account";
+    public const string AdministratorSessionKind = "administrator";
     private static readonly TimeSpan SessionLifetime = TimeSpan.FromHours(24);
     private static readonly TimeSpan RobotMergePreviewLifetime = TimeSpan.FromMinutes(5);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -25,17 +28,33 @@ public sealed class PortalSessionService
     public PortalSessionService(IConfiguration configuration, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
-        var configuredSecret = configuration["OpenJibo:Portal:SessionSigningKey"]
-            ?? configuration["OpenJibo:Portal:StatusPassword"]
-            ?? Environment.GetEnvironmentVariable("OPENJIBO_PORTAL_SESSION_SIGNING_KEY")
-            ?? Environment.GetEnvironmentVariable("OPENJIBO_PORTAL_STATUS_PASSWORD")
-            ?? "openjibo-portal-session-development-fallback";
+        var configuredSecret = new[]
+        {
+            configuration["OpenJibo:Portal:SessionSigningKey"],
+            Environment.GetEnvironmentVariable("OPENJIBO_PORTAL_SESSION_SIGNING_KEY"),
+            configuration["OpenJibo:Portal:StatusPassword"],
+            Environment.GetEnvironmentVariable("OPENJIBO_PORTAL_STATUS_PASSWORD")
+        }.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 
-        _signingKey = SHA256.HashData(Encoding.UTF8.GetBytes(configuredSecret));
+        // Unconfigured instances must never accept a token signed with a public development key.
+        // Configure a private shared key explicitly when sessions must survive restarts/replicas.
+        _signingKey = configuredSecret is null ? RandomNumberGenerator.GetBytes(32)
+            : SHA256.HashData(Encoding.UTF8.GetBytes(configuredSecret));
         _timeProvider = timeProvider;
     }
 
-    public PortalSession CreateSession(string deviceId, string friendlyId, string? userId = null)
+    public PortalSession CreateSession(string deviceId, string friendlyId, string? userId = null,
+        string? ownerUserId = null) =>
+        CreateSessionCore(deviceId, friendlyId, userId, RobotSessionKind, userId ?? ownerUserId);
+
+    public PortalSession CreateAccountSession(string email, string userId) =>
+        CreateSessionCore("portal-account", email, RequireValue(userId, nameof(userId)), AccountSessionKind, null);
+
+    public PortalSession CreateAdministratorSession() =>
+        CreateSessionCore("portal-admin", "Portal Admin", null, AdministratorSessionKind, null);
+
+    private PortalSession CreateSessionCore(string deviceId, string friendlyId, string? userId,
+        string kind, string? ownerUserId)
     {
         PurgeRevocations();
 
@@ -47,10 +66,12 @@ public sealed class PortalSessionService
             now.ToUnixTimeSeconds(),
             expiresAt.ToUnixTimeSeconds(),
             Guid.NewGuid().ToString("N"),
-            string.IsNullOrWhiteSpace(userId) ? null : userId.Trim());
+            string.IsNullOrWhiteSpace(userId) ? null : userId.Trim(),
+            kind, 2, string.IsNullOrWhiteSpace(ownerUserId) ? null : ownerUserId.Trim());
 
         var token = BuildToken(payload);
-        return new PortalSession(token, payload.DeviceId, payload.FriendlyId, expiresAt, payload.UserId);
+        return new PortalSession(token, payload.DeviceId, payload.FriendlyId, expiresAt, payload.UserId,
+            payload.Kind!, payload.OwnerUserId);
     }
 
     public PortalSession? TryGetSession(string? token)
@@ -75,7 +96,7 @@ public sealed class PortalSessionService
             payload.DeviceId,
             payload.FriendlyId,
             DateTimeOffset.FromUnixTimeSeconds(payload.ExpiresAtUtc),
-            payload.UserId);
+            payload.UserId, payload.Kind!, payload.OwnerUserId);
     }
 
     public void RevokeSession(string? token)
@@ -171,7 +192,10 @@ public sealed class PortalSessionService
         {
             payload = JsonSerializer.Deserialize<SessionTokenPayload>(payloadBytes, JsonOptions)
                       ?? throw new JsonException();
-            return !string.IsNullOrWhiteSpace(payload.DeviceId) &&
+            return payload.Version == 2 &&
+                   payload.Kind is RobotSessionKind or AccountSessionKind or AdministratorSessionKind &&
+                   (payload.Kind != AccountSessionKind || !string.IsNullOrWhiteSpace(payload.UserId)) &&
+                   !string.IsNullOrWhiteSpace(payload.DeviceId) &&
                    !string.IsNullOrWhiteSpace(payload.FriendlyId);
         }
         catch
@@ -242,7 +266,10 @@ public sealed class PortalSessionService
         long IssuedAtUtc,
         long ExpiresAtUtc,
         string Nonce,
-        string? UserId);
+        string? UserId,
+        string? Kind,
+        int Version,
+        string? OwnerUserId);
 
     private sealed record RobotMergePreviewTokenPayload(
         string Kind,
@@ -266,5 +293,7 @@ public sealed class PortalSessionService
         string DeviceId,
         string FriendlyId,
         DateTimeOffset ExpiresAtUtc,
-        string? UserId = null);
+        string? UserId = null,
+        string Kind = RobotSessionKind,
+        string? OwnerUserId = null);
 }

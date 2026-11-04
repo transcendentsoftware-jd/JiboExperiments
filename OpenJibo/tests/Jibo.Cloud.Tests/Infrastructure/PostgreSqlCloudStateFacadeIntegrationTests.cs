@@ -6,11 +6,50 @@ using Jibo.Cloud.Application.Services;
 using Jibo.Cloud.Domain.Models;
 using Jibo.Cloud.Infrastructure.Persistence;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace Jibo.Cloud.Tests.Infrastructure;
 
 public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 {
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
+    public async Task PortalOwnershipTransfer_RejectsOldSignedProofAcrossReplicas()
+    {
+        await using var database = await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        await using var sourceB = new PostgreSqlCloudStateDataSource(database.ConnectionString, 2);
+        var first = new PostgreSqlCloudStateStore(sourceA, new PlaintextTestProtector());
+        var second = new PostgreSqlCloudStateStore(sourceB, new PlaintextTestProtector());
+        var ownerA = first.CreateUser("first@example.invalid", "synthetic-password", null, null)!;
+        var ownerB = first.CreateUser("second@example.invalid", "synthetic-password", null, null)!;
+        first.UpsertDevice(new DeviceRegistration
+        {
+            DeviceId = "portal-transfer-device", RobotId = "portal-transfer-robot", FriendlyName = "Synthetic Jibo"
+        });
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["OpenJibo:Portal:SessionSigningKey"] = "synthetic-replica-key"
+        }).Build();
+        var issuer = new PortalSessionService(config);
+        var replica = new PortalSessionService(config);
+        var unclaimed = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot");
+        Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(unclaimed.Token)!, second));
+        first.LinkUserToDevice(ownerA.Id, "portal-transfer-device", "synthetic-claim");
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(unclaimed.Token)!, second));
+        var accountProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerA.Id);
+        var codeProof = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerUserId: ownerA.Id);
+        Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(accountProof.Token)!, second));
+        Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(codeProof.Token)!, second));
+
+        first.LinkUserToDevice(ownerB.Id, "portal-transfer-device", "synthetic-transfer");
+
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(accountProof.Token)!, second));
+        Assert.False(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(codeProof.Token)!, second));
+        var fresh = issuer.CreateSession("portal-transfer-device", "portal-transfer-robot", ownerB.Id);
+        Assert.True(PortalSessionAccessGuard.CanAccess(replica.TryGetSession(fresh.Token)!, second));
+    }
+
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
     public async Task UpdateRobotPersistsOnePrimaryAcrossIndependentFacades()

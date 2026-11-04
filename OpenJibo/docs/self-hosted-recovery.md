@@ -102,6 +102,11 @@ loopback-only ports and robot traffic disconnected:
 
 This procedure does not restore robot-local calibration, firmware, enrollment
 tokens held only in API process memory, external services or provider state.
+Portal session-purpose upgrades require a fresh login once; old token formats
+are rejected. A configured private portal signing key must be retained for
+continuity across later restarts/replicas. With neither a signing key nor a
+status password configured, the API uses a new random process-local signing key
+and sessions expire on restart. User-data encryption keys remain separate.
 It does not capture the container writable layer outside `/data`. For example,
 older installations may keep user-integrations JSON under `/app/App_Data`.
 Fresh `.env` files prepared from the current template select
