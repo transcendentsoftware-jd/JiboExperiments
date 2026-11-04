@@ -38,6 +38,14 @@ public static class IcalCalendarParser
                 status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
                 continue;
 
+            if (WeeklyIcalRecurrence.IsWeekly(rruleRaw))
+            {
+                foreach (var occurrence in WeeklyIcalRecurrence.Expand(dtStartRaw,rruleRaw!,today,tomorrow,localTimeZone))
+                    events.Add(new ParsedIcalEvent(summary,DateOnly.FromDateTime(occurrence.StartLocal),occurrence.IsAllDay,
+                        occurrence.IsAllDay ? "all day" : FormatTimeLabel(occurrence.StartLocal),occurrence.StartLocal));
+                continue;
+            }
+
             if (!TryParseDateTimeProperty(dtStartRaw, localTimeZone, out var startLocal, out var isAllDay))
                 continue;
 

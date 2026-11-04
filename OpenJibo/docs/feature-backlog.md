@@ -1056,6 +1056,12 @@ These are the carryover items that need a clean proof pass first:
 ### 27. Personal Report Parity Track (Weather/News/Commute/Calendar)
 
 - Status: `in_progress`
+- Progress update (`2026-11-04`): fixed weekly iCalendar expansion across every
+  selected weekday, interval/week-start and count/end boundaries, long-running
+  series and source-zone daylight-saving transitions. See the supported subset
+  and remaining calendar gaps in [calendar-architecture.md](calendar-architecture.md).
+  This is source-tested; the current published runtime and live robot have not
+  yet been updated with this calendar change.
 - Tags: `protocol`, `content`, `storage`, `docs`
 - Why now:
   - personal report is a core Jibo charm surface and currently split between implemented weather speech and placeholder calendar/commute/news content
