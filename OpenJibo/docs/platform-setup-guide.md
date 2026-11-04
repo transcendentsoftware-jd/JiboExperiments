@@ -26,18 +26,18 @@ Linux containers are required even when the computer runs Windows or macOS.
 
 | Tool computer | Existing self-hosting entry point | Current evidence and limit |
 | --- | --- | --- |
-| Linux x86-64 | Bash Compose launcher; reviewed published-preview preparer/launcher | Native install, persistence, restore and speech evidence exists for specific previews. See [acceptance](published-starter-acceptance-20261006.md) and the exact release record. No blanket stable certification. |
-| Windows | PowerShell Compose source/digest launcher with a Linux Docker engine | Launcher contracts are tested. A complete fresh Windows install, update, restore and physical-robot rehearsal remains required. The published-preview Python launcher currently refuses this host. |
+| Linux x86-64 | Bash Compose launcher; reviewed published-preview preparer/launcher | Portable and opt-in AVX2 have native install, account-boundary, replacement-container, restore and recorded-speech evidence for [the exact integration-transfer preview](integration-transfer-runtime-preview-20261103.md). Physical robot acceptance remains separate. |
+| Windows x86-64 | PowerShell Compose source/digest launcher; current Python preview launcher with local Docker Desktop Linux engine | The exact portable preview passed fresh install, replacement-container persistence, separate-volume restore, account boundaries and recorded speech. See [Windows instructions and limits](windows-portable-runtime-preview-20261103.md). Windows AVX2, physical-robot acceptance and general version-pair upgrade/rollback remain unqualified. |
 | macOS Intel | Bash Compose source/digest launcher with a Linux Docker engine | Script path exists; complete native host acceptance remains required. The published-preview Python launcher currently refuses this host. |
 | macOS Apple Silicon or Linux ARM64 | Tooling can inspect the selected engine | The current reviewed preview images are Linux/amd64. No native ARM64 image or emulation acceptance is established; do not silently select emulation or label it supported. |
 
 Portable and AVX2 are CPU build profiles, not operating systems. Portable is the
 default preview; AVX2 requires checks on the actual engine host. A remote Docker
 context may use a different OS or CPU from the computer where the command runs.
-The [guarded-source preview record](guarded-source-preview-publication-20261011.md)
-binds the current experimental download to its exact source and digest and
-describes its synthetic-test limits. Older preview evidence does not certify a
-new image or operating system.
+The [integration-transfer preview record](integration-transfer-runtime-preview-20261103.md)
+binds the newer opt-in runtime to its exact source, image and archive hashes and
+describes its test limits. The [older guarded-source preview record](guarded-source-preview-publication-20261011.md)
+remains historical; older evidence does not certify a new image or operating system.
 
 ## Check prerequisites first
 
@@ -101,10 +101,20 @@ guessing a current digest. Avoid `--skip-build` / `-SkipBuild` in digest mode.
 
 The targeted [published-preview preparation and launch path](published-starter-provenance-20261006.md)
 verifies reviewed release identities and provenance, prepares a new directory,
-and requires an explicit start. Its launcher is **native Linux only** today.
-The [download page](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html)
-identifies the selected experimental preview. Preparation and host checks are
-not permission to upgrade an existing installation or bypass the native-host guard.
+and requires an explicit start. Use the current trusted checkout and the
+[`runtime-preview-41768412801` instructions](integration-transfer-runtime-preview-20261103.md)
+for native Linux portable/AVX2 or [Windows portable](windows-portable-runtime-preview-20261103.md).
+The fresh launcher refuses macOS and Windows AVX2. The
+[download page](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html)
+and automatic selectors retain their older selection; this newer preview must
+be selected explicitly. Preparation and host checks do not certify an upgrade
+or physical robot conversion.
+
+For this newer runtime, a different portal account sets up calendar and Home
+Assistant again; same-account re-pairing preserves settings. Review
+[ownership boundaries](integration-ownership.md) and [backup/restore](self-hosted-recovery.md)
+before upgrading. Updated source backup receipts flag configurations that need
+separate integration retention; published archives keep their original scripts.
 
 After startup, follow the runbook's health, database persistence, backup/restore,
 network and device checks. Keep a known-working image and matching recovery

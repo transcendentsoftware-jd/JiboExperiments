@@ -24,12 +24,20 @@ For local setup, use [docs/local-cloud-quickstart.md](docs/local-cloud-quickstar
 
 To self-host the Docker Compose stack on your own hardware, start with [docs/self-hosted-runbook.md](docs/self-hosted-runbook.md).
 
-For a fresh, digest-pinned native Linux experiment without a source build, use
-the [preview download instructions](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html).
-The owner-selected experimental preview is `runtime-preview-38165346370`.
-Portable is the default; AVX2 requires explicit selection and actual daemon-host
-CPU checks. Both passed synthetic install/speech/restore testing, not stable
-or physical-robot certification. [Evidence and remaining gates](docs/guarded-source-preview-publication-20261011.md).
+For a fresh, digest-pinned experiment without a source build, use the explicit
+[`runtime-preview-41768412801` guide](docs/integration-transfer-runtime-preview-20261103.md).
+Native Linux x86-64 supports portable and opt-in AVX2 with actual daemon-host CPU
+checks. Windows x86-64 supports [portable on local Docker Desktop's Linux engine](docs/windows-portable-runtime-preview-20261103.md).
+Use a current trusted checkout for the preparer/launcher and verify the signed
+starter. This opt-in preview does not change automatic defaults or the
+[download site's older selection](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html).
+
+The exact images passed recorded-speech, account-boundary, replacement-container
+and separate-volume restore checks. A new portal account sets up calendar and
+Home Assistant again; same-account re-pairing preserves settings. This is not
+stable or physical-robot certification. OOBE/repeat hardware testing awaits the
+new units; macOS, ARM64/emulation and Windows AVX2 remain separate gates. Retain
+matching keys and backups before any upgrade; see the [recovery guide](docs/self-hosted-recovery.md).
 
 For device bootstrap and OOBE QR setup, use:
 
