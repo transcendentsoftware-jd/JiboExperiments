@@ -4,12 +4,22 @@ This repository is the working lab for bringing Jibo back.
 
 The active OpenJibo work lives in [OpenJibo/README.md](OpenJibo/README.md), and the long-range story now lives in [OpenJibo/docs/roadmap.md](OpenJibo/docs/roadmap.md).
 
-For fresh native Linux self-hosting experiments, see the
-[preview downloads and testing site](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html).
-The recommended experimental package is `runtime-preview-38165346370`, with
-mandatory signature verification and explicit AVX2 opt-in. It is not a stable
-release, updater or robot conversion tool; license/notice and live-robot gates
-remain open. [Exact package acceptance and limits](OpenJibo/docs/guarded-source-preview-publication-20261011.md).
+For a fresh self-hosting experiment, see the tested, opt-in
+[`runtime-preview-41768412801` instructions](OpenJibo/docs/integration-transfer-runtime-preview-20261103.md):
+native Linux x86-64 supports portable and explicitly selected AVX2; Windows x86-64
+supports [portable with a local Docker Desktop Linux engine](OpenJibo/docs/windows-portable-runtime-preview-20261103.md).
+Use the current trusted checkout's preparer/launcher and mandatory signature
+verification. Calendar and Home Assistant need fresh setup after a robot changes
+accounts; same-account re-pairing preserves settings.
+
+This is experimental server installation, not a stable release or completed robot
+conversion. Physical OOBE/repeat deployment is pending delivery of the test units;
+macOS, ARM64/emulation and Windows AVX2 remain unqualified. The
+[download site's older selection](https://transcendentsoftware-jd.github.io/JiboExperiments/downloads.html)
+and automatic defaults are unchanged; select the newer version explicitly using
+its instructions. [Older preview evidence](OpenJibo/docs/guarded-source-preview-publication-20261011.md)
+remains historical. Start with the [platform setup guide](OpenJibo/docs/platform-setup-guide.md)
+for hosting choices, recovery and conversion limits.
 
 Repo hygiene: keep generated scratch output, temp captures, and local workspace state out of Git. The `.codex/` tree is ignored by default, and only intentionally shared configuration should be promoted to tracked files.
 
