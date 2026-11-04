@@ -59,6 +59,7 @@ shared/different keys and rejection of the old token shape. A PostgreSQL test
 uses two application stores and two signed-session services to recheck the
 committed ownership link across instances without relying on a local blacklist.
 
-These source tests do not transfer their results to an older published image.
-Use a release explicitly built from the session-purpose/ownership-guard changes;
-earlier digest-pinned previews remain unchanged.
+The [explicit portal runtime preview](portal-runtime-preview-20261103.md) is built
+from these changes and records new-digest native acceptance. These results do
+not transfer to older published images; earlier digest-pinned previews remain
+unchanged.
