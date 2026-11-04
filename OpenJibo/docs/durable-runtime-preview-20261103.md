@@ -105,7 +105,7 @@ checksums remain unchanged. Acceptance reports are supplemental records, not
 additional signed attestation subjects.
 
 No physical robot, OOBE hardware or playback was tested.
-macOS/ARM/emulation, owner isolation, upgrade compatibility and stable
+macOS/ARM/emulation, owner isolation, general upgrade compatibility and stable
 license/notice readiness are not certified. Fresh keys/data were synthetic;
 test services stopped with volumes and recovery material retained. Earlier
 previews and unpromoted distro-profile run 41728295466 were not substituted for
@@ -116,3 +116,10 @@ Local evidence is under
 `artifact-output/native-current-runtime-20261103/`. Only redacted
 acceptance metadata and CI build/source evidence are public release assets;
 private environments, SQL dumps and local volume archives are excluded.
+
+An [upgrade and recovery rehearsal guide](preview-upgrade-recovery-20261103.md)
+describes retaining an older installation's keys and container-local integration
+file, using the current signed Compose package with the original project and
+volumes, and recovering under the old runtime in a separate project.
+Both profiles passed that bounded older-preview-to-current rehearsal and
+pre-upgrade-backup recovery; it does not establish all-version upgrade support.
