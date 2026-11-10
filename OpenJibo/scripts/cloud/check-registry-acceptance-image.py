@@ -55,7 +55,7 @@ class DockerFixture:
         command(['docker','cp',str(sql),self.pg+':/docker-entrypoint-initdb.d/01-fixture.sql'])
         command(['docker','start',self.pg])
         for _ in range(60):
-            result=subprocess.run(['docker','exec',self.pg,'pg_isready','-U','fixture_admin','-d','registry_state'],capture_output=True,timeout=5)
+            result=subprocess.run(['docker','exec',self.pg,'pg_isready','-h','127.0.0.1','-U','fixture_admin','-d','registry_state'],capture_output=True,timeout=5)
             if result.returncode==0:break
             time.sleep(.5)
         else:raise Refusal('database-readiness')
@@ -128,7 +128,8 @@ def main():
                 if client is not None:proof['cases']=client.results
                 (a.output/'proof.json').write_text(json.dumps(proof,indent=2)+'\n')
     spec=importlib.util.spec_from_file_location('registry_graph',root/'OpenJibo/tests/check_runtime_access.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-    files=set(module.source_files(root))|{'OpenJibo/scripts/cloud/registry_acceptance.py','OpenJibo/scripts/cloud/check-registry-acceptance-image.py','OpenJibo/Dockerfile','OpenJibo/scripts/docker-api-entrypoint.sh'}
+    files=set(module.source_files(root))|{'OpenJibo/scripts/cloud/registry_acceptance.py','OpenJibo/scripts/cloud/check-registry-acceptance-image.py',
+        'OpenJibo/tests/test_registry_acceptance.py','OpenJibo/docs/registry-image-acceptance.md','OpenJibo/Dockerfile','OpenJibo/scripts/docker-api-entrypoint.sh'}
     records=[]
     for name in sorted(files):
         data=(root/name).read_bytes();target='source__'+name.replace('/','__');(a.output/target).write_bytes(data);records.append({'source':name,'file':target,'sha256':hashlib.sha256(data).hexdigest()})
