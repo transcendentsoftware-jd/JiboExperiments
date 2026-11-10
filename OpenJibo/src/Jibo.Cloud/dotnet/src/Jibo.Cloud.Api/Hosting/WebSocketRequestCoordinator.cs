@@ -21,12 +21,14 @@ internal sealed class WebSocketRequestCoordinator(
     ILogger<WebSocketRequestCoordinator> logger,
     HubChannelLeasePolicy? channelLeases = null,
     IRuntimePairingInitiationClient? pairingClient = null,
-    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null)
+    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null,
+    IRuntimeAccessClient? runtimeAccess = null)
 {
     private static readonly TimeSpan TurnWatchdogInterval = TimeSpan.FromMilliseconds(50);
     private const string ActiveConnectionIdMetadataKey = "openjibo.activeWebSocketConnectionId";
     private static readonly object SessionGateRegistryLock = new();
     private static readonly Dictionary<string, SessionGate> SessionGates = new(StringComparer.OrdinalIgnoreCase);
+    internal IRuntimeAccessClient AccessClient {get;init;}=runtimeAccess??new UnavailableRuntimeAccessClient(false);
     internal HubChannelLeasePolicy LeasePolicy { get; init; } = channelLeases ?? HubChannelLeasePolicy.Disabled;
     internal IRuntimePairingInitiationClient PairingClient { get; init; } = pairingClient ?? RejectingRuntimePairingInitiationClient.Instance;
     internal RuntimePairingCredentialEvidenceKey? PairingCredentialKey { get; init; } = pairingCredentialKey;
@@ -121,6 +123,7 @@ internal sealed class WebSocketRequestCoordinator(
             return;
         }
 
+        if (AccessClient.Enabled && kind == "home-assistant") { context.Response.StatusCode=403;return; }
         if (string.Equals(kind, "home-assistant", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogInformation(
@@ -201,9 +204,9 @@ internal sealed class WebSocketRequestCoordinator(
                 return;
             }
             issuedBearer = issuedToken.Token;
-            if (kind == "neo-hub-listen" && PairingClient.IsReady && PairingCredentialKey?.IsReady == true)
+            if ((kind == "neo-hub-listen" && PairingClient.IsReady || AccessClient.Enabled) && PairingCredentialKey?.IsReady == true)
                 pairingEvidence = RuntimePairingCredentialEvidence.Read(issuedToken.Metadata);
-            if (requiredTokenKind == "hub" && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
+            if ((requiredTokenKind == "hub" || AccessClient.Enabled) && HubTokenCredentialBinding.ContainsMetadata(issuedToken.Metadata) &&
                 !HubTokenCredentialBinding.TryRead(issuedToken.Metadata, out credentialBinding))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -253,6 +256,21 @@ internal sealed class WebSocketRequestCoordinator(
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             return;
         }
+        RuntimeAccessSession? accessSession=null;
+        if(AccessClient.Enabled)
+        {
+            if(!AccessClient.IsReady||PairingCredentialKey?.IsReady!=true){context.Response.StatusCode=503;return;}
+            if(kind is not ("neo-hub-listen" or "neo-hub-proactive" or "api-socket") || credentialBinding is null || pairingEvidence is null || token!=issuedBearer ||
+               AccessClient.ResolveIdentity(pairingEvidence) is not {} identity || cloudStateStore.FindIssuedToken(token!)?.DeviceId!=identity.DeviceId ||
+               kind is ("neo-hub-listen" or "neo-hub-proactive") && channelLease is null){context.Response.StatusCode=401;return;}
+            var accessBinding=RandomNumberGenerator.GetBytes(32);
+            accessSession=new RuntimeAccessSession(AccessClient,pairingEvidence,accessBinding,kind=="neo-hub-listen"?"hub-listen":kind=="neo-hub-proactive"?"hub-proactive":"robot-socket",async c=>
+            {
+                if(await cloudStateStore.ReadRuntimeCredentialEvidenceAsync(token!,credentialBinding,PairingCredentialKey,identity.DeviceId,c)!=pairingEvidence)return false;
+                return channelLease is null||await channelLease.CheckAsync(c);
+            });
+            if(!await accessSession.CheckAsync(context.RequestAborted)){context.Response.StatusCode=403;return;}
+        }
         var ownershipKey = channelLease is null ? ActiveConnectionIdMetadataKey : ActiveConnectionIdMetadataKey + "." + kind;
 
         // Stock OS 1.9's Neo Hub client closes when ASP.NET sends a WebSocket
@@ -263,9 +281,14 @@ internal sealed class WebSocketRequestCoordinator(
         var acceptContext = kind is "neo-hub-listen" or "neo-hub-proactive"
             ? new WebSocketAcceptContext { KeepAliveInterval = Timeout.InfiniteTimeSpan }
             : null;
-        using var socket = acceptContext is null
+        using var rawSocket = acceptContext is null
             ? await context.WebSockets.AcceptWebSocketAsync()
             : await context.WebSockets.AcceptWebSocketAsync(acceptContext);
+        using var connectionLifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+        var connectionCancellation = connectionLifetime.Token;
+        WebSocket socket=rawSocket;
+        using var guardedSocket=accessSession is null?null:new BorrowedAuthorizedWebSocket(rawSocket,GuardLeaseAsync);
+        if(guardedSocket is not null)socket=guardedSocket;
         transportMetrics.WebSocketConnectionOpened(kind);
         var connectionId = Guid.NewGuid().ToString("N");
         var openEnvelope = CreateEnvelope(context, kind, token, connectionId);
@@ -287,29 +310,37 @@ internal sealed class WebSocketRequestCoordinator(
         var isPrematureClose = false;
         var loopTransId = session.TurnState.TransId;
         var sessionStateOwnedOnClose = false;
-        using var connectionLifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
-        var connectionCancellation = connectionLifetime.Token;
         using var pairingContext = AmbientRuntimePairingSession.Bind(
             kind == "neo-hub-listen" && channelLease is not null && credentialBinding is not null && pairingEvidence is not null &&
             PairingClient.IsReady && PairingCredentialKey?.IsReady == true
                 ? new HubRuntimePairingSession(cloudStateStore,token!,credentialBinding,pairingEvidence,PairingCredentialKey,
                     channelLease,PairingClient,connectionCancellation) : null);
 
-        var continuity = credentialBinding is not null
+        var continuity = credentialBinding is not null && kind != "api-socket"
             ? new HubTokenContinuityMonitor(cloudStateStore, CredentialRevalidationInterval)
                 .RunAsync(socket, token!, credentialBinding, connectionLifetime)
             : Task.FromResult<string?>(null);
+        var accessMonitor=accessSession is null?Task.CompletedTask:MonitorAccessAsync();
         string? credentialFailure = null;
         var leaseMonitor = channelLease is not null
             ? new HubChannelLeaseMonitor(LeaseRenewalInterval).RunAsync(socket, channelLease, connectionLifetime)
             : Task.CompletedTask;
 
+        async Task MonitorAccessAsync()
+        {
+            using var timer=new PeriodicTimer(TimeSpan.FromMilliseconds(250));
+            try{do {if(!await accessSession!.CheckAsync(connectionCancellation)){connectionLifetime.Cancel();socket.Abort();return;}}
+                while(await timer.WaitForNextTickAsync(connectionCancellation));}
+            catch(OperationCanceledException)when(connectionCancellation.IsCancellationRequested){}
+        }
         Task GuardLeaseAsync(CancellationToken cancellation) => GuardConnectionLeaseAsync(cancellation, idle: false);
 
         async Task GuardConnectionLeaseAsync(CancellationToken cancellation, bool idle)
         {
             connectionCancellation.ThrowIfCancellationRequested();
             cancellation.ThrowIfCancellationRequested();
+            if(accessSession is not null && !await accessSession.CheckAsync(cancellation))
+            {connectionLifetime.Cancel();socket.Abort();throw new OperationCanceledException(connectionCancellation);}
             if (channelLease is null) return;
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellation, connectionCancellation);
             var current = idle ? await channelLease.CheckIdleAsync(linked.Token) : await channelLease.CheckAsync(linked.Token);
@@ -472,6 +503,7 @@ internal sealed class WebSocketRequestCoordinator(
             connectionLifetime.Cancel();
             credentialFailure = await continuity;
             await leaseMonitor;
+            await accessMonitor;
             if (registeredApiSocket)
                 robotNotificationRegistry.Remove(socket);
             if (presenceConnectionId != Guid.Empty) robotPresenceRegistry.Remove(presenceConnectionId);

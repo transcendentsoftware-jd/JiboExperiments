@@ -1055,6 +1055,22 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
                 ? evidence : null);
     }
 
+    public Task<RuntimePairingCredentialEvidence?> ReadRuntimeCredentialEvidenceAsync(string token,
+        HubTokenCredentialBinding expected, RuntimePairingCredentialEvidenceKey key, string expectedDeviceId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!key.IsReady || string.IsNullOrWhiteSpace(token) || token.Length > 4096 || token != token.Trim())
+            return Task.FromResult<RuntimePairingCredentialEvidence?>(null);
+        var stored = _sessions.FindDurable(token);
+        var evidence = stored is null ? null : RuntimePairingCredentialEvidence.Read(stored.Metadata);
+        return Task.FromResult(stored is not null && stored.Token == token && stored.DeviceId == expectedDeviceId && stored.Kind is ("hub" or "robot") &&
+            stored.AccountId == _account.AccountId && stored.ExpiresUtc > DateTimeOffset.UtcNow &&
+            HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) && original == expected &&
+            evidence is not null && key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey)
+                ? evidence : null);
+    }
+
     public string IssueRobotToken(string deviceId)
     {
         var token = $"token-{deviceId}-{Guid.NewGuid():N}";
@@ -1070,6 +1086,24 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
 
         TouchState();
         return token;
+    }
+
+    public string IssueRobotTokenWithCredentialEvidence(string deviceId,HubTokenCredentialBinding binding,RuntimePairingCredentialEvidence evidence)
+    {
+        var token = $"token-{deviceId}-{Guid.NewGuid():N}";
+        RegisterIssuedSession(token, new CloudSession
+        {
+            Kind = "robot",
+            AccountId = _account.AccountId,
+            Token = token,
+            DeviceId = deviceId,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(365),
+            Metadata = BoundMetadata()
+        });
+
+        TouchState();
+        return token;
+        IDictionary<string,object?> BoundMetadata(){var metadata=BuildSessionMetadata(_account.AccountId,deviceId,ResolveDefaultLoopId());binding.WriteTo(metadata);evidence.WriteTo(metadata);return metadata;}
     }
 
     public string IssueDeploymentSmokeRobotToken(string deviceId)

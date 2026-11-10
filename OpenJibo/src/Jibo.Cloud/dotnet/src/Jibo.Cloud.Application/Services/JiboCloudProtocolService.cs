@@ -19,7 +19,8 @@ public sealed class JiboCloudProtocolService(
     RobotNotificationRegistry? robotNotificationRegistry = null,
     LoopUpdatedPushService? loopUpdatedPushService = null,
     ILogger<JiboCloudProtocolService>? logger = null,
-    RobotIdentitySuggestionStore? identitySuggestionStore = null)
+    RobotIdentitySuggestionStore? identitySuggestionStore = null,
+    RuntimeProtocolAccessPolicy? runtimeAccess = null)
 {
     private const int SchedulerBackupDelayMs = 250;
     private const int SchedulerDownloadTickMs = 100;
@@ -102,7 +103,13 @@ public sealed class JiboCloudProtocolService(
         };
     }
 
-    public Task<ProtocolDispatchResult> DispatchAsync(ProtocolEnvelope envelope,
+    public async Task<ProtocolDispatchResult> DispatchAsync(ProtocolEnvelope envelope,CancellationToken cancellationToken=default)
+    {
+        var authorized=runtimeAccess is null?envelope:await runtimeAccess.AuthorizeAsync(envelope,cancellationToken);
+        if(authorized is null)return ProtocolDispatchResult.Raw(403,"", "application/json");
+        return await DispatchAuthorizedAsync(authorized,cancellationToken);
+    }
+    private Task<ProtocolDispatchResult> DispatchAuthorizedAsync(ProtocolEnvelope envelope,
         CancellationToken cancellationToken = default)
     {
         ObserveIdentityCandidates(envelope);

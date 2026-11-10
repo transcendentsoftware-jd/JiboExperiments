@@ -14,7 +14,8 @@ public sealed class CloudAuthProtocolHandler(
     AwsSigV4RequestVerifier? awsSigV4Verifier = null,
     IAwsSigV4ReplayObservationPublisher? awsSigV4ReplayObservationPublisher = null,
     IHubTokenReplayAdmission? hubTokenReplayAdmission = null,
-    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null) : ICloudAuthProtocolHandler
+    RuntimePairingCredentialEvidenceKey? pairingCredentialKey = null,
+    IRuntimeAccessClient? runtimeAccess = null) : ICloudAuthProtocolHandler
 {
     private static readonly AwsSigV4OperationPolicy CreateHubTokenPolicy = new(
         "Account.CreateHubToken",
@@ -259,7 +260,7 @@ public sealed class CloudAuthProtocolHandler(
                 : "unknown-device";
 
         var registrationSource = ReadRegistrationSource(envelope);
-        ObserveLegacyCredential(
+        var notificationVerification = ObserveLegacyCredential(
             envelope,
             NewRobotTokenPolicy,
             TryGetReplayProbeCredential(deviceId, registrationSource, envelope));
@@ -290,7 +291,11 @@ public sealed class CloudAuthProtocolHandler(
 
         var token = isDeploymentSmoke
             ? stateStore.IssueDeploymentSmokeRobotToken(deviceId)
-            : stateStore.IssueRobotToken(existing.DeviceId);
+            : runtimeAccess?.Enabled==true && notificationVerification.CredentialAuthenticated && pairingCredentialKey?.IsReady==true &&
+              HubTokenCredentialBinding.FromVerification(notificationVerification) is {} binding &&
+              notificationVerification.VerifiedProof?.CreatePairingCredentialEvidence(pairingCredentialKey) is {} evidence
+                ? stateStore.IssueRobotTokenWithCredentialEvidence(existing.DeviceId,binding,evidence)
+                : stateStore.IssueRobotToken(existing.DeviceId);
         _logger.LogInformation(
             "Notification NewRobotToken issued deviceId={DeviceId} robotId={RobotId}",
             deviceId,
