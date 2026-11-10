@@ -75,6 +75,11 @@ even if an old connection recently had access.
 
 ## Deployment boundary
 
+An installation can start in the separate [closed maintenance profile](runtime-maintenance.md)
+without initializing runtime data/provider services. Liveness in that profile
+does not establish access readiness. Opening normal service remains an explicit
+configuration and restart operation.
+
 The coordinator acceptance suite covers idle suspension, authorization outage,
 unready authority and fresh reconnect independently for Listen, Proactive and
 notification sockets. These are owned-fixture software checks, not hardware

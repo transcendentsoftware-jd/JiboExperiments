@@ -18,6 +18,17 @@ OpenJiboEnvLoader.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (RuntimeMaintenanceMode.IsEnabled(builder.Configuration))
+{
+    // A closed installation starts without registering runtime data/provider
+    // services. Opening it requires a new process with an explicit profile.
+    builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
+    var maintenanceApp = builder.Build();
+    maintenanceApp.Run(RuntimeMaintenanceMode.HandleAsync);
+    await maintenanceApp.RunAsync();
+    return;
+}
+
 ConfigureOperationalMetrics(builder);
 
 if (ShouldResetDiagnosticsOnStartup(builder.Configuration))
