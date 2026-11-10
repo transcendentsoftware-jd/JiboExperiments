@@ -239,6 +239,19 @@ jobs:
           OPENJIBO_RELEASE_SMOKE_ALLOWED_HOST: localhost
           TEST_ROBOT_ID: open-jibo-smoke-staging
 
+      - name: Verify same-image closed maintenance without runtime credentials
+        shell: bash
+        run: |
+          image=$(docker compose images --quiet api)
+          test -n "$image"
+          python3 -I -B scripts/cloud/check-runtime-maintenance-image.py --image "$image" --source-revision '${{ github.sha }}' --output '${{ runner.temp }}/runtime-maintenance-image'
+      - name: Retain closed maintenance image and exact sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: RuntimeMaintenanceImage-${{ github.sha }}
+          path: ${{ runner.temp }}/runtime-maintenance-image
+          if-no-files-found: error
+
       - name: Repeat startup with persisted volumes
         shell: bash
         run: |
