@@ -29,7 +29,8 @@ def main():
     raw=a.trx.read_bytes();ns={'t':'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'};test=ET.fromstring(raw);units=test.findall('t:Results/t:UnitTestResult',ns)
     required={'.RuntimeAccessTests.':19,'.RuntimeProtocolAccessTests.':7,
       '.Paid_profile_requires_current_full_evidence_and_explicit_identity_before_accept':7,
-      '.Previously_paid_token_cannot_reconnect_after_access_is_suspended':1,
+      '.Previously_paid_token_cannot_reconnect_after_access_is_suspended':3,
+      '.Every_idle_robot_channel_closes_on_lost_authority_and_requires_fresh_reconnect':9,
       '.Credential_bound_notification_socket_uses_its_own_fresh_access_decision':1,
       '.Every_send_overload_checks_the_connection_guard':2,
       '.Expiring_paid_grant_cancels_an_already_open_idle_socket':1,
@@ -48,6 +49,6 @@ def main():
     proof=dict(schema='openjibo.runtime-access-candidate.v1',sourceRevision=a.source_revision,testsPassed=sum(required.values()),testsSkipped=0,
        fullRunPassed=int(counters.get('passed','0')),fullRunSkipped=int(counters.get('notExecuted','0')),testResultsSha256=hashlib.sha256(raw).hexdigest(),
        realCredentialsRead=False,providerRequestsPerformed=False,nativePublicationPerformed=False,robotChanged=False,productionChanged=False,files=records)
-    (output/'proof.json').write_text(json.dumps(proof,indent=2)+'\n');print('Verified 39 runtime access cases and '+str(len(records))+' exact compilation source files.')
+    (output/'proof.json').write_text(json.dumps(proof,indent=2)+'\n');print('Verified '+str(sum(required.values()))+' runtime access cases and '+str(len(records))+' exact compilation source files.')
 
 if __name__=='__main__':main()
