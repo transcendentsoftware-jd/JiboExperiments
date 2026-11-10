@@ -16,15 +16,15 @@ def main():
     image=json.loads(run(['docker','image','inspect',a.image]))[0]['Id']
     if not re.fullmatch('sha256:[0-9a-f]{64}',image):raise SystemExit('Existing immutable local image required.')
     name='openjibo-maintenance-'+uuid.uuid4().hex;container=None;stopped=False;removed=False;checks=[]
+    def owned():
+        d=json.loads(run(['docker','inspect',container]))[0]
+        if d['Id']!=container or d['Image']!=image or d['Config']['Labels'].get('openjibo.test.scope')!=name:raise ValueError('Owned image container required.')
+        return d
     try:
         container=run(['docker','run','--detach','--pull=never','--name',name,'--label','openjibo.test.scope='+name,
             '--read-only','--cap-drop=ALL','--security-opt=no-new-privileges','--tmpfs','/tmp:rw,noexec,nosuid,size=32m',
             '--publish','127.0.0.1::8080','--env','OpenJibo__Maintenance__Enabled=true',
             '--env','ASPNETCORE_URLS=http://+:8080','--env','DOTNET_EnableDiagnostics=0',image])
-        def owned():
-            d=json.loads(run(['docker','inspect',container]))[0]
-            if d['Id']!=container or d['Image']!=image or d['Config']['Labels'].get('openjibo.test.scope')!=name:raise ValueError('Owned image container required.')
-            return d
         d=owned();ports=d['NetworkSettings']['Ports']['8080/tcp']
         if len(ports)!=1 or ports[0]['HostIp']!='127.0.0.1' or not ports[0]['HostPort'].isdigit():raise ValueError('Loopback publication required.')
         origin='http://127.0.0.1:'+ports[0]['HostPort'];opener=urllib.request.build_opener(NoRedirect())
@@ -51,8 +51,14 @@ def main():
             if actual!=status or body:raise ValueError('Closed route differs.')
         checks.extend(['head-liveness','unready-health','closed-protocol','closed-listen','closed-proactive','closed-notification','closed-portal','closed-static','no-health-write'])
         d=owned()
-        if not d['HostConfig']['ReadonlyRootfs'] or d['HostConfig']['CapDrop']!=['ALL'] or 'no-new-privileges' not in d['HostConfig']['SecurityOpt'] or any(m['Type']!='tmpfs' for m in d['Mounts']):raise ValueError('Read-only isolated image required.')
+        if not d['HostConfig']['ReadonlyRootfs'] or d['HostConfig']['CapDrop']!=['ALL'] or not any(s in ('no-new-privileges','no-new-privileges:true') for s in d['HostConfig']['SecurityOpt']) or any(m['Type']!='tmpfs' for m in d['Mounts']):raise ValueError('Read-only isolated image required.')
     finally:
+        if container is None:
+            partial=subprocess.run(['docker','inspect',name],capture_output=True,text=True,timeout=15)
+            if partial.returncode==0:
+                d=json.loads(partial.stdout)[0]
+                if d['Image']!=image or d['Config']['Labels'].get('openjibo.test.scope')!=name:raise ValueError('Unknown partial container; cleanup refused.')
+                container=d['Id']
         if container:
             owned();run(['docker','stop','--time','5',container]);stopped=not owned()['State']['Running']
             if not stopped:raise ValueError('Owned container stop failed.')
