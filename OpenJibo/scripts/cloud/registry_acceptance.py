@@ -64,7 +64,9 @@ class Fixture:
         if not re.fullmatch('[A-Za-z0-9_-]{32}', self.runtime_password):
             raise Refusal('generated-password-shape-refused')
         statements = [f"CREATE ROLE registry_runtime LOGIN PASSWORD '{self.runtime_password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;",
-                      'CREATE DATABASE registry_memory OWNER fixture_admin;']
+                      'CREATE DATABASE registry_memory OWNER fixture_admin;',
+                      'REVOKE ALL ON DATABASE postgres FROM PUBLIC;',
+                      'REVOKE ALL ON DATABASE template1 FROM PUBLIC;']
         for database in ('registry_state', 'registry_memory'):
             statements += [f'\\connect {database}',
                 f'REVOKE ALL ON DATABASE {database} FROM PUBLIC;',

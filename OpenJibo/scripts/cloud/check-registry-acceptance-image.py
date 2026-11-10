@@ -68,6 +68,10 @@ class DockerFixture:
             '--network',self.network,'--env-file',migrate_env,self.image,'/app/migrations/Jibo.Cloud.Migrations.dll','--apply','--target','all'])
         command(['docker','start','--attach',self.migrate],timeout=90)
         if self.owned(self.migrate)['State']['ExitCode']!=0:raise Refusal('migration-refused')
+        role_check="SELECT NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND has_database_privilege('registry_runtime','registry_state','CONNECT') AND has_database_privilege('registry_runtime','registry_memory','CONNECT') AND NOT has_database_privilege('registry_runtime','postgres','CONNECT') AND NOT has_database_privilege('registry_runtime','template1','CONNECT') AND NOT has_schema_privilege('registry_runtime','public','CREATE') FROM pg_roles WHERE rolname='registry_runtime'"
+        for database in ('registry_state','registry_memory'):
+            if command(['docker','exec',self.pg,'psql','-U','fixture_admin','-d',database,'-Atc',role_check])!='t':
+                raise Refusal('runtime-role-boundary-refused')
 
     def start_api(self,phase):
         if self.pg_started!=self.owned(self.pg)['State']['StartedAt']:raise Refusal('database-restarted')
@@ -118,7 +122,7 @@ def main():
                 client.ready();getattr(client,phase)()
             if client.posts!=12 or len(client.results)!=33 or len(controller.retired)!=2:raise Refusal('acceptance-counts-refused')
             proof.update(status='verified',cases=client.results,tokenPosts=client.posts,oldApiProcessesStopped=2,
-                databaseProcessPreserved=True,unchangedBearerPreserved=True)
+                databaseProcessPreserved=True,unchangedBearerPreserved=True,runtimeRoleLeastPrivilegeVerified=True)
         finally:
             proof['ownedResourcesRemoved']=False
             try:
