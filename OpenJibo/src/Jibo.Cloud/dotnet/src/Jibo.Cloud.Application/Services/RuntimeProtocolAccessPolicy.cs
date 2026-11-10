@@ -2,7 +2,8 @@ using System.Security.Cryptography;
 using Jibo.Cloud.Application.Abstractions;
 using Jibo.Cloud.Domain.Models;
 namespace Jibo.Cloud.Application.Services;
-public sealed class RuntimeProtocolAccessPolicy(ICloudStateStore store,IRuntimeAccessClient client,RuntimePairingCredentialEvidenceKey key)
+public sealed class RuntimeProtocolAccessPolicy(ICloudStateStore store,IRuntimeAccessClient client,RuntimePairingCredentialEvidenceKey key,
+ AwsSigV4RequestVerifier? credentialVerifier=null)
 {
  public async Task<ProtocolEnvelope?> AuthorizeAsync(ProtocolEnvelope envelope,CancellationToken cancellation)
  {
@@ -19,7 +20,7 @@ public sealed class RuntimeProtocolAccessPolicy(ICloudStateStore store,IRuntimeA
   }
   else
   {
-   var verifier=new AwsSigV4RequestVerifier(store);var verified=verifier.Verify(envelope);
+   var verifier=credentialVerifier??new AwsSigV4RequestVerifier(store);var verified=verifier.Verify(envelope);
    evidence=verified.CredentialAuthenticated?verified.VerifiedProof?.CreatePairingCredentialEvidence(key):null;if(evidence is null)return null;
    current=c=>{c.ThrowIfCancellationRequested();var again=verifier.Verify(envelope);return Task.FromResult(again.CredentialAuthenticated&&again.VerifiedProof?.CreatePairingCredentialEvidence(key)==evidence);};
   }

@@ -704,9 +704,10 @@ public sealed partial class WebSocketRequestCoordinatorTests
         return new WebSocketRequestCoordinator(service, haHandler, telemetrySink, store);
     }
 
-    private static JiboWebSocketService CreateWebSocketService(out InMemoryCloudStateStore store)
+    private static JiboWebSocketService CreateWebSocketService(out InMemoryCloudStateStore store,
+        InMemoryCloudStateStore? suppliedStore = null)
     {
-        store = new InMemoryCloudStateStore();
+        store = suppliedStore ?? new InMemoryCloudStateStore();
         var contentRepository = new InMemoryJiboExperienceContentRepository();
         var contentCache = new JiboExperienceContentCache(contentRepository);
         var conversationBroker = new DemoConversationBroker(new JiboInteractionService(contentCache,

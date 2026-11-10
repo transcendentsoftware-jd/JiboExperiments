@@ -75,6 +75,11 @@ even if an old connection recently had access.
 
 ## Deployment boundary
 
+For several independently provisioned credentials, use the optional
+[trusted protocol credential registry](trusted-protocol-credentials.md). Its
+immutable inventory requires a controlled restart for removal or rotation and
+does not replace physical identity or ownership acceptance.
+
 An installation can start in the separate [closed maintenance profile](runtime-maintenance.md)
 without initializing runtime data/provider services. Liveness in that profile
 does not establish access readiness. Opening normal service remains an explicit

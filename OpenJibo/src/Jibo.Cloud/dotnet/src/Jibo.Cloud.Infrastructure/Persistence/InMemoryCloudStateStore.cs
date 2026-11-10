@@ -12,6 +12,7 @@ namespace Jibo.Cloud.Infrastructure.Persistence;
 
 public sealed class InMemoryCloudStateStore : ICloudStateStore
 {
+    private readonly TrustedProtocolCredentialRegistry? _trustedCredentials;
     private const string CurrentSchemaVersion = "1";
     private const int IdentityGraphSnapshotVersion = 1;
     private const string IdentityGraphSignatureAlgorithm = "HMAC-SHA256";
@@ -81,8 +82,10 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
     }
 
     public InMemoryCloudStateStore(ISnapshotStore snapshotStore, IHolidayCalendarProvider holidayCalendarProvider,
-        string? ownerFirstName = null, string? ownerLastName = null, ITransportMetrics? transportMetrics = null)
+        string? ownerFirstName = null, string? ownerLastName = null, ITransportMetrics? transportMetrics = null,
+        TrustedProtocolCredentialRegistry? trustedCredentials = null)
     {
+        _trustedCredentials = trustedCredentials;
         _snapshotStore = snapshotStore;
         _holidayCalendarProvider = holidayCalendarProvider;
         _ownerFirstName = ownerFirstName;
@@ -1051,7 +1054,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         return Task.FromResult(stored is not null && stored.Token == token && stored.Kind == "hub" &&
             stored.AccountId == _account.AccountId && stored.ExpiresUtc > DateTimeOffset.UtcNow &&
             HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) && original == expected &&
-            evidence is not null && key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey)
+            evidence is not null && (_trustedCredentials?.Required == true ? _trustedCredentials.IsCurrentBinding(stored.Metadata, key) : key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey))
                 ? evidence : null);
     }
 
@@ -1067,7 +1070,7 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
         return Task.FromResult(stored is not null && stored.Token == token && stored.DeviceId == expectedDeviceId && stored.Kind is ("hub" or "robot") &&
             stored.AccountId == _account.AccountId && stored.ExpiresUtc > DateTimeOffset.UtcNow &&
             HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) && original == expected &&
-            evidence is not null && key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey)
+            evidence is not null && (_trustedCredentials?.Required == true ? _trustedCredentials.IsCurrentBinding(stored.Metadata, key) : key.MatchesCurrentCredential(evidence, _account.AccessKeyId, _account.SecretAccessKey))
                 ? evidence : null);
     }
 
@@ -1339,10 +1342,12 @@ public sealed class InMemoryCloudStateStore : ICloudStateStore
             : null;
     }
 
-    private static bool CredentialBindingIsCurrent(
+    private bool CredentialBindingIsCurrent(
         IEnumerable<KeyValuePair<string, object?>> metadata,
         AccountProfile account)
     {
+        if (_trustedCredentials?.Required == true)
+            return _trustedCredentials.IsCurrentBinding(metadata);
         if (!HubTokenCredentialBinding.ContainsMetadata(metadata))
             return true;
         return HubTokenCredentialBinding.TryRead(metadata, out var binding) &&

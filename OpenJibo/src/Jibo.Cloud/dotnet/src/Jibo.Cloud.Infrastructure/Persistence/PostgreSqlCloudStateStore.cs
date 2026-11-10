@@ -10,6 +10,7 @@ namespace Jibo.Cloud.Infrastructure.Persistence;
 /// </summary>
 public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
 {
+    private readonly TrustedProtocolCredentialRegistry? _trustedCredentials;
     private const string DefaultLoopId = "openjibo-default-loop";
     private readonly ICloudAccountRepository _accounts;
     private readonly ICloudAuthTokenRepository _authTokens;
@@ -48,7 +49,8 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         TimeSpan? deviceCacheTtl = null, int maximumActiveSessions = 256,
         TimeSpan? hubTokenLifetime = null, TimeSpan? robotTokenLifetime = null,
         IBackupPayloadStore? backupPayloadStore = null, string? ownerFirstName = null,
-        string? ownerLastName = null, ITransportMetrics? transportMetrics = null)
+        string? ownerLastName = null, ITransportMetrics? transportMetrics = null,
+        TrustedProtocolCredentialRegistry? trustedCredentials = null)
         : this(
             new PostgreSqlCloudStateMetadataRepository(dataSource),
             new PostgreSqlCloudAccountRepository(dataSource, secretProtector),
@@ -72,7 +74,7 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             new PostgreSqlAtomicLoopBackupRestorer(dataSource),
             secretProtector,
             ownerFirstName, ownerLastName,
-            new PostgreSqlUserDeviceLinkRepository(dataSource))
+            new PostgreSqlUserDeviceLinkRepository(dataSource), trustedCredentials)
     {
         LoadPersistedState();
     }
@@ -99,8 +101,10 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         ICloudStateSecretProtector? secretProtector = null,
         string? ownerFirstName = null,
         string? ownerLastName = null,
-        IUserDeviceLinkRepository? userDeviceLinks = null)
+        IUserDeviceLinkRepository? userDeviceLinks = null,
+        TrustedProtocolCredentialRegistry? trustedCredentials = null)
     {
+        _trustedCredentials = trustedCredentials;
         _metadata = metadata;
         _accounts = accounts;
         _devices = devices;
@@ -582,8 +586,10 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
             !HubTokenCredentialBinding.TryRead(stored.Metadata, out var current) || current != expected)
             return false;
         var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
-        return account is not null && string.Equals(expected.CredentialFingerprint,
-            AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), StringComparison.Ordinal);
+        return account is not null && (_trustedCredentials?.Required == true
+            ? _trustedCredentials.IsCurrentBinding(stored.Metadata)
+            : string.Equals(expected.CredentialFingerprint,
+                AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId), StringComparison.Ordinal));
     }
 
     public async Task<RuntimePairingCredentialEvidence?> ReadHubPairingCredentialEvidenceAsync(string token,
@@ -600,7 +606,7 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         if (evidence is null) return null;
         var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey)
+        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && (_trustedCredentials?.Required == true ? _trustedCredentials.IsCurrentBinding(stored.Metadata, key) : key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey))
             ? evidence : null;
     }
 
@@ -618,7 +624,7 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         if (evidence is null) return null;
         var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
-        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey)
+        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && (_trustedCredentials?.Required == true ? _trustedCredentials.IsCurrentBinding(stored.Metadata, key) : key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey))
             ? evidence : null;
     }
 
@@ -739,12 +745,14 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         string? accountId)
     {
         if (!HubTokenCredentialBinding.ContainsMetadata(metadata))
-            return true;
+            return _trustedCredentials?.Required != true;
         if (!HubTokenCredentialBinding.TryRead(metadata, out var binding) || binding is null ||
             string.IsNullOrWhiteSpace(accountId))
             return false;
 
         var account = Sync(_accounts.GetByIdAsync(accountId));
+        if (_trustedCredentials?.Required == true)
+            return account is not null && _trustedCredentials.IsCurrentBinding(metadata);
         return account is not null && string.Equals(
                    binding.CredentialFingerprint,
                    AwsSigV4RequestVerifier.CreateAccessKeyFingerprint(account.AccessKeyId),
