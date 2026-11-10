@@ -75,6 +75,12 @@ even if an old connection recently had access.
 
 ## Deployment boundary
 
+The coordinator acceptance suite covers idle suspension, authorization outage,
+unready authority and fresh reconnect independently for Listen, Proactive and
+notification sockets. These are owned-fixture software checks, not hardware
+certification. Use the [read-only runtime intake](robot-runtime-intake.md) before
+planning a device-specific configuration change.
+
 This profile serves already enrolled, credential-mapped robots. It provides no
 unpaid enrollment or recovery exemption. Those journeys need their own separately
 authenticated routes. The legacy Home Assistant proxy WebSocket uses another
