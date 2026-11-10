@@ -5,12 +5,13 @@ runtime image with fresh, synthetic credentials and disposable PostgreSQL.
 It requires an existing local image and exact checked-out source revision.
 It never changes an existing Compose stack, contacts a robot or imports a backup.
 
-The controller creates one UUID-owned internal Docker network, a PostgreSQL
+The controller creates one UUID-owned Docker bridge, a PostgreSQL
 container with temporary storage and three successive API processes. Only the
 API has a published port, bound to `127.0.0.1`. The database creates two fresh
 test databases and a non-superuser runtime role; a separate migration process
 uses the fixture administrator. No real database password or provider key is
-supplied. Telemetry exports and speech providers are disabled.
+supplied. Telemetry exports and speech providers are disabled. The bridge is not
+attached to an existing stack; it does not claim an outbound firewall policy.
 
 Acceptance runs three phases:
 

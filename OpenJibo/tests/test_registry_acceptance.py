@@ -18,7 +18,7 @@ class AcceptanceBoundaryTests(unittest.TestCase):
         staging='registry-fixture.example.invalid'
         self.assertIsNotNone(R.origin('http://127.0.0.1:12345'))
         self.assertIsNotNone(R.origin('https://'+staging,staging))
-        for bad in ('http://192.168.130.100:8080','http://172.24.84.101:8080','https://api.openjibo.com',
+        for bad in ('http://192.168.1.100:8080','http://172.16.1.100:8080','https://runtime.example.invalid',
                     'http://localhost:8080','http://127.0.0.1:1234/','http://user:pass@127.0.0.1:1234',
                     'https://'+staging+'/path','https://'+staging+'?query=1',
                     'https://'+staging+'.example.invalid','http://'+staging+':80'):

@@ -47,7 +47,7 @@ class DockerFixture:
 
     def start_database(self):
         self.network_created=True
-        command(['docker','network','create','--internal','--label','openjibo.test.scope='+self.fixture.scope,self.network])
+        command(['docker','network','create','--label','openjibo.test.scope='+self.fixture.scope,self.network])
         pg=command(['docker','image','inspect',POSTGRES_IMAGE,'--format','{{.Id}}'])
         env=self.env_file('pg.env',{'POSTGRES_USER':'fixture_admin','POSTGRES_PASSWORD':self.fixture.admin_password,'POSTGRES_DB':'registry_state'})
         self.create(self.pg,pg,['--env-file',env,'--tmpfs','/var/lib/postgresql/data:rw,nosuid,size=512m'])
