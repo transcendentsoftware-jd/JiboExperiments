@@ -56,7 +56,10 @@ public sealed record AwsSigV4OperationPolicy(
     IReadOnlyList<string> Targets,
     IReadOnlyList<string> Hosts);
 
-public sealed record AwsSigV4Credential(string AccessKeyId, string SecretAccessKey);
+public sealed record AwsSigV4Credential(string AccessKeyId, string SecretAccessKey)
+{
+    public override string ToString() => "AwsSigV4Credential { redacted }";
+}
 
 /// <summary>
 /// Ephemeral proof material emitted only after a legacy SigV4 signature verifies.
@@ -143,8 +146,10 @@ public sealed record AwsSigV4Verification(
 /// </summary>
 public sealed partial class AwsSigV4RequestVerifier(
     ICloudStateStore stateStore,
-    TimeProvider? timeProvider = null)
+    TimeProvider? timeProvider = null,
+    TrustedProtocolCredentialRegistry? trustedCredentials = null)
 {
+    public bool TrustedCredentialsRequired => trustedCredentials?.Required == true;
     public static readonly TimeSpan MaximumClockSkew = TimeSpan.FromMinutes(5);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
@@ -179,12 +184,18 @@ public sealed partial class AwsSigV4RequestVerifier(
         var presentedSignature = match.Groups["signature"].Value;
         var fingerprint = CreateAccessKeyFingerprint(accessKeyId);
 
-        var account = stateStore.GetAccount();
-        var secretAccessKey = MatchesCredential(accessKeyId, additionalCredential)
-            ? additionalCredential!.SecretAccessKey
-            : MatchesCredential(accessKeyId, new AwsSigV4Credential(account.AccessKeyId, account.SecretAccessKey))
-                ? account.SecretAccessKey
-                : null;
+        string? secretAccessKey;
+        if (TrustedCredentialsRequired)
+            secretAccessKey = trustedCredentials!.Resolve(accessKeyId)?.SecretAccessKey;
+        else
+        {
+            var account = stateStore.GetAccount();
+            secretAccessKey = MatchesCredential(accessKeyId, additionalCredential)
+                ? additionalCredential!.SecretAccessKey
+                : MatchesCredential(accessKeyId, new AwsSigV4Credential(account.AccessKeyId, account.SecretAccessKey))
+                    ? account.SecretAccessKey
+                    : null;
+        }
         if (string.IsNullOrWhiteSpace(secretAccessKey))
             return new AwsSigV4Verification(AwsSigV4VerificationOutcome.UnknownCredential, fingerprint);
 

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Jibo.Cloud.Tests.Infrastructure;
 
-public sealed class PostgreSqlCloudStateFacadeIntegrationTests
+public sealed partial class PostgreSqlCloudStateFacadeIntegrationTests
 {
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]

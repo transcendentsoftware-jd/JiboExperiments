@@ -234,7 +234,8 @@ public static class ServiceCollectionExtensions
                 backupPayloadStore: provider.GetRequiredService<IBackupPayloadStore>(),
                 ownerFirstName: ownerFirstName,
                 ownerLastName: ownerLastName,
-                transportMetrics: provider.GetRequiredService<ITransportMetrics>()));
+                transportMetrics: provider.GetRequiredService<ITransportMetrics>(),
+                trustedCredentials: provider.GetRequiredService<TrustedProtocolCredentialRegistry>()));
         }
         else
         {
@@ -248,7 +249,8 @@ public static class ServiceCollectionExtensions
                     holidayCalendarProvider,
                     ownerFirstName,
                     ownerLastName,
-                    provider.GetRequiredService<ITransportMetrics>());
+                    provider.GetRequiredService<ITransportMetrics>(),
+                    provider.GetRequiredService<TrustedProtocolCredentialRegistry>());
             });
         }
 
@@ -363,6 +365,22 @@ public static class ServiceCollectionExtensions
         var pairingEvidenceKey = RuntimePairingCredentialEvidenceKey.Create(pairingEvidenceOptions);
         pairingEvidenceOptions.HmacKey = null;
         services.AddSingleton<RuntimePairingCredentialEvidenceKey>(_ => pairingEvidenceKey);
+        var trustedCredentialOptions = new TrustedProtocolCredentialRegistryOptions();
+        try
+        {
+            configuration?.GetSection(TrustedProtocolCredentialRegistryOptions.SectionName).Bind(trustedCredentialOptions);
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or ArgumentException or FormatException)
+        {
+            // Do not echo raw option values or retain a binder exception as an inner exception.
+            throw new InvalidOperationException("Trusted protocol credential configuration is incomplete or invalid.");
+        }
+        var trustedCredentials = new TrustedProtocolCredentialRegistry(trustedCredentialOptions, pairingEvidenceKey);
+        trustedCredentialOptions.Credentials = null;
+        if (trustedCredentials.Required && !trustedCredentials.IsReady)
+            throw new InvalidOperationException("Trusted protocol credential configuration is incomplete or invalid.");
+        services.AddSingleton<TrustedProtocolCredentialRegistry>(_ => trustedCredentials);
+        services.AddSingleton<AwsSigV4RequestVerifier>();
         Jibo.Cloud.Infrastructure.ManagedPairing.RuntimePairingInitiationClientRegistration.Add(services, configuration);
         Jibo.Cloud.Infrastructure.ManagedPairing.RuntimeAccessClientRegistration.Add(services,configuration);
         services.AddSingleton<ICloudAuthProtocolHandler, CloudAuthProtocolHandler>();

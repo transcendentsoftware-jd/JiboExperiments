@@ -63,6 +63,8 @@ public sealed class CloudAuthProtocolHandler(
                 envelope,
                 CreateHubTokenPolicy,
                 TryGetReplayProbeCredential(deviceId, registrationSource, envelope));
+            if (_awsSigV4Verifier.TrustedCredentialsRequired && !credentialVerification.CredentialAuthenticated)
+                return ProtocolDispatchResult.Raw(401, "{\"message\":\"Request authentication required\"}", "application/json");
             var credentialBinding = HubTokenCredentialBinding.FromVerification(credentialVerification);
             var admission = await _hubTokenReplayAdmission.AdmitAsync(credentialVerification, cancellationToken).ConfigureAwait(false);
             if (admission == HubTokenReplayAdmissionOutcome.Rejected)
@@ -264,6 +266,8 @@ public sealed class CloudAuthProtocolHandler(
             envelope,
             NewRobotTokenPolicy,
             TryGetReplayProbeCredential(deviceId, registrationSource, envelope));
+        if (_awsSigV4Verifier.TrustedCredentialsRequired && !notificationVerification.CredentialAuthenticated)
+            return ProtocolDispatchResult.Raw(401, "{\"message\":\"Request authentication required\"}", "application/json");
         var isDeploymentSmoke = string.Equals(registrationSource, RobotRegistrationSources.DeploymentSmoke,
             StringComparison.OrdinalIgnoreCase);
         DeploymentSmokeRegistrationAuthorization? smokeAuthorization = null;
@@ -291,7 +295,7 @@ public sealed class CloudAuthProtocolHandler(
 
         var token = isDeploymentSmoke
             ? stateStore.IssueDeploymentSmokeRobotToken(deviceId)
-            : runtimeAccess?.Enabled==true && notificationVerification.CredentialAuthenticated && pairingCredentialKey?.IsReady==true &&
+            : (runtimeAccess?.Enabled==true || _awsSigV4Verifier.TrustedCredentialsRequired) && notificationVerification.CredentialAuthenticated && pairingCredentialKey?.IsReady==true &&
               HubTokenCredentialBinding.FromVerification(notificationVerification) is {} binding &&
               notificationVerification.VerifiedProof?.CreatePairingCredentialEvidence(pairingCredentialKey) is {} evidence
                 ? stateStore.IssueRobotTokenWithCredentialEvidence(existing.DeviceId,binding,evidence)

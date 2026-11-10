@@ -3,7 +3,7 @@ import argparse,hashlib,json,os,re,subprocess,xml.etree.ElementTree as ET
 from pathlib import Path
 
 def source_files(root):
-    files={'.github/workflows/openjibo-cloud-ci.yml','OpenJibo/docs/runtime-access-authorization.md','OpenJibo/tests/check_runtime_access.py'}
+    files={'.github/workflows/openjibo-cloud-ci.yml','OpenJibo/docs/runtime-access-authorization.md','OpenJibo/docs/trusted-protocol-credentials.md','OpenJibo/tests/check_runtime_access.py'}
     seen=set()
     def visit(project):
         project=project.resolve()
@@ -34,7 +34,10 @@ def main():
       '.Credential_bound_notification_socket_uses_its_own_fresh_access_decision':1,
       '.Every_send_overload_checks_the_connection_guard':2,
       '.Expiring_paid_grant_cancels_an_already_open_idle_socket':1,
-      '.RuntimeAccessNotificationEvidenceRechecksRevocationAndSecretAcrossReplicas':1}
+      '.RuntimeAccessNotificationEvidenceRechecksRevocationAndSecretAcrossReplicas':1,
+      '.TrustedProtocolCredentialRegistryTests.':33,
+      '.Registry_restart_denies_removed_or_rotated_bearer_reconnect_on_every_channel':6,
+      '.Trusted_registry_restart_removes_or_rotates_old_tokens_without_affecting_other_credentials':1}
     for marker,count in required.items():
         cases=[x for x in units if marker in x.get('testName','')]
         if len(cases)!=count or any(x.get('outcome')!='Passed' for x in cases):raise SystemExit('All required runtime-access cases must pass without skips: '+marker)
