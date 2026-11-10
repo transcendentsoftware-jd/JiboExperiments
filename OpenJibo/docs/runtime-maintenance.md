@@ -13,6 +13,13 @@ from serving liveness, and no application runtime store is initialized. Framewor
 request logging is restricted to warnings/errors; robot capture/export services
 are not registered by this profile.
 
+The disposable-stack CI checks the same built image in a second loopback-only
+container with a read-only root, dropped capabilities, a temporary `/tmp` and no
+persistent mounts or runtime credentials. It checks liveness, unready health,
+hidden protocol/WebSocket/portal/static routes and container stop/removal, then
+retains exact sources and the immutable image identity. This is local image
+acceptance, not publication or physical robot evidence.
+
 The option defaults to absent/false. An explicitly malformed or empty value
 refuses startup. Reopening requires an explicit false value or removing the option
 and restarting the process with its separately verified normal configuration.
