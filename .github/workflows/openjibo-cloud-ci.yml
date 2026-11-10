@@ -252,6 +252,20 @@ jobs:
           path: ${{ runner.temp }}/runtime-maintenance-image
           if-no-files-found: error
 
+      - name: Verify registry removal rotation and reconnect on the actual image
+        shell: bash
+        run: |
+          python3 -B -m unittest discover -s tests -p test_registry_acceptance.py
+          docker pull postgres@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+          image=$(docker compose images --quiet api)
+          python3 -I -B scripts/cloud/check-registry-acceptance-image.py --image "$image" --source-revision '${{ github.sha }}' --output '${{ runner.temp }}/registry-image-acceptance'
+      - name: Retain isolated registry image acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: RegistryImageAcceptance-${{ github.sha }}
+          path: ${{ runner.temp }}/registry-image-acceptance
+          if-no-files-found: error
+
       - name: Repeat startup with persisted volumes
         shell: bash
         run: |
