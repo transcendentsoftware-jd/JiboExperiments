@@ -51,6 +51,11 @@ public interface ICloudStateStore
         HubTokenCredentialBinding? credentialBinding = null,
         RuntimePairingCredentialEvidence? pairingEvidence = null);
     string IssueRobotToken(string deviceId);
+    string IssueRobotTokenWithCredentialEvidence(string deviceId,HubTokenCredentialBinding binding,RuntimePairingCredentialEvidence evidence)
+        => throw new NotSupportedException("Credential-bound robot issuance unavailable.");
+    Task<RuntimePairingCredentialEvidence?> ReadRuntimeCredentialEvidenceAsync(string token,HubTokenCredentialBinding expected,RuntimePairingCredentialEvidenceKey key,string expectedDeviceId,CancellationToken cancellation=default)
+    {cancellation.ThrowIfCancellationRequested();return Task.FromResult<RuntimePairingCredentialEvidence?>(null);}
+
     string IssueDeploymentSmokeRobotToken(string deviceId);
     string IssueDeploymentSmokeHubToken(string deviceId);
     void RevokeDeploymentSmokeTokens(string deviceId);

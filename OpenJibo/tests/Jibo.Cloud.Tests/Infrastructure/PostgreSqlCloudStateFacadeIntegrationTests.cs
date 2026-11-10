@@ -189,6 +189,35 @@ public sealed class PostgreSqlCloudStateFacadeIntegrationTests
 
     [PostgreSqlIntegrationFact]
     [Trait("Category", "PostgreSqlIntegration")]
+    public async Task RuntimeAccessNotificationEvidenceRechecksRevocationAndSecretAcrossReplicas()
+    {
+        await using var database=await CloudStateTestDatabase.CreateAsync();
+        await using var sourceA=new PostgreSqlCloudStateDataSource(database.ConnectionString,2);
+        await using var sourceB=new PostgreSqlCloudStateDataSource(database.ConnectionString,2);
+        var first=new PostgreSqlCloudStateStore(sourceA,new PlaintextTestProtector());
+        var second=new PostgreSqlCloudStateStore(sourceB,new PlaintextTestProtector());
+        using var key=Protocol.RuntimePairingCredentialEvidenceTests.Key();
+        var verified=Protocol.RuntimePairingCredentialEvidenceTests.Verify(first);
+        var binding=HubTokenCredentialBinding.FromVerification(verified)!;
+        var evidence=verified.VerifiedProof!.CreatePairingCredentialEvidence(key)!;
+        first.GetOrCreateDevice("runtime-access-notification",null,null);
+        var token=first.IssueRobotTokenWithCredentialEvidence("runtime-access-notification",binding,evidence);
+        Assert.NotNull(second.FindIssuedToken(token));
+        Assert.Equal(evidence,await second.ReadRuntimeCredentialEvidenceAsync(token,binding,key,"runtime-access-notification"));
+        Assert.Null(await second.ReadHubPairingCredentialEvidenceAsync(token,binding,key));
+        Assert.Null(await second.ReadRuntimeCredentialEvidenceAsync(token,binding,key,"other-device"));
+        var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token))).ToLowerInvariant();
+        await database.ExecuteAsync($"UPDATE CloudAuthTokens SET RevokedUtc=NOW() WHERE TokenHash='{hash}'");
+        Assert.Null(await second.ReadRuntimeCredentialEvidenceAsync(token,binding,key,"runtime-access-notification"));
+        var rotated=first.IssueRobotTokenWithCredentialEvidence("runtime-access-notification",binding,evidence);
+        Assert.Equal(evidence,await second.ReadRuntimeCredentialEvidenceAsync(rotated,binding,key,"runtime-access-notification"));
+        await database.ExecuteAsync("UPDATE Accounts SET SecretAccessKeyCiphertext=convert_to('rotated-secret','UTF8') WHERE AccountId='usr_openjibo_owner'");
+        Assert.Null(await first.ReadRuntimeCredentialEvidenceAsync(rotated,binding,key,"runtime-access-notification"));
+        Assert.Null(await second.ReadRuntimeCredentialEvidenceAsync(rotated,binding,key,"runtime-access-notification"));
+    }
+
+    [PostgreSqlIntegrationFact]
+    [Trait("Category", "PostgreSqlIntegration")]
     public async Task PairingCredentialEvidenceRequiresOriginalProofAndUncachedCurrentSecretRevision()
     {
         await using var database = await CloudStateTestDatabase.CreateAsync();

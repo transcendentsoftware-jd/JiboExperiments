@@ -14,7 +14,7 @@ using Moq;
 
 namespace Jibo.Cloud.Tests.Api;
 
-public sealed class WebSocketRequestCoordinatorTests
+public sealed partial class WebSocketRequestCoordinatorTests
 {
     [Theory]
     [InlineData("eligible")]
@@ -190,12 +190,17 @@ public sealed class WebSocketRequestCoordinatorTests
     public async Task LeaseLossAbortsAnIdleReceive_AndReleasesItsLastLocalSession(string path)
     {
         var service = CreateWebSocketService(out var store); var token = IssueLeaseBoundToken(store);
+        var received = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var leaseStore = HubChannelLeasePolicyTests.WorkingStore(); var renewals = 0;
         leaseStore.Setup(s => s.TryRenewAsync(It.IsAny<byte[]>(), It.IsAny<HubChannel>(), It.IsAny<Guid>(), 1, It.IsAny<CancellationToken>()))
-            .Returns(() => Task.FromResult<HubChannelLease?>(Interlocked.Increment(ref renewals) == 1
-                ? new HubChannelLease(1, DateTimeOffset.UtcNow.AddSeconds(30)) : null));
+            .Returns(async (byte[] digest, HubChannel channel, Guid owner, long generation, CancellationToken cancellation) =>
+            {
+                if (Interlocked.Increment(ref renewals) == 1) return new HubChannelLease(1, DateTimeOffset.UtcNow.AddSeconds(30));
+                // Induce loss after receive is actually idle, not before a busy scheduler starts it.
+                await received.Task.WaitAsync(cancellation);
+                return null;
+            });
         using var policy = new HubChannelLeasePolicy(leaseStore.Object, new byte[32]);
-        var received = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var socket = new FakeWebSocket(new FakeWebSocketFrame(WebSocketMessageType.Close, []))
         {
             PauseBeforeReceiveNumber = 1, ReceiveGate = new(TaskCreationOptions.RunContinuationsAsynchronously), FirstFrameReceived = received

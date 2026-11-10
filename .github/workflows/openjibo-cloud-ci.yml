@@ -151,10 +151,19 @@ jobs:
         run: bash ./scripts/cloud/test-openjibo-cloud-staging-bootstrap-contract.sh
 
       - name: Restore and test
-        run: dotnet test tests/Jibo.Cloud.Tests/Jibo.Cloud.Tests.csproj
+        run: dotnet test tests/Jibo.Cloud.Tests/Jibo.Cloud.Tests.csproj --logger "trx;LogFileName=runtime-access.trx" --results-directory "${{ runner.temp }}/runtime-access-results"
         env:
           OPENJIBO_TEST_POSTGRES_CONNECTION_STRING: Host=localhost;Port=5432;Database=openjibo_tests;Username=openjibo_tests;Password=openjibo_tests
           OPENJIBO_TEST_POSTGRES_PRIVILEGED_CONNECTION_STRING: Host=localhost;Port=5432;Database=openjibo_tests;Username=openjibo_tests;Password=openjibo_tests
+
+      - name: Retain exact runtime access sources and mandatory acceptance
+        run: python3 -I -B tests/check_runtime_access.py --source-revision '${{ github.sha }}' --trx '${{ runner.temp }}/runtime-access-results/runtime-access.trx' --output '${{ runner.temp }}/runtime-access-candidate'
+      - name: Retain runtime access candidate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: RuntimeAccessCandidate-${{ github.sha }}
+          path: ${{ runner.temp }}/runtime-access-candidate
+          if-no-files-found: error
 
   smoke:
     runs-on: ubuntu-latest

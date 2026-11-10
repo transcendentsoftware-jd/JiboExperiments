@@ -434,6 +434,17 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         return token;
     }
 
+    public string IssueRobotTokenWithCredentialEvidence(string deviceId,HubTokenCredentialBinding binding,RuntimePairingCredentialEvidence evidence)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(deviceId);
+        var device = Sync(_devices.GetByDeviceIdAsync(deviceId)) ??
+                     throw new KeyNotFoundException("Robot record was not found.");
+        var account = GetAccount();
+        var token = $"token-{device.DeviceId}-{Guid.NewGuid():N}";
+        RegisterIssuedToken(token, "robot", account.AccountId, device.DeviceId, _robotTokenLifetime,binding,evidence);
+        return token;
+    }
+
     public string IssueDeploymentSmokeRobotToken(string deviceId)
     {
         if (string.IsNullOrWhiteSpace(deviceId) ||
@@ -584,6 +595,24 @@ public sealed partial class PostgreSqlCloudStateStore : ICloudStateStore
         // No session or account cache, body/CONTEXT identity, or short fingerprint lookup.
         var stored = await _authTokens.FindValidAsync(token, cancellationToken: cancellationToken);
         if (stored is null || stored.TokenKind != "hub" || string.IsNullOrWhiteSpace(stored.AccountId) ||
+            !HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) || original != expected) return null;
+        var evidence = RuntimePairingCredentialEvidence.Read(stored.Metadata);
+        if (evidence is null) return null;
+        var account = await _accounts.GetByIdAsync(stored.AccountId, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return stored.ExpiresUtc > DateTimeOffset.UtcNow && account is not null && key.MatchesCurrentCredential(evidence, account.AccessKeyId, account.SecretAccessKey)
+            ? evidence : null;
+    }
+
+    public async Task<RuntimePairingCredentialEvidence?> ReadRuntimeCredentialEvidenceAsync(string token,
+        HubTokenCredentialBinding expected, RuntimePairingCredentialEvidenceKey key, string expectedDeviceId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!key.IsReady || string.IsNullOrWhiteSpace(token) || token.Length > 4096 || token != token.Trim()) return null;
+        // No session or account cache, body/CONTEXT identity, or short fingerprint lookup.
+        var stored = await _authTokens.FindValidAsync(token, cancellationToken: cancellationToken);
+        if (stored is null || stored.DeviceId != expectedDeviceId || stored.TokenKind is not ("hub" or "robot") || string.IsNullOrWhiteSpace(stored.AccountId) ||
             !HubTokenCredentialBinding.TryRead(stored.Metadata, out var original) || original != expected) return null;
         var evidence = RuntimePairingCredentialEvidence.Read(stored.Metadata);
         if (evidence is null) return null;
