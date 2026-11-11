@@ -15,7 +15,9 @@ channel and runtime mapping. No such physical adapter is enabled by this library
 The caller supplies an explicit absolute directory containing `credentials.json`.
 The directory must resolve without aliases, belong to the caller, and prohibit
 group/other writes. The existing file must be an ordinary, single-link, caller-owned
-0600 file with the directory's group. The journal is created 0700. Windows mutation
+0600 file with the directory's group for v1. The explicit stock v2 profile below
+accepts only root:root 0666 originals and installs root:root 0600 replacements.
+The journal is created 0700. Windows mutation
 refuses; Windows tests do not count as POSIX acceptance. The operator must already
 own and exclusively control the directory and its ancestors for the entire call.
 These checks are not protection against another process with the same OS authority.
@@ -45,7 +47,7 @@ status and original credential backups in operator-controlled storage.
    original bytes through the same replacement mechanism and records terminal
    restoration. Restored operations cannot be reactivated; use a new reviewed plan.
 
-All writes are exclusive, bounded, 0600 and fsynced. A same-filesystem journal
+Journal/backup writes are exclusive, bounded, 0600 and fsynced. A same-filesystem journal
 holds both complete versions before the target rename. Status and errors contain
 no credential values, input hashes or paths. The statuses always leave
 `ownershipVerified`, `recoveryVerified`, `robotContactPerformed` and
@@ -68,6 +70,41 @@ the current file through an authorized read. Clearing a lock is deliberately abs
 from the API. The caller must keep a recovery route that works with both versions
 denied, and must reconcile runtime mapping separately. An exact byte rollback of a
 local file must not automatically restore revoked cloud authority or clear a hold.
+
+## Explicit stock permission profile
+
+`schema=openjibo.credential-delivery.v2` adds exactly
+`filePermissionProfile=stock-root-0666-to-0600` to the v1 plan. It is an opt-in
+root:root profile: the caller UID and directory UID/GID must all be zero, and
+the original must be a regular single-link root:root file with exactly 0666 mode.
+The observed stock parent mode 0755 is supported; directory UID/GID, inode, device and mode are rechecked throughout the operation. Other file modes, special bits, arbitrary owner IDs and implicit upgrades from v1
+are refused. V1 still accepts only 0600; it never silently selects stock behavior.
+
+Preparation preserves the original bytes and permissions. Private backups and
+the plan stay 0600 under the 0700 journal. Activation atomically installs the
+new credential as 0600. Restoration creates a private temporary copy, sets its
+exact original 0666 mode while it is still inside the protected journal, fsyncs
+it, then renames it into place. No chmod is applied to the live inode. Abort and
+rollback preserve exact original bytes, UID, GID and mode; a terminal restoration
+cannot be reactivated. Unexpected permission/owner/content changes refuse.
+
+Lstat, opened-fd metadata and post-read metadata must agree. Inode, device, size,
+UID/GID, complete mode, link count, mtime and ctime are compared; replacement
+rechecks the current file identity immediately before rename. Preparation also
+rechecks after durable backup. These checks require independently quiesced writers
+and exclusive operator control. They are not an atomic compare-and-swap defense
+against hostile concurrent writers, including an already-open writable descriptor
+to a legacy 0666 file. Do not infer quiescence or physical/customer ownership from
+root UID, a file hash or the supplied evidence references.
+
+Qualification requires `sudo -n NODE scripts/bootstrap/test-stock-credential-delivery.cjs`
+on disposable Linux files as well as a non-root refusal run. Eighteen groups and
+88 before/after mutation-fault cases include ownership/mode drift, inode replacement,
+private-backup protections and process death after the restoration rename. The v1
+suite remains mandatory. The frozen `credential-delivery-transaction-v1.js` retains
+the original `9e60fa057a4ee05e58f16a53f76c09e623a339189ca0889daa5a358e1fffb239`
+bytes for previously pinned synthetic rehearsals; it is not the stock-profile
+implementation. The default library still has no standalone device writer.
 
 File/directory fsync errors refuse; no weaker durability mode is selected. POSIX
 filesystem behavior and storage hardware still govern power-loss durability.

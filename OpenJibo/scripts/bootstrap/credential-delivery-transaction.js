@@ -12,15 +12,24 @@ function exact(value, keys) {
         Object.keys(value).sort().join(' ') === keys.split(' ').sort().join(' '));
 }
 function validatePlan(p) {
-    exact(p, 'schema operationId beforeSha256 afterSha256 mappingEvidenceSha256 recoveryEvidenceSha256');
-    requireThat(p.schema === 'openjibo.credential-delivery.v1' && typeof p.operationId === 'string' && /^[a-f0-9]{32}$/.test(p.operationId));
+    var stock = p && p.schema === 'openjibo.credential-delivery.v2';
+    exact(p, 'schema operationId beforeSha256 afterSha256 mappingEvidenceSha256 recoveryEvidenceSha256' + (stock ? ' filePermissionProfile' : ''));
+    requireThat((p.schema === 'openjibo.credential-delivery.v1' || stock) && typeof p.operationId === 'string' && /^[a-f0-9]{32}$/.test(p.operationId));
+    if (stock) requireThat(p.filePermissionProfile === 'stock-root-0666-to-0600');
     ['beforeSha256', 'afterSha256', 'mappingEvidenceSha256', 'recoveryEvidenceSha256'].forEach(function (key) {
         requireThat(typeof p[key] === 'string' && /^[a-f0-9]{64}$/.test(p[key]));
     });
     requireThat(p.beforeSha256 !== p.afterSha256);
-    return JSON.stringify({ schema: p.schema, operationId: p.operationId, beforeSha256: p.beforeSha256,
+    var result = { schema: p.schema, operationId: p.operationId, beforeSha256: p.beforeSha256,
         afterSha256: p.afterSha256, mappingEvidenceSha256: p.mappingEvidenceSha256,
-        recoveryEvidenceSha256: p.recoveryEvidenceSha256 });
+        recoveryEvidenceSha256: p.recoveryEvidenceSha256 };
+    if (stock) result.filePermissionProfile = p.filePermissionProfile;
+    return JSON.stringify(result);
+}
+function originalMode(p) { return p.schema === 'openjibo.credential-delivery.v2' ? 438 : 384; }
+function sameFile(a, b) {
+    return ['ino','dev','size','uid','gid','mode','nlink'].every(function (key) { return a[key] === b[key]; }) &&
+        a.mtime.getTime() === b.mtime.getTime() && a.ctime.getTime() === b.ctime.getTime();
 }
 function credential(bytes) {
     requireThat(Buffer.isBuffer(bytes) && bytes.length > 0 && bytes.length <= LIMIT);
@@ -62,24 +71,43 @@ function create(root, io) {
         var fd = io.openSync(dir, 'r');
         try { io.fsyncSync(fd); } finally { io.closeSync(fd); }
     }
-    function read(file) {
+    function readWithMetadata(file, modes) {
         var st = io.lstatSync(file);
         requireThat(st.isFile() && st.nlink === 1 && st.uid === owner.uid && st.gid === owner.gid &&
-            (st.mode & 511) === 384 && st.size > 0 && st.size <= LIMIT);
+            modes.indexOf(st.mode & 4095) >= 0 && st.size > 0 && st.size <= LIMIT);
         var fd = io.openSync(file, io.constants.O_RDONLY | io.constants.O_NOFOLLOW);
         try {
             var opened = io.fstatSync(fd);
-            requireThat(opened.ino === st.ino && opened.dev === st.dev && opened.size === st.size);
+            requireThat(sameFile(opened, st));
             var bytes = Buffer.alloc(LIMIT + 1), count = 0, n;
             while (count <= LIMIT) {
                 n = io.readSync(fd, bytes, count, bytes.length - count, null);
                 if (!n) break; count += n;
             }
             requireThat(count === st.size && count <= LIMIT);
-            return bytes.slice(0, count);
+            requireThat(sameFile(io.fstatSync(fd), st));
+            return { bytes: bytes.slice(0, count), stat: st };
         } finally { io.closeSync(fd); }
     }
-    function write(file, bytes) {
+    function read(file, mode) { return readWithMetadata(file, [mode === undefined ? 384 : mode]).bytes; }
+    function validateContext(p) {
+        validatePlan(p);
+        var now = io.lstatSync(root);
+        requireThat(io.realpathSync(root) === root && now.isDirectory() &&
+            ['uid','gid','ino','dev','mode'].every(function (key) { return now[key] === owner[key]; }));
+        if (p.schema === 'openjibo.credential-delivery.v2')
+            requireThat(owner.uid === 0 && owner.gid === 0 && process.getuid() === 0);
+    }
+    function current(p) {
+        validateContext(p);
+        var observed = readWithMetadata(target, [384, originalMode(p)]), hash = sha(observed.bytes);
+        observed.hash = hash;
+        observed.state = hash === p.beforeSha256 && (observed.stat.mode & 4095) === originalMode(p) ? 'staged' :
+            hash === p.afterSha256 && (observed.stat.mode & 4095) === 384 ? 'installed' : 'diverged';
+        return observed;
+    }
+    function write(file, bytes, mode) {
+        mode = mode === undefined ? 384 : mode;
         var fd = io.openSync(file, 'wx', 384);
         try {
             var at = 0;
@@ -87,7 +115,9 @@ function create(root, io) {
                 var n = io.writeSync(fd, bytes, at, bytes.length - at, null);
                 requireThat(n > 0); at += n;
             }
-            requireThat(io.fstatSync(fd).gid === owner.gid);
+            if (mode !== 384) io.fchmodSync(fd, mode);
+            var st = io.fstatSync(fd);
+            requireThat(st.uid === owner.uid && st.gid === owner.gid && (st.mode & 4095) === mode && st.nlink === 1);
             io.fsyncSync(fd);
         } finally { io.closeSync(fd); }
     }
@@ -102,7 +132,7 @@ function create(root, io) {
         result.lockPresent = false;
         return result;
     }
-    function directory(p) { validatePlan(p); return path.join(root, '.credential-delivery-' + p.operationId); }
+    function directory(p) { validateContext(p); return path.join(root, '.credential-delivery-' + p.operationId); }
     function loaded(p) {
         var dir = directory(p), st = io.lstatSync(dir);
         requireThat(st.isDirectory() && st.uid === owner.uid && st.gid === owner.gid && st.dev === owner.dev && (st.mode & 511) === 448);
@@ -114,32 +144,38 @@ function create(root, io) {
     }
     function exists(file) { try { io.lstatSync(file); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; } }
     function report(p, data) {
-        var current = read(target), hash = sha(current), terminal = path.join(data.dir, 'restored.json');
+        var observed = current(p), terminal = path.join(data.dir, 'restored.json');
         var restored = exists(terminal);
-        if (restored) requireThat(read(terminal).toString('utf8') === '{"restored":true}\n' && hash === p.beforeSha256);
-        return { schema: 'openjibo.credential-delivery-status.v1',
-            state: restored ? 'restored' : hash === p.beforeSha256 ? 'staged' : hash === p.afterSha256 ? 'installed' : 'diverged',
+        if (restored) requireThat(read(terminal).toString('utf8') === '{"restored":true}\n' && observed.state === 'staged');
+        var result = { schema: 'openjibo.credential-delivery-status.v1',
+            state: restored ? 'restored' : observed.state,
             lockPresent: exists(lock), ownershipVerified: false, recoveryVerified: false,
             robotContactPerformed: false, serviceAccessGranted: false };
+        if (p.schema === 'openjibo.credential-delivery.v2') result.filePermissionProfile = p.filePermissionProfile;
+        return result;
     }
-    function replace(p, data, bytes, expectedHash, tempName) {
+    function replace(p, data, bytes, expectedHash, tempName, mode) {
+        var initial = current(p);
+        requireThat(initial.hash === expectedHash && initial.state !== 'diverged');
         var temp = path.join(data.dir, tempName);
         // Preserve partial files. A complete pre-rename file may be resumed only
         // when its bytes exactly match the reviewed transaction.
-        if (exists(temp)) requireThat(sha(read(temp)) === sha(bytes)); else write(temp, bytes);
+        if (exists(temp)) requireThat(sha(read(temp, mode)) === sha(bytes)); else write(temp, bytes, mode);
         syncDirectory(data.dir);
-        requireThat(sha(read(target)) === expectedHash);
+        var beforeRename = current(p);
+        requireThat(beforeRename.hash === expectedHash && beforeRename.state !== 'diverged' && sameFile(beforeRename.stat, initial.stat));
         io.renameSync(temp, target);
         syncDirectory(root); syncDirectory(data.dir);
-        requireThat(sha(read(target)) === sha(bytes));
+        requireThat(sha(read(target, mode)) === sha(bytes));
     }
     function safe(fn) { return function () { try { return fn.apply(null, arguments); } catch (_) { throw new Error(REFUSAL); } }; }
     return {
         prepare: safe(function (p, replacement) {
-            validatePlan(p); credential(replacement); requireThat(sha(replacement) === p.afterSha256);
+            validateContext(p); credential(replacement); requireThat(sha(replacement) === p.afterSha256);
             return guarded(function () {
                 if (exists(directory(p))) return report(p, loaded(p));
-                var original = read(target); credential(original); requireThat(sha(original) === p.beforeSha256);
+                var observed = current(p), original = observed.bytes;
+                credential(original); requireThat(observed.state === 'staged');
                 // Never silently change routing as part of credential delivery.
                 requireThat(credential(original).region === credential(replacement).region);
                 requireThat(credential(original).accessKeyId !== credential(replacement).accessKeyId ||
@@ -149,20 +185,22 @@ function create(root, io) {
                 write(path.join(directory(p), 'after.bin'), replacement);
                 write(path.join(directory(p), 'plan.json'), Buffer.from(validatePlan(p) + '\n', 'utf8'));
                 syncDirectory(directory(p)); syncDirectory(root);
+                var afterBackup = current(p);
+                requireThat(afterBackup.state === 'staged' && sameFile(afterBackup.stat, observed.stat));
                 return report(p, loaded(p));
             });
         }),
         inspect: safe(function (p) { return report(p, loaded(p)); }),
-        activate: safe(function (p) { return guarded(function () {
+        activate: safe(function (p) { validateContext(p); return guarded(function () {
             var data = loaded(p), status = report(p, data);
             requireThat(status.state === 'staged' || status.state === 'installed');
-            if (status.state === 'staged') replace(p, data, data.after, p.beforeSha256, 'activate.tmp');
+            if (status.state === 'staged') replace(p, data, data.after, p.beforeSha256, 'activate.tmp', 384);
             return report(p, data);
         }); }),
-        restore: safe(function (p) { return guarded(function () {
+        restore: safe(function (p) { validateContext(p); return guarded(function () {
             var data = loaded(p), status = report(p, data);
             requireThat(status.state !== 'diverged');
-            if (status.state === 'installed') replace(p, data, data.before, p.afterSha256, 'restore.tmp');
+            if (status.state === 'installed') replace(p, data, data.before, p.afterSha256, 'restore.tmp', originalMode(p));
             if (status.state !== 'restored') {
                 write(path.join(data.dir, 'restored.json'), Buffer.from('{"restored":true}\n'));
                 syncDirectory(data.dir);
