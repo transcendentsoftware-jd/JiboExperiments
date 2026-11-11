@@ -33,7 +33,7 @@ jobs:
           python3 - "$RUNNER_TEMP/credential-delivery" <<'PY'
           import json, pathlib, sys
           root = pathlib.Path(sys.argv[1])
-          assert json.loads((root/'stock-root.json').read_text()) == dict(groupsPassed=17, filesystemFaultCases=88, posixAcceptance=True, rootStockProfileAccepted=True, realCredentialContentsRead=False, robotContacted=False)
+          assert json.loads((root/'stock-root.json').read_text()) == dict(groupsPassed=18, filesystemFaultCases=88, posixAcceptance=True, rootStockProfileAccepted=True, realCredentialContentsRead=False, robotContacted=False)
           assert json.loads((root/'stock-nonroot.json').read_text()) == dict(groupsPassed=2, posixAcceptance=True, rootStockProfileAccepted=False, nonRootRefusal=True)
           PY
           cp OpenJibo/scripts/bootstrap/credential-delivery-transaction.js OpenJibo/scripts/bootstrap/credential-delivery-transaction-v1.js OpenJibo/scripts/bootstrap/test-credential-delivery-transaction.cjs OpenJibo/scripts/bootstrap/test-stock-credential-delivery.cjs "$RUNNER_TEMP/credential-delivery/reviewed-source/"

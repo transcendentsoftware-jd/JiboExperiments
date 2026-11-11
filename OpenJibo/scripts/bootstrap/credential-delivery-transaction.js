@@ -92,10 +92,14 @@ function create(root, io) {
     function read(file, mode) { return readWithMetadata(file, [mode === undefined ? 384 : mode]).bytes; }
     function validateContext(p) {
         validatePlan(p);
+        var now = io.lstatSync(root);
+        requireThat(io.realpathSync(root) === root && now.isDirectory() &&
+            ['uid','gid','ino','dev','mode'].every(function (key) { return now[key] === owner[key]; }));
         if (p.schema === 'openjibo.credential-delivery.v2')
             requireThat(owner.uid === 0 && owner.gid === 0 && process.getuid() === 0);
     }
     function current(p) {
+        validateContext(p);
         var observed = readWithMetadata(target, [384, originalMode(p)]), hash = sha(observed.bytes);
         observed.hash = hash;
         observed.state = hash === p.beforeSha256 && (observed.stat.mode & 4095) === originalMode(p) ? 'staged' :

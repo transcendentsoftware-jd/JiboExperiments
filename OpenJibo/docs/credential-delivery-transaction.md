@@ -77,7 +77,7 @@ local file must not automatically restore revoked cloud authority or clear a hol
 `filePermissionProfile=stock-root-0666-to-0600` to the v1 plan. It is an opt-in
 root:root profile: the caller UID and directory UID/GID must all be zero, and
 the original must be a regular single-link root:root file with exactly 0666 mode.
-Other modes, special bits, arbitrary owner IDs and implicit upgrades from v1
+The observed stock parent mode 0755 is supported; directory UID/GID, inode, device and mode are rechecked throughout the operation. Other file modes, special bits, arbitrary owner IDs and implicit upgrades from v1
 are refused. V1 still accepts only 0600; it never silently selects stock behavior.
 
 Preparation preserves the original bytes and permissions. Private backups and
@@ -98,7 +98,7 @@ to a legacy 0666 file. Do not infer quiescence or physical/customer ownership fr
 root UID, a file hash or the supplied evidence references.
 
 Qualification requires `sudo -n NODE scripts/bootstrap/test-stock-credential-delivery.cjs`
-on disposable Linux files as well as a non-root refusal run. Seventeen groups and
+on disposable Linux files as well as a non-root refusal run. Eighteen groups and
 88 before/after mutation-fault cases include ownership/mode drift, inode replacement,
 private-backup protections and process death after the restoration rename. The v1
 suite remains mandatory. The frozen `credential-delivery-transaction-v1.js` retains
