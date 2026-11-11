@@ -99,7 +99,7 @@ observations and interruption/recovery timing remain separately unqualified.
 
 ## Acceptance evidence
 
-CI requires 25 groups without skips on Node 6.9.2 and Node 24, both as a normal
+CI requires 27 groups without skips on Node 6.9.2 and Node 24, both as a normal
 user with private mode 0600 and as root with stock 0666-to-0600-to-0666. Groups
 exercise resident-consumer readback, controller exit/death, delayed reload fencing,
 lost acknowledgement, replay denial, expiry during quiesce, source/config drift,
@@ -109,3 +109,18 @@ unit serialization and repeat-operation closeout. Windows mutation refuses.
 Source hashes and both runtime receipts are retained with each CI candidate.
 These fixtures do not establish physical reload, full-image restoration, firmware
 redistribution, credential commissioning or production readiness.
+
+## Cleanup readback after verified closeout
+
+When the watchdog has restored, observed, closed and exited, a returning controller
+may request only fresh `fence`/`restore` readback against that terminal attempt.
+The driver validates all five source-bound terminal records and the original
+file, then acquires a temporary exclusive unit claim. It fences the old consumer
+operation and observes the original again; it does not restart the watchdog,
+rewrite credentials, reload the consumer or permit any forward phase. Only a
+successful fresh readback releases that temporary claim. Ambiguity retains it.
+
+A changed baseline is refused before reserving the unit, and an active later
+attempt's claim is never stolen. An old cleanup cannot overwrite that later
+operation. Missing terminal records, supervisor death before closeout, or stale
+claims retain the manual recovery boundary described above.
