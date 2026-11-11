@@ -10,6 +10,48 @@ on:
   workflow_dispatch:
 
 jobs:
+  credential-recovery-agent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['6.9.2', '24']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Test detached recovery and resident consumers without hardware
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/credential-agent/source"
+          node OpenJibo/scripts/bootstrap/test-credential-recovery-agent.cjs | tee "$RUNNER_TEMP/credential-agent/private-user.json"
+          sudo -n "$(command -v node)" OpenJibo/scripts/bootstrap/test-credential-recovery-agent.cjs | tee "$RUNNER_TEMP/credential-agent/stock-root.json"
+          node --version > "$RUNNER_TEMP/credential-agent/node-version.txt"
+          python3 - "$RUNNER_TEMP/credential-agent" <<'PY'
+          import hashlib, json, os, pathlib, sys
+          output = pathlib.Path(sys.argv[1])
+          for name, root_user in [('private-user.json',False),('stock-root.json',True)]:
+              expected = dict(groupsPassed=25, posixAcceptance=True, rootStockProfileAccepted=root_user, detachedWatchdogTested=True, residentConsumerTested=True, robotContacted=False, realCredentialsRead=False, physicalReloadQualified=False)
+              assert json.loads((output/name).read_text()) == expected
+          names = ['OpenJibo/scripts/bootstrap/credential-recovery-agent.js','OpenJibo/scripts/bootstrap/credential-delivery-transaction.js','OpenJibo/scripts/bootstrap/fixtures/credential-agent-consumer.js','OpenJibo/scripts/bootstrap/test-credential-recovery-agent.cjs','OpenJibo/docs/credential-recovery-agent.md']
+          records=[]
+          for name in names:
+              data=pathlib.Path(name).read_bytes(); target='source/'+name.replace('/','__'); (output/target).write_bytes(data)
+              records.append(dict(source=name,file=target,sha256=hashlib.sha256(data).hexdigest()))
+          assert records[1]['sha256']=='4ae9099906ec2cbda8df91b82d3c36b4f3c910f7c03c30469768bc0448e331ff'
+          proof=dict(schema='openjibo.credential-recovery-agent-candidate.v1',sourceRevision=os.environ['GITHUB_SHA'],groupsPerProfile=25,profilesTested=2,robotContacted=False,physicalReloadQualified=False,files=records)
+          (output/'proof.json').write_text(json.dumps(proof,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CredentialRecoveryAgent-node-${{ matrix.node }}-${{ github.sha }}
+          path: ${{ runner.temp }}/credential-agent
+          if-no-files-found: error
+
   credential-delivery:
     runs-on: ubuntu-24.04
     strategy:
