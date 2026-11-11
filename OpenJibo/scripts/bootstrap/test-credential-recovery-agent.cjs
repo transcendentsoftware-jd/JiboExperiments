@@ -87,6 +87,7 @@ check('symlinked source and unsafe private helper mode refuse', function () { re
     var p = path.join(f.helper, 'consumer-profile.js'); fs.renameSync(p, p+'.original'); fs.symlinkSync(p+'.original', p); refused(invoke(f, 'prepare')); fs.unlinkSync(p); fs.renameSync(p+'.original', p);
     fs.chmodSync(f.helper, 493); refused(invoke(f, 'prepare')); fs.chmodSync(f.helper, 448); original(f);
     var target = path.join(f.root, 'credentials.json'); fs.chmodSync(target, f.stock ? 384 : 438); refused(invoke(f, 'inspect')); fs.chmodSync(target, f.stock ? 438 : 384);
+    if (!f.stock) { f.config.transactionProfile = 'stock-root-0666-to-0600'; write(path.join(f.helper, 'agent.json'), f.config); fs.chmodSync(target, 438); refused(invoke(f, 'inspect')); f.config.transactionProfile = 'private-0600'; write(path.join(f.helper, 'agent.json'), f.config); fs.chmodSync(target, 384); }
     fs.writeFileSync(target, Buffer.from('unexpected baseline')); refused(invoke(f, 'inspect')); assert.strictEqual(fs.readFileSync(target).toString(), 'unexpected baseline');
 }); });
 check('unrelated credential edits survive failed watchdog recovery', function () { return fixture(function (f) {

@@ -48,6 +48,7 @@ function context() {
     need(typeof c.credentialDirectory === 'string' && path.isAbsolute(c.credentialDirectory) && path.resolve(c.credentialDirectory) === c.credentialDirectory && c.credentialDirectory !== '/' && path.dirname(helper) === c.credentialDirectory);
     var parent = fs.lstatSync(c.credentialDirectory); need(fs.realpathSync(c.credentialDirectory) === c.credentialDirectory && parent.isDirectory() && parent.uid === process.getuid() && parent.gid === process.getgid() && (parent.mode & 18) === 0);
     need(c.transactionProfile === 'private-0600' || c.transactionProfile === 'stock-root-0666-to-0600');
+    if (c.transactionProfile === 'stock-root-0666-to-0600') need(process.getuid() === 0 && process.getgid() === 0);
     need(typeof c.watchdogMs === 'number' && c.watchdogMs % 1 === 0 && c.watchdogMs >= 500 && c.watchdogMs <= 30000);
     need(typeof c.actionTimeoutMs === 'number' && c.actionTimeoutMs % 1 === 0 && c.actionTimeoutMs >= 100 && c.actionTimeoutMs <= 1000);
     need(sha(read(__filename, 65536)) === c.binding.driverSha256 && sha(read(path.join(helper, 'transaction.js'), 65536)) === c.binding.transactionSha256 && sha(read(path.join(helper, 'consumer-profile.js'), 65536)) === c.binding.consumerProfileSha256);
