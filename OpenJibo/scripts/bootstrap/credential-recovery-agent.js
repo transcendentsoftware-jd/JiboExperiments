@@ -7,8 +7,9 @@ function need(ok) { if (!ok) throw new Error(REFUSAL); }
 function sha(b) { return crypto.createHash('sha256').update(b).digest('hex'); }
 function exact(v, keys) { need(v && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).sort().join(' ') === keys.split(' ').sort().join(' ')); }
 function sync(dir) { var fd = fs.openSync(dir, 'r'); try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); } }
-function read(file, limit) {
-    var st = fs.lstatSync(file); need(st.isFile() && st.nlink === 1 && st.uid === process.getuid() && st.gid === process.getgid() && (st.mode & 4095) === 384 && st.size > 0 && st.size <= limit);
+function read(file, limit, modes) {
+    modes = modes || [384];
+    var st = fs.lstatSync(file); need(st.isFile() && st.nlink === 1 && st.uid === process.getuid() && st.gid === process.getgid() && modes.indexOf(st.mode & 4095) >= 0 && st.size > 0 && st.size <= limit);
     var fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
     try {
         var opened = fs.fstatSync(fd); need(opened.ino === st.ino && opened.dev === st.dev && opened.size === st.size && opened.mode === st.mode && opened.uid === st.uid && opened.gid === st.gid && opened.nlink === 1);
@@ -204,7 +205,11 @@ function transport(s, r) {
 }
 function rpc(r) {
     var s = context(); request(s, r);
-    if (r.phase === 'inspect') return profile(s, 'inspect', r.expiresAtUnixMs, {}).then(function () { return receipt(s, r, 'qualified'); });
+    if (r.phase === 'inspect') {
+        var original = read(path.join(s.c.credentialDirectory, 'credentials.json'), 16384, [s.c.transactionProfile === 'private-0600' ? 384 : 438]);
+        need(sha(original) === s.c.binding.beforeSha256); require(path.join(s.helper, 'transaction.js')).validateCredential(original);
+        return profile(s, 'inspect', r.expiresAtUnixMs, {}).then(function () { return receipt(s, r, 'qualified'); });
+    }
     if (r.phase !== 'prepare') return transport(s, r);
     need(!has(s, 'reserved')); claim(s, true); event(s, 'reserved');
     var child = cp.spawn(process.execPath, [__filename, '--daemon'], { detached: true, stdio: 'ignore', env: {} });
