@@ -1,0 +1,85 @@
+# Local credential handoff transaction
+
+`scripts/bootstrap/credential-delivery-transaction.js` is a local POSIX file
+transaction library with ES5 syntax for Node 6.9.2 and newer. It has no standalone
+execution interface, network transport, service restart, mount, enrollment API or
+implicit device path. Running the file directly refuses without opening credentials.
+All qualification uses synthetic credentials and disposable directories.
+
+An operator adapter still needs a separately reviewed device, recovery path,
+physical association, ownership ceremony, stopped credential consumers, delivery
+channel and runtime mapping. No such physical adapter is enabled by this library.
+
+## Transaction contract
+
+The caller supplies an explicit absolute directory containing `credentials.json`.
+The directory must resolve without aliases, belong to the caller, and prohibit
+group/other writes. The existing file must be an ordinary, single-link, caller-owned
+0600 file with the directory's group. The journal is created 0700. Windows mutation
+refuses; Windows tests do not count as POSIX acceptance. The operator must already
+own and exclusively control the directory and its ancestors for the entire call.
+These checks are not protection against another process with the same OS authority.
+
+The exact plan has `schema=openjibo.credential-delivery.v1`, a 32-character lowercase
+hex `operationId`, and four lowercase SHA-256 values: `beforeSha256`, `afterSha256`,
+`mappingEvidenceSha256`, `recoveryEvidenceSha256`. The last two bind reviewed
+references to the transaction; supplied hashes authenticate neither evidence nor
+ownership, recovery readiness, subscription state or a physical device. Keep plans,
+status and original credential backups in operator-controlled storage.
+
+`create(directory)` returns four methods:
+
+1. `prepare(plan, replacementBuffer)` validates bounded flat UTF-8 credentials,
+   refuses duplicate/escaped duplicate fields and unsupported shapes, and retains
+   exact original/replacement bytes and the plan before touching the live file.
+   At least the access ID or secret must change. The region must remain identical;
+   endpoint conversion and credential handoff are separate operations.
+2. `activate(plan)` requires intact journal bytes and an exact current original
+   hash, writes/fsyncs an exclusive temporary file, rechecks the target, renames it,
+   fsyncs the containing directories and verifies the installed bytes. An exact
+   installed repeat reports the observed state without rewriting the file.
+3. `inspect(plan)` reports `staged`, `installed`, `restored` or `diverged` and
+   whether a writer lock was observed. It never exports credentials or hashes.
+   An incomplete/corrupt journal refuses instead of reporting a successful stage.
+4. `restore(plan)` accepts only the exact installed or original bytes. It restores
+   original bytes through the same replacement mechanism and records terminal
+   restoration. Restored operations cannot be reactivated; use a new reviewed plan.
+
+All writes are exclusive, bounded, 0600 and fsynced. A same-filesystem journal
+holds both complete versions before the target rename. Status and errors contain
+no credential values, input hashes or paths. The statuses always leave
+`ownershipVerified`, `recoveryVerified`, `robotContactPerformed` and
+`serviceAccessGranted` false. An installed file is not an acknowledged delivery,
+proof that a service loaded it, or permission to use paid features.
+
+## Interrupted and ambiguous operations
+
+A process-scoped operation creates `.credential-delivery-lock` exclusively. Normal
+returns/exceptions remove only that lock; process death leaves it for review.
+No call steals a stale lock or deletes a journal, partial file or previous backup.
+A complete matching pre-rename temporary file can be resumed after operator review;
+an incomplete file refuses and is retained. Unexpected current bytes are never
+overwritten. Do not treat an exception as evidence that replacement did not happen:
+inspect independently before deciding what to do next.
+
+Before an operator clears a stale lock, stop the known writer and credential
+consumers, establish that no other writer remains, retain the journal and compare
+the current file through an authorized read. Clearing a lock is deliberately absent
+from the API. The caller must keep a recovery route that works with both versions
+denied, and must reconcile runtime mapping separately. An exact byte rollback of a
+local file must not automatically restore revoked cloud authority or clear a hold.
+
+File/directory fsync errors refuse; no weaker durability mode is selected. POSIX
+filesystem behavior and storage hardware still govern power-loss durability.
+The tests inject errors and kill a process after rename; they do not emulate board
+power loss, a full-image restore, filesystem corruption or physical recovery.
+
+## Acceptance
+
+Run `node scripts/bootstrap/test-credential-delivery-transaction.cjs`. Linux CI
+requires both Node 6.9.2 and Node 24 runs and retains the synthetic result plus exact
+reviewed source. Coverage includes exact rollback, terminal abort, unknown edits,
+context substitution, corrupt backup/manifest, unsafe files/roots, short/failed
+writes, stale-lock refusal, real child-process death after rename, and injected
+failures before/after every mutating filesystem call in the successful lifecycle.
+No physical inventory, customer data, provider credentials or vendor image is used.
