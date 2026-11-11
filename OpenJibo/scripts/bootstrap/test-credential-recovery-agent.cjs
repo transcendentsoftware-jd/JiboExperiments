@@ -170,5 +170,23 @@ check('unit serialization and verified closeout permit a fresh operation only', 
         prepare(second); ok(second, 'activate', 'installed'); refused(invoke(f, 'restore')); assert.ok(fs.readFileSync(path.join(f.root, 'credentials.json')).equals(after)); ok(second, 'restore', 'restored'); original(f);
     });
 }, { watchdogMs: 2200 }); });
+check('closed watchdog permits fresh cleanup readback without restarting or reloading', function () { return fixture(function (f) {
+    prepare(f); ok(f, 'activate', 'installed'); ok(f, 'reload', 'reload-started');
+    return poll(function () { return fs.existsSync(path.join(f.helper, 'closed.json')); }).then(function () {
+        var startup = fs.readFileSync(path.join(f.helper, 'daemon-started.json'));
+        ok(f, 'fence', 'forward-fenced'); ok(f, 'restore', 'restored'); original(f);
+        assert.ok(fs.readFileSync(path.join(f.helper, 'daemon-started.json')).equals(startup));
+        assert.strictEqual(fs.existsSync(path.join(f.root, '.credential-recovery-owner')), false); refused(invoke(f, 'activate'));
+        return state(f);
+    }).then(function (s) { assert.strictEqual(s.originalReloads, 1); assert.strictEqual(s.hash, sha(before)); });
+}); });
+check('closed cleanup preserves a changed baseline without reserving the unit', function () { return fixture(function (f) {
+    prepare(f);
+    return poll(function () { return fs.existsSync(path.join(f.helper, 'closed.json')); }).then(function () {
+        var edit=Buffer.from('later unrelated configuration'); fs.writeFileSync(path.join(f.root, 'credentials.json'), edit);
+        refused(invoke(f, 'restore')); assert.ok(fs.readFileSync(path.join(f.root, 'credentials.json')).equals(edit));
+        assert.strictEqual(fs.existsSync(path.join(f.root, '.credential-recovery-owner')), false);
+    });
+}); });
 var passed = 0, sequence = Promise.resolve(); groups.forEach(function (g) { sequence = sequence.then(g.run).then(function () { passed++; }); });
 sequence.then(function () { console.log(JSON.stringify({ groupsPassed: passed, posixAcceptance: true, rootStockProfileAccepted: process.getuid() === 0, detachedWatchdogTested: true, residentConsumerTested: true, robotContacted: false, realCredentialsRead: false, physicalReloadQualified: false })); }, function (e) { console.error(e.stack); process.exitCode = 1; });

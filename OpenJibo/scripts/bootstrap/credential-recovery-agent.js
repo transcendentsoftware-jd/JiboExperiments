@@ -65,6 +65,11 @@ function event(s, name) {
 }
 function has(s, name) { return exists(path.join(s.helper, name + '.json')); }
 function verify(s) { need(JSON.stringify(context().c) === JSON.stringify(s.c)); }
+function checkEvent(s, name) {
+    var value = parse(read(path.join(s.helper, name + '.json'), 4096));
+    exact(value, 'phase bindingSha256');
+    need(value.phase === name && value.bindingSha256 === sha(Buffer.from(JSON.stringify(s.c.binding))));
+}
 function claim(s, fresh) {
     if (fresh) { fs.mkdirSync(s.claim, 448); sync(s.c.credentialDirectory); write(path.join(s.claim, 'owner.json'), { operationId: s.c.binding.operationId }); }
     var st = fs.lstatSync(s.claim); need(st.isDirectory() && st.uid === process.getuid() && st.gid === process.getgid() && (st.mode & 4095) === 448);
@@ -142,7 +147,7 @@ function daemon() {
     }
     function forward(r) { verify(s); request(s, r); need(!terminal()); claim(s, false); }
     function run(r) {
-        verify(s); request(s, r); claim(s, false);
+        verify(s); request(s, r); claim(s, false); need(!has(s, 'closed'));
         if (r.phase === 'fence') return fence().then(function () { return 'forward-fenced'; });
         if (r.phase === 'restore') return restore().then(function () { return 'restored'; });
         forward(r);
@@ -204,6 +209,25 @@ function transport(s, r) {
         framed(socket, 4096, function (error, value) { socket.destroy(); if (error) reject(new Error(REFUSAL)); else resolve(value); });
     });
 }
+function closedReadback(s, r) {
+    // A completed watchdog needs no restart and conveys no new forward permit.
+    // Validate terminal evidence and the original file before taking a temporary
+    // claim. An old request must not block or overwrite a later configuration.
+    ['fenced','consumer-fenced','restored','closeout-verified','closed'].forEach(function (name) { checkEvent(s, name); });
+    need(s.tx.inspect(s.plan).state === 'restored');
+    claim(s, true);
+    return profile(s, 'fence', r.expiresAtUnixMs, {}).then(function () {
+        verify(s); request(s, r); claim(s, false); need(s.tx.inspect(s.plan).state === 'restored');
+        return profile(s, 'observeOriginal', r.expiresAtUnixMs, {});
+    }).then(function () {
+        verify(s); request(s, r); claim(s, false); need(s.tx.inspect(s.plan).state === 'restored' && fs.readdirSync(s.claim).sort().join(' ') === 'owner.json');
+        fs.unlinkSync(path.join(s.claim, 'owner.json')); fs.rmdirSync(s.claim); sync(s.c.credentialDirectory);
+        return receipt(s, r, r.phase === 'fence' ? 'forward-fenced' : 'restored');
+    }).catch(function () {
+        // Preserve an uncertain claim; never steal it or replay a reload.
+        event(s, 'readback-unverified'); throw new Error(REFUSAL);
+    });
+}
 function rpc(r) {
     var s = context(); request(s, r);
     if (r.phase === 'inspect') {
@@ -211,6 +235,7 @@ function rpc(r) {
         need(sha(original) === s.c.binding.beforeSha256); require(path.join(s.helper, 'transaction.js')).validateCredential(original);
         return profile(s, 'inspect', r.expiresAtUnixMs, {}).then(function () { return receipt(s, r, 'qualified'); });
     }
+    if (has(s, 'closed') && (r.phase === 'fence' || r.phase === 'restore')) return closedReadback(s, r);
     if (r.phase !== 'prepare') return transport(s, r);
     need(!has(s, 'reserved')); claim(s, true); event(s, 'reserved');
     var child = cp.spawn(process.execPath, [__filename, '--daemon'], { detached: true, stdio: 'ignore', env: {} });
