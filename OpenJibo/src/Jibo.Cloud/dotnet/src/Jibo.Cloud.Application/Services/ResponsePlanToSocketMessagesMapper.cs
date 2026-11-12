@@ -25,6 +25,15 @@ public sealed class ResponsePlanToSocketMessagesMapper
         var isYesNoIntent = string.Equals(plan.IntentName, "yes", StringComparison.OrdinalIgnoreCase) ||
                             string.Equals(plan.IntentName, "no", StringComparison.OrdinalIgnoreCase);
         var isSkillListenIntent = string.Equals(plan.IntentName, "skill_listen", StringComparison.OrdinalIgnoreCase);
+        // This internal routing label is not a grammar tag in the stock optional
+        // fun-fact state. Preserve unmatched speech without inventing a native match.
+        // Explicit client grammar results and global commands retain normal routing.
+        if (isSkillListenIntent &&
+            string.Equals(primarySkillRule, "word-of-the-day/fun_fact", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(clientIntent) &&
+            !string.IsNullOrWhiteSpace(transcript))
+            return MapUnmatchedWordOfDayFollowUp(transId, primarySkillRule!, transcript);
+
         var isPromptEchoIntent = string.Equals(plan.IntentName, "prompt_echo", StringComparison.OrdinalIgnoreCase);
         // Robot-owned skill listens speak for themselves. Personal report is cloud-owned and still
         // needs a SKILL_ACTION.
@@ -610,6 +619,38 @@ public sealed class ResponsePlanToSocketMessagesMapper
                 data = new { }
             })),
             new SocketReplyPlan(JsonSerializer.Serialize(BuildGenericFallbackSkillPayload(transId)), 75)
+        ];
+    }
+
+    private static IReadOnlyList<SocketReplyPlan> MapUnmatchedWordOfDayFollowUp(
+        string transId, string localRule, string transcript)
+    {
+        return
+        [
+            new SocketReplyPlan(JsonSerializer.Serialize(new
+            {
+                type = "LISTEN",
+                transID = transId,
+                data = new
+                {
+                    asr = new { confidence = 0.95, final = true, text = transcript },
+                    nlu = new
+                    {
+                        confidence = 0.95,
+                        intent = string.Empty,
+                        rules = new[] { localRule },
+                        entities = new Dictionary<string, object?>()
+                    }
+                }
+            })),
+            new SocketReplyPlan(JsonSerializer.Serialize(new
+            {
+                type = "EOS",
+                ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                msgID = CloudMessageIdFactory.CreateHubMessageId(),
+                transID = transId,
+                data = new { }
+            }))
         ];
     }
 
