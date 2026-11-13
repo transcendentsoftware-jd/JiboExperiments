@@ -11,10 +11,11 @@ namespace Jibo.Cloud.Tests.WebSockets;
 public sealed class AudioBatchGapRegressionTests
 {
     [Theory]
-    [InlineData(420)]
-    [InlineData(500)]
-    [InlineData(1000)]
-    public async Task NetworkBatchGapDoesNotEndSpeech(int gapMs)
+    [InlineData(420, false)]
+    [InlineData(500, false)]
+    [InlineData(1000, false)]
+    [InlineData(1300, true)]
+    public async Task NetworkBatchGapRespectsArrivalAllowance(int gapMs, bool shouldFinalize)
     {
         var store = new InMemoryCloudStateStore();
         var stt = new Mock<ISttStrategy>();
@@ -59,8 +60,21 @@ public sealed class AudioBatchGapRegressionTests
         await service.HandleMessageAsync(Audio(BuildOggFrame(0x00, "OpusTags")));
         await service.HandleMessageAsync(Audio(BuildOggFrame(0x00)));
         await service.HandleMessageAsync(Audio(BuildOggFrame(0x00)));
+        if (shouldFinalize)
+            await service.HandleMessageAsync(Audio(BuildOggFrame(0x00)));
         session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromMilliseconds(1500);
         session.TurnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow - TimeSpan.FromMilliseconds(gapMs);
+
+        if (shouldFinalize)
+        {
+            // Missing EOS/content silence must still have a bounded idle fallback.
+            Assert.NotEmpty(await service.HandleIdleAsync(session, listen));
+            stt.Verify(strategy => strategy.TranscribeAsync(It.IsAny<TurnContext>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+            Assert.False(session.TurnState.AwaitingTurnCompletion);
+            Assert.Equal(0, session.TurnState.BufferedAudioBytes);
+            return;
+        }
 
         // Another batch is arriving: the preceding network gap is not acoustic silence.
         Assert.Empty(await service.HandleMessageAsync(Audio(BuildOggFrame(0x00))));
