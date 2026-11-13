@@ -67,6 +67,18 @@ public sealed partial class JiboInteractionService
             isAlarmValueTurn,
             isSkillOwnedListen);
 
+        // Candidate policy: leave untagged fun-fact speech local unless the client
+        // supplied a grammar intent or an explicit yes/no rule.
+        if (isSkillOwnedListen &&
+            string.IsNullOrWhiteSpace(clientIntent) &&
+            string.Equals(SkillListenOwnership.ReadPrimarySkillRule(listenRules, clientRules),
+                "word-of-the-day/fun_fact", StringComparison.OrdinalIgnoreCase) &&
+            !listenRules.Concat(clientRules).Concat(listenAsrHints).Any(IsYesNoRule) &&
+            (string.Equals(semanticIntent, "yes", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(semanticIntent, "no", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(semanticIntent, "yes_no_clarify", StringComparison.OrdinalIgnoreCase)))
+            semanticIntent = "skill_listen";
+
         if (SkillListenOwnership.ShouldStayInCloudConversation(turn, semanticIntent))
             semanticIntent = "chat";
 
