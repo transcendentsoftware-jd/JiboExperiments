@@ -110,6 +110,14 @@ public sealed partial class JiboInteractionService
         if (householdListDecision is not null) return householdListDecision;
 
         var preferredName = ResolvePreferredGreetingName(turn, greetingPresence);
+        // With a live camera configured (OPENJIBO_JIBO_CAMERA_URL) and a knowledge-search backend,
+        // "what do you see?" / "can you see?" go to the AI, which describes a fresh photo, instead
+        // of the stock "I can see faces and movement" reply.
+        if (string.Equals(semanticIntent, "robot_can_see", StringComparison.OrdinalIgnoreCase) &&
+            knowledgeSearchService?.IsConfigured == true &&
+            RobotCameraSettings.CameraBaseUri is not null)
+            semanticIntent = "chat";
+
         if (string.Equals(semanticIntent, "chat", StringComparison.OrdinalIgnoreCase))
         {
             if (isSkillOwnedListen)
