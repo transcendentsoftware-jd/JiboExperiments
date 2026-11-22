@@ -142,11 +142,98 @@ public sealed class ChatGptSearchProviderTests
         Assert.DoesNotContain("You ARE Jibo", messages[0].GetProperty("content").GetString(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task SearchAsync_VisionQuestionWithCamera_SendsFreshPhotoToModel()
+    {
+        var calls = new List<string>();
+        string? chatBody = null;
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.ToString();
+            calls.Add($"{request.Method} {uri}");
+            if (uri == "http://jibo.test:8486/media/photo")
+                return JsonResponse("""{"id":"photo-1"}""");
+            if (uri == "http://jibo.test:8486/media/photo?id=photo-1")
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent([0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3])
+                };
+            chatBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return JsonResponse("""{"choices":[{"message":{"role":"assistant","content":"I see you waving at me."}}]}""");
+        });
+        var provider = CreateProvider(handler, cameraUrl: "http://jibo.test:8486");
+
+        var result = await provider.SearchAsync(new KnowledgeSearchRequest(
+            "what do you see",
+            new SearchBackendSpec(SearchBackendKind.ChatGPT, "test-api-key", "gpt-5.4-nano")));
+
+        Assert.Equal("I see you waving at me.", result!.AnswerText);
+        Assert.Equal("POST http://jibo.test:8486/media/photo", calls[0]);
+        Assert.Equal("GET http://jibo.test:8486/media/photo?id=photo-1", calls[1]);
+        using var json = JsonDocument.Parse(chatBody!);
+        var content = json.RootElement.GetProperty("messages")[1].GetProperty("content");
+        Assert.Equal("text", content[0].GetProperty("type").GetString());
+        Assert.Equal("image_url", content[1].GetProperty("type").GetString());
+        Assert.StartsWith(
+            "data:image/jpeg;base64,",
+            content[1].GetProperty("image_url").GetProperty("url").GetString(),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task SearchAsync_VisionQuestion_CameraFails_SaysSoWithoutCallingModel()
+    {
+        var chatCalled = false;
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            if (request.RequestUri!.Host == "jibo.test")
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            chatCalled = true;
+            return JsonResponse("""{"choices":[]}""");
+        });
+        var provider = CreateProvider(handler, cameraUrl: "http://jibo.test:8486");
+
+        var result = await provider.SearchAsync(new KnowledgeSearchRequest(
+            "can you see me",
+            new SearchBackendSpec(SearchBackendKind.ChatGPT, "test-api-key", "gpt-5.4-nano")));
+
+        Assert.Equal(ChatGptSearchProvider.CameraUnavailableReply, result!.AnswerText);
+        Assert.False(chatCalled);
+    }
+
+    [Fact]
+    public async Task SearchAsync_OrdinaryQuestionWithCamera_DoesNotTakePhoto()
+    {
+        var cameraCalled = false;
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            if (request.RequestUri!.Host == "jibo.test") cameraCalled = true;
+            return JsonResponse("""{"choices":[{"message":{"role":"assistant","content":"Paris."}}]}""");
+        });
+        var provider = CreateProvider(handler, cameraUrl: "http://jibo.test:8486");
+
+        await provider.SearchAsync(new KnowledgeSearchRequest(
+            "What is the capital of France",
+            new SearchBackendSpec(SearchBackendKind.ChatGPT, "test-api-key", "gpt-5.4-nano")));
+
+        Assert.False(cameraCalled);
+    }
+
+    [Theory]
+    [InlineData("{\"id\":\"abc\"}", "abc")]
+    [InlineData("{\"id\":\"\"}", null)]
+    [InlineData("not json", null)]
+    public void ReadPhotoId_ReadsMediaServiceAnswer(string json, string? expected)
+    {
+        Assert.Equal(expected, ChatGptSearchProvider.ReadPhotoId(json));
+    }
+
     private static ChatGptSearchProvider CreateProvider(
         HttpMessageHandler handler,
         string? apiKey = "test-api-key",
         string? model = "gpt-5.4-nano",
-        string? llmInstructions = null)
+        string? llmInstructions = null,
+        string? cameraUrl = null)
     {
         var primary = model is null
             ? $"ChatGPT!{apiKey}"
@@ -155,7 +242,10 @@ public sealed class ChatGptSearchProviderTests
         return new ChatGptSearchProvider(
             new HttpClient(handler),
             SearchBackendOptions.Create(primary, null, 300, 45, llmInstructions),
-            NullLogger<ChatGptSearchProvider>.Instance);
+            NullLogger<ChatGptSearchProvider>.Instance)
+        {
+            CameraUrlOverride = cameraUrl is null ? null : new Uri(cameraUrl)
+        };
     }
 
     private static HttpResponseMessage JsonResponse(string body)
