@@ -6314,12 +6314,25 @@ public sealed class JiboWebSocketServiceTests
     [InlineData("show me your Christmas sweater", "robot_show_christmas_sweater", "RA_JBO_ShowChristmasSweater", "emoji")]
     [InlineData("show me Christmas stockings", "robot_show_christmas_stockings", "RA_JBO_ShowChristmasStockings", "jiboji")]
     [InlineData("show me a Christmas tree", "robot_show_christmas_tree", "RA_JBO_ShowChristmasTree", "emoji")]
+    [InlineData("show me Christmas lights", "robot_show_christmas_lights", "RA_JBO_ShowChristmasLights", "emoji")]
+    [InlineData("show me Santa's cookies and milk", "robot_show_christmas_cookies_milk", "RA_JBO_ShowChristmasCookiesMilk", "jiboji")]
+    [InlineData("show me mistletoe", "robot_show_mistletoe", "RA_JBO_ShowMistletoe", "emoji")]
+    [InlineData("show me a menorah", "robot_show_menorah", "RA_JBO_ShowMenorah", "emoji")]
+    [InlineData("show me a bird", "robot_show_bird", "RA_JBO_ShowBird", "emoji")]
+    [InlineData("show me a cat", "robot_show_cat", "RA_JBO_ShowCat", "emoji")]
+    [InlineData("show me the chicken egg", "robot_show_chicken_egg", "RA_JBO_ShowChickenEgg", "jiboji")]
+    [InlineData("do an Abe Lincoln impersonation", "robot_show_lincoln_beard", "RA_JBO_ShowAbrahamLincolnBeard", "jiboji")]
+    [InlineData("show the lunar new year dog", "robot_show_year_of_the_dog", "RA_JBO_ShowYearOfTheDog", "emoji")]
+    [InlineData("can you ski jump", "robot_can_ski_jump", "RI_JBO_CanSkiJump", "jiboji")]
     [InlineData("show me a Kwanzaa kinara", "robot_show_kinara", "RA_JBO_ShowKwanzaaKinara", "emoji")]
     [InlineData("show me some matzo ball soup", "robot_show_matzah_ball_soup", "RA_JBO_ShowMatzahBallSoup", "emoji")]
     [InlineData("show me a present", "robot_show_gift", "RA_JBO_ShowGift", "emoji")]
     [InlineData("show me some shopping bags", "robot_show_shopping_bags", "RA_JBO_ShowShoppingBags", "emoji")]
     [InlineData("show me a champagne glass", "robot_show_champagne_glass", "RA_JBO_ShowChampagneGlass", "emoji")]
     [InlineData("show me a Christmas tree on a car", "robot_show_christmas_tree_car", "RA_JBO_ShowChristmasTreeCar", "jiboji")]
+    [InlineData("what do you think about Earth Day", "robot_opinion_of_earth_day", "RI_JBO_HasOpinionAboutEarthDay", "emoji")]
+    [InlineData("what do you think of Groundhog Day", "robot_opinion_of_groundhog_day", "RI_JBO_HasOpinionAboutGroundhogDay", "jiboji")]
+    [InlineData("do you like playing music", "robot_likes_playing_music", "RI_JBO_LikesPlayingMusic", "emoji")]
     [InlineData("do you have a dreidel", "robot_has_dreidel", "RI_JBO_HasDreidel", "emoji")]
     [InlineData("do you have any brothers", "robot_has_brothers", "RI_JBO_HasBrothers", "emoji")]
     [InlineData("would you like to build a snowman", "robot_wants_to_build_snowman", "RI_JBO_WantsToBuildSnowman", "emoji")]
@@ -8475,21 +8488,27 @@ public sealed class JiboWebSocketServiceTests
     }
 
     [Theory]
-    [InlineData("so it's back to the future show me christmas", false, true, "show me Christmas stockings",
+    [InlineData("so it's back to the future show me christmas", false, true, false, "show me Christmas stockings",
         "robot_show_christmas_stockings")]
-    [InlineData("so what's your what's your show me a christmas stock", false, true, "show me Christmas stockings",
+    [InlineData("so what's your what's your show me a christmas stock", false, true, false, "show me Christmas stockings",
         "robot_show_christmas_stockings")]
-    [InlineData("so it's back to the future show me christmas", false, true, null, "not_understood")]
-    [InlineData("show me christmas stockings", false, false, null, "robot_show_christmas_stockings")]
-    [InlineData("show me christmas stockings and follow along", false, false, null, "not_understood")]
-    [InlineData("show me christmas", true, false, null, "not_understood")]
+    [InlineData("so it's back to the future show me christmas", false, true, false, null, "not_understood")]
+    [InlineData("show me christmas", false, true, true, null, "not_understood")]
+    [InlineData("show me christmas stockings", false, false, false, null, "robot_show_christmas_stockings")]
+    [InlineData("show me christmas stockings and follow along", false, false, false, null, "not_understood")]
+    [InlineData("show me christmas", true, false, false, null, "not_understood")]
     public async Task BufferedHotphraseOggAudio_VisualRequestDefersOnlyWhileMoreAudioMayHelp(
-        string initialTranscript, bool endOfStream, bool shouldDefer, string? continuation, string expectedIntent)
+        string initialTranscript, bool endOfStream, bool shouldDefer, bool slowProbe, string? continuation,
+        string expectedIntent)
     {
         var stateStore = new InMemoryCloudStateStore();
+        var blockingStt = slowProbe ? new BlockingBufferedAudioSttStrategy(initialTranscript) : null;
+        ISttStrategy stt = blockingStt is not null
+            ? blockingStt
+            : new QueuedBufferedAudioSttStrategy(initialTranscript, continuation ?? initialTranscript);
         var service = CreateService(stateStore, sttStrategies:
         [
-            new QueuedBufferedAudioSttStrategy(initialTranscript, continuation ?? initialTranscript)
+            stt
         ]);
         const string token = "hub-incomplete-visual-request";
         WebSocketMessageEnvelope Envelope(string? text = null, byte[]? binary = null) => new()
@@ -8519,9 +8538,17 @@ public sealed class JiboWebSocketServiceTests
         session.TurnState.FirstAudioReceivedUtc = DateTimeOffset.UtcNow.AddMilliseconds(-3100);
         session.TurnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow;
 
-        var replies = endOfStream
-            ? await service.HandleMessageAsync(Envelope(binary: BuildOggFrame(0x04)))
-            : await service.HandleIdleAsync(session, envelope);
+        var firstProbe = endOfStream
+            ? service.HandleMessageAsync(Envelope(binary: BuildOggFrame(0x04)))
+            : service.HandleIdleAsync(session, envelope);
+        if (blockingStt is not null)
+        {
+            await blockingStt.Started.WaitAsync(TimeSpan.FromSeconds(5));
+            session.TurnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow.AddMilliseconds(-1400);
+            blockingStt.Release();
+        }
+
+        var replies = await firstProbe;
         if (shouldDefer)
         {
             Assert.Empty(replies);
@@ -8538,6 +8565,7 @@ public sealed class JiboWebSocketServiceTests
             else
             {
                 session.TurnState.LastAudioReceivedUtc = DateTimeOffset.UtcNow.AddMilliseconds(-1300);
+                session.TurnState.LastAutoFinalizeAttemptUtc = DateTimeOffset.UtcNow.AddMilliseconds(-350);
                 replies = await service.HandleIdleAsync(session, envelope);
             }
         }

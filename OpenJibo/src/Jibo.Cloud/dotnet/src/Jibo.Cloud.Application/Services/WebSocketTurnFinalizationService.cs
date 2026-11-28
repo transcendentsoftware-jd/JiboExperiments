@@ -1248,6 +1248,10 @@ public sealed class WebSocketTurnFinalizationService(
             session.TurnState.AwaitingTurnCompletion);
         try
         {
+            // An idle probe can await STT while the socket receive loop is waiting
+            // for its result. Measure the arrival gap before the probe takes that time.
+            var audioWasStillArriving = turnState.LastAudioReceivedUtc is { } lastAudio &&
+                                        DateTimeOffset.UtcNow - lastAudio < AutoFinalizeHotphraseOggArrivalGap;
             var turn = ProtocolToTurnContextMapper.MapListenMessage(envelope, session, messageType);
             await StoreBufferedAudioArtifactAsync(session, turn, cancellationToken);
             if (IsYesNoTurn(turn) || ReadPrimaryYesNoRule(turn) is not null)
@@ -1663,7 +1667,7 @@ public sealed class WebSocketTurnFinalizationService(
                 allowFallbackOnMissingTranscript);
 
             if (ShouldDeferForIncompleteHotphraseLaunchCommand(finalizedTurn, turnState, messageType,
-                    allowFallbackOnMissingTranscript, out var incompleteCommandReason))
+                    allowFallbackOnMissingTranscript, audioWasStillArriving, out var incompleteCommandReason))
             {
                 turnState.AwaitingTurnCompletion = true;
                 turnState.FinalizeAttemptCount += 1;
@@ -2134,8 +2138,9 @@ public sealed class WebSocketTurnFinalizationService(
             turnState.BufferedAudioBytes <= turnState.DeferredIncompleteAudioBytes &&
             !receivedEndOfStream &&
             !reachedHardTimeout &&
-            (!reachedContentSilence || turnState.DeferredIncompleteVisualRequest) &&
-            !(turnState.DeferredIncompleteVisualRequest && reachedSilenceWindow))
+            (turnState.DeferredIncompleteVisualRequest
+                ? !reachedSilenceWindow || !CanRetryAfterProbeInterval(turnState, now)
+                : !reachedContentSilence))
             return false;
 
         return turnState is
@@ -2264,10 +2269,12 @@ public sealed class WebSocketTurnFinalizationService(
             turnState.BufferedAudioBytes <= turnState.DeferredIncompleteAudioBytes)
             return false;
 
-        return !turnState.LastAutoFinalizeAttemptUtc.HasValue ||
-               DateTimeOffset.UtcNow - turnState.LastAutoFinalizeAttemptUtc.Value >=
-               AutoFinalizeEarlyProbeRetryInterval;
+        return CanRetryAfterProbeInterval(turnState, DateTimeOffset.UtcNow);
     }
+
+    private static bool CanRetryAfterProbeInterval(WebSocketTurnState turnState, DateTimeOffset now) =>
+        turnState.LastAutoFinalizeAttemptUtc is not { } previousAttempt ||
+        now - previousAttempt >= AutoFinalizeEarlyProbeRetryInterval;
 
     private static bool IsHotphraseLaunchListen(WebSocketTurnState turnState)
     {
@@ -3429,6 +3436,7 @@ public sealed class WebSocketTurnFinalizationService(
         WebSocketTurnState turnState,
         string messageType,
         bool allowFallbackOnMissingTranscript,
+        bool audioWasStillArriving,
         out string reason)
     {
         reason = string.Empty;
@@ -3456,8 +3464,7 @@ public sealed class WebSocketTurnFinalizationService(
         if (!turnState.DeferredIncompleteVisualRequest && turnAge < hardAge &&
             IsHotphraseOggProbeCandidate(turnState) &&
             (turnState.BufferedAudioBytes > ReadProbedAudioBytes(turn, turnState) ||
-             !forceCloseIncomplete && turnState.LastAudioReceivedUtc is { } lastAudio &&
-             DateTimeOffset.UtcNow - lastAudio < AutoFinalizeHotphraseOggArrivalGap) &&
+             !forceCloseIncomplete && audioWasStillArriving) &&
             PegasusQuipRoutes.LooksLikeIncompleteVisualRequest(
                 TranscriptTextNormalizer.NormalizeLooseText(normalized)))
         {
