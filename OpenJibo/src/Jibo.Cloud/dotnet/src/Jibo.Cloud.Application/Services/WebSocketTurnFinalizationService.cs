@@ -1126,7 +1126,7 @@ public sealed class WebSocketTurnFinalizationService(
         session.TurnState.LastAudioReceivedUtc = null;
         session.TurnState.LastAutoFinalizeAttemptUtc = null;
         session.TurnState.DeferredIncompleteAudioBytes = 0;
-        session.TurnState.DeferredIncompleteVisualRequest = false;
+        session.TurnState.DeferredIncompletePegasusRequest = false;
         session.TurnState.BufferedAudioFrames.Clear();
         session.TurnState.FinalizeAttemptCount = 0;
         session.TurnState.AutoFinalizeBlockedUntilUtc = null;
@@ -1160,7 +1160,7 @@ public sealed class WebSocketTurnFinalizationService(
         turnState.LastAudioReceivedUtc = null;
         turnState.LastAutoFinalizeAttemptUtc = null;
         turnState.DeferredIncompleteAudioBytes = 0;
-        turnState.DeferredIncompleteVisualRequest = false;
+        turnState.DeferredIncompletePegasusRequest = false;
         turnState.ListenSosTimeout = null;
         turnState.ListenMaxSpeechTimeout = null;
         turnState.BufferedAudioChunkCount = 0;
@@ -1674,9 +1674,9 @@ public sealed class WebSocketTurnFinalizationService(
                 // Block STT retry storms until more audio arrives. Early probes at
                 // 100–400ms were re-transcribing the same truncated buffer and either
                 // burned ~3s or eventually finalized incomplete text into the wrong skill.
-                if (incompleteCommandReason == "visual_request_incomplete")
+                if (incompleteCommandReason == "pegasus_request_incomplete")
                 {
-                    turnState.DeferredIncompleteVisualRequest = true;
+                    turnState.DeferredIncompletePegasusRequest = true;
                     turnState.DeferredIncompleteAudioBytes = ReadProbedAudioBytes(finalizedTurn, turnState);
                 }
                 else
@@ -2138,7 +2138,7 @@ public sealed class WebSocketTurnFinalizationService(
             turnState.BufferedAudioBytes <= turnState.DeferredIncompleteAudioBytes &&
             !receivedEndOfStream &&
             !reachedHardTimeout &&
-            (turnState.DeferredIncompleteVisualRequest
+            (turnState.DeferredIncompletePegasusRequest
                 ? !reachedSilenceWindow || !CanRetryAfterProbeInterval(turnState, now)
                 : !reachedContentSilence))
             return false;
@@ -3460,15 +3460,14 @@ public sealed class WebSocketTurnFinalizationService(
             normalized = NormalizeUsableTranscript(commandTranscript);
 
         // A speculative probe can end before the final word arrives. Give an
-        // incomplete visual request one chance to collect more audio.
-        if (!turnState.DeferredIncompleteVisualRequest && turnAge < hardAge &&
+        // incomplete Pegasus request one chance to collect more audio.
+        if (!turnState.DeferredIncompletePegasusRequest && turnAge < hardAge &&
             IsHotphraseOggProbeCandidate(turnState) &&
             (turnState.BufferedAudioBytes > ReadProbedAudioBytes(turn, turnState) ||
              !forceCloseIncomplete && audioWasStillArriving) &&
-            PegasusQuipRoutes.LooksLikeIncompleteVisualRequest(
-                TranscriptTextNormalizer.NormalizeLooseText(normalized)))
+            PegasusQuipRoutes.LooksLikeIncompleteRequest(normalized, turn.RawTranscript ?? normalized))
         {
-            reason = "visual_request_incomplete";
+            reason = "pegasus_request_incomplete";
             return true;
         }
 

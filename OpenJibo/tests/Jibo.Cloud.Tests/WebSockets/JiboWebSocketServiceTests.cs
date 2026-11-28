@@ -8497,7 +8497,14 @@ public sealed class JiboWebSocketServiceTests
     [InlineData("show me christmas stockings", false, false, false, null, "robot_show_christmas_stockings")]
     [InlineData("show me christmas stockings and follow along", false, false, false, null, "not_understood")]
     [InlineData("show me christmas", true, false, false, null, "not_understood")]
-    public async Task BufferedHotphraseOggAudio_VisualRequestDefersOnlyWhileMoreAudioMayHelp(
+    [InlineData("can can you do ski", false, true, false, "can can you do ski jump", "robot_can_ski_jump")]
+    [InlineData("can you ski", false, false, false, null, "robot_ski")]
+    [InlineData("tell me a rid", false, true, false, "tell me a riddle", "robot_tell_riddle")]
+    [InlineData("we went to the store make me break", false, true, false,
+        "we went to the store make me breakfast", "robot_make_breakfast")]
+    [InlineData("show me christmas lights and tell me a rid", false, false, false, null, "not_understood")]
+    [InlineData("show me christmas lights and show me christmas", false, false, false, null, "not_understood")]
+    public async Task BufferedHotphraseOggAudio_PegasusRequestDefersOnlyWhileMoreAudioMayHelp(
         string initialTranscript, bool endOfStream, bool shouldDefer, bool slowProbe, string? continuation,
         string expectedIntent)
     {
@@ -8552,7 +8559,7 @@ public sealed class JiboWebSocketServiceTests
         if (shouldDefer)
         {
             Assert.Empty(replies);
-            Assert.True(session.TurnState.DeferredIncompleteVisualRequest);
+            Assert.True(session.TurnState.DeferredIncompletePegasusRequest);
             Assert.Empty(await service.HandleIdleAsync(session, envelope));
             Assert.Null(session.LastIntent);
 
@@ -8573,7 +8580,7 @@ public sealed class JiboWebSocketServiceTests
         Assert.Equal(3, replies.Count);
         Assert.Equal(expectedIntent, session.LastIntent);
         Assert.False(session.TurnState.AwaitingTurnCompletion);
-        Assert.False(session.TurnState.DeferredIncompleteVisualRequest);
+        Assert.False(session.TurnState.DeferredIncompletePegasusRequest);
     }
 
     [Fact]

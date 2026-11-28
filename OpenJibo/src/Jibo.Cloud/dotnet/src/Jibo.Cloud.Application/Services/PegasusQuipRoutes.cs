@@ -736,21 +736,50 @@ public static class PegasusQuipRoutes
         Routes.SelectMany(route => route.Phrases.Select(phrase => (Phrase: phrase, route.Intent)))
             .ToLookup(entry => entry.Phrase, entry => entry.Intent, StringComparer.Ordinal);
 
-    private static readonly string[] VisualRequests = SpokenIntents
-        .Select(group => group.Key)
-        .Where(phrase => phrase.StartsWith("show me ", StringComparison.Ordinal))
-        .ToArray();
+    private static readonly HashSet<string> IncompleteRequests = BuildIncompleteRequests();
 
-    internal static bool LooksLikeIncompleteVisualRequest(string transcript)
+    private static HashSet<string> BuildIncompleteRequests()
     {
-        var start = transcript.LastIndexOf("show me ", StringComparison.Ordinal);
-        if (start < 0 || (start > 0 && transcript[start - 1] != ' ')) return false;
+        var prefixes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var group in SpokenIntents)
+        {
+            var phrase = NormalizeSpokenPhrase(group.Key);
+            var spaces = 0;
+            var wordStart = 0;
+            for (var i = 0; i < phrase.Length; i++)
+            {
+                if (spaces >= 2 && i - wordStart >= 3)
+                    prefixes.Add(phrase[..i]);
+                if (phrase[i] == ' ')
+                {
+                    spaces++;
+                    wordStart = i + 1;
+                }
+            }
+        }
 
-        var request = transcript[start..];
-        if (request.Length - request.LastIndexOf(' ') < 4 || SpokenIntents.Contains(request))
-            return false;
+        // A short alias may already be a complete request for another quip.
+        prefixes.ExceptWith(SpokenIntents.Select(group => NormalizeSpokenPhrase(group.Key)));
+        return prefixes;
+    }
 
-        return VisualRequests.Any(phrase => phrase.StartsWith(request, StringComparison.Ordinal));
+    internal static bool LooksLikeIncompleteRequest(string transcript, string sourceTranscript)
+    {
+        if (sourceTranscript.IndexOfAny(['"', '“', '”']) >= 0) return false;
+
+        var request = SkipLeadingDisfluencies(NormalizeSpokenPhrase(transcript), sourceTranscript);
+        if (LooksIncomplete(request)) return true;
+
+        // Preserve the original retry for visual commands preceded by uncategorized
+        // background audio. A fragment after a joining word may be a second request.
+        var start = request.LastIndexOf(" show me ", StringComparison.Ordinal);
+        return start > 0 &&
+               request[..start].Split(' ')[^1] is not ("and" or "or" or "then" or "but" or "don't") &&
+               LooksIncomplete(request[(start + 1)..]);
+
+        static bool LooksIncomplete(string candidate) =>
+            IncompleteRequests.Contains(candidate) ||
+            CollapseImmediateRepeats(candidate) is { } collapsed && IncompleteRequests.Contains(collapsed);
     }
 
     internal static string? Resolve(
@@ -834,7 +863,23 @@ public static class PegasusQuipRoutes
                 return phrase[restartedFalseStart.Length..];
         }
 
-        return phrase;
+        // Only skip a lead-in that fits the same bounded conversation patterns
+        // used for trailing speech. Quoted requests and compound commands keep their wording.
+        var boundary = 0;
+        var commandStart = 0;
+        for (var words = 1; words <= 10 && boundary + 1 < phrase.Length; words++)
+        {
+            boundary = phrase.IndexOf(' ', boundary + 1);
+            if (boundary < 0) break;
+
+            var lead = phrase[..boundary];
+            var remainder = phrase[(boundary + 1)..];
+            if (remainder.Split(' ', 2)[0] is "and" or "or" or "then" or "but") continue;
+            if (IsTrailingConversation(lead) || IsTrailingConversation($"and {lead}"))
+                commandStart = boundary + 1;
+        }
+
+        return phrase[commandStart..];
     }
 
     private static string? CollapseImmediateRepeats(string request)

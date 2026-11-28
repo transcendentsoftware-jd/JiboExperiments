@@ -32,7 +32,7 @@ public sealed class WebSocketTurnState
     /// Early probes must wait for additional audio before re-running STT.
     /// </summary>
     public int DeferredIncompleteAudioBytes { get; set; }
-    public bool DeferredIncompleteVisualRequest { get; set; }
+    public bool DeferredIncompletePegasusRequest { get; set; }
     public List<byte[]> BufferedAudioFrames { get; } = [];
     public int FinalizeAttemptCount { get; set; }
     public string? LastLocalNoInputRule { get; set; }
