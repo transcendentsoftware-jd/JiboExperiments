@@ -6332,6 +6332,8 @@ public sealed class JiboWebSocketServiceTests
     [InlineData("show me a Christmas tree on a car", "robot_show_christmas_tree_car", "RA_JBO_ShowChristmasTreeCar", "jiboji")]
     [InlineData("what do you think about Earth Day", "robot_opinion_of_earth_day", "RI_JBO_HasOpinionAboutEarthDay", "emoji")]
     [InlineData("what do you think of Groundhog Day", "robot_opinion_of_groundhog_day", "RI_JBO_HasOpinionAboutGroundhogDay", "jiboji")]
+    [InlineData("what do you think of Bubble Week", "robot_opinion_of_bubble_week", "RI_JBO_HasOpinionAboutNationalBubbleWeek", "jiboji")]
+    [InlineData("what do you think of the singularity", "robot_opinion_of_singularity", "RI_JBO_HasOpinionAboutSingularity", "emoji")]
     [InlineData("do you like playing music", "robot_likes_playing_music", "RI_JBO_LikesPlayingMusic", "emoji")]
     [InlineData("do you have a dreidel", "robot_has_dreidel", "RI_JBO_HasDreidel", "emoji")]
     [InlineData("do you have any brothers", "robot_has_brothers", "RI_JBO_HasBrothers", "emoji")]
